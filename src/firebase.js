@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, deleteUser } from "firebase/auth";
 import { getFirestore, doc, setDoc, getDoc, collection, addDoc, onSnapshot, query, where, serverTimestamp, orderBy, runTransaction } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -22,6 +22,8 @@ export const fbLogin = (email, password) =>
   signInWithEmailAndPassword(auth, email, password);
 export const fbLogout = () => signOut(auth);
 export const fbOnAuthChange = (cb) => onAuthStateChanged(auth, cb);
+export const fbDeleteCurrentUser = () =>
+  auth.currentUser ? deleteUser(auth.currentUser) : Promise.resolve();
 
 // ─── USER PROFILE ──────────────────────────────────────
 export const fbSaveUser = (uid, data) =>

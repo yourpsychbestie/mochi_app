@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   fbRegister, fbLogin, fbLogout, fbOnAuthChange,
+  fbDeleteCurrentUser,
   fbSaveUser, fbGetUser,
   fbSaveCode, fbGetCode,
   fbSaveProgress, fbGetProgress,
@@ -1759,6 +1760,15 @@ function Login({ onLogin }) {
     return fallback;
   };
 
+  const isPermissionError = (e) => {
+    const code = e?.code || "";
+    const msg = e?.message || "";
+    return code === "permission-denied"
+      || code === "missing-or-insufficient-permissions"
+      || msg.includes("Missing or insufficient permissions")
+      || msg.toLowerCase().includes("permissions");
+  };
+
   const doLogin = async () => {
     if (!email || !pass) { setErr("Completa correo y contraseña"); return; }
     setLoading(true); setErr("");
@@ -1811,17 +1821,25 @@ function Login({ onLogin }) {
     setLoading(true); setErr("");
     try {
       const cleanCode = pCode.trim().toUpperCase();
-      const codeData = await fbGetCode(cleanCode);
-      if (!codeData) { setErr("Código no encontrado — revisa que esté bien escrito"); setLoading(false); return; }
       const cred = await fbRegister(pEmail, pPass);
       const uid = cred.user.uid;
+      const codeData = await fbGetCode(cleanCode);
+      if (!codeData) {
+        await fbDeleteCurrentUser().catch(() => {});
+        setErr("Código no encontrado — revisa que esté bien escrito");
+        setLoading(false);
+        return;
+      }
       const ownerName = (codeData.names || "?").split(" & ")[0].trim();
       const partnerName = nameB.trim() || "?";
       const names = ownerName + " & " + partnerName;
       const since = codeData.since || "Juntos desde hoy";
-      // Update names in the code so owner also sees partner's name
-      await fbSaveCode(cleanCode, { names, partnerEmail: pEmail, partnerUid: uid });
       await fbSaveUser(uid, { email: pEmail, names, code: cleanCode, since, isOwner: false });
+      // Update the shared code doc when rules allow it. If Firestore blocks this,
+      // keep the partner account usable instead of aborting the join flow.
+      await fbSaveCode(cleanCode, { names, partnerEmail: pEmail, partnerUid: uid }).catch((err) => {
+        console.warn("Join: could not update code doc", err);
+      });
       // Also update owner's user record with new names
       if (codeData.ownerUid) await fbSaveUser(codeData.ownerUid, { names }).catch(()=>{});
       onLogin({ uid, email: pEmail, names, code: cleanCode, since, isOwner: false, isGuest: false }, true);
@@ -1841,8 +1859,8 @@ function Login({ onLogin }) {
           setErr("Este correo ya tiene cuenta — verifica tu contraseña");
           setLoading(false); return;
         }
-      } else if (e.code === "missing-or-insufficient-permissions" || e.message?.includes("permissions")) {
-        setErr("Error de permisos — intenta de nuevo");
+      } else if (isPermissionError(e)) {
+        setErr("Firebase bloqueó el acceso al código de pareja. Revisa Firestore Rules para la colección codes.");
       } else {
         setErr(authErrMsg(e, "Error al unirse: " + (e.message || e.code || "desconocido")));
       }
@@ -3245,6 +3263,7 @@ export default function App() {
   const [gratitud, setGratitud] = useState([]);
   const [momentos, setMomentos] = useState([]);
   const happyTimer = useRef(null);
+  const screenRef = useRef("login");
 
   const saveKey = u => u?.email ? "mochi_prog_" + u.email : null;
   const toast = msg => { setToastMsg(msg); setTimeout(() => setToastMsg(null), 3000); };
@@ -3266,6 +3285,10 @@ export default function App() {
     if (uid) fbSaveProgress(uid, s).catch(() => {});
   }, [user]);
 
+  useEffect(() => {
+    screenRef.current = screen;
+  }, [screen]);
+
   // Garden decay on login: -5 water per day away, -2 happiness per day
   const applyDecay = (savedState) => {
     const last = savedState.lastVisit ? new Date(savedState.lastVisit) : new Date();
@@ -3285,9 +3308,9 @@ export default function App() {
   const afterLogin = async (u, isNew) => {
     setUser(u);
     ls.set("mochi_last", u.email || "guest");
+    let s = null;
     if (!isNew && u.uid) {
       // Try Firebase first, fallback to localStorage
-      let s = null;
       try { s = await fbGetProgress(u.uid); } catch(e) {}
       if (!s) s = ls.get(saveKey(u));
       if (s) {
@@ -3316,7 +3339,13 @@ export default function App() {
       setMessages(sharedMsgs);
     }
     setLastVisit(new Date().toISOString());
-    setScreen(isNew ? "onboarding" : "main");
+    const introFlowOpen = screenRef.current === "onboarding" || screenRef.current === "reltest";
+    const hasCompletedTest = !!s?.testScores;
+    if (!isNew && introFlowOpen) {
+      setScreen(screenRef.current);
+      return;
+    }
+    setScreen(isNew ? "onboarding" : (hasCompletedTest ? "main" : "reltest"));
   };
 
   // Keep messages in sync whenever user/code changes
@@ -3685,6 +3714,7 @@ export default function App() {
   if (screen === "login") return <><style>{STYLES}</style><Login onLogin={afterLogin}/></>;
   if (screen === "onboarding") return <><style>{STYLES}</style><Onboarding onDone={()=>setScreen("reltest")}/></>;
   if (screen === "reltest") return <><style>{STYLES}</style><RelTest user={user} onDone={finishTest}/></>;
+  if (user && !user?.isGuest && !testScores) return <><style>{STYLES}</style><RelTest user={user} onDone={finishTest}/></>;
 
   return (
     <div style={{ fontFamily:"'Nunito',sans-serif", maxWidth:480, margin:"0 auto", minHeight:"100vh", background:C.sandL, position:"relative" }}>
