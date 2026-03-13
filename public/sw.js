@@ -1,4 +1,4 @@
-const CACHE = 'mochi-v1';
+const CACHE = 'mochi-v2';
 const ASSETS = [
   '/',
   '/index.html',
@@ -25,6 +25,30 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+
+  const reqUrl = new URL(e.request.url);
+  const isSameOrigin = reqUrl.origin === self.location.origin;
+  const isNavigate = e.request.mode === 'navigate';
+
+  // Never cache Firebase/API requests.
+  if (!isSameOrigin || reqUrl.pathname.startsWith('/__/')) {
+    return;
+  }
+
+  // For document navigation, prefer fresh network to avoid stale app shells after deploy.
+  if (isNavigate) {
+    e.respondWith(
+      fetch(e.request)
+        .then(res => {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put('/index.html', copy));
+          return res;
+        })
+        .catch(() => caches.match('/index.html'))
+    );
+    return;
+  }
+
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;

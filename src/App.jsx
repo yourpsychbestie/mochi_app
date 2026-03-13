@@ -1698,6 +1698,23 @@ function Login({ onLogin }) {
 
   const [loading, setLoading] = useState(false);
 
+  const authErrMsg = (e, fallback) => {
+    const code = e?.code || "";
+    if (code === "auth/unauthorized-domain") {
+      return "Dominio no autorizado en Firebase. Agrega tu dominio de Netlify en Authentication > Settings > Authorized domains.";
+    }
+    if (code === "auth/network-request-failed") {
+      return "Error de red al conectar con Firebase. Revisa conexión, bloqueadores o HTTPS.";
+    }
+    if (code === "auth/operation-not-allowed") {
+      return "Email/Password no está habilitado en Firebase Authentication.";
+    }
+    if (code === "auth/too-many-requests") {
+      return "Demasiados intentos, espera unos minutos.";
+    }
+    return fallback;
+  };
+
   const doLogin = async () => {
     if (!email || !pass) { setErr("Completa correo y contraseña"); return; }
     setLoading(true); setErr("");
@@ -1718,7 +1735,7 @@ function Login({ onLogin }) {
       } else if (code === "auth/too-many-requests") {
         setErr("Demasiados intentos, espera unos minutos");
       } else {
-        setErr("Error al entrar: " + (e.message || e.code || "desconocido"));
+        setErr(authErrMsg(e, "Error al entrar: " + (e.message || e.code || "desconocido")));
       }
     }
     setLoading(false);
@@ -1736,7 +1753,11 @@ function Login({ onLogin }) {
       await fbSaveCode(code, { ownerEmail: email, ownerUid: uid, names, since });
       onLogin({ uid, email, names, code, since, isOwner: true, isGuest: false }, true);
     } catch(e) {
-      setErr(e.code === "auth/email-already-in-use" ? "Este correo ya tiene cuenta" : "Error al crear cuenta");
+      if (e.code === "auth/email-already-in-use") {
+        setErr("Este correo ya tiene cuenta");
+      } else {
+        setErr(authErrMsg(e, "Error al crear cuenta"));
+      }
     }
     setLoading(false);
   };
@@ -1779,7 +1800,7 @@ function Login({ onLogin }) {
       } else if (e.code === "missing-or-insufficient-permissions" || e.message?.includes("permissions")) {
         setErr("Error de permisos — intenta de nuevo");
       } else {
-        setErr("Error al unirse: " + (e.message || e.code || "desconocido"));
+        setErr(authErrMsg(e, "Error al unirse: " + (e.message || e.code || "desconocido")));
       }
     }
     setLoading(false);
