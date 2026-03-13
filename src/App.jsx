@@ -1834,16 +1834,6 @@ function Login({ onLogin }) {
           ))}
         </div>
         {tab === "register" && (
-          <div style={{ fontSize:"0.75rem", color:C.inkM, textAlign:"center", marginBottom:12, lineHeight:1.5, padding:"0 4px" }}>
-            🌱 Eres el primero en crear la cuenta. Luego le pasas un código a tu pareja para que se una.
-          </div>
-        )}
-        {tab === "pair" && (
-          <div style={{ fontSize:"0.75rem", color:C.inkM, textAlign:"center", marginBottom:12, lineHeight:1.5, padding:"0 4px" }}>
-            🐾 Tu pareja ya creó una cuenta y te compartió su código. Úsalo aquí para conectarse.
-          </div>
-        )}
-        {tab === "register" && (
           <div style={{ background: "#f0f7e8", borderRadius: 12, padding: "9px 14px", marginBottom: 10, border: "1px solid #c8ddb0", textAlign: "center" }}>
             <div style={{ fontSize: "0.78rem", color: "#4a6a30", lineHeight: 1.6 }}>
               🌱 <strong>¿Eres el primero?</strong> Crea la cuenta y le mandas tu código a tu pareja para que se una.
