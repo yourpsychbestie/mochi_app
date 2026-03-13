@@ -1165,6 +1165,7 @@ function GardenScene({ garden, waterLevel }) {
   const showDew = lvl === 4;
 
   const dry = lvl === 0;
+  const withering = w < 40;
   const waterCol = dry ? "#c8b870" : "#88c8c8";
 
   return (
@@ -1558,11 +1559,15 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
         <div style={{ display:"flex", gap:10, overflowX:"auto", padding:"8px 14px 20px" }}>
           {shopItems.map(item => {
             const owned = shopTab === "accesorios" ? accessories?.[item.id] : garden?.[item.id];
+            const POND_DEPS = ["koi1", "koi2", "lotus_pad"];
+            const locked = shopTab !== "accesorios" && POND_DEPS.includes(item.id) && !garden?.pond && !owned;
             return (
               <div key={item.id} onClick={() => shopTab==="accesorios" ? onBuyAccessory(item) : onBuy(item)}
-                style={{ background:owned===true?"#d4e8c4":owned==="owned"?C.cream:C.sandL, border:`2px solid ${owned===true?C.olive:owned==="owned"?"#c8b060":C.border}`,
-                  borderRadius:16, padding:"12px 10px", textAlign:"center", cursor:"pointer",
-                  minWidth:84, flexShrink:0, boxShadow:owned?`0 3px 0 ${C.olive}50`:`0 2px 0 ${C.border}`,
+                style={{ background:owned===true?"#d4e8c4":owned==="owned"?C.cream:locked?"#f0ede8":C.sandL,
+                  border:`2px solid ${owned===true?C.olive:owned==="owned"?"#c8b060":locked?C.sand:C.border}`,
+                  borderRadius:16, padding:"12px 10px", textAlign:"center", cursor:locked?"default":"pointer",
+                  minWidth:84, flexShrink:0, opacity:locked?0.6:1,
+                  boxShadow:owned?`0 3px 0 ${C.olive}50`:`0 2px 0 ${C.border}`,
                   transition:"all 0.15s" }}>
                 <div style={{ display:"flex", justifyContent:"center", marginBottom:4 }}>
                   {shopTab === "accesorios"
@@ -1570,9 +1575,11 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
                     : <GardenItemIcon id={item.id} size={38}/>}
                 </div>
                 <div style={{ fontSize:"0.67rem", fontWeight:800, color:C.ink, marginBottom:2, lineHeight:1.2 }}>{item.name}</div>
-                <div style={{ fontSize:"0.62rem", color:C.inkL, marginBottom:5, lineHeight:1.2 }}>{item.desc}</div>
+                <div style={{ fontSize:"0.62rem", color:C.inkL, marginBottom:5, lineHeight:1.2 }}>{locked ? "🔒 Requiere Estanque" : item.desc}</div>
                 {owned
                   ? <div style={{ background:C.olive, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>✓</div>
+                  : locked
+                  ? <div style={{ background:C.sand, color:C.inkL, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>🔒</div>
                   : <div style={{ background:C.dark, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>{item.cost} 🌿</div>}
               </div>
             );
@@ -2908,7 +2915,9 @@ function RelTest({ user, onDone }) {
   };
 
   // Results screen — both done
-  if (bothDone || (isGuest && iMyDone)) {
+  const guestDone = isGuest && Object.keys(myScores).length === TEST_AREAS.length;
+
+  if (bothDone || guestDone) {
     const ownerScores = isGuest ? myScores : (testData?.owner || {});
     const partnerScores = isGuest ? myScores : (testData?.partner || {});
     const avgs = TEST_AREAS.map(a => {
@@ -3112,10 +3121,10 @@ function LeccionDia({ lessonsDone, onComplete }) {
           ) : (
             <div style={{ textAlign:"center", background:C.cream, borderRadius:14, padding:14, border:`1.5px solid ${C.border}` }}>
               <div style={{ fontFamily:"'Fredoka One',cursive", color:C.olive, marginBottom:6 }}>✓ Ya la completaste</div>
-                    <div style={{ display:"flex", gap:10, justifyContent:"center" }}>
-                      <div style={{ fontSize:"0.75rem", fontWeight:800, color: lessonsDone?.[openLesson?.id]?.owner ? C.olive : C.sand }}>🐼 {nameA} {lessonsDone?.[openLesson?.id]?.owner ? "✓" : "pendiente"}</div>
-                      <div style={{ fontSize:"0.75rem", fontWeight:800, color: lessonsDone?.[openLesson?.id]?.partner ? C.teal : C.sand }}>🐾 {nameB} {lessonsDone?.[openLesson?.id]?.partner ? "✓" : "pendiente"}</div>
-                    </div>
+              <div style={{ display:"flex", gap:10, justifyContent:"center" }}>
+                <div style={{ fontSize:"0.75rem", fontWeight:800, color: lessonsDone?.[open?.id]?.owner ? C.olive : C.sand }}>🐼 Persona A {lessonsDone?.[open?.id]?.owner ? "✓" : "pendiente"}</div>
+                <div style={{ fontSize:"0.75rem", fontWeight:800, color: lessonsDone?.[open?.id]?.partner ? C.teal : C.sand }}>🐾 Persona B {lessonsDone?.[open?.id]?.partner ? "✓" : "pendiente"}</div>
+              </div>
             </div>
           )}
         </div>
@@ -3394,6 +3403,12 @@ export default function App() {
       }
       const safeGarden = garden && typeof garden === "object" ? garden : {};
       if (safeGarden[item.id]) { toast("Ya está en el jardín"); return; }
+      // Pond-dependent items require pond first
+      const POND_DEPS = ["koi1", "koi2", "lotus_pad"];
+      if (POND_DEPS.includes(item.id) && !safeGarden.pond) {
+        toast("Necesitas el Estanque primero 🪷");
+        return;
+      }
       if (bamboo < item.cost) { toast("Necesitas más bambú — completa ejercicios"); return; }
       const nb = bamboo - item.cost, ng = { ...safeGarden, [item.id]: true }, nh = Math.min(100, happiness + 10);
       const nv = new Date().toISOString();

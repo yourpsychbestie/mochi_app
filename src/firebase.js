@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
-import { getFirestore, doc, setDoc, getDoc, collection, addDoc, onSnapshot, query, where, serverTimestamp, orderBy } from "firebase/firestore";
+import { getFirestore, doc, setDoc, getDoc, collection, addDoc, onSnapshot, query, where, serverTimestamp, orderBy, runTransaction } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBkKnVX0kStBOrujGMFA_mUCmQmt2P245g",
@@ -114,13 +114,16 @@ export const fbGetBamboo = async (coupleCode) => {
   const snap = await getDoc(doc(db, "bamboo", coupleCode));
   return snap.exists() ? (snap.data().total || 0) : 0;
 };
-// Increment bamboo atomically using a read-then-write
+// Increment bamboo with a Firestore transaction to avoid lost updates.
 export const fbIncrementBamboo = async (coupleCode, delta) => {
-  const snap = await getDoc(doc(db, "bamboo", coupleCode));
-  const current = snap.exists() ? (snap.data().total || 0) : 0;
-  const newTotal = Math.max(0, current + delta);
-  await setDoc(doc(db, "bamboo", coupleCode), { total: newTotal, updatedAt: serverTimestamp() });
-  return newTotal;
+  const ref = doc(db, "bamboo", coupleCode);
+  return runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    const current = snap.exists() ? (snap.data().total || 0) : 0;
+    const newTotal = Math.max(0, current + delta);
+    tx.set(ref, { total: newTotal, updatedAt: serverTimestamp() }, { merge: true });
+    return newTotal;
+  });
 };
 
 // ─── GRATITUD (synced entries) ─────────────────────────
@@ -130,7 +133,7 @@ export const fbListenGratitud = (coupleCode, cb) => {
   const q = query(collection(db, "gratitud"), where("coupleCode", "==", coupleCode));
   return onSnapshot(q, snap => {
     const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    items.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    items.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
     cb(items);
   }, () => cb([]));
 };
@@ -142,7 +145,7 @@ export const fbListenMomentos = (coupleCode, cb) => {
   const q = query(collection(db, "momentos"), where("coupleCode", "==", coupleCode));
   return onSnapshot(q, snap => {
     const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    items.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    items.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
     cb(items);
   }, () => cb([]));
 };
