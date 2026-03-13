@@ -1578,10 +1578,14 @@ function Mensajes({ user, messages, onSend }) {
     const msg = quick || text.trim();
     if (!msg || sending) return;
     setSending(true);
-    onSend(msg);
-    setTimeout(() => {
-      setModal(false); setText(""); setQuick(null); setSending(false);
-    }, 300);
+    try {
+      onSend(msg);
+      setModal(false);
+      setText("");
+      setQuick(null);
+    } finally {
+      setSending(false);
+    }
   };
 
   const todayStr = new Date().toDateString();
@@ -2159,7 +2163,7 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
 
   return (
     <>
-      <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
+      <div style={{ background: C.sandL, minHeight: ejTab === "ejerc" ? "100vh" : "auto", paddingBottom: 90 }}>
         {/* Header with sub-tabs */}
         <div style={{ background: C.dark, padding:"44px 18px 0" }}>
           <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.9rem", color:C.cream2, marginBottom:4 }}>Ejercicios ⭐</div>
@@ -2310,13 +2314,33 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
 function Conocete({ conoce, onSave, user }) {
   const nameA = user?.names ? user.names.split("&")[0].trim() : "Persona A";
   const nameB = user?.names ? user.names.split("&")[1]?.trim() || "Persona B" : "Persona B";
+  const myRole = user?.isOwner !== false ? "owner" : "partner";
+  const partnerRole = myRole === "owner" ? "partner" : "owner";
+  const myWho = myRole === "owner" ? "A" : "B";
+  const myLabel = myRole === "owner" ? nameA : nameB;
+  const partnerWho = myRole === "owner" ? "B" : "A";
+  const partnerLabel = myRole === "owner" ? nameB : nameA;
   const [cat, setCat] = useState(null);
   const [qIdx, setQIdx] = useState(null);
-  const [rA, setRA] = useState(""); const [rB, setRB] = useState("");
+  const [myAnswer, setMyAnswer] = useState("");
   const [saved, setSaved] = useState(false);
 
-  const openQ = (c, i) => { setCat(c); setQIdx(i); setSaved(false); const ex = conoce[`${c}-${i}`] || {}; setRA(ex.a || ""); setRB(ex.b || ""); };
-  const saveQ = () => { if (!rA && !rB) return; onSave(cat, qIdx, rA, rB, !conoce[`${cat}-${qIdx}`]); setSaved(true); };
+  const openQ = (c, i) => {
+    setCat(c);
+    setQIdx(i);
+    setSaved(false);
+    const ex = conoce[`${c}-${i}`] || {};
+    setMyAnswer(ex[myRole] || "");
+  };
+  const saveQ = () => {
+    const key = `${cat}-${qIdx}`;
+    const clean = myAnswer.trim();
+    if (!clean) return;
+    const isNewMine = !conoce[key]?.[myRole];
+    onSave(cat, qIdx, clean, null, isNewMine);
+    setSaved(true);
+    setQIdx(null);
+  };
 
   if (qIdx !== null) return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
@@ -2325,7 +2349,18 @@ function Conocete({ conoce, onSave, user }) {
         <div style={{ background: C.white, borderRadius: 20, padding: 18, boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
           <div style={{ fontSize: "0.7rem", fontWeight: 800, color: C.inkM, marginBottom: 8, letterSpacing: "0.5px" }}>{CONOCE_CATS[cat].emoji} {CONOCE_CATS[cat].label.toUpperCase()}</div>
           <div style={{ fontSize: "0.97rem", color: C.ink, lineHeight: 1.6, fontWeight: 700, marginBottom: 16 }}>{CONOCE_CATS[cat].preguntas[qIdx]}</div>
-          {[["A", rA, setRA, nameA], ["B", rB, setRB, nameB]].map(([w, v, fn, nm]) => <div key={w} style={{ marginBottom: 12 }}><PBadge who={w} name={nm} /><TA value={v} onChange={fn} placeholder="Tu respuesta..." rows={3} /></div>)}
+          <div style={{ marginBottom: 12 }}>
+            <PBadge who={myWho} name={myLabel} />
+            <TA value={myAnswer} onChange={setMyAnswer} placeholder="Tu respuesta..." rows={3} />
+          </div>
+          {!!conoce[`${cat}-${qIdx}`]?.[partnerRole] && (
+            <div style={{ marginBottom: 12, background: C.cream, borderRadius: 12, padding: 11, border: `1.5px solid ${C.border}` }}>
+              <PBadge who={partnerWho} name={partnerLabel} />
+              <div style={{ fontSize: "0.86rem", color: C.inkM, lineHeight: 1.6, marginTop: 6 }}>
+                {conoce[`${cat}-${qIdx}`][partnerRole]}
+              </div>
+            </div>
+          )}
           {saved && <div style={{ textAlign: "center", fontSize: "0.82rem", fontWeight: 800, color: C.olive, marginBottom: 10, background: C.cream, borderRadius: 9, padding: "8px", border: `1.5px solid ${C.border}` }}>✓ Guardado — +15 bambú 🌿</div>}
           <div style={{ display: "flex", gap: 9 }}><Btn onClick={saveQ} style={{ flex: 1 }}>Guardar 🌿</Btn><Btn onClick={() => setQIdx(null)} variant="ghost" style={{ padding: "12px 14px" }}>✕</Btn></div>
         </div>
@@ -2343,10 +2378,14 @@ function Conocete({ conoce, onSave, user }) {
             <button onClick={() => setCat(null)} style={{ background: C.sand, border: `1.5px solid ${C.border}`, borderRadius: 8, width: 30, height: 30, cursor: "pointer", fontSize: "0.85rem", color: C.inkM }}>✕</button>
           </div>
           {CONOCE_CATS[cat].preguntas.map((q, i) => {
-            const done = !!conoce[`${cat}-${i}`];
-            return <div key={i} onClick={() => openQ(cat, i)} style={{ background: done ? C.cream : C.sandL, borderRadius: 12, padding: 13, marginBottom: 8, cursor: "pointer", borderLeft: `4px solid ${done ? C.olive : C.border}`, transition: "all 0.13s" }}>
+            const doneMine = !!conoce[`${cat}-${i}`]?.[myRole];
+            const donePartner = !!conoce[`${cat}-${i}`]?.[partnerRole];
+            return <div key={i} onClick={() => openQ(cat, i)} style={{ background: doneMine ? C.cream : C.sandL, borderRadius: 12, padding: 13, marginBottom: 8, cursor: "pointer", borderLeft: `4px solid ${doneMine ? C.olive : C.border}`, transition: "all 0.13s" }}>
               <div style={{ fontSize: "0.88rem", fontWeight: 700, color: C.ink }}>{q}</div>
-              {done && <div style={{ fontSize: "0.72rem", color: C.olive, fontWeight: 800, marginTop: 3 }}>✓ RESPONDIDA · +15 bambú</div>}
+              <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                <div style={{ fontSize: "0.7rem", fontWeight: 800, color: doneMine ? C.olive : C.inkL }}>{myWho} {doneMine ? "✓" : "pendiente"}</div>
+                <div style={{ fontSize: "0.7rem", fontWeight: 800, color: donePartner ? C.teal : C.inkL }}>{partnerWho} {donePartner ? "✓" : "pendiente"}</div>
+              </div>
             </div>;
           })}
         </div>
@@ -2360,7 +2399,7 @@ function Conocete({ conoce, onSave, user }) {
       <div style={{ padding: "8px 14px 0", fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark }}>Elige una categoría</div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 11, padding: "10px 14px" }}>
         {Object.entries(CONOCE_CATS).map(([key, data]) => {
-          const done = data.preguntas.filter((_, i) => conoce[`${key}-${i}`]).length;
+          const done = data.preguntas.filter((_, i) => !!conoce[`${key}-${i}`]?.[myRole]).length;
           return <div key={key} onClick={() => setCat(key)} style={{ background: data.bg, borderRadius: 18, padding: 18, textAlign: "center", cursor: "pointer", boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}`, transition: "transform 0.13s" }} onMouseOver={e => e.currentTarget.style.transform = "translateY(-2px)"} onMouseOut={e => e.currentTarget.style.transform = "none"}>
             <div style={{ fontSize: "2.2rem", marginBottom: 7 }}>{data.emoji}</div>
             <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.97rem", color: C.dark }}>{data.label}</div>
@@ -2762,7 +2801,7 @@ const DAILY_LESSONS = [
       { title:"Cómo depositar", icon:"💰", body:"Pequeños momentos: agradecer, notar algo bonito, reír juntos, un mensaje de buenos días, recordar algo que dijeron. No tiene que ser grandioso." },
       { title:"El interés genuino", icon:"🔍", body:"Gottman llama a esto 'mapas del amor' — conocer el mundo interno de tu pareja: sus miedos, sueños, el nombre de su jefa, lo que le da ansiedad esta semana." },
     ],
-    reflect:"¿Cómo está su banco emocional ahora? ¿Están depositando o retirando más?" },,
+    reflect:"¿Cómo está su banco emocional ahora? ¿Están depositando o retirando más?" },
   { id:"lesson8", emoji:"🌻", title:"La Regla de Oro: 5 actos al día",
   tag:"Gottman · Actos de bondad",
   intro:"John Gottman descubrió que las parejas más felices no son las que nunca pelean, sino las que tienen más interacciones positivas que negativas. La proporción mágica es 5:1.",
@@ -3374,18 +3413,10 @@ export default function App() {
     if (lessonsDone[lessonId]?.[myKey]) return; // already done by me
     if (user?.code && !user?.isGuest) {
       await fbSaveLessonRead(user.code, lessonId, myKey).catch(() => {});
-      const existing = lessonsDone[lessonId] || {};
-      const partnerKey = myKey === "owner" ? "partner" : "owner";
-      const bothRead = existing[partnerKey];
-      if (bothRead) {
-        const nb = await fbIncrementBamboo(user.code, 10).catch(() => bamboo + 10);
-        setBamboo(nb); trigHappy();
-        toast("¡Ambos leyeron la lección! +10 bambú 🌿");
-      } else {
-        trigHappy();
-        toast("Lección leída ✓ — cuando tu pareja también la lea, ganan bambú juntos 🌿");
-        fbSendNotif(user.code, { type:"leccion", msg:`${myName} leyó una lección — ¡léela tú también! 📖`, forUid:"partner", fromUid: user.uid }).catch(()=>{});
-      }
+      const nb = await fbIncrementBamboo(user.code, 10).catch(() => bamboo + 10);
+      setBamboo(nb); trigHappy();
+      toast("Lección completada ✓ +10 bambú 🌿");
+      fbSendNotif(user.code, { type:"leccion", msg:`${myName} leyó una lección — ¡léela tú también! 📖`, forUid:"partner", fromUid: user.uid }).catch(()=>{});
     } else {
       const nl = { ...lessonsDone, [lessonId]: { ...(lessonsDone[lessonId] || {}), [myKey]: true } };
       setLessonsDone(nl);

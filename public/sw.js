@@ -1,4 +1,4 @@
-const CACHE = 'mochi-v2';
+const CACHE = 'mochi-v3';
 const ASSETS = [
   '/',
   '/index.html',
@@ -58,7 +58,7 @@ self.addEventListener('fetch', e => {
           caches.open(CACHE).then(c => c.put(e.request, copy));
         }
         return res;
-      }).catch(() => caches.match('/index.html'));
+      }).catch(() => Response.error());
     })
   );
 });
