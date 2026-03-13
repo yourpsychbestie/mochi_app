@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   fbRegister, fbLogin, fbLogout, fbOnAuthChange,
   fbSaveUser, fbGetUser,
@@ -29,6 +29,28 @@ const ls = {
   get:(k)=>{ try{return JSON.parse(localStorage.getItem(k));}catch{return null;} },
   set:(k,v)=>{ try{localStorage.setItem(k,JSON.stringify(v));}catch{} },
 };
+
+class SectionErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error) {
+    console.error("Section render error:", error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback || null;
+    }
+    return this.props.children;
+  }
+}
 
 const getMyName = (user, fallback = "Yo") => {
   const parts = String(user?.names || "")
@@ -1435,9 +1457,9 @@ function GardenScene({ garden, waterLevel }) {
 function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pandaBubble, onPet, onBuy, onWater, onBuyAccessory }) {
   const [shopTab, setShopTab] = useState("plantas");
   const cats = [{id:"plantas",label:"🌿 Plantas"},{id:"agua",label:"🐟 Agua"},{id:"cielo",label:"☁️ Cielo"},{id:"deco",label:"🏮 Deco"},{id:"especial",label:"✨ Especiales"},{id:"accesorios",label:"🐼 Pandas"}];
-  const shopItems = shopTab === "accesorios"
+  const shopItems = (shopTab === "accesorios"
     ? PANDA_ACCESSORIES
-    : GARDEN_ITEMS.filter(i => i.cat === shopTab);
+    : GARDEN_ITEMS.filter(i => i.cat === shopTab)).filter(i => i && i.id && typeof i.cost === "number");
 
   const dry = water < 20;
   const withering = water < 40;
@@ -1471,39 +1493,41 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
 
       {/* Garden scene */}
       <div style={{ position:"relative" }}>
-        <GardenScene garden={garden} waterLevel={water}/>
-        <div onClick={onPet} style={{ position:"absolute", bottom:-5, left:"50%", transform:"translateX(-50%)", cursor:"pointer",
-          animation: mochiHappy ? "floatHappy 1.6s ease-in-out infinite" : "float 3s ease-in-out infinite" }}>
-          <div style={{ position:"relative", display:"inline-block" }}>
-            {/* Speech bubbles */}
-            {pandaBubble?.textA && (
-              <div style={{ position:"absolute", bottom:"88%", left:"-10px", maxWidth:130, background:"white",
-                border:"2px solid #4a6e30", borderRadius:"14px 14px 4px 14px", padding:"6px 10px",
-                fontSize:"0.7rem", color:"#1e2b1e", fontWeight:700, lineHeight:1.4,
-                boxShadow:"0 2px 8px rgba(0,0,0,0.15)", zIndex:10, animation:"fadeIn 0.3s ease" }}>
-                {pandaBubble.nameA && <div style={{ fontSize:"0.6rem", color:"#4a6e30", fontWeight:800, marginBottom:2 }}>{pandaBubble.nameA}</div>}
-                {pandaBubble.textA}
-                <div style={{ position:"absolute", bottom:-8, left:10, width:0, height:0,
-                  borderLeft:"8px solid transparent", borderRight:"0 solid transparent",
-                  borderTop:"8px solid #4a6e30" }}/>
-              </div>
-            )}
-            {pandaBubble?.textB && (
-              <div style={{ position:"absolute", bottom:"88%", right:"-10px", maxWidth:130, background:"white",
-                border:"2px solid #e8907a", borderRadius:"14px 14px 14px 4px", padding:"6px 10px",
-                fontSize:"0.7rem", color:"#1e2b1e", fontWeight:700, lineHeight:1.4,
-                boxShadow:"0 2px 8px rgba(0,0,0,0.15)", zIndex:10, animation:"fadeIn 0.3s ease" }}>
-                {pandaBubble.nameB && <div style={{ fontSize:"0.6rem", color:"#e8907a", fontWeight:800, marginBottom:2 }}>{pandaBubble.nameB}</div>}
-                {pandaBubble.textB}
-                <div style={{ position:"absolute", bottom:-8, right:10, width:0, height:0,
-                  borderLeft:"0 solid transparent", borderRight:"8px solid transparent",
-                  borderTop:"8px solid #e8907a" }}/>
-              </div>
-            )}
-            <CouplePandaSVG happy={mochiHappy} size={140}/>
-            <PandaAccessoryLayer accessories={accessories} pandaSize={140}/>
+        <SectionErrorBoundary fallback={<div style={{ background:C.white, border:`1.5px solid ${C.border}`, borderRadius:16, margin:12, padding:12, textAlign:"center", color:C.inkM, fontWeight:700 }}>No se pudo cargar esta vista del jardín. Cambia de pestaña y vuelve a intentar.</div>}>
+          <GardenScene garden={garden} waterLevel={water}/>
+          <div onClick={onPet} style={{ position:"absolute", bottom:-5, left:"50%", transform:"translateX(-50%)", cursor:"pointer",
+            animation: mochiHappy ? "floatHappy 1.6s ease-in-out infinite" : "float 3s ease-in-out infinite" }}>
+            <div style={{ position:"relative", display:"inline-block" }}>
+              {/* Speech bubbles */}
+              {pandaBubble?.textA && (
+                <div style={{ position:"absolute", bottom:"104%", left:"-58px", maxWidth:140, background:"white",
+                  border:"2px solid #4a6e30", borderRadius:"14px 14px 4px 14px", padding:"6px 10px",
+                  fontSize:"0.7rem", color:"#1e2b1e", fontWeight:700, lineHeight:1.4,
+                  boxShadow:"0 2px 8px rgba(0,0,0,0.15)", zIndex:10, animation:"fadeIn 0.3s ease" }}>
+                  {pandaBubble.nameA && <div style={{ fontSize:"0.6rem", color:"#4a6e30", fontWeight:800, marginBottom:2 }}>{pandaBubble.nameA}</div>}
+                  {pandaBubble.textA}
+                  <div style={{ position:"absolute", bottom:-8, left:10, width:0, height:0,
+                    borderLeft:"8px solid transparent", borderRight:"0 solid transparent",
+                    borderTop:"8px solid #4a6e30" }}/>
+                </div>
+              )}
+              {pandaBubble?.textB && (
+                <div style={{ position:"absolute", bottom:"78%", right:"-58px", maxWidth:140, background:"white",
+                  border:"2px solid #e8907a", borderRadius:"14px 14px 14px 4px", padding:"6px 10px",
+                  fontSize:"0.7rem", color:"#1e2b1e", fontWeight:700, lineHeight:1.4,
+                  boxShadow:"0 2px 8px rgba(0,0,0,0.15)", zIndex:10, animation:"fadeIn 0.3s ease" }}>
+                  {pandaBubble.nameB && <div style={{ fontSize:"0.6rem", color:"#e8907a", fontWeight:800, marginBottom:2 }}>{pandaBubble.nameB}</div>}
+                  {pandaBubble.textB}
+                  <div style={{ position:"absolute", bottom:-8, right:10, width:0, height:0,
+                    borderLeft:"0 solid transparent", borderRight:"8px solid transparent",
+                    borderTop:"8px solid #e8907a" }}/>
+                </div>
+              )}
+              <CouplePandaSVG happy={mochiHappy} size={140}/>
+              <PandaAccessoryLayer accessories={accessories} pandaSize={140}/>
+            </div>
           </div>
-        </div>
+        </SectionErrorBoundary>
       </div>
 
       {/* Water button */}
@@ -1913,14 +1937,18 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
   const currentStep = session?.step ?? 0;
   const isDone = session?.done === true;
   const cur = ex.phases[currentStep];
-  const isMyTurn = cur && cur.role === myRole;
+  const starterRole = session?.starterRole ?? 0;
+  const scenarioNameA = starterRole === 0 ? nameA : nameB;
+  const scenarioNameB = starterRole === 0 ? nameB : nameA;
+  const mappedTurnRole = cur ? (cur.role === 0 ? starterRole : (starterRole === 0 ? 1 : 0)) : null;
+  const isMyTurn = cur && mappedTurnRole === myRole;
   const myName = isOwner ? nameA : nameB;
 
   // Start or listen to session
   useEffect(() => {
     if (isGuest) {
       // Local mode for guests
-      setSession({ messages: [], step: 0, totalSteps: ex.phases.length, done: false });
+      setSession({ messages: [], step: 0, totalSteps: ex.phases.length, done: false, starterRole: myRole });
       setStarted(true);
       return;
     }
@@ -1937,15 +1965,21 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
   const startSession = async () => {
     if (isGuest || !user?.code) {
       // Local mode — just set session directly
-      setSession({ messages: [], step: 0, totalSteps: ex.phases.length, done: false });
+      setSession({ messages: [], step: 0, totalSteps: ex.phases.length, done: false, starterRole: myRole });
       setStarted(true);
       return;
     }
     try {
-      await fbStartExSession(user.code, ex.id, ex.phases.length);
+      await fbStartExSession(user.code, ex.id, ex.phases.length, myRole);
+      fbSendNotif(user.code, {
+        type: "ejercicio",
+        msg: `${myName} inició "${ex.title}" — te toca continuar 🌿`,
+        forUid: "partner",
+        fromUid: user.uid,
+      }).catch(() => {});
     } catch(e) {
       // Fallback to local if Firebase fails
-      setSession({ messages: [], step: 0, totalSteps: ex.phases.length, done: false });
+      setSession({ messages: [], step: 0, totalSteps: ex.phases.length, done: false, starterRole: myRole });
       setStarted(true);
     }
   };
@@ -1964,10 +1998,17 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
       if (isDoneNow) onDone();
     } else {
       const newMessages = [...messages, msg];
-      await fbSendExMessage(user.code, ex.id, { messages: newMessages, step: newStep }).catch(() => {});
+      await fbSendExMessage(user.code, ex.id, { messages: newMessages, step: newStep, starterRole }).catch(() => {});
       if (isDoneNow) {
         await fbCompleteExSession(user.code, ex.id).catch(() => {});
         onDone();
+      } else {
+        fbSendNotif(user.code, {
+          type: "ejercicio",
+          msg: `${myName} respondió en "${ex.title}" — sigue tú ✍️`,
+          forUid: "partner",
+          fromUid: user.uid,
+        }).catch(() => {});
       }
       setVal("");
     }
@@ -2015,9 +2056,9 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
       {/* Current prompt */}
       {cur && (
         <div style={{ background: C.sandL, borderRadius:16, padding:14, border:`1.5px solid ${C.border}` }}>
-          <PBadge who={cur.role === 0 ? "A" : "B"} name={cur.role === 0 ? nameA : nameB} />
+          <PBadge who={mappedTurnRole === 0 ? "A" : "B"} name={mappedTurnRole === 0 ? nameA : nameB} />
           <div style={{ fontSize:"0.9rem", color:C.ink, fontWeight:700, marginBottom:8, lineHeight:1.6 }}>
-            {cur.q.replace(/Persona A/g, nameA).replace(/Persona B/g, nameB)}
+            {cur.q.replace(/Persona A/g, scenarioNameA).replace(/Persona B/g, scenarioNameB)}
           </div>
           {cur.hint && <div style={{ fontSize:"0.75rem", color:C.inkM, background:C.cream, borderRadius:8, padding:"6px 10px", marginBottom:9, border:`1px solid ${C.border}` }}>💡 {cur.hint}</div>}
 
@@ -2032,7 +2073,7 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
             <div style={{ textAlign:"center", padding:"14px 0", color:C.inkL }}>
               <div style={{ fontSize:"1.5rem", marginBottom:4 }}>⏳</div>
               <div style={{ fontSize:"0.82rem", fontWeight:700 }}>
-                Esperando a {cur.role === 0 ? nameA : nameB}...
+                Esperando a {mappedTurnRole === 0 ? nameA : nameB}...
               </div>
               <div style={{ fontSize:"0.72rem", marginTop:4 }}>La pantalla se actualiza automáticamente ✨</div>
             </div>
@@ -3346,39 +3387,58 @@ export default function App() {
   }, []); // eslint-disable-line
 
   const buyItem = item => {
-    if (garden[item.id]) { toast("Ya está en el jardín"); return; }
-    if (bamboo < item.cost) { toast("Necesitas más bambú — completa ejercicios"); return; }
-    const nb = bamboo - item.cost, ng = { ...garden, [item.id]: true }, nh = Math.min(100, happiness + 10);
-    const nv = new Date().toISOString();
-    setBamboo(nb); setGarden(ng); setHappiness(nh); setLastVisit(nv); trigHappy();
-    toast(`${item.name} plantado 🌿`);
-    save(null, { bamboo:nb, happiness:nh, water, garden:ng, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit:nv, testScores, lessonsDone, gratitud, momentos });
+    try {
+      if (!item?.id || typeof item?.cost !== "number") {
+        toast("Este item no está disponible ahora");
+        return;
+      }
+      const safeGarden = garden && typeof garden === "object" ? garden : {};
+      if (safeGarden[item.id]) { toast("Ya está en el jardín"); return; }
+      if (bamboo < item.cost) { toast("Necesitas más bambú — completa ejercicios"); return; }
+      const nb = bamboo - item.cost, ng = { ...safeGarden, [item.id]: true }, nh = Math.min(100, happiness + 10);
+      const nv = new Date().toISOString();
+      setBamboo(nb); setGarden(ng); setHappiness(nh); setLastVisit(nv); trigHappy();
+      toast(`${item.name} plantado 🌿`);
+      save(null, { bamboo:nb, happiness:nh, water, garden:ng, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit:nv, testScores, lessonsDone, gratitud, momentos });
+    } catch (e) {
+      console.error("buyItem error:", e);
+      toast("No se pudo comprar ese item");
+    }
   };
 
   const buyAccessory = item => {
-    // If already owned, toggle it on/off (equip/unequip)
-    if (accessories[item.id] === "owned") {
-      // Already owned but not equipped — equip it
-      const na = { ...accessories, [item.id]: true };
-      setAccessories(na);
-      save(null, { bamboo, happiness, water, garden, accessories: na, exDone, messages, conoce, burbuja, coupleInfo, lastVisit: new Date().toISOString(), testScores, lessonsDone });
-      toast(`${item.name} puesto 🐼`);
-      return;
+    try {
+      if (!item?.id || typeof item?.cost !== "number") {
+        toast("Este accesorio no está disponible ahora");
+        return;
+      }
+      const safeAccessories = accessories && typeof accessories === "object" ? accessories : {};
+
+      // If already owned, toggle it on/off (equip/unequip)
+      if (safeAccessories[item.id] === "owned") {
+        const na = { ...safeAccessories, [item.id]: true };
+        setAccessories(na);
+        save(null, { bamboo, happiness, water, garden, accessories: na, exDone, messages, conoce, burbuja, coupleInfo, lastVisit: new Date().toISOString(), testScores, lessonsDone });
+        toast(`${item.name} puesto 🐼`);
+        return;
+      }
+      if (safeAccessories[item.id] === true) {
+        const na = { ...safeAccessories, [item.id]: "owned" };
+        setAccessories(na);
+        save(null, { bamboo, happiness, water, garden, accessories: na, exDone, messages, conoce, burbuja, coupleInfo, lastVisit: new Date().toISOString(), testScores, lessonsDone });
+        toast(`${item.name} quitado`);
+        return;
+      }
+      if (bamboo < item.cost) { toast("Necesitas más bambú"); return; }
+      const nb = bamboo - item.cost, na = { ...safeAccessories, [item.id]: true }, nh = Math.min(100, happiness + 5);
+      const nv = new Date().toISOString();
+      setBamboo(nb); setAccessories(na); setHappiness(nh); setLastVisit(nv); trigHappy();
+      toast(`${item.name} puesto ${item.emoji} +5 amor`);
+      save(null, { bamboo:nb, happiness:nh, water, garden, accessories:na, exDone, messages, conoce, burbuja, coupleInfo, lastVisit:nv, testScores, lessonsDone, gratitud, momentos });
+    } catch (e) {
+      console.error("buyAccessory error:", e);
+      toast("No se pudo comprar ese accesorio");
     }
-    if (accessories[item.id] === true) {
-      // Currently equipped — unequip but keep owned
-      const na = { ...accessories, [item.id]: "owned" };
-      setAccessories(na);
-      save(null, { bamboo, happiness, water, garden, accessories: na, exDone, messages, conoce, burbuja, coupleInfo, lastVisit: new Date().toISOString(), testScores, lessonsDone });
-      toast(`${item.name} quitado`);
-      return;
-    }
-    if (bamboo < item.cost) { toast("Necesitas más bambú"); return; }
-    const nb = bamboo - item.cost, na = { ...accessories, [item.id]: true }, nh = Math.min(100, happiness + 5);
-    const nv = new Date().toISOString();
-    setBamboo(nb); setAccessories(na); setHappiness(nh); setLastVisit(nv); trigHappy();
-    toast(`${item.name} puesto ${item.emoji} +5 amor`);
-    save(null, { bamboo:nb, happiness:nh, water, garden, accessories:na, exDone, messages, conoce, burbuja, coupleInfo, lastVisit:nv, testScores, lessonsDone, gratitud, momentos });
   };
 
   const waterGarden = () => {
@@ -3555,16 +3615,16 @@ export default function App() {
     trigHappy();
     if (user?.code && !user?.isGuest) {
       await fbAddGratitud(user.code, enriched).catch(() => {});
-      const nb = await fbIncrementBamboo(user.code, 3).catch(() => bamboo + 3);
+      const nb = await fbIncrementBamboo(user.code, 5).catch(() => bamboo + 5);
       setBamboo(nb);
       // Notify partner
       if (user?.uid) fbSendNotif(user.code, { type:"gratitud", msg:`${myName} escribió algo de gratitud 💛`, forUid:"partner", fromUid: user.uid }).catch(()=>{});
     } else {
       const ng = [{ ...enriched, id: Date.now() }, ...gratitud];
       setGratitud(ng);
-      setBamboo(b => b + 3);
+      setBamboo(b => b + 5);
     }
-    toast("💛 Guardado en el baúl de gratitud +3 bambú 🌿");
+    toast("💛 Guardado en el baúl de gratitud +5 bambú 🌿");
   };
 
   const addMomento = async (entry) => {
@@ -3573,12 +3633,15 @@ export default function App() {
     trigHappy();
     if (user?.code && !user?.isGuest) {
       await fbAddMomento(user.code, enriched).catch(() => {});
+      const nb = await fbIncrementBamboo(user.code, 5).catch(() => bamboo + 5);
+      setBamboo(nb);
       if (user?.uid) fbSendNotif(user.code, { type:"momento", msg:`${myName} guardó un momento especial ✨`, forUid:"partner", fromUid: user.uid }).catch(()=>{});
     } else {
       const nm = [{ ...enriched, id: Date.now() }, ...momentos];
       setMomentos(nm);
+      setBamboo(b => b + 5);
     }
-    toast("✨ Guardado en el baúl de momentos");
+    toast("✨ Guardado en el baúl de momentos +5 bambú 🌿");
   };
 
   const logout = () => {

@@ -90,11 +90,12 @@ export const fbSendExMessage = (coupleCode, exId, msgData) =>
   setDoc(doc(db, "exSessions", `${coupleCode}_${exId}`), {
     messages: msgData.messages || [],
     step: msgData.step,
+    starterRole: msgData.starterRole,
     updatedAt: serverTimestamp()
   }, { merge: true });
-export const fbStartExSession = (coupleCode, exId, totalSteps) =>
+export const fbStartExSession = (coupleCode, exId, totalSteps, starterRole) =>
   setDoc(doc(db, "exSessions", `${coupleCode}_${exId}`), {
-    messages: [], step: 0, totalSteps, done: false, startedAt: serverTimestamp()
+    messages: [], step: 0, totalSteps, done: false, starterRole, startedAt: serverTimestamp()
   });
 export const fbCompleteExSession = (coupleCode, exId) =>
   setDoc(doc(db, "exSessions", `${coupleCode}_${exId}`), { done: true }, { merge: true });
