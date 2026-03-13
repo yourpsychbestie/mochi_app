@@ -30,6 +30,15 @@ const ls = {
   set:(k,v)=>{ try{localStorage.setItem(k,JSON.stringify(v));}catch{} },
 };
 
+const getMyName = (user, fallback = "Yo") => {
+  const parts = String(user?.names || "")
+    .split("&")
+    .map(s => s.trim())
+    .filter(Boolean);
+  if (user?.isOwner === false) return parts[1] || parts[0] || fallback;
+  return parts[0] || parts[1] || fallback;
+};
+
 // ═══════════════════════════════════════════════
 // GARDEN ITEMS — multiple quantities, koi/lotus aesthetic
 // ═══════════════════════════════════════════════
@@ -3371,7 +3380,7 @@ export default function App() {
 
   const completeLesson = async (lessonId) => {
     const myKey = user?.isOwner !== false ? "owner" : "partner";
-    const myName = user?.names ? user.names.split("&")[user?.isOwner !== false ? 0 : 1].trim() : "Yo";
+    const myName = getMyName(user, "Yo");
     if (lessonsDone[lessonId]?.[myKey]) return; // already done by me
     if (user?.code && !user?.isGuest) {
       await fbSaveLessonRead(user.code, lessonId, myKey).catch(() => {});
@@ -3407,7 +3416,7 @@ export default function App() {
     const total = pts + bonus;
     const nh = Math.min(100, happiness + 8);
     setHappiness(nh); setExDone(nd); trigHappy();
-    const myName = user?.names ? user.names.split("&")[user?.isOwner !== false ? 0 : 1].trim() : "Yo";
+    const myName = getMyName(user, "Yo");
     if (user?.code && !user?.isGuest) {
       const nb = await fbIncrementBamboo(user.code, total).catch(() => bamboo + total);
       setBamboo(nb);
@@ -3421,14 +3430,21 @@ export default function App() {
 
   const sendMsg = text => {
     if (!text || !text.trim()) return;
+    const trimmedText = text.trim();
+    const nextMessages = [{
+      id: Date.now(), text: trimmedText,
+      sender: getMyName(user, "Yo"),
+      senderEmail: user?.email || "guest",
+      time: new Date().toISOString(), read: false
+    }, ...messages];
     const msg = {
-      id: Date.now(), text: text.trim(),
-      sender: (user?.names || "Yo").split("&")[user?.isOwner !== false ? 0 : 1]?.trim() || "Yo",
+      id: nextMessages[0].id, text: trimmedText,
+      sender: getMyName(user, "Yo"),
       senderEmail: user?.email || "guest",
       time: new Date().toISOString(), read: false
     };
     // Always update local state first so UI doesn't freeze
-    setMessages(prev => [msg, ...prev]);
+    setMessages(nextMessages);
     if (user?.code && !user?.isGuest) {
       // Fire and forget — listener will sync
       fbSendMessage(user.code, msg).catch(e => console.warn("Send failed:", e));
@@ -3439,7 +3455,7 @@ export default function App() {
     }
     const nb = bamboo + 5; setBamboo(nb); trigHappy();
     toast("Mensajito enviado 💌 +5 bambú");
-    save(null, { bamboo:nb, happiness, water, garden, accessories, exDone, messages:nm, conoce, burbuja, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
+    save(null, { bamboo:nb, happiness, water, garden, accessories, exDone, messages:nextMessages, conoce, burbuja, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
   };
 
   // Poll partner messages
@@ -3453,7 +3469,7 @@ export default function App() {
   const saveConoce = async (cat, qIdx, myAnswer, _b, isNew) => {
     const key = `${cat}-${qIdx}`;
     const myRole = user?.isOwner !== false ? "owner" : "partner";
-    const myName = user?.names ? user.names.split("&")[user?.isOwner !== false ? 0 : 1].trim() : "Yo";
+    const myName = getMyName(user, "Yo");
     if (user?.code && !user?.isGuest) {
       // Save my answer to Firebase (keyed by role)
       await fbSaveConoce(user.code, key, { [myRole]: myAnswer, updatedAt: new Date().toISOString() }).catch(() => {});
@@ -3513,7 +3529,7 @@ export default function App() {
   };
 
   const addGratitud = async (entry) => {
-    const myName = user?.names ? user.names.split("&")[user?.isOwner !== false ? 0 : 1].trim() : "Yo";
+    const myName = getMyName(user, "Yo");
     const enriched = { ...entry, authorName: myName, authorUid: user?.uid, date: new Date().toLocaleDateString("es", {day:"numeric",month:"short"}) };
     trigHappy();
     if (user?.code && !user?.isGuest) {
@@ -3531,7 +3547,7 @@ export default function App() {
   };
 
   const addMomento = async (entry) => {
-    const myName = user?.names ? user.names.split("&")[user?.isOwner !== false ? 0 : 1].trim() : "Yo";
+    const myName = getMyName(user, "Yo");
     const enriched = { ...entry, authorName: myName, authorUid: user?.uid, date: new Date().toLocaleDateString("es", {day:"numeric",month:"short",year:"numeric"}) };
     trigHappy();
     if (user?.code && !user?.isGuest) {
