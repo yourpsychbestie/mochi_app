@@ -41,6 +41,49 @@ export const fbGetCode = async (code) => {
   return snap.exists() ? snap.data() : null;
 };
 
+// Create an owner code only when it does not already exist.
+export const fbCreateCodeOwner = async (code, data) => {
+  const ref = doc(db, "codes", code);
+  return runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (snap.exists()) throw new Error("CODE_TAKEN");
+    tx.set(ref, { ...data, updatedAt: serverTimestamp() }, { merge: false });
+    return { code, ...data };
+  });
+};
+
+// Claim partner slot atomically, preventing accidental overwrite by a third account.
+export const fbClaimPartnerCode = async (code, partner) => {
+  const ref = doc(db, "codes", code);
+  return runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()) throw new Error("CODE_NOT_FOUND");
+
+    const data = snap.data() || {};
+    if (data.partnerUid && data.partnerUid !== partner.partnerUid) {
+      throw new Error("CODE_ALREADY_LINKED");
+    }
+
+    const ownerName = String(data.names || "?").split(" & ")[0].trim() || "?";
+    const partnerName = String(partner.partnerName || "?").trim() || "?";
+    const names = `${ownerName} & ${partnerName}`;
+
+    tx.set(ref, {
+      names,
+      partnerEmail: partner.partnerEmail,
+      partnerUid: partner.partnerUid,
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
+
+    return {
+      ...data,
+      names,
+      ownerUid: data.ownerUid || null,
+      since: data.since || "Juntos desde hoy",
+    };
+  });
+};
+
 // ─── PROGRESS ──────────────────────────────────────────
 export const fbSaveProgress = (uid, data) =>
   setDoc(doc(db, "progress", uid), { ...data, updatedAt: serverTimestamp() }, { merge: true });
@@ -154,6 +197,24 @@ export const fbListenGardenState = (coupleCode, cb) =>
     cb(snap.exists() ? snap.data() : null);
   }, () => cb(null));
 
+export const fbPurchaseGardenUpdate = async (coupleCode, amount, data) => {
+  const bambooRef = doc(db, "bamboo", coupleCode);
+  const gardenRef = doc(db, "garden", coupleCode);
+  return runTransaction(db, async (tx) => {
+    const bambooSnap = await tx.get(bambooRef);
+    const current = bambooSnap.exists() ? (bambooSnap.data().total || 0) : 0;
+    if (current < amount) throw new Error("INSUFFICIENT_BAMBOO");
+    const newTotal = current - amount;
+    tx.set(bambooRef, { total: newTotal, updatedAt: serverTimestamp() }, { merge: true });
+    tx.set(gardenRef, {
+      ...data,
+      coupleCode,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    return newTotal;
+  });
+};
+
 // ─── GRATITUD (synced entries) ─────────────────────────
 export const fbAddGratitud = (coupleCode, entry) =>
   addDoc(collection(db, "gratitud"), { ...entry, coupleCode, createdAt: serverTimestamp() });
@@ -238,3 +299,34 @@ export const fbListenNotifs = (coupleCode, cb) => {
 };
 export const fbMarkNotifRead = (notifId) =>
   setDoc(doc(db, "notifs", notifId), { read: true }, { merge: true });
+
+// ─── STREAKS (daily interactions + summary profile) ───────────────
+export const fbSaveStreakInteraction = (coupleCode, date, type, completed = true, extra = {}) =>
+  setDoc(doc(db, "streakInteractions", `${coupleCode}_${date}_${type}`), {
+    coupleCode,
+    date,
+    type,
+    completed,
+    ...extra,
+    updatedAt: serverTimestamp()
+  }, { merge: true });
+
+export const fbListenStreakInteractions = (coupleCode, cb) => {
+  const q = query(collection(db, "streakInteractions"), where("coupleCode", "==", coupleCode));
+  return onSnapshot(q, snap => {
+    const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    cb(items);
+  }, () => cb([]));
+};
+
+export const fbSaveStreakProfile = (coupleCode, data) =>
+  setDoc(doc(db, "streaks", coupleCode), {
+    ...data,
+    coupleCode,
+    updatedAt: serverTimestamp()
+  }, { merge: true });
+
+export const fbListenStreakProfile = (coupleCode, cb) =>
+  onSnapshot(doc(db, "streaks", coupleCode), snap => {
+    cb(snap.exists() ? snap.data() : null);
+  }, () => cb(null));

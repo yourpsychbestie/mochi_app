@@ -1,21 +1,23 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   fbRegister, fbLogin, fbLogout, fbOnAuthChange,
   fbDeleteCurrentUser,
   fbSaveUser, fbGetUser,
-  fbSaveCode, fbGetCode,
+  fbGetCode, fbCreateCodeOwner, fbClaimPartnerCode,
   fbSaveProgress, fbGetProgress,
   fbSendMessage, fbListenMessages,
   fbSaveTestAnswers, fbListenTest, fbResetTest,
   fbListenExSession, fbSendExMessage, fbStartExSession, fbCompleteExSession,
   fbListenBamboo, fbIncrementBamboo, fbSpendBamboo, fbGetBamboo,
-  fbSaveGardenState, fbListenGardenState,
+  fbSaveGardenState, fbListenGardenState, fbPurchaseGardenUpdate,
   fbAddGratitud, fbListenGratitud,
   fbAddMomento, fbListenMomentos,
   fbSaveConoce, fbListenConoce,
   fbSaveLessonRead, fbListenLessons,
   fbSaveBurbuja, fbListenBurbuja,
   fbSendNotif, fbListenNotifs, fbMarkNotifRead,
+  fbSaveStreakInteraction, fbListenStreakInteractions,
+  fbSaveStreakProfile, fbListenStreakProfile,
 } from "./firebase";
 import Cuestionarios, { getQuizAdviceFromConoce } from "./Cuestionarios";
 
@@ -36,6 +38,200 @@ const ls = {
 
 const MAX_MESSAGE_LENGTH = 220;
 const BUBBLE_PREVIEW_LENGTH = 38;
+
+const toJsDate = (value) => {
+  if (!value) return null;
+  if (value instanceof Date) return value;
+  if (typeof value === "number") {
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  if (typeof value === "string") {
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  if (typeof value?.toDate === "function") {
+    const d = value.toDate();
+    return Number.isNaN(d?.getTime?.()) ? null : d;
+  }
+  if (typeof value?.seconds === "number") {
+    const ms = value.seconds * 1000 + Math.floor((value.nanoseconds || 0) / 1e6);
+    const d = new Date(ms);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  return null;
+};
+
+const getWeekStartUtc = (date) => {
+  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  const day = d.getUTCDay();
+  const diff = day === 0 ? -6 : 1 - day; // Monday as week start
+  d.setUTCDate(d.getUTCDate() + diff);
+  return d;
+};
+
+const getWeeklyStreak = (dates) => {
+  const weekMs = 7 * 24 * 60 * 60 * 1000;
+  const activeWeekSet = new Set(
+    dates
+      .map(toJsDate)
+      .filter(Boolean)
+      .map(d => getWeekStartUtc(d).getTime())
+  );
+  if (!activeWeekSet.size) return 0;
+
+  let streak = 0;
+  let cursor = getWeekStartUtc(new Date()).getTime();
+
+  if (!activeWeekSet.has(cursor)) {
+    const sortedWeeks = [...activeWeekSet].sort((a, b) => b - a);
+    cursor = sortedWeeks[0];
+  }
+
+  while (activeWeekSet.has(cursor)) {
+    streak += 1;
+    cursor -= weekMs;
+  }
+
+  return streak;
+};
+
+const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100];
+const STREAK_TYPES = {
+  message: "Mensaje de amor",
+  exercise: "Ejercicio o leccion",
+  gratitude: "Gratitud",
+  moment: "Momento especial",
+  conoce: "Pregunta de Conocete",
+  agreement: "Acuerdo en Burbuja",
+};
+
+const STREAK_RESOURCES = [
+  { type: "Articulo", title: "Escucha activa en pareja (5 minutos)", url: "https://www.gottman.com/blog/active-listening/" },
+  { type: "Video", title: "Reparar conflictos con calidez", url: "https://www.youtube.com/watch?v=AKTyPgwfPgg" },
+  { type: "Articulo", title: "Micro-habitos de conexion emocional", url: "https://positivepsychology.com/emotional-intimacy/" },
+];
+
+const getDateKeyLocal = (date = new Date()) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
+
+const addDaysToKey = (key, delta) => {
+  const [y, m, d] = String(key).split("-").map(Number);
+  const dt = new Date(y, (m || 1) - 1, d || 1);
+  dt.setDate(dt.getDate() + delta);
+  return getDateKeyLocal(dt);
+};
+
+const computeDailyStreakData = (interactions, prevLongest = 0) => {
+  const cutoffKey = addDaysToKey(getDateKeyLocal(), -180);
+  const sorted = (interactions || [])
+    .filter(i => i?.completed && i?.date && String(i.date) >= cutoffKey)
+    .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+
+  const byDate = {};
+  sorted.forEach(i => {
+    if (!byDate[i.date]) byDate[i.date] = [];
+    byDate[i.date].push(i);
+  });
+
+  const dates = Object.keys(byDate).sort();
+  const todayKey = getDateKeyLocal();
+  const yesterdayKey = addDaysToKey(todayKey, -1);
+  const anchor = byDate[todayKey] ? todayKey : (byDate[yesterdayKey] ? yesterdayKey : null);
+
+  let currentStreak = 0;
+  if (anchor) {
+    let cursor = anchor;
+    while (byDate[cursor]) {
+      currentStreak += 1;
+      cursor = addDaysToKey(cursor, -1);
+    }
+  }
+
+  let longestStreak = Math.max(0, prevLongest);
+  if (dates.length) {
+    let run = 1;
+    longestStreak = Math.max(longestStreak, 1);
+    for (let i = 1; i < dates.length; i += 1) {
+      run = dates[i] === addDaysToKey(dates[i - 1], 1) ? run + 1 : 1;
+      if (run > longestStreak) longestStreak = run;
+    }
+  }
+
+  const unlockedMilestones = STREAK_MILESTONES.filter(m => currentStreak >= m);
+  const nextMilestone = STREAK_MILESTONES.find(m => m > currentStreak) || null;
+  const previousMilestone = [...STREAK_MILESTONES].reverse().find(m => m <= currentStreak) || 0;
+  const denom = nextMilestone ? Math.max(1, nextMilestone - previousMilestone) : 1;
+  const numer = nextMilestone ? currentStreak - previousMilestone : 1;
+  const progressPct = nextMilestone ? Math.max(0, Math.min(100, Math.round((numer / denom) * 100))) : 100;
+
+  return {
+    byDate,
+    todayKey,
+    todayDone: !!byDate[todayKey],
+    currentStreak,
+    longestStreak,
+    unlockedMilestones,
+    nextMilestone,
+    progressPct,
+  };
+};
+
+const WEEKDAY_NAMES = ["Dom", "Lun", "Mar", "Mie", "Jue", "Vie", "Sab"];
+
+const computeStreakAnalytics = (interactions) => {
+  const byDate = {};
+  (interactions || []).forEach(i => {
+    if (!i?.completed || !i?.date) return;
+    byDate[i.date] = (byDate[i.date] || 0) + 1;
+  });
+
+  const getWindowKeys = (days, offset = 0) => {
+    const keys = [];
+    for (let i = days - 1 + offset; i >= offset; i -= 1) {
+      keys.push(addDaysToKey(getDateKeyLocal(), -i));
+    }
+    return keys;
+  };
+
+  const last7 = getWindowKeys(7, 0);
+  const prev7 = getWindowKeys(7, 7);
+  const last30 = getWindowKeys(30, 0);
+
+  const active7 = last7.filter(k => !!byDate[k]).length;
+  const activePrev7 = prev7.filter(k => !!byDate[k]).length;
+  const active30 = last30.filter(k => !!byDate[k]).length;
+
+  const retention7 = Math.round((active7 / 7) * 100);
+  const retention30 = Math.round((active30 / 30) * 100);
+  const trendDeltaDays = active7 - activePrev7;
+
+  const weekdayCounts = Array(7).fill(0);
+  last30.forEach(k => {
+    if (!byDate[k]) return;
+    const [y, m, d] = k.split("-").map(Number);
+    const wd = new Date(y, m - 1, d).getDay();
+    weekdayCounts[wd] += 1;
+  });
+
+  const weekdaySeries = WEEKDAY_NAMES.map((name, idx) => ({ name, value: weekdayCounts[idx] }));
+  const minVal = Math.min(...weekdayCounts);
+  const weakest = weekdaySeries.find(w => w.value === minVal) || { name: "-", value: 0 };
+
+  return {
+    retention7,
+    retention30,
+    trendDeltaDays,
+    active7,
+    active30,
+    weekdaySeries,
+    weakestWeekday: weakest,
+  };
+};
 
 class SectionErrorBoundary extends React.Component {
   constructor(props) {
@@ -321,48 +517,53 @@ function CouplePandaSVG({ happy = false, size = 160 }) {
 
   const Panda = ({ x, y, tilt = 0, isHappy = false, tuft = false }) => (
     <g transform={`translate(${x} ${y}) rotate(${tilt})`}>
-      <ellipse cx="0" cy="121" rx="34" ry="6" fill="#1a1a1a" opacity="0.14" />
+      <ellipse cx="0" cy="126" rx="35" ry="6.5" fill="#1a1a1a" opacity="0.12" />
 
-      <ellipse cx="0" cy="79" rx="25" ry="29" fill="#f8fbff" stroke="#2c1b23" strokeWidth="2.3" />
-      <ellipse cx="0" cy="88" rx="17.5" ry="13.5" fill="#ecf1f7" opacity="0.95" />
+      <path d="M-27 44 C-27 31 -18 22 -6 22 L6 22 C18 22 27 31 27 44 L27 88 C27 101 18 111 5 111 L-5 111 C-18 111 -27 101 -27 88 Z" fill="#f7fbff" stroke="#2c1b23" strokeWidth="2.4" />
+      <path d="M-22 46 C-18 35 -9 30 0 30 C9 30 18 35 22 46" fill="none" stroke="#c7d9f1" strokeWidth="3.4" strokeLinecap="round" />
+      <path d="M-18 58 L0 72 L18 58" fill="none" stroke="#6d88ce" strokeWidth="3.8" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="-18" y="73" width="36" height="10" rx="5" fill="#6d88ce" opacity="0.96" />
+      <circle cx="0" cy="69" r="3.8" fill="#f39eb0" />
+      <path d="M-14 86 C-10 82 -5 80 0 80 C5 80 10 82 14 86" fill="none" stroke="#dce6f4" strokeWidth="3" strokeLinecap="round" />
 
-      <ellipse cx="-24" cy="81" rx="8" ry="15" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(-16 -24 81)" />
-      <ellipse cx="24" cy="81" rx="8" ry="15" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(16 24 81)" />
+      <ellipse cx="-24" cy="62" rx="8.2" ry="17" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(-16 -24 62)" />
+      <ellipse cx="24" cy="62" rx="8.2" ry="17" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(16 24 62)" />
 
-      <ellipse cx="-12" cy="108" rx="11" ry="13" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(-8 -12 108)" />
-      <ellipse cx="12" cy="108" rx="11" ry="13" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(8 12 108)" />
+      <ellipse cx="-13" cy="108" rx="10.5" ry="13.2" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(-7 -13 108)" />
+      <ellipse cx="13" cy="108" rx="10.5" ry="13.2" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(7 13 108)" />
 
       <circle cx="0" cy="0" r="39" fill="#fcfeff" stroke="#2c1b23" strokeWidth="2.5" />
 
-      <circle cx="-22" cy="-33" r="11.5" fill="#3f4756" stroke="#2c1b23" strokeWidth="2.2" />
-      <circle cx="22" cy="-33" r="11.5" fill="#3f4756" stroke="#2c1b23" strokeWidth="2.2" />
+      <circle cx="-22" cy="-33" r="11.8" fill="#3f4756" stroke="#2c1b23" strokeWidth="2.2" />
+      <circle cx="22" cy="-33" r="11.8" fill="#3f4756" stroke="#2c1b23" strokeWidth="2.2" />
 
       {tuft && (
-        <path d="M-1 -45 C-1 -50 3 -52 6 -49 C4 -45 3 -42 3 -38" fill="none" stroke="#2c1b23" strokeWidth="2.2" strokeLinecap="round" />
+        <path d="M-2 -46 C-3 -52 3 -55 7 -51 C4 -47 3 -43 4 -38" fill="none" stroke="#2c1b23" strokeWidth="2.2" strokeLinecap="round" />
       )}
 
-      <ellipse cx="-14" cy="-2" rx="12" ry="11" fill="#4b5564" />
-      <ellipse cx="14" cy="-2" rx="12" ry="11" fill="#4b5564" />
+      <ellipse cx="-14" cy="-2" rx="12.2" ry="11.2" fill="#4b5564" />
+      <ellipse cx="14" cy="-2" rx="12.2" ry="11.2" fill="#4b5564" />
 
-      <circle cx="-14" cy="-2" r="5.5" fill="#2a1018" />
-      <circle cx="14" cy="-2" r="5.5" fill="#2a1018" />
-      <circle cx="-12.4" cy="-3.4" r="1.5" fill="#ffffff" opacity="0.95" />
-      <circle cx="15.6" cy="-3.4" r="1.5" fill="#ffffff" opacity="0.95" />
+      <circle cx="-14" cy="-2" r="5.8" fill="#2a1018" />
+      <circle cx="14" cy="-2" r="5.8" fill="#2a1018" />
+      <circle cx="-12.3" cy="-3.6" r="1.6" fill="#ffffff" opacity="0.95" />
+      <circle cx="15.7" cy="-3.6" r="1.6" fill="#ffffff" opacity="0.95" />
 
-      <ellipse cx="0" cy="11" rx="3.8" ry="2.5" fill="#2c1b23" />
+      <ellipse cx="0" cy="11" rx="4.1" ry="2.8" fill="#2c1b23" />
 
       {isHappy ? (
         <>
-          <path d="M-11 17 Q0 29 11 17" fill="#f58ca5" stroke="#2c1b23" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M-6 18 Q0 24 6 18" fill="none" stroke="#fff3f6" strokeWidth="1.3" strokeLinecap="round" />
+          <path d="M-11 18 Q0 30 11 18" fill="#f58ca5" stroke="#2c1b23" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M-6 19 Q0 25 6 19" fill="none" stroke="#fff3f6" strokeWidth="1.3" strokeLinecap="round" />
         </>
       ) : (
         <>
-          <ellipse cx="0" cy="18" rx="7.6" ry="6.8" fill="#f58ca5" stroke="#2c1b23" strokeWidth="2.1" />
-          <path d="M-4 18 Q0 14 4 18" fill="none" stroke="#fff3f6" strokeWidth="1.2" strokeLinecap="round" />
+          <ellipse cx="0" cy="18" rx="8.2" ry="7.2" fill="#f58ca5" stroke="#2c1b23" strokeWidth="2.1" />
+          <path d="M-4.5 18 Q0 14 4.5 18" fill="none" stroke="#fff3f6" strokeWidth="1.2" strokeLinecap="round" />
         </>
       )}
 
+      <ellipse cx="-21" cy="7" rx="6.1" ry="4" fill="#f58ca5" opacity="0.72" transform="rotate(14 -21 7)" />
       <ellipse cx="21" cy="7" rx="6.3" ry="4" fill="#f58ca5" opacity="0.85" transform="rotate(-14 21 7)" />
     </g>
   );
@@ -387,35 +588,40 @@ function CouplePandaSVG({ happy = false, size = 160 }) {
 function SinglePandaSVG({ size = 100 }) {
   return (
     <svg viewBox="0 0 160 200" width={size} height={size * 1.25} style={{ display: "block" }}>
-      <ellipse cx="80" cy="191" rx="33" ry="6" fill="#1a1a1a" opacity="0.14" />
+      <ellipse cx="80" cy="191" rx="33" ry="6" fill="#1a1a1a" opacity="0.12" />
 
-      <ellipse cx="80" cy="150" rx="25" ry="29" fill="#f8fbff" stroke="#2c1b23" strokeWidth="2.3" />
-      <ellipse cx="80" cy="159" rx="17.5" ry="13.5" fill="#ecf1f7" opacity="0.95" />
+      <path d="M53 116 C53 102 63 92 76 92 L84 92 C97 92 107 102 107 116 L107 159 C107 173 96 183 83 183 L77 183 C64 183 53 173 53 159 Z" fill="#f7fbff" stroke="#2c1b23" strokeWidth="2.4" />
+      <path d="M58 118 C62 108 70 102 80 102 C90 102 98 108 102 118" fill="none" stroke="#c7d9f1" strokeWidth="3.4" strokeLinecap="round" />
+      <path d="M62 129 L80 143 L98 129" fill="none" stroke="#6d88ce" strokeWidth="3.8" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="62" y="144" width="36" height="10" rx="5" fill="#6d88ce" opacity="0.96" />
+      <circle cx="80" cy="140" r="3.8" fill="#f39eb0" />
+      <path d="M66 157 C70 153 75 151 80 151 C85 151 90 153 94 157" fill="none" stroke="#dce6f4" strokeWidth="3" strokeLinecap="round" />
 
-      <ellipse cx="56" cy="152" rx="8" ry="15" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(-16 56 152)" />
-      <ellipse cx="104" cy="152" rx="8" ry="15" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(16 104 152)" />
+      <ellipse cx="56" cy="131" rx="8.2" ry="17" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(-16 56 131)" />
+      <ellipse cx="104" cy="131" rx="8.2" ry="17" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(16 104 131)" />
 
-      <ellipse cx="68" cy="179" rx="11" ry="13" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(-8 68 179)" />
-      <ellipse cx="92" cy="179" rx="11" ry="13" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(8 92 179)" />
+      <ellipse cx="68" cy="179" rx="10.5" ry="13.2" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(-7 68 179)" />
+      <ellipse cx="92" cy="179" rx="10.5" ry="13.2" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(7 92 179)" />
 
       <circle cx="80" cy="74" r="39" fill="#fcfeff" stroke="#2c1b23" strokeWidth="2.5" />
       <circle cx="58" cy="41" r="11.5" fill="#3f4756" stroke="#2c1b23" strokeWidth="2.2" />
       <circle cx="102" cy="41" r="11.5" fill="#3f4756" stroke="#2c1b23" strokeWidth="2.2" />
 
-      <path d="M78 29 C78 24 82 22 85 25 C83 29 82 32 82 36" fill="none" stroke="#2c1b23" strokeWidth="2.2" strokeLinecap="round" />
+      <path d="M78 28 C77 22 83 19 87 23 C84 28 83 32 84 36" fill="none" stroke="#2c1b23" strokeWidth="2.2" strokeLinecap="round" />
 
-      <ellipse cx="66" cy="72" rx="12" ry="11" fill="#4b5564" />
-      <ellipse cx="94" cy="72" rx="12" ry="11" fill="#4b5564" />
+      <ellipse cx="66" cy="72" rx="12.2" ry="11.2" fill="#4b5564" />
+      <ellipse cx="94" cy="72" rx="12.2" ry="11.2" fill="#4b5564" />
 
-      <circle cx="66" cy="72" r="5.5" fill="#2a1018" />
-      <circle cx="94" cy="72" r="5.5" fill="#2a1018" />
-      <circle cx="67.6" cy="70.6" r="1.5" fill="#ffffff" />
-      <circle cx="95.6" cy="70.6" r="1.5" fill="#ffffff" />
+      <circle cx="66" cy="72" r="5.8" fill="#2a1018" />
+      <circle cx="94" cy="72" r="5.8" fill="#2a1018" />
+      <circle cx="67.7" cy="70.4" r="1.6" fill="#ffffff" />
+      <circle cx="95.7" cy="70.4" r="1.6" fill="#ffffff" />
 
-      <ellipse cx="80" cy="83" rx="3.8" ry="2.5" fill="#2c1b23" />
-      <path d="M69 89 Q80 101 91 89" fill="#f58ca5" stroke="#2c1b23" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M74 90 Q80 96 86 90" fill="none" stroke="#fff3f6" strokeWidth="1.3" strokeLinecap="round" />
+      <ellipse cx="80" cy="83" rx="4.1" ry="2.8" fill="#2c1b23" />
+      <path d="M69 90 Q80 102 91 90" fill="#f58ca5" stroke="#2c1b23" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M74 91 Q80 97 86 91" fill="none" stroke="#fff3f6" strokeWidth="1.3" strokeLinecap="round" />
 
+      <ellipse cx="59" cy="79" rx="6.1" ry="4" fill="#f58ca5" opacity="0.72" transform="rotate(14 59 79)" />
       <ellipse cx="101" cy="79" rx="6.3" ry="4" fill="#f58ca5" opacity="0.85" transform="rotate(-14 101 79)" />
     </svg>
   );
@@ -1431,7 +1637,7 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
             <div style={{ position:"relative", display:"inline-block" }}>
               {/* Speech bubbles */}
               {pandaBubble?.textA && (
-                <div style={{ position:"absolute", bottom:"120%", left:"-56px", maxWidth:118, background:"white",
+                <div style={{ position:"absolute", bottom:"90%", left:"-18px", maxWidth:108, background:"white",
                   border:"2px solid #4a6e30", borderRadius:"14px 14px 4px 14px", padding:"6px 10px",
                   fontSize:"0.7rem", color:"#1e2b1e", fontWeight:700, lineHeight:1.4,
                   boxShadow:"0 2px 8px rgba(0,0,0,0.15)", zIndex:10, animation:"fadeIn 0.3s ease" }}>
@@ -1443,7 +1649,7 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
                 </div>
               )}
               {pandaBubble?.textB && (
-                <div style={{ position:"absolute", bottom:"58%", right:"-56px", maxWidth:118, background:"white",
+                <div style={{ position:"absolute", bottom:"84%", right:"-16px", maxWidth:108, background:"white",
                   border:"2px solid #e8907a", borderRadius:"14px 14px 14px 4px", padding:"6px 10px",
                   fontSize:"0.7rem", color:"#1e2b1e", fontWeight:700, lineHeight:1.4,
                   boxShadow:"0 2px 8px rgba(0,0,0,0.15)", zIndex:10, animation:"fadeIn 0.3s ease" }}>
@@ -1520,222 +1726,37 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
   );
 }
 
-// ═══════════════════════════════════════════════
-// MENSAJES — updated with inbox from partner
-// ═══════════════════════════════════════════════
-function Mensajes({ user, messages, onSend }) {
-  const [modal, setModal] = useState(false);
-  const [text, setText] = useState("");
-  const [quick, setQuick] = useState(null);
-  const [view, setView] = useState("inbox"); // "inbox" | "sent" | "compose"
-  const [momentos, setMomentos] = useState([]);
-  const [nuevoMomento, setNuevoMomento] = useState("");
-  const [gratitud, setGratitud] = useState([]);
-  const [nuevaGratitud, setNuevaGratitud] = useState("");
-  const myEmail = user?.email || "guest";
-
-  const inbox = messages.filter(m => m.senderEmail !== myEmail);
-  const sent = messages.filter(m => m.senderEmail === myEmail);
-  const unread = inbox.filter(m => !m.read).length;
-
-  const [sending, setSending] = useState(false);
-
-  const agregarMomento = () => {
-    const clean = nuevoMomento.trim();
-    if (!clean) return;
-    setMomentos(prev => [clean, ...prev]);
-    setNuevoMomento("");
-  };
-
-  const agregarGratitud = () => {
-    const clean = nuevaGratitud.trim();
-    if (!clean) return;
-    setGratitud(prev => [clean, ...prev]);
-    setNuevaGratitud("");
-  };
-
-  const send = () => {
-    const msg = quick || text.trim();
-    if (!msg || sending) return;
-    setSending(true);
-    try {
-      onSend(msg);
-      setModal(false);
-      setText("");
-      setQuick(null);
-    } finally {
-      setSending(false);
-    }
-  };
-
-  const todayStr = new Date().toDateString();
-  const todayFromPartner = inbox.find(m => new Date(m.time).toDateString() === todayStr);
-
-  return (
-    <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
-      <div style={{ background: "#c05068", padding: "48px 20px 24px", textAlign: "center" }}>
-        <h1 style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.9rem", color: C.cream2, margin: 0 }}>Mensajes</h1>
-        <p style={{ color: `${C.cream}88`, fontSize: "0.86rem", fontWeight: 600, margin: "4px 0 0" }}>Buzón de amor · +5 bambú por enviar 🌿</p>
-      </div>
-
-      {/* Tab bar */}
-      <div style={{ display:"flex", gap:0, background:C.white, borderBottom:`1.5px solid ${C.border}` }}>
-        {[{id:"inbox",label:"📬 Recibidos",badge:unread},{id:"sent",label:"💌 Enviados",badge:0}].map(t=>(
-          <div key={t.id} onClick={()=>setView(t.id)}
-            style={{ flex:1, padding:"12px 0", textAlign:"center", cursor:"pointer",
-              fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem",
-              color:view===t.id?C.dark:C.inkL,
-              borderBottom:view===t.id?`3px solid #c05068`:"3px solid transparent",
-              position:"relative" }}>
-            {t.label}
-            {t.badge>0 && <span style={{ position:"absolute", top:8, right:16, background:"#c05068", color:"white", borderRadius:5, padding:"1px 5px", fontSize:"0.65rem", fontWeight:800 }}>{t.badge}</span>}
-          </div>
-        ))}
-      </div>
-
-      {/* Today's message highlight */}
-      {view === "inbox" && (
-        <div style={{ margin:"14px 14px 0" }}>
-          <div style={{ background:C.white, borderRadius:20, padding:18, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
-            <div style={{ fontSize:"0.7rem", fontWeight:800, color:"#c05068", marginBottom:10, letterSpacing:"0.5px" }}>💌 HOY</div>
-            {todayFromPartner
-              ? <div style={{ background:C.dark, color:C.cream2, borderRadius:"16px 16px 16px 4px", padding:"13px 16px", fontSize:"0.92rem", lineHeight:1.6 }}>
-                  <div style={{ fontSize:"1.5rem", marginBottom:4 }}>💝</div>
-                  {todayFromPartner.text}
-                  <div style={{ fontSize:"0.7rem", opacity:0.65, marginTop:4 }}>De {todayFromPartner.sender} · {new Date(todayFromPartner.time).toLocaleTimeString("es",{hour:"2-digit",minute:"2-digit"})}</div>
-                </div>
-              : <div style={{ textAlign:"center", padding:"14px 0", fontSize:"0.86rem", color:C.inkL }}>
-                  <div style={{ fontSize:"2.8rem", marginBottom:8 }}>🕊</div>
-                  Tu pareja no ha enviado mensajito hoy aún
-                </div>}
-          </div>
-        </div>
-      )}
-
-      {/* Message list */}
-      <div style={{ background:C.white, borderRadius:20, margin:14, padding:18, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
-        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:12 }}>
-          {view==="inbox" ? "Todos los mensajes recibidos" : "Mensajes enviados"}
-        </div>
-        {(view==="inbox"?inbox:sent).length === 0
-          ? <div style={{ textAlign:"center", fontSize:"0.85rem", color:C.inkL, padding:14 }}>
-              {view==="inbox" ? "Aquí aparecerán los mensajes de tu pareja 🌸" : "Aún no has enviado mensajes 💌"}
-            </div>
-          : (view==="inbox"?inbox:sent).slice(0,30).map(m => (
-            <div key={m.id} style={{ background:view==="inbox"?C.cream:C.sand, borderRadius:13, padding:12, marginBottom:8, borderLeft:`4px solid ${view==="inbox"?"#c05068":C.olive}` }}>
-              <div style={{ fontSize:"0.7rem", fontWeight:800, color:"#c05068", marginBottom:2 }}>
-                {view==="inbox" ? `De ${m.sender}` : "Tú enviaste"}
-              </div>
-              <div style={{ fontSize:"0.88rem", color:C.ink, lineHeight:1.6 }}>{m.text}</div>
-              <div style={{ fontSize:"0.68rem", color:C.inkL, marginTop:3, fontWeight:700 }}>
-                {new Date(m.time).toLocaleDateString("es",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}
-              </div>
-            </div>
-          ))}
-      </div>
-
-      {/* Momentos Especiales */}
-      <div style={{ background:C.white, borderRadius:20, margin:"0 14px 12px", padding:18, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
-        <h3 style={{ margin:"0 0 10px", fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark }}>Momentos Especiales</h3>
-        <ul style={{ margin:"0 0 10px", paddingLeft:20, color:C.ink }}>
-          {momentos.map((momento, i) => (
-            <li key={`momento-${i}`} style={{ fontSize:"0.84rem", lineHeight:1.6, marginBottom:4 }}>{momento}</li>
-          ))}
-        </ul>
-        <div style={{ display:"flex", gap:8 }}>
-          <input
-            value={nuevoMomento}
-            onChange={e => setNuevoMomento(e.target.value)}
-            placeholder="Escribe un momento especial"
-            style={{ flex:1, border:`1.5px solid ${C.border}`, borderRadius:10, padding:"10px 12px", fontSize:"0.84rem", fontFamily:"'Nunito',sans-serif", color:C.ink, background:C.sandL }}
-          />
-          <button
-            onClick={agregarMomento}
-            style={{ border:"none", background:C.olive, color:C.cream2, borderRadius:10, padding:"10px 14px", fontWeight:800, cursor:"pointer" }}>
-            Agregar
-          </button>
-        </div>
-      </div>
-
-      {/* Gratitud */}
-      <div style={{ background:C.white, borderRadius:20, margin:"0 14px 14px", padding:18, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
-        <h3 style={{ margin:"0 0 10px", fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark }}>Gratitud</h3>
-        <ul style={{ margin:"0 0 10px", paddingLeft:20, color:C.ink }}>
-          {gratitud.map((item, i) => (
-            <li key={`gratitud-${i}`} style={{ fontSize:"0.84rem", lineHeight:1.6, marginBottom:4 }}>{item}</li>
-          ))}
-        </ul>
-        <div style={{ display:"flex", gap:8 }}>
-          <input
-            value={nuevaGratitud}
-            onChange={e => setNuevaGratitud(e.target.value)}
-            placeholder="Escribe algo por lo que agradeces"
-            style={{ flex:1, border:`1.5px solid ${C.border}`, borderRadius:10, padding:"10px 12px", fontSize:"0.84rem", fontFamily:"'Nunito',sans-serif", color:C.ink, background:C.sandL }}
-          />
-          <button
-            onClick={agregarGratitud}
-            style={{ border:"none", background:"#c05068", color:C.cream2, borderRadius:10, padding:"10px 14px", fontWeight:800, cursor:"pointer" }}>
-            Agregar
-          </button>
-        </div>
-      </div>
-
-      {/* Compose button */}
-      <button onClick={()=>setModal(true)}
-        style={{ background:"#c05068", color:C.cream2, border:"none", borderRadius:12, padding:14,
-          fontFamily:"'Fredoka One',cursive", fontSize:"1.05rem", cursor:"pointer",
-          width:"calc(100% - 28px)", margin:"0 14px 14px", display:"block",
-          boxShadow:"0 3px 0 rgba(0,0,0,0.18)" }}>
-        💌 Enviar mensajito
-      </button>
-
-      {/* Compose modal */}
-      {modal && (
-        <div style={{ position:"fixed", inset:0, background:"rgba(15,25,15,0.62)", zIndex:5000, display:"flex", alignItems:"flex-end" }}
-          onClick={e=>{if(e.target===e.currentTarget){setModal(false);setQuick(null);setText("");}}}>
-          <div style={{ background:C.white, borderRadius:"22px 22px 0 0", padding:"16px 18px 44px", width:"100%", maxWidth:480, margin:"0 auto", border:`1.5px solid ${C.border}` }}>
-            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
-              <div style={{ width:34, height:5, background:C.sand, borderRadius:50 }}/>
-              <div onClick={()=>{ setModal(false);setQuick(null);setText(""); }} style={{ width:30, height:30, borderRadius:"50%", background:C.sand, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", fontSize:"1rem", color:C.inkM, fontWeight:800 }}>✕</div>
-            </div>
-            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.3rem", color:C.dark, marginBottom:2 }}>💌 Mensajito de amor</div>
-            <div style={{ fontSize:"0.78rem", color:C.inkL, marginBottom:14, fontWeight:600 }}>+5 bambú 🌿 · Elige una idea o escribe lo que sientas</div>
-            {/* Prompt ideas */}
-            <div style={{ display:"flex", flexDirection:"column", gap:6, marginBottom:14 }}>
-              {LOVE_PROMPTS.map((p,i)=>(
-                <div key={i} onClick={()=>{ setQuick(p.idea); setText(p.idea); }}
-                  style={{ display:"flex", alignItems:"center", gap:10, background:text===p.idea?C.cream:C.sandL,
-                    borderRadius:11, padding:"9px 12px", cursor:"pointer",
-                    border:`1.5px solid ${text===p.idea?C.olive:C.border}`, transition:"all 0.15s" }}>
-                  <span style={{ fontSize:"1.1rem" }}>{p.icon}</span>
-                  <span style={{ fontSize:"0.78rem", color:C.inkM, lineHeight:1.4, flex:1 }}>{p.idea}</span>
-                  {text===p.idea && <span style={{ fontSize:"0.7rem", color:C.olive, fontWeight:800 }}>✓</span>}
-                </div>
-              ))}
-            </div>
-            {/* Always-editable textarea */}
-            <div style={{ fontSize:"0.7rem", fontWeight:800, color:C.inkL, marginBottom:6, letterSpacing:"0.5px" }}>TU MENSAJE</div>
-            <TA value={text} onChange={v=>{ setText(v); setQuick(null); }}
-              placeholder="Escribe aquí... o edita la idea que elegiste 💬" rows={3} style={{ marginBottom:12 }}/>
-            <Btn onClick={send} variant="salmon" style={{ width:"100%", fontSize:"1.05rem" }} disabled={sending}>{sending ? "Enviando..." : "Enviar con amor 💌"}</Btn>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-
-
 function Login({ onLogin }) {
   const [tab, setTab] = useState("login");
   const [email, setEmail] = useState(""); const [pass, setPass] = useState("");
   const [nameA, setNameA] = useState(""); const [nameB, setNameB] = useState(""); const [durN, setDurN] = useState(""); const [durU, setDurU] = useState("meses");
   const [pCode, setPCode] = useState(""); const [pEmail, setPEmail] = useState(""); const [pPass, setPPass] = useState("");
   const [err, setErr] = useState("");
-  const [code] = useState("MO" + Math.random().toString(36).slice(2, 6).toUpperCase());
+  const makeCode = () => "MO" + Math.random().toString(36).slice(2, 6).toUpperCase();
+  const [code, setCode] = useState(makeCode());
+  const [codeStatus, setCodeStatus] = useState("checking"); // checking | available | taken | error
 
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!code || tab !== "register") return;
+
+    setCodeStatus("checking");
+    fbGetCode(code)
+      .then((data) => {
+        if (cancelled) return;
+        setCodeStatus(data ? "taken" : "available");
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setCodeStatus("error");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [code, tab]);
 
   const authErrMsg = (e, fallback) => {
     const code = e?.code || "";
@@ -1792,7 +1813,7 @@ function Login({ onLogin }) {
       let userData = await fbGetUser(cred.user.uid);
       // If no Firestore data found, still let them in with basic info
       if (!userData) {
-        userData = { email, names: email.split("@")[0] + "&", coupleCode: "", isOwner: true };
+        userData = { email, names: email.split("@")[0] + " & ?", code: "", isOwner: true };
       }
       onLogin({ uid: cred.user.uid, email, ...userData, isGuest: false }, false);
     } catch(e) {
@@ -1819,9 +1840,30 @@ function Login({ onLogin }) {
       const cred = await fbRegister(email, pass);
       const uid = cred.user.uid;
       await ensureAuthReady(cred.user);
-      await retryFirestore(() => fbSaveUser(uid, { email, names, code, since, isOwner: true }));
-      await retryFirestore(() => fbSaveCode(code, { ownerEmail: email, ownerUid: uid, names, since }));
-      onLogin({ uid, email, names, code, since, isOwner: true, isGuest: false }, true);
+      let finalCode = code;
+      let created = false;
+      for (let i = 0; i < 8; i += 1) {
+        try {
+          await retryFirestore(() => fbCreateCodeOwner(finalCode, { ownerEmail: email, ownerUid: uid, names, since }));
+          created = true;
+          break;
+        } catch (e) {
+          if (String(e?.message || "").includes("CODE_TAKEN")) {
+            finalCode = makeCode();
+            continue;
+          }
+          throw e;
+        }
+      }
+      if (!created) {
+        await fbDeleteCurrentUser().catch(() => {});
+        setErr("No se pudo generar un código único. Intenta de nuevo.");
+        setLoading(false);
+        return;
+      }
+      if (finalCode !== code) setCode(finalCode);
+      await retryFirestore(() => fbSaveUser(uid, { email, names, code: finalCode, since, isOwner: true }));
+      onLogin({ uid, email, names, code: finalCode, since, isOwner: true, isGuest: false }, true);
     } catch(e) {
       if (e.code === "auth/email-already-in-use") {
         setErr("Este correo ya tiene cuenta");
@@ -1835,30 +1877,23 @@ function Login({ onLogin }) {
   const doJoin = async () => {
     if (!nameB || !pCode || !pEmail || pPass.length < 6) { setErr("Completa tu nombre, código, correo y contraseña"); return; }
     setLoading(true); setErr("");
+    let justCreated = false;
     try {
       const cleanCode = pCode.trim().toUpperCase();
       const cred = await fbRegister(pEmail, pPass);
+      justCreated = true;
       const uid = cred.user.uid;
       await ensureAuthReady(cred.user);
-      const codeData = await retryFirestore(() => fbGetCode(cleanCode));
-      if (!codeData) {
-        await fbDeleteCurrentUser().catch(() => {});
-        setErr("Código no encontrado — revisa que esté bien escrito");
-        setLoading(false);
-        return;
-      }
-      const ownerName = (codeData.names || "?").split(" & ")[0].trim();
-      const partnerName = nameB.trim() || "?";
-      const names = ownerName + " & " + partnerName;
-      const since = codeData.since || "Juntos desde hoy";
+      const claim = await retryFirestore(() => fbClaimPartnerCode(cleanCode, {
+        partnerEmail: pEmail,
+        partnerUid: uid,
+        partnerName: nameB.trim() || "?",
+      }));
+      const names = claim.names || "Nosotros";
+      const since = claim.since || "Juntos desde hoy";
       await retryFirestore(() => fbSaveUser(uid, { email: pEmail, names, code: cleanCode, since, isOwner: false }));
-      // Update the shared code doc when rules allow it. If Firestore blocks this,
-      // keep the partner account usable instead of aborting the join flow.
-      await retryFirestore(() => fbSaveCode(cleanCode, { names, partnerEmail: pEmail, partnerUid: uid })).catch((err) => {
-        console.warn("Join: could not update code doc", err);
-      });
       // Also update owner's user record with new names
-      if (codeData.ownerUid) await fbSaveUser(codeData.ownerUid, { names }).catch(()=>{});
+      if (claim.ownerUid) await retryFirestore(() => fbSaveUser(claim.ownerUid, { names }));
       onLogin({ uid, email: pEmail, names, code: cleanCode, since, isOwner: false, isGuest: false }, true);
     } catch(e) {
       if (e.code === "auth/email-already-in-use") {
@@ -1868,19 +1903,43 @@ function Login({ onLogin }) {
           const uid2 = cred2.user.uid;
           const cleanCode2 = pCode.trim().toUpperCase();
           await ensureAuthReady(cred2.user);
-          const codeData2 = await retryFirestore(() => fbGetCode(cleanCode2)).catch(()=>null);
-          const names2 = codeData2?.names || "Nosotros";
-          await retryFirestore(() => fbSaveUser(uid2, { email: pEmail, names: names2, code: cleanCode2, isOwner: false })).catch(()=>{});
-          onLogin({ uid: uid2, email: pEmail, names: names2, code: cleanCode2, since: codeData2?.since || "Juntos", isOwner: false, isGuest: false }, false);
+          const claim2 = await retryFirestore(() => fbClaimPartnerCode(cleanCode2, {
+            partnerEmail: pEmail,
+            partnerUid: uid2,
+            partnerName: nameB.trim() || "?",
+          }));
+          const names2 = claim2.names || "Nosotros";
+          await retryFirestore(() => fbSaveUser(uid2, { email: pEmail, names: names2, code: cleanCode2, isOwner: false }));
+          if (claim2.ownerUid) await retryFirestore(() => fbSaveUser(claim2.ownerUid, { names: names2 }));
+          onLogin({ uid: uid2, email: pEmail, names: names2, code: cleanCode2, since: claim2.since || "Juntos", isOwner: false, isGuest: false }, false);
           setLoading(false); return;
         } catch(e2) {
-          setErr("Este correo ya tiene cuenta — verifica tu contraseña");
+          const msg2 = String(e2?.message || "");
+          if (msg2.includes("CODE_ALREADY_LINKED")) {
+            setErr("Ese código ya está vinculado con otra cuenta de pareja.");
+          } else if (msg2.includes("CODE_NOT_FOUND")) {
+            setErr("Código no encontrado — revisa que esté bien escrito");
+          } else
+          if (isPermissionError(e2)) {
+            setErr("No se pudo vincular la cuenta con ese código por permisos de Firebase.");
+          } else {
+            setErr("Este correo ya tiene cuenta — verifica tu contraseña");
+          }
           setLoading(false); return;
         }
       } else if (isPermissionError(e)) {
+        if (justCreated) await fbDeleteCurrentUser().catch(() => {});
         setErr("Firebase bloqueó el acceso al código de pareja. Revisa Firestore Rules para la colección codes.");
       } else {
-        setErr(authErrMsg(e, "Error al unirse: " + (e.message || e.code || "desconocido")));
+        const msg = String(e?.message || "");
+        if (justCreated) await fbDeleteCurrentUser().catch(() => {});
+        if (msg.includes("CODE_ALREADY_LINKED")) {
+          setErr("Ese código ya está vinculado con otra cuenta de pareja.");
+        } else if (msg.includes("CODE_NOT_FOUND")) {
+          setErr("Código no encontrado — revisa que esté bien escrito");
+        } else {
+          setErr(authErrMsg(e, "Error al unirse: " + (e.message || e.code || "desconocido")));
+        }
       }
     }
     setLoading(false);
@@ -1944,6 +2003,15 @@ function Login({ onLogin }) {
           <div style={{ background: C.cream, borderRadius: 16, padding: 14, textAlign: "center", border: `1.5px solid ${C.border}` }}>
             <div style={{ fontSize: "0.7rem", fontWeight: 800, color: C.inkL, letterSpacing: "0.6px", marginBottom: 7 }}>TU CÓDIGO DE PAREJA</div>
             <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "2.2rem", letterSpacing: 9, color: C.dark, background: C.white, borderRadius: 10, padding: "10px", marginBottom: 6, border: `1.5px solid ${C.border}` }}>{code}</div>
+            <div style={{ fontSize: "0.72rem", fontWeight: 800, marginBottom: 8, color: codeStatus === "available" ? C.olive : codeStatus === "taken" ? "#c04040" : C.inkL }}>
+              {codeStatus === "checking" && "Verificando disponibilidad..."}
+              {codeStatus === "available" && "Código disponible ✓"}
+              {codeStatus === "taken" && "Código ocupado, genera otro"}
+              {codeStatus === "error" && "No se pudo verificar ahora, se validará al crear"}
+            </div>
+            <Btn onClick={() => setCode(makeCode())} variant="sand" style={{ padding: "8px 12px", fontSize: "0.76rem", marginBottom: 8 }}>
+              Generar otro código
+            </Btn>
             <div style={{ fontSize: "0.7rem", color: C.inkL, fontWeight: 700 }}>Compártelo para que tu pareja se una</div>
           </div>
         </>}
@@ -2472,8 +2540,6 @@ function Conocete({ conoce, onSave, user }) {
               </div>
             </div>;
           })}
-
-          <Cuestionarios conoce={conoce} onSave={onSave} user={user} />
         </div>
       </div>
     </div>
@@ -2493,6 +2559,9 @@ function Conocete({ conoce, onSave, user }) {
             <ProgBar value={done} max={data.preguntas.length} color={C.olive} style={{ marginTop: 8 }} />
           </div>;
         })}
+      </div>
+      <div style={{ margin: "0 14px 0" }}>
+        <Cuestionarios conoce={conoce} onSave={onSave} user={user} />
       </div>
     </div>
   );
@@ -2621,10 +2690,181 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
   );
 }
 
+function StreakSection({ streakInfo, streakAnalytics, onUpdateSettings, user }) {
+  const [openSettings, setOpenSettings] = useState(false);
+  const settings = streakInfo?.settings || { reminderEnabled: true, reminderHour: "20:00", reminderTone: "suave" };
+  const current = streakInfo?.currentStreak || 0;
+  const longest = streakInfo?.longestStreak || 0;
+  const nextMilestone = streakInfo?.nextMilestone || null;
+  const todayDone = !!streakInfo?.todayDone;
+  const pairName = user?.names || "su pareja";
+  const toneText = {
+    suave: `Hola ${pairName}, hoy una mini conexion de 3 minutos ya cuenta 💚`,
+    amistoso: `Equipo ${pairName}: su Mochi diario los espera 🐼`,
+    energico: `Vamos ${pairName}, mantengan viva la racha de hoy ⚡`,
+  };
+
+  const saveSetting = (patch) => {
+    onUpdateSettings({
+      ...settings,
+      ...patch,
+    });
+  };
+
+  return (
+    <div style={{ margin: "0 14px 12px", background: C.white, borderRadius: 18, padding: 16, boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
+        <div>
+          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark }}>Racha de conexion diaria</div>
+          <div style={{ fontSize: "0.76rem", color: C.inkL, fontWeight: 700 }}>Comuniquense con calidez cada dia para cuidar su vinculo</div>
+        </div>
+        <div style={{ background: todayDone ? C.mint : C.sandL, borderRadius: 999, padding: "6px 10px", fontSize: "0.68rem", fontWeight: 800, color: todayDone ? C.teal : C.inkL }}>
+          {todayDone ? "Hoy completado" : "Hoy pendiente"}
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
+        <div style={{ background: C.cream, borderRadius: 12, padding: "10px 12px", border: `1px solid ${C.border}` }}>
+          <div style={{ fontSize: "0.68rem", color: C.inkL, fontWeight: 800 }}>Racha actual</div>
+          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.45rem", color: C.dark }}>{current} dias</div>
+        </div>
+        <div style={{ background: C.cream, borderRadius: 12, padding: "10px 12px", border: `1px solid ${C.border}` }}>
+          <div style={{ fontSize: "0.68rem", color: C.inkL, fontWeight: 800 }}>Mejor racha</div>
+          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.45rem", color: C.dark }}>{longest} dias</div>
+        </div>
+      </div>
+
+      <div style={{ marginBottom: 8 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
+          <div style={{ fontSize: "0.72rem", color: C.inkL, fontWeight: 800 }}>Progreso al proximo hito</div>
+          <div style={{ fontSize: "0.72rem", color: C.inkM, fontWeight: 800 }}>
+            {nextMilestone ? `Meta ${nextMilestone} dias` : "Todas las metas desbloqueadas"}
+          </div>
+        </div>
+        <div style={{ width: "100%", height: 12, borderRadius: 999, background: C.sand, overflow: "hidden", border: `1px solid ${C.border}` }}>
+          <div style={{ width: `${streakInfo?.progressPct || 0}%`, height: "100%", background: "linear-gradient(90deg, #7ab848 0%, #4a9a8a 100%)", transition: "width 0.35s ease" }} />
+        </div>
+      </div>
+
+      <div style={{ marginBottom: 10, display: "flex", gap: 8, overflowX: "auto", paddingBottom: 2 }}>
+        {STREAK_MILESTONES.map(m => {
+          const done = (streakInfo?.unlockedMilestones || []).includes(m);
+          return (
+            <div key={m} style={{ minWidth: 108, borderRadius: 12, padding: "10px 9px", border: `1px solid ${done ? C.teal : C.border}`, background: done ? "#e8f7f1" : C.sandL, textAlign: "center", opacity: done ? 1 : 0.72 }}>
+              <div style={{ fontSize: "1.1rem", marginBottom: 2 }}>🐼</div>
+              <div style={{ fontSize: "0.72rem", fontWeight: 800, color: C.dark }}>Mochi {m}</div>
+              <div style={{ fontSize: "0.64rem", color: C.inkL, fontWeight: 700 }}>{done ? "Desbloqueado" : `${m} dias`}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={{ background: C.sandL, borderRadius: 12, padding: "10px 10px", border: `1px solid ${C.border}`, marginBottom: 10 }}>
+        <div style={{ fontSize: "0.72rem", color: C.inkL, fontWeight: 800, marginBottom: 7 }}>Analitica de participacion</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+          <div style={{ background: C.white, borderRadius: 9, padding: "8px 9px", border: `1px solid ${C.border}` }}>
+            <div style={{ fontSize: "0.64rem", color: C.inkL, fontWeight: 800 }}>Retencion 7 dias</div>
+            <div style={{ fontSize: "1rem", color: C.dark, fontWeight: 800 }}>{streakAnalytics?.retention7 || 0}%</div>
+            <div style={{ fontSize: "0.62rem", color: C.inkM, fontWeight: 700 }}>{streakAnalytics?.active7 || 0}/7 dias activos</div>
+          </div>
+          <div style={{ background: C.white, borderRadius: 9, padding: "8px 9px", border: `1px solid ${C.border}` }}>
+            <div style={{ fontSize: "0.64rem", color: C.inkL, fontWeight: 800 }}>Retencion 30 dias</div>
+            <div style={{ fontSize: "1rem", color: C.dark, fontWeight: 800 }}>{streakAnalytics?.retention30 || 0}%</div>
+            <div style={{ fontSize: "0.62rem", color: C.inkM, fontWeight: 700 }}>{streakAnalytics?.active30 || 0}/30 dias activos</div>
+          </div>
+        </div>
+        <div style={{ fontSize: "0.7rem", color: C.inkM, fontWeight: 700, lineHeight: 1.55 }}>
+          Tendencia semanal: {streakAnalytics?.trendDeltaDays >= 0 ? `+${streakAnalytics?.trendDeltaDays || 0}` : streakAnalytics?.trendDeltaDays || 0} dias vs semana anterior.
+          Dia mas flojo: {streakAnalytics?.weakestWeekday?.name || "-"}.
+        </div>
+      </div>
+
+      {!!streakInfo?.celebrationText && (
+        <div style={{ background: "linear-gradient(120deg, #fff1c2 0%, #ffe5b4 100%)", borderRadius: 12, padding: "9px 10px", border: "1px solid #f3d38a", marginBottom: 10, animation: "fadeIn 0.25s ease" }}>
+          <div style={{ fontSize: "0.78rem", color: "#7a5a11", fontWeight: 800 }}>{streakInfo.celebrationText}</div>
+        </div>
+      )}
+
+      <div style={{ background: C.cream, borderRadius: 12, padding: "9px 10px", border: `1px solid ${C.border}`, marginBottom: 8 }}>
+        <div style={{ fontSize: "0.74rem", color: C.inkM, lineHeight: 1.6, fontWeight: 700 }}>
+          Hoy para {pairName}: compartan una apreciacion especifica, una emocion del dia y una accion de cuidado mutuo.
+        </div>
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }} onClick={() => setOpenSettings(v => !v)}>
+        <div style={{ fontSize: "0.74rem", color: C.inkL, fontWeight: 800 }}>Recordatorios personalizables</div>
+        <div style={{ fontSize: "0.74rem", color: C.inkM, fontWeight: 800 }}>{openSettings ? "Ocultar" : "Configurar"}</div>
+      </div>
+
+      {openSettings && (
+        <div style={{ marginTop: 8, background: C.sandL, borderRadius: 12, padding: "10px 10px", border: `1px solid ${C.border}` }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, fontSize: "0.76rem", color: C.ink, fontWeight: 700 }}>
+            <input type="checkbox" checked={!!settings.reminderEnabled} onChange={(e) => saveSetting({ reminderEnabled: e.target.checked })} />
+            Enviar recordatorio suave
+          </label>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            <div>
+              <div style={{ fontSize: "0.66rem", color: C.inkL, fontWeight: 800, marginBottom: 4 }}>Hora sugerida</div>
+              <input type="time" value={settings.reminderHour || "20:00"} onChange={(e) => saveSetting({ reminderHour: e.target.value })} style={{ width: "100%", border: `1.5px solid ${C.border}`, borderRadius: 8, padding: "7px 8px", fontFamily: "'Nunito',sans-serif" }} />
+            </div>
+            <div>
+              <div style={{ fontSize: "0.66rem", color: C.inkL, fontWeight: 800, marginBottom: 4 }}>Tono</div>
+              <select value={settings.reminderTone || "suave"} onChange={(e) => saveSetting({ reminderTone: e.target.value })} style={{ width: "100%", border: `1.5px solid ${C.border}`, borderRadius: 8, padding: "7px 8px", fontFamily: "'Nunito',sans-serif", background: C.white }}>
+                <option value="suave">Suave</option>
+                <option value="amistoso">Amistoso</option>
+                <option value="energico">Energetico</option>
+              </select>
+            </div>
+          </div>
+          <div style={{ marginTop: 8, fontSize: "0.72rem", color: C.inkM, fontWeight: 700, lineHeight: 1.6 }}>
+            Vista previa: {toneText[settings.reminderTone || "suave"]}
+          </div>
+        </div>
+      )}
+
+      <div style={{ marginTop: 10, background: C.cream, borderRadius: 12, padding: "9px 10px", border: `1px solid ${C.border}` }}>
+        <div style={{ fontSize: "0.72rem", color: C.inkL, fontWeight: 800, marginBottom: 4 }}>Como recuperar racha o reclamar Mochis</div>
+        <div style={{ fontSize: "0.74rem", color: C.inkM, fontWeight: 700, lineHeight: 1.65 }}>
+          1) Completen una interaccion hoy: mensaje, gratitud, momento, ejercicio, Conocete o acuerdo.
+        </div>
+        <div style={{ fontSize: "0.74rem", color: C.inkM, fontWeight: 700, lineHeight: 1.65 }}>
+          2) Cuando ambos vuelven a conectar, la racha se reinicia y sube dia a dia.
+        </div>
+        <div style={{ fontSize: "0.74rem", color: C.inkM, fontWeight: 700, lineHeight: 1.65 }}>
+          3) Al llegar al hito, se desbloquea automaticamente su recompensa Mochi 🐼.
+        </div>
+      </div>
+
+      <div style={{ marginTop: 10 }}>
+        <div style={{ fontSize: "0.72rem", color: C.inkL, fontWeight: 800, marginBottom: 5 }}>Recursos para fortalecer la relacion</div>
+        {STREAK_RESOURCES.map(r => (
+          <a key={r.url} href={r.url} target="_blank" rel="noreferrer" style={{ display: "block", textDecoration: "none", background: C.sandL, border: `1px solid ${C.border}`, borderRadius: 10, padding: "8px 9px", marginBottom: 6 }}>
+            <div style={{ fontSize: "0.68rem", color: C.inkL, fontWeight: 800 }}>{r.type}</div>
+            <div style={{ fontSize: "0.78rem", color: C.ink, fontWeight: 700, lineHeight: 1.5 }}>{r.title}</div>
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // PROFILE — Enhanced with more info fields
-function Perfil({ user, bamboo, exDone, messages, burbuja, conoce, coupleInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento }) {
+function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, conoce, lessonsDone, coupleInfo, streakInfo, streakAnalytics, onUpdateStreakSettings, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento, onSendMessage }) {
   const [editMode, setEditMode] = useState(false);
   const [editingName, setEditingName] = useState(false);
+  const [showLoveModal, setShowLoveModal] = useState(false);
+  const [loveText, setLoveText] = useState("");
+  const [quickLove, setQuickLove] = useState(null);
+  const [debugTapCount, setDebugTapCount] = useState(0);
+  const [debugTapUntil, setDebugTapUntil] = useState(0);
+  const [debugNotice, setDebugNotice] = useState("");
+  const [manualDebugEnabled, setManualDebugEnabled] = useState(() => {
+    try {
+      return localStorage.getItem("mochi_debug_streak") === "1";
+    } catch {
+      return false;
+    }
+  });
   const [nameInput, setNameInput] = useState(user?.names || "");
   const [form, setForm] = useState({
     anniversary: coupleInfo.anniversary || "",
@@ -2646,7 +2886,10 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, conoce, coupleInfo, o
   const nameA = nameParts[0] || "Panda A";
   const nameB = nameParts[1] || nameParts[0] || "Panda B";
   const myEmail = user?.email || "guest";
+  const myRole = user?.isOwner !== false ? "owner" : "partner";
   const myMsgs = messages.filter(m => m.senderEmail === myEmail).length;
+  const partnerMsgs = messages.filter(m => m.senderEmail !== myEmail);
+  const latestPartnerMsg = partnerMsgs[0] || null;
   const ownerQuiz = getQuizAdviceFromConoce(conoce || {}, "owner");
   const partnerQuiz = getQuizAdviceFromConoce(conoce || {}, "partner");
   const approvedAgreements = Object.entries(burbuja || {})
@@ -2656,6 +2899,58 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, conoce, coupleInfo, o
       text: v.approvedText || v.proposalText,
       question: v.question || BURBUJA_ITEM_MAP[id]?.question || "Acuerdo"
     }));
+  const gardenPlacedCount = Object.values(garden || {}).filter(v => v === true).length;
+  const outfitOwnedCount = Object.entries(accessories || {}).filter(([k, v]) => k.startsWith("outfit_") && (v === true || v === "owned")).length;
+  const combosCount = gardenPlacedCount * outfitOwnedCount;
+  const lessonsTogetherCount = Object.values(lessonsDone || {}).filter(v => v?.owner && v?.partner).length;
+  const myConoceCount = Object.values(conoce || {}).filter(v => !!v?.[myRole]).length;
+
+  const quizScaleScores = Object.entries(conoce || {}).reduce((arr, [k, v]) => {
+    if (!k.startsWith("quizFortalezas-") && !k.startsWith("quizPersonalidad-")) return arr;
+    const raw = Number(v?.[myRole]);
+    if (!Number.isFinite(raw)) return arr;
+    return [...arr, raw];
+  }, []);
+  const myQuiz = getQuizAdviceFromConoce(conoce || {}, myRole);
+  const highQuizScore = quizScaleScores.length >= 10
+    ? (quizScaleScores.reduce((s, n) => s + n, 0) / quizScaleScores.length) >= 4
+    : false;
+
+  const weeklyActivityDates = [
+    ...messages.map(m => m?.time),
+    ...gratitud.map(g => g?.createdAt),
+    ...momentos.map(m => m?.createdAt),
+  ];
+  const weeklyActiveWeeks = new Set(
+    weeklyActivityDates
+      .map(toJsDate)
+      .filter(Boolean)
+      .map(d => getWeekStartUtc(d).getTime())
+  ).size;
+  const weeklyStreak = getWeeklyStreak(weeklyActivityDates);
+  const debugByQuery = typeof window !== "undefined"
+    && new URLSearchParams(window.location.search).get("debug") === "1";
+  const showDebugStreak = debugByQuery || manualDebugEnabled;
+
+  const onTapLogros = () => {
+    const now = Date.now();
+    const withinWindow = now <= debugTapUntil;
+    const nextCount = withinWindow ? debugTapCount + 1 : 1;
+    setDebugTapCount(nextCount);
+    setDebugTapUntil(now + 2200);
+
+    if (nextCount >= 5) {
+      const nextEnabled = !manualDebugEnabled;
+      setManualDebugEnabled(nextEnabled);
+      try {
+        localStorage.setItem("mochi_debug_streak", nextEnabled ? "1" : "0");
+      } catch {}
+      setDebugTapCount(0);
+      setDebugTapUntil(0);
+      setDebugNotice(nextEnabled ? "Debug de racha activado" : "Debug de racha desactivado");
+      setTimeout(() => setDebugNotice(""), 1800);
+    }
+  };
   const [connected, setConnected] = useState(false);
   useEffect(() => {
     if (user?.code && !user?.isGuest) {
@@ -2671,14 +2966,16 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, conoce, coupleInfo, o
   }, [user?.code]);
 
   const ACHS = [
-    { icon: "🌱", name: "Primer ejercicio", done: totalEx >= 1 },
-    { icon: "⭐", name: "10 ejercicios", done: totalEx >= 10 },
-    { icon: "🔗", name: "Pareja conectada", done: connected },
-    { icon: "💌", name: "5 mensajitos", done: myMsgs >= 5 },
-    { icon: "🌸", name: "5 acuerdos", done: approvedAgreements.length >= 5 },
-    { icon: "🌿", name: "100 bambú", done: bamboo >= 100 },
-    { icon: "💝", name: "Jardín lleno", done: approvedAgreements.length >= 10 },
-    { icon: "🏆", name: "25 ejercicios", done: totalEx >= 25 },
+    { icon: "🌳", name: "Maestro del Jardín", done: gardenPlacedCount >= 20 },
+    { icon: "🧥", name: "Panda Estiloso", done: outfitOwnedCount >= 10 },
+    { icon: "🎨", name: "Equipo Creativo", done: combosCount >= 5 },
+    { icon: "⚡", name: "Dúo Dinámico", done: totalEx >= 15 },
+    { icon: "📚", name: "Alumnos Estelares", done: lessonsTogetherCount >= 10 },
+    { icon: "💞", name: "Constancia Amorosa", done: weeklyStreak >= 4 && lessonsTogetherCount >= 4 },
+    { icon: "📝", name: "Poetas Digitales", done: myMsgs >= 20 },
+    { icon: "🤝", name: "Equipo Comprometido", done: approvedAgreements.length >= 5 },
+    { icon: "🔎", name: "Investigadores del Amor", done: myConoceCount >= 30 },
+    { icon: "🏅", name: "Másters en Conexión", done: myQuiz.complete && highQuizScore },
   ];
 
   const FIELDS = [
@@ -2697,6 +2994,14 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, conoce, coupleInfo, o
   ];
 
   const save = () => { onSaveCoupleInfo(form); setEditMode(false); };
+  const submitLoveMessage = () => {
+    const clean = (quickLove || loveText).trim();
+    if (!clean) return;
+    onSendMessage(clean);
+    setShowLoveModal(false);
+    setLoveText("");
+    setQuickLove(null);
+  };
 
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
@@ -2717,6 +3022,27 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, conoce, coupleInfo, o
           </div>
         ))}
       </div>
+      <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:16, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
+        <button onClick={() => setShowLoveModal(true)} style={{ width:"100%", background:"#c05068", color:C.cream2, border:"none", borderRadius:12, padding:"12px 16px", fontFamily:"'Fredoka One',cursive", fontSize:"1rem", cursor:"pointer", boxShadow:"0 3px 0 rgba(0,0,0,0.18)" }}>
+          Manda un mensaje de amor
+        </button>
+        <div style={{ marginTop:12, background:C.cream, borderRadius:12, padding:12, border:`1px solid ${C.border}` }}>
+          <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.88rem", color:C.dark, marginBottom:6 }}>💌 Último mensaje de tu pareja</div>
+          {!latestPartnerMsg ? (
+            <div style={{ fontSize:"0.8rem", color:C.inkL, lineHeight:1.6 }}>Aquí aparecerá el último mensajito que te enviaron. Lo que mandes desde aquí seguirá saliendo en los globos del jardín.</div>
+          ) : (
+            <>
+              <div style={{ fontSize:"0.88rem", color:C.ink, lineHeight:1.65, fontWeight:700 }}>{latestPartnerMsg.text}</div>
+              <div style={{ fontSize:"0.7rem", color:C.inkL, fontWeight:700, marginTop:6 }}>
+                De {latestPartnerMsg.sender} · {new Date(latestPartnerMsg.time).toLocaleDateString("es", { day:"numeric", month:"short", hour:"2-digit", minute:"2-digit" })}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      <StreakSection streakInfo={streakInfo} streakAnalytics={streakAnalytics} onUpdateSettings={onUpdateStreakSettings} user={user} />
+
             {/* ── BAÚL DE GRATITUD ── */}
       <div style={{ margin:"0 14px 12px" }}>
         <BaulSection
@@ -2770,13 +3096,46 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, conoce, coupleInfo, o
       </div>
 
       {/* Achievements */}
-      <div style={{ padding: "4px 14px 6px", fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark }}>Logros</div>
+      <div onClick={onTapLogros} style={{ padding: "4px 14px 6px", fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark, cursor: "pointer", userSelect: "none" }}>Logros</div>
+      {debugNotice && <div style={{ padding: "0 14px 8px", fontSize: "0.72rem", color: C.inkL, fontWeight: 800 }}>{debugNotice}</div>}
       <div style={{ display: "flex", gap: 10, padding: "4px 14px 18px", overflowX: "auto" }}>
-        {ACHS.map(a => <div key={a.name} style={{ background: a.done ? C.cream : C.sandL, borderRadius: 16, padding: "14px 11px", textAlign: "center", minWidth: 88, flexShrink: 0, opacity: a.done ? 1 : 0.4, boxShadow: `0 2px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
+        {ACHS.map(a => <div key={a.name} style={{ background: a.done ? C.cream : C.sandL, borderRadius: 16, padding: "14px 11px", textAlign: "center", minWidth: 118, flexShrink: 0, opacity: a.done ? 1 : 0.4, boxShadow: `0 2px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
           <div style={{ fontSize: "1.7rem", marginBottom: 5 }}>{a.icon}</div>
-          <div style={{ fontSize: "0.7rem", fontWeight: 800, color: C.ink, lineHeight: 1.3 }}>{a.name}</div>
+          <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.ink, lineHeight: 1.3 }}>{a.name}</div>
         </div>)}
       </div>
+      {showDebugStreak && (
+        <div style={{ margin: "0 14px 12px", background: "#fff8e8", border: "1.5px dashed #d4a843", borderRadius: 14, padding: "10px 12px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 4 }}>
+            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.88rem", color: C.dark }}>Debug racha semanal</div>
+            <button
+              onClick={() => {
+                setManualDebugEnabled(false);
+                try {
+                  localStorage.setItem("mochi_debug_streak", "0");
+                } catch {}
+                setDebugNotice("Debug de racha desactivado");
+                setTimeout(() => setDebugNotice(""), 1800);
+              }}
+              style={{
+                border: `1.5px solid ${C.border}`,
+                background: C.white,
+                color: C.ink,
+                borderRadius: 9,
+                padding: "4px 8px",
+                fontSize: "0.68rem",
+                fontWeight: 800,
+                cursor: "pointer"
+              }}
+            >
+              Reset debug
+            </button>
+          </div>
+          <div style={{ fontSize: "0.78rem", color: C.inkM, lineHeight: 1.6, fontWeight: 700 }}>
+            weeklyStreak: {weeklyStreak} / 4 · weeksWithActivity: {weeklyActiveWeeks} · lessonsTogether: {lessonsTogetherCount}
+          </div>
+        </div>
+      )}
 
       <div style={{ padding: "0 14px 20px" }}>
 
@@ -2869,6 +3228,37 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, conoce, coupleInfo, o
         </div>
         <div style={{ fontSize: "0.65rem", color: C.inkL, textAlign: "center", paddingBottom: 4 }}>Mochi v1.0 · Hecho con 🐼 amor</div>
       </div>
+
+      {showLoveModal && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(15,25,15,0.62)", zIndex:5000, display:"flex", alignItems:"flex-end" }} onClick={e => {
+          if (e.target === e.currentTarget) {
+            setShowLoveModal(false);
+            setLoveText("");
+            setQuickLove(null);
+          }
+        }}>
+          <div style={{ background:C.white, borderRadius:"22px 22px 0 0", padding:"16px 18px 44px", width:"100%", maxWidth:480, margin:"0 auto", border:`1.5px solid ${C.border}` }}>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
+              <div style={{ width:34, height:5, background:C.sand, borderRadius:50 }}/>
+              <div onClick={() => { setShowLoveModal(false); setLoveText(""); setQuickLove(null); }} style={{ width:30, height:30, borderRadius:"50%", background:C.sand, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", fontSize:"1rem", color:C.inkM, fontWeight:800 }}>✕</div>
+            </div>
+            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.3rem", color:C.dark, marginBottom:2 }}>💌 Mensajito de amor</div>
+            <div style={{ fontSize:"0.78rem", color:C.inkL, marginBottom:14, fontWeight:600 }}>+5 bambú 🌿 · Lo que envíes aparece también en los globos del jardín</div>
+            <div style={{ display:"flex", flexDirection:"column", gap:6, marginBottom:14 }}>
+              {LOVE_PROMPTS.map((p, i) => (
+                <div key={i} onClick={() => { setQuickLove(p.idea); setLoveText(p.idea); }} style={{ display:"flex", alignItems:"center", gap:10, background:loveText===p.idea?C.cream:C.sandL, borderRadius:11, padding:"9px 12px", cursor:"pointer", border:`1.5px solid ${loveText===p.idea?C.olive:C.border}`, transition:"all 0.15s" }}>
+                  <span style={{ fontSize:"1.1rem" }}>{p.icon}</span>
+                  <span style={{ fontSize:"0.78rem", color:C.inkM, lineHeight:1.4, flex:1 }}>{p.idea}</span>
+                  {loveText===p.idea && <span style={{ fontSize:"0.7rem", color:C.olive, fontWeight:800 }}>✓</span>}
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize:"0.7rem", fontWeight:800, color:C.inkL, marginBottom:6, letterSpacing:"0.5px" }}>TU MENSAJE</div>
+            <TA value={loveText} onChange={v => { setLoveText(v); setQuickLove(null); }} placeholder="Escribe aquí... o edita una idea 💬" rows={3} style={{ marginBottom:12 }} />
+            <Btn onClick={submitLoveMessage} variant="salmon" style={{ width:"100%", fontSize:"1.05rem" }}>Enviar con amor 💌</Btn>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -3362,7 +3752,6 @@ function Onboarding({ onDone }) {
 const NAV = [
   { id: "jardin", emoji: "🌿", label: "Jardín" },
   { id: "ejerc", emoji: "⭐", label: "Ejerc." },
-  { id: "mensajes", emoji: "💌", label: "Mensajes" },
   { id: "conocete", emoji: "💬", label: "Conócete" },
   { id: "burbuja", emoji: "🫧", label: "Burbuja" },
   { id: "perfil", emoji: "👤", label: "Nosotros" },
@@ -3387,7 +3776,6 @@ export default function App() {
   const [burbuja, setBurbuja] = useState({});
   const [coupleInfo, setCoupleInfo] = useState({});
   const [notifs, setNotifs] = useState([]);
-  const [notifBadge, setNotifBadge] = useState(0);
   const [pandaBubble, setPandaBubble] = useState(null); // {nameA, textA, nameB, textB}
   const [mochiHappy, setMochiHappy] = useState(false);
   const [lastVisit, setLastVisit] = useState(null);
@@ -3395,8 +3783,21 @@ export default function App() {
   const [lessonsDone, setLessonsDone] = useState({});
   const [gratitud, setGratitud] = useState([]);
   const [momentos, setMomentos] = useState([]);
+  const [streakInteractions, setStreakInteractions] = useState([]);
+  const [streakData, setStreakData] = useState({
+    currentStreak: 0,
+    longestStreak: 0,
+    unlockedMilestones: [],
+    nextMilestone: STREAK_MILESTONES[0],
+    progressPct: 0,
+    settings: { reminderEnabled: true, reminderHour: "20:00", reminderTone: "suave" },
+    rewards: [],
+    todayDone: false,
+    celebrationText: "",
+  });
   const happyTimer = useRef(null);
   const screenRef = useRef("login");
+  const streakAnalytics = useMemo(() => computeStreakAnalytics(streakInteractions), [streakInteractions]);
 
   const saveKey = u => u?.email ? "mochi_prog_" + u.email : null;
   const toast = msg => { setToastMsg(msg); setTimeout(() => setToastMsg(null), 3000); };
@@ -3406,17 +3807,17 @@ export default function App() {
     happyTimer.current = setTimeout(() => setMochiHappy(false), 4000);
   }, []);
 
-  const buildSave = useCallback((overrides = {}) => ({
-    bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit,
-    ...overrides
-  }), [bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit]);
-
   const save = useCallback((u, s) => {
+    const payload = {
+      ...s,
+      streakInteractions: s?.streakInteractions ?? streakInteractions,
+      streakData: s?.streakData ?? streakData,
+    };
     const k = saveKey(u || user);
-    if (k) ls.set(k, s); // keep local backup
+    if (k) ls.set(k, payload); // keep local backup
     const uid = (u || user)?.uid;
-    if (uid) fbSaveProgress(uid, s).catch(() => {});
-  }, [user]);
+    if (uid) fbSaveProgress(uid, payload).catch(() => {});
+  }, [streakData, streakInteractions, user]);
 
   useEffect(() => {
     screenRef.current = screen;
@@ -3461,6 +3862,8 @@ export default function App() {
         if (s.lessonsDone) setLessonsDone(s.lessonsDone);
         if (s.gratitud) setGratitud(s.gratitud);
         if (s.momentos) setMomentos(s.momentos);
+        if (s.streakInteractions) setStreakInteractions(s.streakInteractions);
+        if (s.streakData) setStreakData(prev => ({ ...prev, ...s.streakData }));
       }
     }
     // Listen to real-time messages if couple code exists
@@ -3537,8 +3940,14 @@ export default function App() {
     // Notifications
     unsubs.push(fbListenNotifs(code, items => {
       setNotifs(items);
-      const unread = items.filter(n => !n.read && n.forUid === user.uid).length;
-      setNotifBadge(unread);
+    }));
+
+    // Daily streak interactions and summary profile
+    unsubs.push(fbListenStreakInteractions(code, items => setStreakInteractions(items)));
+    unsubs.push(fbListenStreakProfile(code, data => {
+      if (data) {
+        setStreakData(prev => ({ ...prev, ...data }));
+      }
     }));
 
     return () => unsubs.forEach(u => u && u());
@@ -3569,6 +3978,116 @@ export default function App() {
     return () => unsub();
   }, []); // eslint-disable-line
 
+  const trackDailyInteraction = useCallback(async (type) => {
+    if (!STREAK_TYPES[type]) return;
+    const date = getDateKeyLocal();
+    const item = {
+      id: `${user?.code || "guest"}_${date}_${type}`,
+      date,
+      type,
+      completed: true,
+      completedBy: user?.uid || "guest",
+      updatedAt: new Date().toISOString(),
+      coupleCode: user?.code || "guest",
+    };
+
+    setStreakInteractions(prev => {
+      const idx = prev.findIndex(p => p.date === date && p.type === type);
+      if (idx === -1) return [item, ...prev];
+      const next = [...prev];
+      next[idx] = { ...next[idx], ...item };
+      return next;
+    });
+
+    if (user?.code && !user?.isGuest) {
+      await fbSaveStreakInteraction(user.code, date, type, true, { completedBy: user?.uid || "unknown" }).catch(() => {});
+    }
+  }, [user?.code, user?.isGuest, user?.uid]);
+
+  const updateStreakSettings = useCallback(async (settingsPatch) => {
+    const nextSettings = {
+      ...(streakData.settings || { reminderEnabled: true, reminderHour: "20:00", reminderTone: "suave" }),
+      ...settingsPatch,
+    };
+    setStreakData(prev => ({ ...prev, settings: nextSettings }));
+    if (user?.code && !user?.isGuest) {
+      await fbSaveStreakProfile(user.code, { settings: nextSettings }).catch(() => {});
+    }
+  }, [streakData.settings, user?.code, user?.isGuest]);
+
+  useEffect(() => {
+    const defaultSettings = streakData.settings || { reminderEnabled: true, reminderHour: "20:00", reminderTone: "suave" };
+    const computed = computeDailyStreakData(streakInteractions, streakData.longestStreak || 0);
+    const prevUnlocked = streakData.unlockedMilestones || [];
+    const newlyUnlocked = computed.unlockedMilestones.filter(m => !prevUnlocked.includes(m));
+    const nextRewards = [...(streakData.rewards || [])];
+
+    newlyUnlocked.forEach(m => {
+      if (!nextRewards.find(r => r.id === `mochi-${m}`)) {
+        nextRewards.push({
+          id: `mochi-${m}`,
+          milestone: m,
+          name: `Mochi de ${m} dias`,
+          unlockedAt: new Date().toISOString(),
+        });
+      }
+    });
+
+    const celebrationText = newlyUnlocked.length
+      ? `Nuevo hito desbloqueado: Mochi ${newlyUnlocked[newlyUnlocked.length - 1]} 🐼`
+      : streakData.celebrationText || "";
+
+    const changed =
+      computed.currentStreak !== streakData.currentStreak
+      || computed.longestStreak !== streakData.longestStreak
+      || computed.todayDone !== streakData.todayDone
+      || computed.nextMilestone !== streakData.nextMilestone
+      || computed.progressPct !== streakData.progressPct
+      || JSON.stringify(computed.unlockedMilestones) !== JSON.stringify(prevUnlocked)
+      || JSON.stringify(nextRewards) !== JSON.stringify(streakData.rewards || []);
+
+    if (!changed && !newlyUnlocked.length) return;
+
+    const merged = {
+      ...streakData,
+      ...computed,
+      unlockedMilestones: computed.unlockedMilestones,
+      rewards: nextRewards,
+      settings: defaultSettings,
+      celebrationText,
+    };
+
+    setStreakData(merged);
+
+    if (newlyUnlocked.length) {
+      trigHappy();
+      toast(`Hito de racha: ${newlyUnlocked[newlyUnlocked.length - 1]} dias. Recompensa Mochi desbloqueada 🐼`);
+      if (user?.code && !user?.isGuest && user?.uid) {
+        const myName = getMyName(user, "Tu pareja");
+        fbSendNotif(user.code, {
+          type: "racha",
+          msg: `${myName} alcanzo un nuevo hito de racha 🐼`,
+          forUid: "partner",
+          fromUid: user.uid,
+        }).catch(() => {});
+      }
+    }
+
+    if (user?.code && !user?.isGuest) {
+      fbSaveStreakProfile(user.code, {
+        currentStreak: merged.currentStreak,
+        longestStreak: merged.longestStreak,
+        todayDone: merged.todayDone,
+        unlockedMilestones: merged.unlockedMilestones,
+        nextMilestone: merged.nextMilestone,
+        progressPct: merged.progressPct,
+        rewards: merged.rewards,
+        settings: merged.settings,
+        celebrationText: merged.celebrationText,
+      }).catch(() => {});
+    }
+  }, [streakInteractions, streakData, user?.code, user?.isGuest, user?.uid, trigHappy]);
+
   const buyItem = item => {
     try {
       if (!item?.id || typeof item?.cost !== "number") {
@@ -3587,13 +4106,12 @@ export default function App() {
       const nb = bamboo - item.cost, ng = { ...safeGarden, [item.id]: true }, nh = Math.min(100, happiness + 10);
       const nv = new Date().toISOString();
       if (user?.code && !user?.isGuest) {
-        fbSpendBamboo(user.code, item.cost)
-          .then(async (newTotal) => {
+        fbPurchaseGardenUpdate(user.code, item.cost, { garden: ng, accessories, water, happiness: nh })
+          .then((newTotal) => {
             setBamboo(newTotal);
             setGarden(ng);
             setHappiness(nh);
             setLastVisit(nv);
-            await fbSaveGardenState(user.code, { garden: ng, accessories, water, happiness: nh }).catch(() => {});
             trigHappy();
             toast(`${item.name} plantado 🌿`);
             save(null, { bamboo:newTotal, happiness:nh, water, garden:ng, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit:nv, testScores, lessonsDone, gratitud, momentos });
@@ -3650,13 +4168,12 @@ export default function App() {
       const nb = bamboo - item.cost, na = { ...safeAccessories, [item.id]: true }, nh = Math.min(100, happiness + 5);
       const nv = new Date().toISOString();
       if (user?.code && !user?.isGuest) {
-        fbSpendBamboo(user.code, item.cost)
-          .then(async (newTotal) => {
+        fbPurchaseGardenUpdate(user.code, item.cost, { garden, accessories: na, water, happiness: nh })
+          .then((newTotal) => {
             setBamboo(newTotal);
             setAccessories(na);
             setHappiness(nh);
             setLastVisit(nv);
-            await fbSaveGardenState(user.code, { garden, accessories: na, water, happiness: nh }).catch(() => {});
             trigHappy();
             toast(`${item.name} puesto ${item.emoji} +5 amor`);
             save(null, { bamboo:newTotal, happiness:nh, water, garden, accessories:na, exDone, messages, conoce, burbuja, coupleInfo, lastVisit:nv, testScores, lessonsDone, gratitud, momentos });
@@ -3718,12 +4235,14 @@ export default function App() {
       const nb = await fbIncrementBamboo(user.code, 10).catch(() => bamboo + 10);
       setBamboo(nb); trigHappy();
       toast("Lección completada ✓ +10 bambú 🌿");
+      trackDailyInteraction("exercise");
       fbSendNotif(user.code, { type:"leccion", msg:`${myName} leyó una lección — ¡léela tú también! 📖`, forUid:"partner", fromUid: user.uid }).catch(()=>{});
     } else {
       const nl = { ...lessonsDone, [lessonId]: { ...(lessonsDone[lessonId] || {}), [myKey]: true } };
       setLessonsDone(nl);
       const nb = bamboo + 10; setBamboo(nb); trigHappy();
       toast("Lección completada ✓ +10 bambú 🌿");
+      trackDailyInteraction("exercise");
     }
   };
 
@@ -3743,9 +4262,11 @@ export default function App() {
     if (user?.code && !user?.isGuest) {
       const nb = await fbIncrementBamboo(user.code, total).catch(() => bamboo + total);
       setBamboo(nb);
+      trackDailyInteraction("exercise");
       fbSendNotif(user.code, { type:"ejercicio", msg:`${myName} completó un ejercicio — ¡complétalo tú también! 🌿`, forUid:"partner", fromUid: user.uid }).catch(()=>{});
     } else {
       setBamboo(b => b + total);
+      trackDailyInteraction("exercise");
     }
     toast(bonus ? `¡Maestría! +${total} bambú 🌟` : `+${total} bambú 🌿`);
     save(null, { bamboo: bamboo + total, happiness:nh, water, garden, accessories, exDone:nd, messages, conoce, burbuja, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
@@ -3782,16 +4303,9 @@ export default function App() {
     }
     const nb = bamboo + 5; setBamboo(nb); trigHappy();
     toast("Mensajito enviado 💌 +5 bambú");
+    trackDailyInteraction("message");
     save(null, { bamboo:nb, happiness, water, garden, accessories, exDone, messages:nextMessages, conoce, burbuja, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
   };
-
-  // Poll partner messages
-  useEffect(() => {
-    if (tab === "mensajes" && user?.code) {
-      const m = ls.get("mochi_msgs_" + user.code);
-      if (m) setMessages(m);
-    }
-  }, [tab]);
 
   const saveConoce = async (cat, qIdx, myAnswer, _b, isNew) => {
     const key = `${cat}-${qIdx}`;
@@ -3809,17 +4323,19 @@ export default function App() {
         const nb = await fbIncrementBamboo(user.code, 15).catch(() => bamboo + 15);
         setBamboo(nb); trigHappy();
         toast("+15 bambú por conocerse más 🌿");
+        trackDailyInteraction("conoce");
       } else if (isNew) {
         // I answered first — notify partner
         trigHappy();
         toast("¡Guardado! Esperando que tu pareja responda para ganar bambú 🌿");
+        trackDailyInteraction("conoce");
         fbSendNotif(user.code, { type:"conoce", msg:`${myName} respondió una pregunta — ¡tu turno! 🌿`, forUid:"partner", fromUid: user.uid }).catch(()=>{});
       }
     } else {
       // Local mode
       const nc = { ...conoce, [key]: { ...( conoce[key] || {}), [myRole]: myAnswer } };
       setConoce(nc);
-      if (isNew) { setBamboo(b => b + 15); trigHappy(); toast("+15 bambú por conocerse más 🌿"); }
+      if (isNew) { setBamboo(b => b + 15); trigHappy(); toast("+15 bambú por conocerse más 🌿"); trackDailyInteraction("conoce"); }
     }
   };
 
@@ -3914,6 +4430,7 @@ export default function App() {
 
     trigHappy();
     toast("Acuerdo aprobado ✓ +10 bambú 🌿");
+    trackDailyInteraction("agreement");
 
     if (user?.code && !user?.isGuest) {
       await fbSaveBurbuja(user.code, id, next).catch(() => {});
@@ -3958,12 +4475,14 @@ export default function App() {
       await fbAddGratitud(user.code, enriched).catch(() => {});
       const nb = await fbIncrementBamboo(user.code, 5).catch(() => bamboo + 5);
       setBamboo(nb);
+      trackDailyInteraction("gratitude");
       // Notify partner
       if (user?.uid) fbSendNotif(user.code, { type:"gratitud", msg:`${myName} escribió algo de gratitud 💛`, forUid:"partner", fromUid: user.uid }).catch(()=>{});
     } else {
       const ng = [{ ...enriched, id: Date.now() }, ...gratitud];
       setGratitud(ng);
       setBamboo(b => b + 5);
+      trackDailyInteraction("gratitude");
     }
     toast("💛 Guardado en el baúl de gratitud +5 bambú 🌿");
   };
@@ -3976,11 +4495,13 @@ export default function App() {
       await fbAddMomento(user.code, enriched).catch(() => {});
       const nb = await fbIncrementBamboo(user.code, 5).catch(() => bamboo + 5);
       setBamboo(nb);
+      trackDailyInteraction("moment");
       if (user?.uid) fbSendNotif(user.code, { type:"momento", msg:`${myName} guardó un momento especial ✨`, forUid:"partner", fromUid: user.uid }).catch(()=>{});
     } else {
       const nm = [{ ...enriched, id: Date.now() }, ...momentos];
       setMomentos(nm);
       setBamboo(b => b + 5);
+      trackDailyInteraction("moment");
     }
     toast("✨ Guardado en el baúl de momentos +5 bambú 🌿");
   };
@@ -3990,6 +4511,18 @@ export default function App() {
     setBamboo(0); setHappiness(20); setWater(40); setGarden({});
     setAccessories({}); setExDone({}); setMessages([]); setConoce({}); setBurbuja({}); setCoupleInfo({});
     setGratitud([]); setMomentos([]);
+    setStreakInteractions([]);
+    setStreakData({
+      currentStreak: 0,
+      longestStreak: 0,
+      unlockedMilestones: [],
+      nextMilestone: STREAK_MILESTONES[0],
+      progressPct: 0,
+      settings: { reminderEnabled: true, reminderHour: "20:00", reminderTone: "suave" },
+      rewards: [],
+      todayDone: false,
+      celebrationText: "",
+    });
   };
 
   const deleteAccount = () => {
@@ -4006,8 +4539,6 @@ export default function App() {
     logout();
   };
 
-  const unread = messages.filter(m => m.senderEmail !== (user?.email || "guest") && !m.read).length;
-
   if (screen === "login") return <><style>{STYLES}</style><Login onLogin={afterLogin}/></>;
   if (screen === "onboarding") return <><style>{STYLES}</style><Onboarding onDone={()=>setScreen("reltest")}/></>;
   if (screen === "reltest") return <><style>{STYLES}</style><RelTest user={user} onDone={finishTest}/></>;
@@ -4019,18 +4550,16 @@ export default function App() {
       <div style={{ paddingBottom:72 }}>
         {tab==="jardin" && <Jardin bamboo={bamboo} happiness={happiness} water={water} garden={garden} accessories={accessories} mochiHappy={mochiHappy} pandaBubble={pandaBubble} onPet={petMochi} onBuy={buyItem} onWater={waterGarden} onBuyAccessory={buyAccessory}/>}
         {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson}/>}
-        {tab==="mensajes" && <Mensajes user={user} messages={messages} onSend={sendMsg}/>}
         {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user}/>}
         {tab==="burbuja" && <Burbuja burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} user={user}/>}
-        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} coupleInfo={coupleInfo} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento}/>}
+        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} garden={garden} accessories={accessories} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} lessonsDone={lessonsDone} coupleInfo={coupleInfo} streakInfo={streakData} streakAnalytics={streakAnalytics} onUpdateStreakSettings={updateStreakSettings} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} onSendMessage={sendMsg}/>} 
       </div>
       <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:480, background:C.white, borderTop:`1.5px solid ${C.border}`, display:"flex", zIndex:1000, boxShadow:`0 -3px 0 ${C.line}` }}>
         {NAV.map(n => {
           const active = tab === n.id;
-          const msgBadge = n.id==="mensajes" && unread>0 ? unread : null;
-          const notifTypes = { "ejerc":["ejercicio","leccion"], "conocete":["conoce"], "burbuja":["gratitud","momento","acuerdo"], "mensajes":[] };
+          const notifTypes = { "ejerc":["ejercicio","leccion"], "conocete":["conoce"], "burbuja":["gratitud","momento","acuerdo"], "perfil":["racha"] };
           const nBadge = notifTypes[n.id] ? notifs.filter(x=>!x.read && x.forUid===user?.uid && notifTypes[n.id].includes(x.type)).length : 0;
-          const badge = msgBadge || (nBadge > 0 ? nBadge : null);
+          const badge = nBadge > 0 ? nBadge : null;
           return (
             <div key={n.id} onClick={()=>{
               setTab(n.id);
