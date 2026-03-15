@@ -321,56 +321,56 @@ function CouplePandaSVG({ happy = false, size = 160 }) {
 
   const Panda = ({ x, y, tilt = 0, isHappy = false, tuft = false }) => (
     <g transform={`translate(${x} ${y}) rotate(${tilt})`}>
-      <ellipse cx="0" cy="120" rx="34" ry="7" fill="#1a1a1a" opacity="0.14" />
+      <ellipse cx="0" cy="121" rx="34" ry="6" fill="#1a1a1a" opacity="0.14" />
 
-      <ellipse cx="0" cy="78" rx="30" ry="34" fill="#f8fbff" stroke="#2c1b23" strokeWidth="2.4" />
-      <ellipse cx="0" cy="88" rx="21" ry="17" fill="#eef2f7" opacity="0.95" />
+      <ellipse cx="0" cy="79" rx="25" ry="29" fill="#f8fbff" stroke="#2c1b23" strokeWidth="2.3" />
+      <ellipse cx="0" cy="88" rx="17.5" ry="13.5" fill="#ecf1f7" opacity="0.95" />
 
-      <ellipse cx="-24" cy="81" rx="9" ry="16" fill="#3e4653" stroke="#2c1b23" strokeWidth="2" transform="rotate(-18 -24 81)" />
-      <ellipse cx="24" cy="81" rx="9" ry="16" fill="#3e4653" stroke="#2c1b23" strokeWidth="2" transform="rotate(18 24 81)" />
+      <ellipse cx="-24" cy="81" rx="8" ry="15" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(-16 -24 81)" />
+      <ellipse cx="24" cy="81" rx="8" ry="15" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(16 24 81)" />
 
-      <ellipse cx="-16" cy="108" rx="12" ry="14" fill="#3e4653" stroke="#2c1b23" strokeWidth="2" transform="rotate(-8 -16 108)" />
-      <ellipse cx="16" cy="108" rx="12" ry="14" fill="#3e4653" stroke="#2c1b23" strokeWidth="2" transform="rotate(8 16 108)" />
+      <ellipse cx="-12" cy="108" rx="11" ry="13" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(-8 -12 108)" />
+      <ellipse cx="12" cy="108" rx="11" ry="13" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(8 12 108)" />
 
-      <circle cx="0" cy="26" r="38" fill="#fbfdff" stroke="#2c1b23" strokeWidth="2.4" />
+      <circle cx="0" cy="0" r="39" fill="#fcfeff" stroke="#2c1b23" strokeWidth="2.5" />
 
-      <circle cx="-22" cy="-6" r="11.5" fill="#3e4653" stroke="#2c1b23" strokeWidth="2.2" />
-      <circle cx="22" cy="-6" r="11.5" fill="#3e4653" stroke="#2c1b23" strokeWidth="2.2" />
+      <circle cx="-22" cy="-33" r="11.5" fill="#3f4756" stroke="#2c1b23" strokeWidth="2.2" />
+      <circle cx="22" cy="-33" r="11.5" fill="#3f4756" stroke="#2c1b23" strokeWidth="2.2" />
 
       {tuft && (
-        <path d="M-2 -11 C-3 -18 0 -20 4 -18 C2 -14 1 -11 2 -8" fill="none" stroke="#2c1b23" strokeWidth="2.2" strokeLinecap="round" />
+        <path d="M-1 -45 C-1 -50 3 -52 6 -49 C4 -45 3 -42 3 -38" fill="none" stroke="#2c1b23" strokeWidth="2.2" strokeLinecap="round" />
       )}
 
-      <ellipse cx="-14" cy="22" rx="11" ry="10" fill="#4b5564" />
-      <ellipse cx="14" cy="22" rx="11" ry="10" fill="#4b5564" />
+      <ellipse cx="-14" cy="-2" rx="12" ry="11" fill="#4b5564" />
+      <ellipse cx="14" cy="-2" rx="12" ry="11" fill="#4b5564" />
 
-      <circle cx="-14" cy="22" r="4.8" fill="#2a0f17" />
-      <circle cx="14" cy="22" r="4.8" fill="#2a0f17" />
-      <circle cx="-12.8" cy="20.8" r="1.1" fill="#ffffff" opacity="0.9" />
-      <circle cx="15.2" cy="20.8" r="1.1" fill="#ffffff" opacity="0.9" />
+      <circle cx="-14" cy="-2" r="5.5" fill="#2a1018" />
+      <circle cx="14" cy="-2" r="5.5" fill="#2a1018" />
+      <circle cx="-12.4" cy="-3.4" r="1.5" fill="#ffffff" opacity="0.95" />
+      <circle cx="15.6" cy="-3.4" r="1.5" fill="#ffffff" opacity="0.95" />
 
-      <ellipse cx="0" cy="32" rx="3.8" ry="2.4" fill="#2c1b23" />
+      <ellipse cx="0" cy="11" rx="3.8" ry="2.5" fill="#2c1b23" />
 
       {isHappy ? (
         <>
-          <path d="M-9 39 Q0 49 9 39" fill="#f58ca5" stroke="#2c1b23" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M-5 40 Q0 45 5 40" fill="none" stroke="#fff3f6" strokeWidth="1.3" strokeLinecap="round" />
+          <path d="M-11 17 Q0 29 11 17" fill="#f58ca5" stroke="#2c1b23" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M-6 18 Q0 24 6 18" fill="none" stroke="#fff3f6" strokeWidth="1.3" strokeLinecap="round" />
         </>
       ) : (
         <>
-          <ellipse cx="0" cy="40" rx="7.5" ry="6.4" fill="#f58ca5" stroke="#2c1b23" strokeWidth="2.1" />
-          <path d="M-4 40 Q0 36 4 40" fill="none" stroke="#fff3f6" strokeWidth="1.2" strokeLinecap="round" />
+          <ellipse cx="0" cy="18" rx="7.6" ry="6.8" fill="#f58ca5" stroke="#2c1b23" strokeWidth="2.1" />
+          <path d="M-4 18 Q0 14 4 18" fill="none" stroke="#fff3f6" strokeWidth="1.2" strokeLinecap="round" />
         </>
       )}
 
-      <ellipse cx="22" cy="30" rx="6.2" ry="4" fill="#f58ca5" opacity="0.85" transform="rotate(-14 22 30)" />
+      <ellipse cx="21" cy="7" rx="6.3" ry="4" fill="#f58ca5" opacity="0.85" transform="rotate(-14 21 7)" />
     </g>
   );
 
   return (
     <svg viewBox="0 0 260 220" width={s} height={s * 0.846} style={{ display: "block" }}>
-      <Panda x={76} y={58} tilt={4} isHappy={happy} />
-      <Panda x={176} y={58} tilt={-4} isHappy={happy} tuft />
+      <Panda x={76} y={88} tilt={4} isHappy={happy} />
+      <Panda x={176} y={88} tilt={-4} isHappy={happy} tuft />
 
       {happy && (
         <>
@@ -387,36 +387,36 @@ function CouplePandaSVG({ happy = false, size = 160 }) {
 function SinglePandaSVG({ size = 100 }) {
   return (
     <svg viewBox="0 0 160 200" width={size} height={size * 1.25} style={{ display: "block" }}>
-      <ellipse cx="80" cy="193" rx="34" ry="7" fill="#1a1a1a" opacity="0.14" />
+      <ellipse cx="80" cy="191" rx="33" ry="6" fill="#1a1a1a" opacity="0.14" />
 
-      <ellipse cx="80" cy="145" rx="30" ry="33" fill="#f8fbff" stroke="#2c1b23" strokeWidth="2.4" />
-      <ellipse cx="80" cy="154" rx="21" ry="16" fill="#eef2f7" />
+      <ellipse cx="80" cy="150" rx="25" ry="29" fill="#f8fbff" stroke="#2c1b23" strokeWidth="2.3" />
+      <ellipse cx="80" cy="159" rx="17.5" ry="13.5" fill="#ecf1f7" opacity="0.95" />
 
-      <ellipse cx="54" cy="148" rx="9" ry="15" fill="#3e4653" stroke="#2c1b23" strokeWidth="2" transform="rotate(-18 54 148)" />
-      <ellipse cx="106" cy="148" rx="9" ry="15" fill="#3e4653" stroke="#2c1b23" strokeWidth="2" transform="rotate(18 106 148)" />
+      <ellipse cx="56" cy="152" rx="8" ry="15" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(-16 56 152)" />
+      <ellipse cx="104" cy="152" rx="8" ry="15" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(16 104 152)" />
 
-      <ellipse cx="64" cy="174" rx="12" ry="13" fill="#3e4653" stroke="#2c1b23" strokeWidth="2" />
-      <ellipse cx="96" cy="174" rx="12" ry="13" fill="#3e4653" stroke="#2c1b23" strokeWidth="2" />
+      <ellipse cx="68" cy="179" rx="11" ry="13" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(-8 68 179)" />
+      <ellipse cx="92" cy="179" rx="11" ry="13" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(8 92 179)" />
 
-      <circle cx="80" cy="74" r="40" fill="#fbfdff" stroke="#2c1b23" strokeWidth="2.5" />
-      <circle cx="55" cy="42" r="12" fill="#3e4653" stroke="#2c1b23" strokeWidth="2.2" />
-      <circle cx="105" cy="42" r="12" fill="#3e4653" stroke="#2c1b23" strokeWidth="2.2" />
+      <circle cx="80" cy="74" r="39" fill="#fcfeff" stroke="#2c1b23" strokeWidth="2.5" />
+      <circle cx="58" cy="41" r="11.5" fill="#3f4756" stroke="#2c1b23" strokeWidth="2.2" />
+      <circle cx="102" cy="41" r="11.5" fill="#3f4756" stroke="#2c1b23" strokeWidth="2.2" />
 
-      <path d="M76 34 C75 28 78 26 82 28 C80 32 80 35 81 38" fill="none" stroke="#2c1b23" strokeWidth="2.3" strokeLinecap="round" />
+      <path d="M78 29 C78 24 82 22 85 25 C83 29 82 32 82 36" fill="none" stroke="#2c1b23" strokeWidth="2.2" strokeLinecap="round" />
 
       <ellipse cx="66" cy="72" rx="12" ry="11" fill="#4b5564" />
       <ellipse cx="94" cy="72" rx="12" ry="11" fill="#4b5564" />
 
-      <circle cx="66" cy="72" r="5.2" fill="#2a0f17" />
-      <circle cx="94" cy="72" r="5.2" fill="#2a0f17" />
-      <circle cx="67.3" cy="70.7" r="1.2" fill="#ffffff" />
-      <circle cx="95.3" cy="70.7" r="1.2" fill="#ffffff" />
+      <circle cx="66" cy="72" r="5.5" fill="#2a1018" />
+      <circle cx="94" cy="72" r="5.5" fill="#2a1018" />
+      <circle cx="67.6" cy="70.6" r="1.5" fill="#ffffff" />
+      <circle cx="95.6" cy="70.6" r="1.5" fill="#ffffff" />
 
-      <ellipse cx="80" cy="82" rx="4" ry="2.5" fill="#2c1b23" />
-      <path d="M72 90 Q80 101 88 90" fill="#f58ca5" stroke="#2c1b23" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M76 91 Q80 96 84 91" fill="none" stroke="#fff3f6" strokeWidth="1.2" strokeLinecap="round" />
+      <ellipse cx="80" cy="83" rx="3.8" ry="2.5" fill="#2c1b23" />
+      <path d="M69 89 Q80 101 91 89" fill="#f58ca5" stroke="#2c1b23" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M74 90 Q80 96 86 90" fill="none" stroke="#fff3f6" strokeWidth="1.3" strokeLinecap="round" />
 
-      <ellipse cx="103" cy="81" rx="6.3" ry="4" fill="#f58ca5" opacity="0.85" transform="rotate(-12 103 81)" />
+      <ellipse cx="101" cy="79" rx="6.3" ry="4" fill="#f58ca5" opacity="0.85" transform="rotate(-14 101 79)" />
     </svg>
   );
 }
