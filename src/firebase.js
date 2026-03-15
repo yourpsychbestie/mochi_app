@@ -128,6 +128,32 @@ export const fbIncrementBamboo = async (coupleCode, delta) => {
   });
 };
 
+// Spend bamboo atomically; throws "INSUFFICIENT_BAMBOO" when funds are not enough.
+export const fbSpendBamboo = async (coupleCode, amount) => {
+  const ref = doc(db, "bamboo", coupleCode);
+  return runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    const current = snap.exists() ? (snap.data().total || 0) : 0;
+    if (current < amount) throw new Error("INSUFFICIENT_BAMBOO");
+    const newTotal = current - amount;
+    tx.set(ref, { total: newTotal, updatedAt: serverTimestamp() }, { merge: true });
+    return newTotal;
+  });
+};
+
+// ─── SHARED GARDEN STATE ──────────────────────────────
+export const fbSaveGardenState = (coupleCode, data) =>
+  setDoc(doc(db, "garden", coupleCode), {
+    ...data,
+    coupleCode,
+    updatedAt: serverTimestamp()
+  }, { merge: true });
+
+export const fbListenGardenState = (coupleCode, cb) =>
+  onSnapshot(doc(db, "garden", coupleCode), snap => {
+    cb(snap.exists() ? snap.data() : null);
+  }, () => cb(null));
+
 // ─── GRATITUD (synced entries) ─────────────────────────
 export const fbAddGratitud = (coupleCode, entry) =>
   addDoc(collection(db, "gratitud"), { ...entry, coupleCode, createdAt: serverTimestamp() });
@@ -174,6 +200,27 @@ export const fbListenLessons = (coupleCode, cb) => {
   return onSnapshot(q, snap => {
     const map = {};
     snap.docs.forEach(d => { map[d.data().lessonId] = d.data(); });
+    cb(map);
+  }, () => cb({}));
+};
+
+// ─── BURBUJA (synced agreements workflow) ─────────────
+export const fbSaveBurbuja = (coupleCode, key, data) =>
+  setDoc(doc(db, "burbuja", `${coupleCode}_${key}`), {
+    ...data,
+    coupleCode,
+    key,
+    updatedAt: serverTimestamp()
+  }, { merge: true });
+
+export const fbListenBurbuja = (coupleCode, cb) => {
+  const q = query(collection(db, "burbuja"), where("coupleCode", "==", coupleCode));
+  return onSnapshot(q, snap => {
+    const map = {};
+    snap.docs.forEach(d => {
+      const data = d.data();
+      if (data?.key) map[data.key] = data;
+    });
     cb(map);
   }, () => cb({}));
 };

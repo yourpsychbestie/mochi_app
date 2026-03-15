@@ -8,13 +8,16 @@ import {
   fbSendMessage, fbListenMessages,
   fbSaveTestAnswers, fbListenTest, fbResetTest,
   fbListenExSession, fbSendExMessage, fbStartExSession, fbCompleteExSession,
-  fbListenBamboo, fbIncrementBamboo, fbGetBamboo,
+  fbListenBamboo, fbIncrementBamboo, fbSpendBamboo, fbGetBamboo,
+  fbSaveGardenState, fbListenGardenState,
   fbAddGratitud, fbListenGratitud,
   fbAddMomento, fbListenMomentos,
   fbSaveConoce, fbListenConoce,
   fbSaveLessonRead, fbListenLessons,
+  fbSaveBurbuja, fbListenBurbuja,
   fbSendNotif, fbListenNotifs, fbMarkNotifRead,
 } from "./firebase";
+import Cuestionarios, { getQuizAdviceFromConoce } from "./Cuestionarios";
 
 const C = {
   cream:"#f5edda", cream2:"#fdf8ef", dark:"#1e2b1e",
@@ -30,6 +33,9 @@ const ls = {
   get:(k)=>{ try{return JSON.parse(localStorage.getItem(k));}catch{return null;} },
   set:(k,v)=>{ try{localStorage.setItem(k,JSON.stringify(v));}catch{} },
 };
+
+const MAX_MESSAGE_LENGTH = 220;
+const BUBBLE_PREVIEW_LENGTH = 38;
 
 class SectionErrorBoundary extends React.Component {
   constructor(props) {
@@ -107,8 +113,14 @@ const PANDA_ACCESSORIES = [
   {id:"hat_flower", cat:"sombrero", name:"Corona de Flores", cost:40,  emoji:"🌸", desc:"Romanticísima"},
   {id:"hat_crown",  cat:"sombrero", name:"Corona Real",      cost:70,  emoji:"👑", desc:"Son reyes"},
   {id:"hat_straw",  cat:"sombrero", name:"Sombrero de Paja", cost:25,  emoji:"🎋", desc:"Para el jardín"},
+  {id:"hat_beret",  cat:"sombrero", name:"Boina Chic",       cost:32,  emoji:"🧢", desc:"Cute y elegante"},
+  {id:"hat_beanie", cat:"sombrero", name:"Gorrito Nube",     cost:36,  emoji:"🧶", desc:"Suave y cozy"},
+  {id:"hat_frog",   cat:"sombrero", name:"Sombrero Ranita",  cost:45,  emoji:"🐸", desc:"Demasiado tierno"},
   {id:"glasses_heart", cat:"lentes", name:"Lentes Corazón", cost:30,  emoji:"💝", desc:"Ver con amor"},
   {id:"glasses_sun",   cat:"lentes", name:"Lentes de Sol",  cost:25,  emoji:"😎", desc:"Fresquísimos"},
+  {id:"glasses_round", cat:"lentes", name:"Lentes Redondos", cost:28,  emoji:"🕶️", desc:"Estilo clásico"},
+  {id:"glasses_clear", cat:"lentes", name:"Lentes Cristal",  cost:24,  emoji:"🤓", desc:"Suavecitos"},
+  {id:"glasses_star",  cat:"lentes", name:"Lentes Estrella", cost:42,  emoji:"⭐", desc:"Brillo total"},
   {id:"acc_bow",    cat:"accesorio", name:"Moño Rosa",       cost:20,  emoji:"🎀", desc:"Kawaii"},
   {id:"acc_scarf",  cat:"accesorio", name:"Bufanda",         cost:25,  emoji:"🧣", desc:"Para el frío"},
   {id:"outfit_kimono",  cat:"traje", name:"Kimono",          cost:60,  emoji:"👘", desc:"Elegancia japonesa"},
@@ -282,6 +294,13 @@ const BURBUJA_SECTIONS = [
     ]},
 ];
 
+const BURBUJA_ITEM_MAP = BURBUJA_SECTIONS.reduce((acc, sec) => {
+  sec.items.forEach(item => {
+    acc[item.id] = { question: item.q, section: sec.title };
+  });
+  return acc;
+}, {});
+
 const LOVE_PROMPTS = [
   { icon:"🌸", idea:"Hoy noté algo lindo en ti: " },
   { icon:"💜", idea:"Gracias por... me hizo sentir " },
@@ -299,251 +318,67 @@ const LOVE_PROMPTS = [
 
 function CouplePandaSVG({ happy = false, size = 160 }) {
   const s = size;
-  // Redesigned pandas: soft, chubby, chibi-style with smooth shapes
-  // Lots of gradients & soft shadows to avoid "geometric pieces" look
-  // Left panda (she): slightly rounder, tiny flower behind ear, tilted head
-  // Right panda (he): slightly taller, little cow-lick tuft, leaning in
-  // Both sitting close, arms around each other
-  return (
-    <svg viewBox="0 0 260 220" width={s} height={s * 0.846} style={{ display: "block" }}>
-      <defs>
-        {/* Soft fur gradient for bodies */}
-        <radialGradient id="bodyL" cx="45%" cy="35%" r="60%">
-          <stop offset="0%" stopColor="#fdf9f0"/>
-          <stop offset="100%" stopColor="#ede4d0"/>
-        </radialGradient>
-        <radialGradient id="bodyR" cx="55%" cy="35%" r="60%">
-          <stop offset="0%" stopColor="#fdf9f0"/>
-          <stop offset="100%" stopColor="#ede4d0"/>
-        </radialGradient>
-        <radialGradient id="patchL" cx="40%" cy="30%" r="65%">
-          <stop offset="0%" stopColor="#2d3d2d"/>
-          <stop offset="100%" stopColor="#1a261a"/>
-        </radialGradient>
-        <radialGradient id="patchR" cx="60%" cy="30%" r="65%">
-          <stop offset="0%" stopColor="#2d3d2d"/>
-          <stop offset="100%" stopColor="#1a261a"/>
-        </radialGradient>
-        <radialGradient id="tummy" cx="50%" cy="40%" r="55%">
-          <stop offset="0%" stopColor="#fefcf6"/>
-          <stop offset="100%" stopColor="#f5eede"/>
-        </radialGradient>
-        <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="#1a261a" floodOpacity="0.12"/>
-        </filter>
-        <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
-          <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#f8d0e8" floodOpacity="0.6"/>
-        </filter>
-      </defs>
 
-      {/* ══════════════════════════════════════ */}
-      {/* LEFT PANDA — she, sitting, head tilted right */}
-      {/* ══════════════════════════════════════ */}
+  const Panda = ({ x, y, tilt = 0, isHappy = false, tuft = false }) => (
+    <g transform={`translate(${x} ${y}) rotate(${tilt})`}>
+      <ellipse cx="0" cy="120" rx="34" ry="7" fill="#1a1a1a" opacity="0.14" />
 
-      {/* Shadow under left panda */}
-      <ellipse cx="82" cy="208" rx="42" ry="7" fill="#1a261a" opacity="0.08"/>
+      <ellipse cx="0" cy="78" rx="30" ry="34" fill="#f8fbff" stroke="#2c1b23" strokeWidth="2.4" />
+      <ellipse cx="0" cy="88" rx="21" ry="17" fill="#eef2f7" opacity="0.95" />
 
-      {/* Body — chubby teardrop shape */}
-      <path d="M52 205 C35 205 28 185 30 165 C32 145 42 132 62 128 C72 126 82 126 92 128 C112 132 122 145 122 165 C124 185 117 205 100 205 Z"
-        fill="url(#bodyL)" filter="url(#softShadow)"/>
+      <ellipse cx="-24" cy="81" rx="9" ry="16" fill="#3e4653" stroke="#2c1b23" strokeWidth="2" transform="rotate(-18 -24 81)" />
+      <ellipse cx="24" cy="81" rx="9" ry="16" fill="#3e4653" stroke="#2c1b23" strokeWidth="2" transform="rotate(18 24 81)" />
 
-      {/* Tummy highlight — soft oval */}
-      <ellipse cx="76" cy="168" rx="18" ry="22" fill="url(#tummy)" opacity="0.9"/>
+      <ellipse cx="-16" cy="108" rx="12" ry="14" fill="#3e4653" stroke="#2c1b23" strokeWidth="2" transform="rotate(-8 -16 108)" />
+      <ellipse cx="16" cy="108" rx="12" ry="14" fill="#3e4653" stroke="#2c1b23" strokeWidth="2" transform="rotate(8 16 108)" />
 
-      {/* Left arm (her right arm) — reaching toward right panda, around his shoulder */}
-      <path d="M116 150 C128 142 142 140 150 145 C155 148 152 158 145 158 C138 158 130 155 120 158"
-        fill="none" stroke="#1a261a" strokeWidth="16" strokeLinecap="round"/>
-      <path d="M116 150 C128 142 142 140 150 145 C155 148 152 158 145 158"
-        fill="none" stroke="#2d3d2d" strokeWidth="13" strokeLinecap="round"/>
+      <circle cx="0" cy="26" r="38" fill="#fbfdff" stroke="#2c1b23" strokeWidth="2.4" />
 
-      {/* Right arm (her left arm) — down at side */}
-      <path d="M38 158 C28 165 24 178 28 188" fill="none" stroke="#1a261a" strokeWidth="15" strokeLinecap="round"/>
-      <path d="M38 158 C28 165 24 178 28 188" fill="none" stroke="#2d3d2d" strokeWidth="12" strokeLinecap="round"/>
+      <circle cx="-22" cy="-6" r="11.5" fill="#3e4653" stroke="#2c1b23" strokeWidth="2.2" />
+      <circle cx="22" cy="-6" r="11.5" fill="#3e4653" stroke="#2c1b23" strokeWidth="2.2" />
 
-      {/* Legs — chubby, peeking out */}
-      <ellipse cx="57" cy="198" rx="20" ry="12" fill="#1a261a"/>
-      <ellipse cx="57" cy="196" rx="17" ry="10" fill="#2d3d2d"/>
-      <ellipse cx="98" cy="198" rx="20" ry="12" fill="#1a261a"/>
-      <ellipse cx="98" cy="196" rx="17" ry="10" fill="#2d3d2d"/>
-      {/* Foot pads */}
-      <ellipse cx="57" cy="205" rx="11" ry="6" fill="#f0e8d8" opacity="0.6"/>
-      <ellipse cx="98" cy="205" rx="11" ry="6" fill="#f0e8d8" opacity="0.6"/>
+      {tuft && (
+        <path d="M-2 -11 C-3 -18 0 -20 4 -18 C2 -14 1 -11 2 -8" fill="none" stroke="#2c1b23" strokeWidth="2.2" strokeLinecap="round" />
+      )}
 
-      {/* HEAD — tilted, minimalist cute face */}
-      <g transform="rotate(6, 76, 95)">
-        {/* Head — slightly wider than tall, soft */}
-        <ellipse cx="76" cy="88" rx="44" ry="42" fill="url(#bodyL)" filter="url(#softShadow)"/>
+      <ellipse cx="-14" cy="22" rx="11" ry="10" fill="#4b5564" />
+      <ellipse cx="14" cy="22" rx="11" ry="10" fill="#4b5564" />
 
-        {/* Ears — compact, not huge */}
-        <circle cx="42" cy="54" r="16" fill="#1a261a"/>
-        <circle cx="42" cy="54" r="10" fill="#2d3d2d"/>
-        <circle cx="110" cy="54" r="16" fill="#1a261a"/>
-        <circle cx="110" cy="54" r="10" fill="#2d3d2d"/>
-        {/* Inner ear blush */}
-        <circle cx="42" cy="54" r="6" fill="#d87888" opacity="0.25"/>
-        <circle cx="110" cy="54" r="6" fill="#d87888" opacity="0.25"/>
+      <circle cx="-14" cy="22" r="4.8" fill="#2a0f17" />
+      <circle cx="14" cy="22" r="4.8" fill="#2a0f17" />
+      <circle cx="-12.8" cy="20.8" r="1.1" fill="#ffffff" opacity="0.9" />
+      <circle cx="15.2" cy="20.8" r="1.1" fill="#ffffff" opacity="0.9" />
 
-        {/* Eye patches — smaller, almond-shaped, not too dominant */}
-        <ellipse cx="60" cy="85" rx="13" ry="11" fill="url(#patchL)" transform="rotate(-10 60 85)"/>
-        <ellipse cx="92" cy="85" rx="13" ry="11" fill="url(#patchR)" transform="rotate(10 92 85)"/>
+      <ellipse cx="0" cy="32" rx="3.8" ry="2.4" fill="#2c1b23" />
 
-        {/* Eyes — smaller, more almond/crescent, less bulgy */}
-        {happy ? (
-          <>
-            {/* Happy — gentle curved crescents */}
-            <path d="M53 85 Q60 92 67 85" fill="none" stroke="#fdf9f0" strokeWidth="3" strokeLinecap="round"/>
-            <path d="M85 85 Q92 92 99 85" fill="none" stroke="#fdf9f0" strokeWidth="3" strokeLinecap="round"/>
-          </>
-        ) : (
-          <>
-            {/* Normal — almond-shaped, not round balls */}
-            <ellipse cx="60" cy="86" rx="7" ry="6" fill="#fdf9f0"/>
-            <ellipse cx="92" cy="86" rx="7" ry="6" fill="#fdf9f0"/>
-            <ellipse cx="61" cy="87" rx="4.5" ry="4" fill="#1a1a2a"/>
-            <ellipse cx="93" cy="87" rx="4.5" ry="4" fill="#1a1a2a"/>
-            {/* Tiny shine — just one dot */}
-            <circle cx="63" cy="85" r="1.6" fill="white"/>
-            <circle cx="95" cy="85" r="1.6" fill="white"/>
-          </>
-        )}
-
-        {/* Nose — small oval, simple */}
-        <ellipse cx="76" cy="97" rx="4" ry="2.8" fill="#1a261a" opacity="0.7"/>
-
-        {/* Mouth — small w-shape */}
-        {happy
-          ? <path d="M68 104 Q72 110 76 106 Q80 110 84 104" fill="none" stroke="#1a261a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-          : <path d="M70 103 Q73 107 76 104 Q79 107 82 103" fill="none" stroke="#1a261a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-        }
-
-        {/* Blush — subtle small */}
-        <ellipse cx="44" cy="98" rx="10" ry="6" fill="#f0907a" opacity={happy ? "0.4" : "0.15"}/>
-        <ellipse cx="108" cy="98" rx="10" ry="6" fill="#f0907a" opacity={happy ? "0.4" : "0.15"}/>
-
-        {/* Little flower behind ear */}
-        <g transform="translate(106, 46)">
-          {[0,60,120,180,240,300].map((a,i) => (
-            <ellipse key={i}
-              cx={Math.cos(a*Math.PI/180)*6} cy={Math.sin(a*Math.PI/180)*6}
-              rx="3.5" ry="2.8"
-              fill={["#f9b8cc","#f4d0e0","#fce8f0","#f9b8cc","#f4d0e0","#fce8f0"][i]}
-              transform={`rotate(${a})`} opacity="0.95"/>
-          ))}
-          <circle cx="0" cy="0" r="3" fill="#f8e870"/>
-        </g>
-      </g>
-
-      {/* ══════════════════════════════════════ */}
-      {/* RIGHT PANDA — he, sitting upright */}
-      {/* ══════════════════════════════════════ */}
-
-      {/* Shadow */}
-      <ellipse cx="182" cy="208" rx="44" ry="7" fill="#1a261a" opacity="0.08"/>
-
-      {/* Body */}
-      <path d="M148 205 C131 205 124 185 126 165 C128 144 138 131 160 128 C170 126 182 126 194 128 C214 131 224 145 224 165 C226 185 219 205 202 205 Z"
-        fill="url(#bodyR)" filter="url(#softShadow)"/>
-
-      {/* Tummy */}
-      <ellipse cx="176" cy="168" rx="19" ry="23" fill="url(#tummy)" opacity="0.9"/>
-
-      {/* Left arm (his right arm) — around her, coming from side */}
-      <path d="M134 148 C126 140 118 138 112 142 C108 145 110 155 116 156"
-        fill="none" stroke="#1a261a" strokeWidth="16" strokeLinecap="round"/>
-      <path d="M134 148 C126 140 118 138 112 142 C108 145 110 155 116 156"
-        fill="none" stroke="#2d3d2d" strokeWidth="13" strokeLinecap="round"/>
-
-      {/* Right arm — down at side */}
-      <path d="M218 158 C228 165 232 178 228 188" fill="none" stroke="#1a261a" strokeWidth="15" strokeLinecap="round"/>
-      <path d="M218 158 C228 165 232 178 228 188" fill="none" stroke="#2d3d2d" strokeWidth="12" strokeLinecap="round"/>
-
-      {/* Legs */}
-      <ellipse cx="157" cy="198" rx="21" ry="12" fill="#1a261a"/>
-      <ellipse cx="157" cy="196" rx="18" ry="10" fill="#2d3d2d"/>
-      <ellipse cx="198" cy="198" rx="21" ry="12" fill="#1a261a"/>
-      <ellipse cx="198" cy="196" rx="18" ry="10" fill="#2d3d2d"/>
-      <ellipse cx="157" cy="205" rx="12" ry="6" fill="#f0e8d8" opacity="0.6"/>
-      <ellipse cx="198" cy="205" rx="12" ry="6" fill="#f0e8d8" opacity="0.6"/>
-
-      {/* HEAD — upright, compact */}
-      <g transform="rotate(-4, 176, 90)">
-        {/* Head — slightly wider than tall */}
-        <ellipse cx="176" cy="88" rx="46" ry="44" fill="url(#bodyR)" filter="url(#softShadow)"/>
-
-        {/* Ears — compact */}
-        <circle cx="140" cy="52" r="17" fill="#1a261a"/>
-        <circle cx="140" cy="52" r="11" fill="#2d3d2d"/>
-        <circle cx="140" cy="52" r="6" fill="#d87888" opacity="0.25"/>
-
-        <circle cx="212" cy="52" r="17" fill="#1a261a"/>
-        <circle cx="212" cy="52" r="11" fill="#2d3d2d"/>
-        <circle cx="212" cy="52" r="6" fill="#d87888" opacity="0.25"/>
-
-        {/* Eye patches — smaller, almond */}
-        <ellipse cx="162" cy="87" rx="14" ry="12" fill="url(#patchL)" transform="rotate(-8 162 87)"/>
-        <ellipse cx="190" cy="87" rx="14" ry="12" fill="url(#patchR)" transform="rotate(8 190 87)"/>
-
-        {/* Eyes — almond, not round balls */}
-        {happy ? (
-          <>
-            <path d="M155 87 Q162 94 169 87" fill="none" stroke="#fdf9f0" strokeWidth="3" strokeLinecap="round"/>
-            <path d="M183 87 Q190 94 197 87" fill="none" stroke="#fdf9f0" strokeWidth="3" strokeLinecap="round"/>
-          </>
-        ) : (
-          <>
-            <ellipse cx="162" cy="88" rx="7" ry="6" fill="#fdf9f0"/>
-            <ellipse cx="190" cy="88" rx="7" ry="6" fill="#fdf9f0"/>
-            <ellipse cx="163" cy="89" rx="4.5" ry="4" fill="#1a1a2a"/>
-            <ellipse cx="191" cy="89" rx="4.5" ry="4" fill="#1a1a2a"/>
-            <circle cx="165" cy="87" r="1.6" fill="white"/>
-            <circle cx="193" cy="87" r="1.6" fill="white"/>
-          </>
-        )}
-
-        {/* Nose — small, simple */}
-        <ellipse cx="176" cy="100" rx="4" ry="2.8" fill="#1a261a" opacity="0.7"/>
-
-        {/* Mouth — w-shape */}
-        {happy
-          ? <path d="M168 107 Q172 113 176 109 Q180 113 184 107" fill="none" stroke="#1a261a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-          : <path d="M170 106 Q173 110 176 107 Q179 110 182 106" fill="none" stroke="#1a261a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-        }
-
-        {/* Blush — subtle */}
-        <ellipse cx="140" cy="102" rx="11" ry="7" fill="#f0907a" opacity={happy ? "0.4" : "0.15"}/>
-        <ellipse cx="212" cy="102" rx="11" ry="7" fill="#f0907a" opacity={happy ? "0.4" : "0.15"}/>
-
-        {/* Cow-lick tuft — same but proportional */}
-        <path d="M172 40 C170 30 168 22 172 16" fill="none" stroke="#1a261a" strokeWidth="4" strokeLinecap="round"/>
-        <path d="M177 41 C179 31 182 24 178 18" fill="none" stroke="#1a261a" strokeWidth="3" strokeLinecap="round"/>
-        <path d="M167 41 C163 33 161 27 163 21" fill="none" stroke="#1a261a" strokeWidth="2.5" strokeLinecap="round"/>
-      </g>
-
-      {/* ══ BETWEEN THEM ══ */}
-      {happy && (
+      {isHappy ? (
         <>
-          {/* Floating heart */}
-          <g filter="url(#softGlow)">
-            <path d="M122 100 C122 95 126 93 130 97 C134 93 138 95 138 100 C138 106 130 115 130 115 C130 115 122 106 122 100Z"
-              fill="#e8607a" opacity="0.95"/>
-          </g>
-          {/* Small hearts */}
-          <path d="M106 78 C106 75 108 74 110 76 C112 74 114 75 114 78 C114 81 110 85 110 85 C110 85 106 81 106 78Z"
-            fill="#f4a0b8" opacity="0.7"/>
-          <path d="M144 72 C144 70 145.5 69 147 71 C148.5 69 150 70 150 72 C150 74.5 147 78 147 78 C147 78 144 74.5 144 72Z"
-            fill="#f4a0b8" opacity="0.6"/>
-          {/* Stars */}
-          <path d="M12 38 L14 44 L20 44 L15 48 L17 54 L12 50 L7 54 L9 48 L4 44 L10 44Z" fill="#d4a843" opacity="0.85"/>
-          <path d="M240 32 L241.5 37 L247 37 L242.5 40.5 L244 46 L240 43 L236 46 L237.5 40.5 L233 37 L238.5 37Z" fill="#d4a843" opacity="0.8"/>
-          <circle cx="130" cy="142" r="3" fill="#f8e0a0" opacity="0.75"/>
-          <circle cx="108" cy="130" r="2" fill="#f9b8cc" opacity="0.7"/>
-          <circle cx="152" cy="128" r="2" fill="#f9b8cc" opacity="0.65"/>
+          <path d="M-9 39 Q0 49 9 39" fill="#f58ca5" stroke="#2c1b23" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M-5 40 Q0 45 5 40" fill="none" stroke="#fff3f6" strokeWidth="1.3" strokeLinecap="round" />
+        </>
+      ) : (
+        <>
+          <ellipse cx="0" cy="40" rx="7.5" ry="6.4" fill="#f58ca5" stroke="#2c1b23" strokeWidth="2.1" />
+          <path d="M-4 40 Q0 36 4 40" fill="none" stroke="#fff3f6" strokeWidth="1.2" strokeLinecap="round" />
         </>
       )}
 
-      {/* Always-visible tiny sparkles */}
-      <circle cx="20" cy="55" r="1.5" fill="#f8e8c0" opacity="0.5"/>
-      <circle cx="240" cy="60" r="1.5" fill="#f8e8c0" opacity="0.5"/>
+      <ellipse cx="22" cy="30" rx="6.2" ry="4" fill="#f58ca5" opacity="0.85" transform="rotate(-14 22 30)" />
+    </g>
+  );
+
+  return (
+    <svg viewBox="0 0 260 220" width={s} height={s * 0.846} style={{ display: "block" }}>
+      <Panda x={76} y={58} tilt={4} isHappy={happy} />
+      <Panda x={176} y={58} tilt={-4} isHappy={happy} tuft />
+
+      {happy && (
+        <>
+          <path d="M122 86 C122 81 126 79 130 83 C134 79 138 81 138 86 C138 92 130 100 130 100 C130 100 122 92 122 86Z" fill="#ea607d" opacity="0.95" />
+          <circle cx="110" cy="116" r="2" fill="#ffd7e0" opacity="0.85" />
+          <circle cx="149" cy="113" r="2" fill="#ffd7e0" opacity="0.75" />
+        </>
+      )}
     </svg>
   );
 }
@@ -552,62 +387,36 @@ function CouplePandaSVG({ happy = false, size = 160 }) {
 function SinglePandaSVG({ size = 100 }) {
   return (
     <svg viewBox="0 0 160 200" width={size} height={size * 1.25} style={{ display: "block" }}>
-      <defs>
-        <radialGradient id="sb" cx="45%" cy="35%" r="60%">
-          <stop offset="0%" stopColor="#fdf9f0"/><stop offset="100%" stopColor="#ede4d0"/>
-        </radialGradient>
-      </defs>
-      {/* Shadow */}
-      <ellipse cx="80" cy="196" rx="38" ry="6" fill="#1a261a" opacity="0.1"/>
-      {/* Body */}
-      <path d="M42 195 C28 195 22 175 24 155 C26 138 38 126 58 122 C66 120 80 120 94 122 C114 126 126 138 128 155 C130 175 124 195 110 195Z" fill="url(#sb)"/>
-      {/* Tummy */}
-      <ellipse cx="76" cy="162" rx="20" ry="24" fill="#fefcf6" opacity="0.85"/>
-      {/* Legs */}
-      <ellipse cx="57" cy="190" rx="18" ry="10" fill="#1a261a"/>
-      <ellipse cx="97" cy="190" rx="18" ry="10" fill="#1a261a"/>
-      <ellipse cx="57" cy="196" rx="12" ry="5" fill="#f0e8d8" opacity="0.5"/>
-      <ellipse cx="97" cy="196" rx="12" ry="5" fill="#f0e8d8" opacity="0.5"/>
-      {/* Arms */}
-      <path d="M34 150 C24 158 20 172 24 180" fill="none" stroke="#1a261a" strokeWidth="13" strokeLinecap="round"/>
-      <path d="M34 150 C24 158 20 172 24 180" fill="none" stroke="#2d3d2d" strokeWidth="10" strokeLinecap="round"/>
-      <path d="M118 150 C128 158 132 172 128 180" fill="none" stroke="#1a261a" strokeWidth="13" strokeLinecap="round"/>
-      <path d="M118 150 C128 158 132 172 128 180" fill="none" stroke="#2d3d2d" strokeWidth="10" strokeLinecap="round"/>
-      {/* Head */}
-      <circle cx="80" cy="76" r="50" fill="url(#sb)"/>
-      {/* Ears */}
-      <circle cx="42" cy="38" r="22" fill="#1a261a"/>
-      <circle cx="42" cy="38" r="14" fill="#2d3d2d"/>
-      <circle cx="42" cy="38" r="7" fill="#3d4d3d" opacity="0.4"/>
-      <circle cx="118" cy="38" r="22" fill="#1a261a"/>
-      <circle cx="118" cy="38" r="14" fill="#2d3d2d"/>
-      <circle cx="118" cy="38" r="7" fill="#3d4d3d" opacity="0.4"/>
-      {/* Eye patches */}
-      <ellipse cx="62" cy="76" rx="19" ry="18" fill="#1a261a" transform="rotate(-8 62 76)"/>
-      <ellipse cx="98" cy="76" rx="19" ry="18" fill="#1a261a" transform="rotate(8 98 76)"/>
-      {/* Eyes */}
-      <circle cx="62" cy="77" r="11" fill="#fdf9f0"/>
-      <circle cx="98" cy="77" r="11" fill="#fdf9f0"/>
-      <circle cx="64" cy="78" r="7" fill="#1a1a2a"/>
-      <circle cx="100" cy="78" r="7" fill="#1a1a2a"/>
-      <circle cx="66" cy="75" r="2.8" fill="white"/>
-      <circle cx="102" cy="75" r="2.8" fill="white"/>
-      {/* Nose */}
-      <path d="M76 94 C76 91 78 90 80 92 C82 90 84 91 84 94 C84 97 80 100 80 100 C80 100 76 97 76 94Z" fill="#1a261a" opacity="0.85"/>
-      {/* Mouth */}
-      <path d="M72 103 Q80 112 88 103" fill="none" stroke="#1a261a" strokeWidth="2.5" strokeLinecap="round"/>
-      {/* Blush */}
-      <ellipse cx="40" cy="92" rx="14" ry="8" fill="#f0907a" opacity="0.3"/>
-      <ellipse cx="120" cy="92" rx="14" ry="8" fill="#f0907a" opacity="0.3"/>
-      {/* Flower behind ear */}
-      <g transform="translate(112, 42)">
-        {[0,72,144,216,288].map((a,i) => (
-          <ellipse key={i} cx={Math.cos(a*Math.PI/180)*6} cy={Math.sin(a*Math.PI/180)*6}
-            rx="4" ry="2.5" fill={["#ffb8cc","#f4d0e0","#fce8f0","#ffb8cc","#f4d0e0"][i]}
-            transform={`rotate(${a})`} opacity="0.9"/>
-        ))}
-        <circle cx="0" cy="0" r="3.5" fill="#fff8d0"/>
-      </g>
+      <ellipse cx="80" cy="193" rx="34" ry="7" fill="#1a1a1a" opacity="0.14" />
+
+      <ellipse cx="80" cy="145" rx="30" ry="33" fill="#f8fbff" stroke="#2c1b23" strokeWidth="2.4" />
+      <ellipse cx="80" cy="154" rx="21" ry="16" fill="#eef2f7" />
+
+      <ellipse cx="54" cy="148" rx="9" ry="15" fill="#3e4653" stroke="#2c1b23" strokeWidth="2" transform="rotate(-18 54 148)" />
+      <ellipse cx="106" cy="148" rx="9" ry="15" fill="#3e4653" stroke="#2c1b23" strokeWidth="2" transform="rotate(18 106 148)" />
+
+      <ellipse cx="64" cy="174" rx="12" ry="13" fill="#3e4653" stroke="#2c1b23" strokeWidth="2" />
+      <ellipse cx="96" cy="174" rx="12" ry="13" fill="#3e4653" stroke="#2c1b23" strokeWidth="2" />
+
+      <circle cx="80" cy="74" r="40" fill="#fbfdff" stroke="#2c1b23" strokeWidth="2.5" />
+      <circle cx="55" cy="42" r="12" fill="#3e4653" stroke="#2c1b23" strokeWidth="2.2" />
+      <circle cx="105" cy="42" r="12" fill="#3e4653" stroke="#2c1b23" strokeWidth="2.2" />
+
+      <path d="M76 34 C75 28 78 26 82 28 C80 32 80 35 81 38" fill="none" stroke="#2c1b23" strokeWidth="2.3" strokeLinecap="round" />
+
+      <ellipse cx="66" cy="72" rx="12" ry="11" fill="#4b5564" />
+      <ellipse cx="94" cy="72" rx="12" ry="11" fill="#4b5564" />
+
+      <circle cx="66" cy="72" r="5.2" fill="#2a0f17" />
+      <circle cx="94" cy="72" r="5.2" fill="#2a0f17" />
+      <circle cx="67.3" cy="70.7" r="1.2" fill="#ffffff" />
+      <circle cx="95.3" cy="70.7" r="1.2" fill="#ffffff" />
+
+      <ellipse cx="80" cy="82" rx="4" ry="2.5" fill="#2c1b23" />
+      <path d="M72 90 Q80 101 88 90" fill="#f58ca5" stroke="#2c1b23" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M76 91 Q80 96 84 91" fill="none" stroke="#fff3f6" strokeWidth="1.2" strokeLinecap="round" />
+
+      <ellipse cx="103" cy="81" rx="6.3" ry="4" fill="#f58ca5" opacity="0.85" transform="rotate(-12 103 81)" />
     </svg>
   );
 }
@@ -794,63 +603,52 @@ function GardenItemIcon({ id, size = 38 }) {
     koi2: (<svg viewBox="0 0 44 28" width={s} height={s*0.64}><ellipse cx="22" cy="14" rx="16" ry="8" fill="#d4a843"/><ellipse cx="18" cy="14" rx="12" ry="6" fill="#e8c060"/><path d="M6 14 Q2 8 0 14 Q2 20 6 14Z" fill="#c89830"/><circle cx="30" cy="12" r="2.5" fill="white"/><circle cx="30" cy="12" r="1.2" fill="#1a1a1a"/><circle cx="20" cy="10" r="2" fill="#e86040" opacity="0.7"/><circle cx="24" cy="16" r="1.5" fill="#e86040" opacity="0.6"/></svg>),
     lotus_pad: (<svg viewBox="0 0 44 28" width={s} height={s*0.64}><ellipse cx="22" cy="16" rx="20" ry="11" fill="#5a9840" opacity="0.85"/><ellipse cx="22" cy="16" rx="16" ry="8" fill="#6aac48" opacity="0.8"/><path d="M22 5 L22 16" stroke="#4a8030" strokeWidth="1.5"/>{[30,60,90,120,150,210,240,270,300,330].map((a,i)=><path key={i} d={`M22 16 L${22+Math.cos(a*Math.PI/180)*18} ${16+Math.sin(a*Math.PI/180)*10}`} stroke="#4a8030" strokeWidth="1" opacity="0.5"/>)}<circle cx="28" cy="8" r="4" fill="#f4a8b8" opacity="0.9"/><circle cx="28" cy="8" r="2.5" fill="#f8c4cc"/></svg>),
     // Cielo
-    sun: (<svg viewBox="0 0 48 48" width={s} height={s}>{[0,30,60,90,120,150,180,210,240,270,300,330].map(a=>(<line key={a} x1={24+Math.cos(a*Math.PI/180)*16} y1={24+Math.sin(a*Math.PI/180)*16} x2={24+Math.cos(a*Math.PI/180)*23} y2={24+Math.sin(a*Math.PI/180)*23} stroke="#e8a030" strokeWidth="2.5" strokeLinecap="round"/>))}<circle cx="24" cy="24" r="13" fill="#e8a030"/><circle cx="24" cy="24" r="9" fill="#f0bc50"/></svg>),
-    rainbow: (<svg viewBox="0 0 52 30" width={s} height={s*0.58}>{[["#e87878",0],["#e8a858",6],["#e8d860",12],["#8ac868",18],["#5ab8c8",24]].map(([c,o],i)=><path key={i} d={`M${4+o/2} 28 Q26 ${4+o} ${48-o/2} 28`} fill="none" stroke={c} strokeWidth="4" strokeLinecap="round" opacity="0.8"/>)}</svg>),
-    swallow1: (<svg viewBox="0 0 44 38" width={s} height={s*0.86}>
-      {/* Cute round bird sitting on branch */}
-      {/* Branch */}
-      <path d="M4 30 Q22 28 40 30" fill="none" stroke="#8a6838" strokeWidth="2.5" strokeLinecap="round"/>
-      {/* Tail */}
-      <path d="M12 22 Q8 28 6 32 M12 22 Q10 29 10 33" fill="none" stroke="#2a3a5a" strokeWidth="2.5" strokeLinecap="round"/>
-      {/* Body — fat teardrop */}
-      <ellipse cx="22" cy="20" rx="11" ry="10" fill="#2a3a5a"/>
-      {/* Tummy */}
-      <ellipse cx="23" cy="22" rx="6" ry="7" fill="#f5e8d0"/>
-      {/* Wing hint */}
-      <path d="M14 18 Q10 14 13 11 Q18 15 22 16" fill="#1a2a4a"/>
-      {/* Head */}
-      <circle cx="28" cy="13" r="8" fill="#2a3a5a"/>
-      {/* Cheek patch */}
-      <ellipse cx="31" cy="15" rx="4" ry="3" fill="#e87060" opacity="0.7"/>
-      {/* Eye */}
-      <circle cx="30" cy="12" r="3.5" fill="white"/>
-      <circle cx="30.5" cy="12" r="2" fill="#1a1a2a"/>
-      <circle cx="31.5" cy="11" r="0.8" fill="white"/>
-      {/* Beak */}
-      <path d="M35 13 L39 14 L35 15Z" fill="#e8a830"/>
-      {/* Feet */}
-      <line x1="20" y1="29" x2="18" y2="32" stroke="#8a6030" strokeWidth="1.5" strokeLinecap="round"/>
-      <line x1="18" y1="32" x2="15" y2="33" stroke="#8a6030" strokeWidth="1.5" strokeLinecap="round"/>
-      <line x1="18" y1="32" x2="18" y2="34" stroke="#8a6030" strokeWidth="1.5" strokeLinecap="round"/>
-      <line x1="24" y1="29" x2="26" y2="32" stroke="#8a6030" strokeWidth="1.5" strokeLinecap="round"/>
-      <line x1="26" y1="32" x2="29" y2="33" stroke="#8a6030" strokeWidth="1.5" strokeLinecap="round"/>
-      <line x1="26" y1="32" x2="26" y2="34" stroke="#8a6030" strokeWidth="1.5" strokeLinecap="round"/>
+    sun: (<svg viewBox="0 0 48 48" width={s} height={s}>
+      {[0,30,60,90,120,150,180,210,240,270,300,330].map(a=>(
+        <line key={a} x1={24+Math.cos(a*Math.PI/180)*15} y1={24+Math.sin(a*Math.PI/180)*15} x2={24+Math.cos(a*Math.PI/180)*22} y2={24+Math.sin(a*Math.PI/180)*22} stroke="#e8a030" strokeWidth="2.6" strokeLinecap="round" opacity="0.8"/>
+      ))}
+      <circle cx="24" cy="24" r="14" fill="#e8a030" opacity="0.95"/>
+      <circle cx="24" cy="24" r="10" fill="#f6c85b"/>
+      <ellipse cx="20" cy="19" rx="4" ry="2.5" fill="#fff0b8" opacity="0.45" transform="rotate(-25 20 19)"/>
     </svg>),
-    swallow2: (<svg viewBox="0 0 56 40" width={s} height={s*0.71}>
-      <path d="M2 32 Q28 30 54 32" fill="none" stroke="#8a6838" strokeWidth="2.5" strokeLinecap="round"/>
-      <path d="M10 24 Q7 29 5 33 M10 24 Q9 30 9 34" fill="none" stroke="#2a3a5a" strokeWidth="2" strokeLinecap="round"/>
-      <ellipse cx="16" cy="21" rx="8" ry="8" fill="#2a3a5a"/>
-      <ellipse cx="17" cy="23" rx="4.5" ry="5.5" fill="#f5e8d0"/>
-      <circle cx="21" cy="14" r="6.5" fill="#2a3a5a"/>
-      <ellipse cx="23" cy="16" rx="3" ry="2.5" fill="#e87060" opacity="0.7"/>
-      <circle cx="22" cy="13" r="2.8" fill="white"/>
-      <circle cx="22.5" cy="13" r="1.6" fill="#1a1a2a"/>
-      <circle cx="23" cy="12.2" r="0.6" fill="white"/>
-      <path d="M26 13.5 L29 14.5 L26 15.5Z" fill="#e8a830"/>
-      <line x1="14" y1="30" x2="12" y2="33" stroke="#8a6030" strokeWidth="1.5" strokeLinecap="round"/>
-      <line x1="18" y1="30" x2="20" y2="33" stroke="#8a6030" strokeWidth="1.5" strokeLinecap="round"/>
-      <ellipse cx="41" cy="20" rx="8" ry="7.5" fill="#3a5a2a"/>
-      <ellipse cx="42" cy="22" rx="4.5" ry="5" fill="#f5e8d0"/>
-      <circle cx="46" cy="13" r="6" fill="#3a5a2a"/>
-      <ellipse cx="48" cy="15" rx="2.8" ry="2.2" fill="#e87060" opacity="0.7"/>
-      <circle cx="47" cy="12" r="2.6" fill="white"/>
-      <circle cx="47.5" cy="12" r="1.5" fill="#1a1a2a"/>
-      <path d="M44 13 L41 14 L44 15Z" fill="#e8a830"/>
-      <line x1="39" y1="29" x2="37" y2="32" stroke="#8a6030" strokeWidth="1.5" strokeLinecap="round"/>
-      <line x1="43" y1="29" x2="45" y2="32" stroke="#8a6030" strokeWidth="1.5" strokeLinecap="round"/>
-      <path d="M29 10 C29 8.5 30 8 31 9 C32 8 33 8.5 33 10 C33 12 31 14 31 14 C31 14 29 12 29 10Z" fill="#e87080" opacity="0.85"/>
+    rainbow: (<svg viewBox="0 0 56 34" width={s} height={s*0.61}>
+      {[ ["#e87878",0],["#e8a858",6],["#e8d860",12],["#8ac868",18],["#5ab8c8",24] ].map(([c,o],i)=>(
+        <path key={i} d={`M${4+o/2} 30 Q28 ${4+o} ${52-o/2} 30`} fill="none" stroke={c} strokeWidth="4" strokeLinecap="round" opacity="0.85"/>
+      ))}
+      <ellipse cx="8" cy="28" rx="7" ry="4.5" fill="white" opacity="0.92"/>
+      <ellipse cx="13" cy="26" rx="5" ry="3.5" fill="white" opacity="0.88"/>
+      <ellipse cx="48" cy="28" rx="7" ry="4.5" fill="white" opacity="0.92"/>
+      <ellipse cx="43" cy="26" rx="5" ry="3.5" fill="white" opacity="0.88"/>
     </svg>),
-    clouds: (<svg viewBox="0 0 52 30" width={s} height={s*0.58}><ellipse cx="28" cy="18" rx="20" ry="10" fill="white" opacity="0.9"/><ellipse cx="18" cy="20" rx="14" ry="8" fill="white" opacity="0.85"/><ellipse cx="28" cy="12" rx="12" ry="8" fill="white" opacity="0.9"/><ellipse cx="38" cy="16" rx="10" ry="7" fill="white" opacity="0.8"/></svg>),
+    swallow1: (<svg viewBox="0 0 46 34" width={s} height={s*0.74}>
+      <g transform="translate(23 17)">
+        <path d="M0 -1 C-5 -9 -15 -12 -22 -9 C-16 -6 -11 -2 -7 2 C-12 1 -17 3 -21 7 C-13 7 -7 5 -1 1" fill="#2a3448"/>
+        <path d="M0 -1 C5 -9 15 -12 22 -9 C16 -6 11 -2 7 2 C12 1 17 3 21 7 C13 7 7 5 1 1" fill="#2a3448"/>
+        <ellipse cx="0" cy="1" rx="4.2" ry="2.6" fill="#1f2838"/>
+        <path d="M-1 2 L-6 8 L-2 7 L0 10 L2 7 L6 8 L1 2" fill="#1f2838" opacity="0.95"/>
+      </g>
+    </svg>),
+    swallow2: (<svg viewBox="0 0 60 34" width={s} height={s*0.57}>
+      <g transform="translate(18 15) scale(0.9)">
+        <path d="M0 -1 C-5 -9 -15 -12 -22 -9 C-16 -6 -11 -2 -7 2 C-12 1 -17 3 -21 7 C-13 7 -7 5 -1 1" fill="#2a3448"/>
+        <path d="M0 -1 C5 -9 15 -12 22 -9 C16 -6 11 -2 7 2 C12 1 17 3 21 7 C13 7 7 5 1 1" fill="#2a3448"/>
+        <ellipse cx="0" cy="1" rx="4.2" ry="2.6" fill="#1f2838"/>
+        <path d="M-1 2 L-6 8 L-2 7 L0 10 L2 7 L6 8 L1 2" fill="#1f2838" opacity="0.95"/>
+      </g>
+      <g transform="translate(42 19) scale(0.72) rotate(10)">
+        <path d="M0 -1 C-5 -9 -15 -12 -22 -9 C-16 -6 -11 -2 -7 2 C-12 1 -17 3 -21 7 C-13 7 -7 5 -1 1" fill="#37435a"/>
+        <path d="M0 -1 C5 -9 15 -12 22 -9 C16 -6 11 -2 7 2 C12 1 17 3 21 7 C13 7 7 5 1 1" fill="#37435a"/>
+        <ellipse cx="0" cy="1" rx="4.2" ry="2.6" fill="#283246"/>
+        <path d="M-1 2 L-6 8 L-2 7 L0 10 L2 7 L6 8 L1 2" fill="#283246" opacity="0.95"/>
+      </g>
+    </svg>),
+    clouds: (<svg viewBox="0 0 54 32" width={s} height={s*0.59}>
+      <ellipse cx="28" cy="19" rx="21" ry="10" fill="#dfe8ef" opacity="0.45"/>
+      <ellipse cx="18" cy="20" rx="13" ry="7.5" fill="white" opacity="0.92"/>
+      <ellipse cx="29" cy="13" rx="13" ry="8.5" fill="white" opacity="0.95"/>
+      <ellipse cx="40" cy="18" rx="11" ry="7" fill="white" opacity="0.9"/>
+      <ellipse cx="28" cy="19" rx="21" ry="9" fill="none" stroke="#d5e0e8" strokeWidth="1" opacity="0.7"/>
+    </svg>),
     // Decoración
     lantern: (<svg viewBox="0 0 32 50" width={s} height={s}><rect x="14" y="2" width="4" height="7" rx="2" fill="#9a7848"/><rect x="10" y="12" width="12" height="22" rx="6" fill="#e86030"/><rect x="12" y="12" width="8" height="22" rx="4" fill="#f08050" opacity="0.7"/><ellipse cx="16" cy="12" rx="7" ry="3" fill="#9a7848"/><ellipse cx="16" cy="34" rx="7" ry="3" fill="#9a7848"/><rect x="14" y="34" width="4" height="8" rx="2" fill="#9a7848"/><circle cx="16" cy="23" r="4" fill="#f8e060" opacity="0.5"/></svg>),
     lantern2: (<svg viewBox="0 0 52 50" width={s} height={s}><line x1="8" y1="0" x2="44" y2="0" stroke="#9a7848" strokeWidth="2"/><line x1="16" y1="0" x2="12" y2="10" stroke="#9a7848" strokeWidth="1.5"/><line x1="36" y1="0" x2="40" y2="10" stroke="#9a7848" strokeWidth="1.5"/><rect x="6" y="10" width="10" height="18" rx="5" fill="#e86030"/><rect x="8" y="10" width="6" height="18" rx="3" fill="#f08050" opacity="0.7"/><ellipse cx="11" cy="10" rx="6" ry="2.5" fill="#9a7848"/><ellipse cx="11" cy="28" rx="6" ry="2.5" fill="#9a7848"/><rect x="30" y="10" width="10" height="18" rx="5" fill="#d4408a"/><rect x="32" y="10" width="6" height="18" rx="3" fill="#e060a0" opacity="0.7"/><ellipse cx="35" cy="10" rx="6" ry="2.5" fill="#9a7848"/><ellipse cx="35" cy="28" rx="6" ry="2.5" fill="#9a7848"/></svg>),
@@ -948,40 +746,82 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
         </g>
       )}
 
+      {owned.hat_beret && (
+        <g transform="rotate(6, 76, 88) translate(76, 46)">
+          <ellipse cx="-6" cy="-4" rx="23" ry="11" fill="#c95b79"/>
+          <ellipse cx="-6" cy="-4" rx="23" ry="11" fill="none" stroke="#7b3146" strokeWidth="2"/>
+          <circle cx="9" cy="-12" r="3" fill="#e98aa2"/>
+          <rect x="-18" y="2" width="24" height="5" rx="2.5" fill="#7b3146" opacity="0.6"/>
+        </g>
+      )}
+
+      {owned.hat_beanie && (
+        <g transform="rotate(6, 76, 88) translate(76, 46)">
+          <path d="M-22 4 C-22 -12 -12 -20 0 -20 C12 -20 22 -12 22 4" fill="#8ac8e8"/>
+          <rect x="-24" y="2" width="48" height="8" rx="4" fill="#4a90b8"/>
+          <circle cx="0" cy="-23" r="5" fill="#d9f2ff"/>
+        </g>
+      )}
+
+      {owned.hat_frog && (
+        <g transform="rotate(6, 76, 88) translate(76, 45)">
+          <ellipse cx="0" cy="0" rx="26" ry="10" fill="#78c85a"/>
+          <ellipse cx="-11" cy="-8" rx="5" ry="5" fill="#8de06f" stroke="#3e8a30" strokeWidth="1.5"/>
+          <ellipse cx="11" cy="-8" rx="5" ry="5" fill="#8de06f" stroke="#3e8a30" strokeWidth="1.5"/>
+          <circle cx="-11" cy="-8" r="1.2" fill="#1f4120"/>
+          <circle cx="11" cy="-8" r="1.2" fill="#1f4120"/>
+        </g>
+      )}
+
       {/* GLASSES: HEART */}
       {owned.glasses_heart && (
-        <g transform="rotate(6, 76, 88) translate(76, 88)">
-          {/* Left lens */}
-          <path d="M-28 -4 C-28 -9 -24 -11 -20 -7 C-16 -11 -12 -9 -12 -4 C-12 2 -20 8 -20 8 C-20 8 -28 2 -28 -4Z"
-            fill="#ff7090" opacity="0.75"/>
-          <path d="M-28 -4 C-28 -9 -24 -11 -20 -7 C-16 -11 -12 -9 -12 -4 C-12 2 -20 8 -20 8 C-20 8 -28 2 -28 -4Z"
-            fill="none" stroke="#d04060" strokeWidth="1.5"/>
-          {/* Right lens */}
-          <path d="M12 -4 C12 -9 16 -11 20 -7 C24 -11 28 -9 28 -4 C28 2 20 8 20 8 C20 8 12 2 12 -4Z"
-            fill="#ff7090" opacity="0.75"/>
-          <path d="M12 -4 C12 -9 16 -11 20 -7 C24 -11 28 -9 28 -4 C28 2 20 8 20 8 C20 8 12 2 12 -4Z"
-            fill="none" stroke="#d04060" strokeWidth="1.5"/>
-          {/* Bridge */}
-          <path d="M-12 -2 C-6 -6 6 -6 12 -2" fill="none" stroke="#d04060" strokeWidth="2.5" strokeLinecap="round"/>
-          {/* Arms */}
-          <line x1="-28" y1="-2" x2="-40" y2="-4" stroke="#d04060" strokeWidth="2.5" strokeLinecap="round"/>
-          <line x1="28" y1="-2" x2="40" y2="-4" stroke="#d04060" strokeWidth="2.5" strokeLinecap="round"/>
-          {/* Shine */}
-          <ellipse cx="-22" cy="-5" rx="3" ry="2" fill="white" opacity="0.5" transform="rotate(-20 -22 -5)"/>
-          <ellipse cx="18" cy="-5" rx="3" ry="2" fill="white" opacity="0.5" transform="rotate(-20 18 -5)"/>
+        <g transform="rotate(6, 76, 88) translate(76, 84)">
+          <path d="M-20 -1 C-20 -5 -17 -7 -14 -4 C-11 -7 -8 -5 -8 -1 C-8 3 -14 8 -14 8 C-14 8 -20 3 -20 -1Z" fill="#ff84a7" stroke="#b93d62" strokeWidth="1.5"/>
+          <path d="M8 -1 C8 -5 11 -7 14 -4 C17 -7 20 -5 20 -1 C20 3 14 8 14 8 C14 8 8 3 8 -1Z" fill="#ff84a7" stroke="#b93d62" strokeWidth="1.5"/>
+          <line x1="-8" y1="0" x2="8" y2="0" stroke="#b93d62" strokeWidth="2" strokeLinecap="round"/>
+          <line x1="-20" y1="0" x2="-29" y2="-2" stroke="#b93d62" strokeWidth="2" strokeLinecap="round"/>
+          <line x1="20" y1="0" x2="29" y2="-2" stroke="#b93d62" strokeWidth="2" strokeLinecap="round"/>
         </g>
       )}
 
       {/* GLASSES: SUNGLASSES */}
       {owned.glasses_sun && (
-        <g transform="rotate(6, 76, 88) translate(76, 88)">
-          <rect x="-32" y="-8" width="20" height="14" rx="7" fill="#1a3050" opacity="0.88"/>
-          <rect x="12" y="-8" width="20" height="14" rx="7" fill="#1a3050" opacity="0.88"/>
-          <line x1="-12" y1="-1" x2="12" y2="-1" stroke="#8a7030" strokeWidth="2.5" strokeLinecap="round"/>
-          <line x1="-32" y1="-2" x2="-44" y2="-5" stroke="#8a7030" strokeWidth="2.5" strokeLinecap="round"/>
-          <line x1="32" y1="-2" x2="44" y2="-5" stroke="#8a7030" strokeWidth="2.5" strokeLinecap="round"/>
-          <rect x="-30" y="-6" width="8" height="5" rx="3" fill="white" opacity="0.12"/>
-          <rect x="14" y="-6" width="8" height="5" rx="3" fill="white" opacity="0.12"/>
+        <g transform="rotate(6, 76, 88) translate(76, 84)">
+          <rect x="-24" y="-7" width="16" height="11" rx="5.5" fill="#1b2230"/>
+          <rect x="8" y="-7" width="16" height="11" rx="5.5" fill="#1b2230"/>
+          <line x1="-8" y1="-1" x2="8" y2="-1" stroke="#2f3540" strokeWidth="2" strokeLinecap="round"/>
+          <line x1="-24" y1="-2" x2="-32" y2="-3" stroke="#2f3540" strokeWidth="2" strokeLinecap="round"/>
+          <line x1="24" y1="-2" x2="32" y2="-3" stroke="#2f3540" strokeWidth="2" strokeLinecap="round"/>
+          <rect x="-21" y="-5" width="5" height="3" rx="1.5" fill="#ffffff" opacity="0.18"/>
+          <rect x="11" y="-5" width="5" height="3" rx="1.5" fill="#ffffff" opacity="0.18"/>
+        </g>
+      )}
+
+      {owned.glasses_round && (
+        <g transform="rotate(6, 76, 88) translate(76, 84)">
+          <circle cx="-12" cy="-1" r="7.2" fill="none" stroke="#6a6f78" strokeWidth="2"/>
+          <circle cx="12" cy="-1" r="7.2" fill="none" stroke="#6a6f78" strokeWidth="2"/>
+          <line x1="-4.8" y1="-1" x2="4.8" y2="-1" stroke="#6a6f78" strokeWidth="1.8" strokeLinecap="round"/>
+          <line x1="-19" y1="-2" x2="-27" y2="-3" stroke="#6a6f78" strokeWidth="1.8" strokeLinecap="round"/>
+          <line x1="19" y1="-2" x2="27" y2="-3" stroke="#6a6f78" strokeWidth="1.8" strokeLinecap="round"/>
+        </g>
+      )}
+
+      {owned.glasses_clear && (
+        <g transform="rotate(6, 76, 88) translate(76, 84)">
+          <rect x="-22" y="-7" width="14" height="11" rx="4" fill="#d9eef9" opacity="0.35" stroke="#7891a0" strokeWidth="1.6"/>
+          <rect x="8" y="-7" width="14" height="11" rx="4" fill="#d9eef9" opacity="0.35" stroke="#7891a0" strokeWidth="1.6"/>
+          <line x1="-8" y1="-1" x2="8" y2="-1" stroke="#7891a0" strokeWidth="1.8" strokeLinecap="round"/>
+          <line x1="-22" y1="-2" x2="-30" y2="-3" stroke="#7891a0" strokeWidth="1.8" strokeLinecap="round"/>
+          <line x1="22" y1="-2" x2="30" y2="-3" stroke="#7891a0" strokeWidth="1.8" strokeLinecap="round"/>
+        </g>
+      )}
+
+      {owned.glasses_star && (
+        <g transform="rotate(6, 76, 88) translate(76, 84)">
+          <path d="M-13 -8 L-11 -3 L-6 -3 L-10 -0.5 L-8.5 4.5 L-13 2 L-17.5 4.5 L-16 -0.5 L-20 -3 L-15 -3Z" fill="#ffd76a" stroke="#c28d1f" strokeWidth="1.2"/>
+          <path d="M13 -8 L15 -3 L20 -3 L16 -0.5 L17.5 4.5 L13 2 L8.5 4.5 L10 -0.5 L6 -3 L11 -3Z" fill="#ffd76a" stroke="#c28d1f" strokeWidth="1.2"/>
+          <line x1="-6" y1="-1" x2="6" y2="-1" stroke="#c28d1f" strokeWidth="1.8" strokeLinecap="round"/>
         </g>
       )}
 
@@ -1051,6 +891,44 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
         </g>
       )}
 
+      {owned.outfit_sailor && (
+        <g>
+          <path d="M45 136 C43 151 43 170 45 192 C56 197 95 197 107 192 C109 170 109 151 107 136 C92 131 61 131 45 136Z" fill="#f5f8ff" opacity="0.96"/>
+          <path d="M59 132 L76 152 L93 132" fill="none" stroke="#5d7bbd" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+          <rect x="47" y="161" width="58" height="10" rx="5" fill="#5d7bbd" opacity="0.85"/>
+          <circle cx="76" cy="156" r="4" fill="#f4a8c0"/>
+
+          <path d="M145 136 C143 151 143 170 145 192 C156 197 195 197 207 192 C209 170 209 151 207 136 C192 131 161 131 145 136Z" fill="#f5f8ff" opacity="0.96"/>
+          <path d="M159 132 L176 152 L193 132" fill="none" stroke="#3f669f" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+          <rect x="147" y="161" width="58" height="10" rx="5" fill="#3f669f" opacity="0.9"/>
+          <circle cx="176" cy="156" r="4" fill="#b8d8ff"/>
+        </g>
+      )}
+
+      {owned.outfit_witch && (
+        <g>
+          <path d="M44 138 C40 155 40 176 44 194 C56 201 97 201 108 194 C112 176 112 155 108 138 C92 132 60 132 44 138Z" fill="#7b5bb8" opacity="0.9"/>
+          <path d="M52 138 C60 145 69 149 76 149 C83 149 92 145 100 138" fill="none" stroke="#d6a55a" strokeWidth="2.5"/>
+          <circle cx="76" cy="168" r="6" fill="#2f1d4a" opacity="0.8"/>
+
+          <path d="M144 138 C140 155 140 176 144 194 C156 201 197 201 208 194 C212 176 212 155 208 138 C192 132 160 132 144 138Z" fill="#5f4aa0" opacity="0.9"/>
+          <path d="M152 138 C160 145 169 149 176 149 C183 149 192 145 200 138" fill="none" stroke="#d6a55a" strokeWidth="2.5"/>
+          <circle cx="176" cy="168" r="6" fill="#24163b" opacity="0.85"/>
+        </g>
+      )}
+
+      {owned.outfit_angel && (
+        <g>
+          <path d="M44 137 C42 154 42 174 44 192 C56 199 96 199 108 192 C110 174 110 154 108 137 C92 132 60 132 44 137Z" fill="#fff8f0" opacity="0.97"/>
+          <ellipse cx="34" cy="151" rx="10" ry="18" fill="#f6fcff" opacity="0.8"/>
+          <ellipse cx="118" cy="151" rx="10" ry="18" fill="#f6fcff" opacity="0.8"/>
+
+          <path d="M144 137 C142 154 142 174 144 192 C156 199 196 199 208 192 C210 174 210 154 208 137 C192 132 160 132 144 137Z" fill="#fff8f0" opacity="0.97"/>
+          <ellipse cx="134" cy="151" rx="10" ry="18" fill="#f6fcff" opacity="0.8"/>
+          <ellipse cx="218" cy="151" rx="10" ry="18" fill="#f6fcff" opacity="0.8"/>
+        </g>
+      )}
+
       {/* ══════════ RIGHT PANDA — same accessories mirrored ══════════ */}
 
       {owned.hat_flower && (
@@ -1095,33 +973,80 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
         </g>
       )}
 
+      {owned.hat_beret && (
+        <g transform="rotate(-4, 176, 88) translate(176, 46)">
+          <ellipse cx="-6" cy="-4" rx="23" ry="11" fill="#7e8fe0"/>
+          <ellipse cx="-6" cy="-4" rx="23" ry="11" fill="none" stroke="#3e4f96" strokeWidth="2"/>
+          <circle cx="9" cy="-12" r="3" fill="#a8b4ef"/>
+          <rect x="-18" y="2" width="24" height="5" rx="2.5" fill="#3e4f96" opacity="0.6"/>
+        </g>
+      )}
+
+      {owned.hat_beanie && (
+        <g transform="rotate(-4, 176, 88) translate(176, 46)">
+          <path d="M-22 4 C-22 -12 -12 -20 0 -20 C12 -20 22 -12 22 4" fill="#ffb8d0"/>
+          <rect x="-24" y="2" width="48" height="8" rx="4" fill="#e884ac"/>
+          <circle cx="0" cy="-23" r="5" fill="#ffe4ef"/>
+        </g>
+      )}
+
+      {owned.hat_frog && (
+        <g transform="rotate(-4, 176, 88) translate(176, 45)">
+          <ellipse cx="0" cy="0" rx="26" ry="10" fill="#78c85a"/>
+          <ellipse cx="-11" cy="-8" rx="5" ry="5" fill="#8de06f" stroke="#3e8a30" strokeWidth="1.5"/>
+          <ellipse cx="11" cy="-8" rx="5" ry="5" fill="#8de06f" stroke="#3e8a30" strokeWidth="1.5"/>
+          <circle cx="-11" cy="-8" r="1.2" fill="#1f4120"/>
+          <circle cx="11" cy="-8" r="1.2" fill="#1f4120"/>
+        </g>
+      )}
+
       {owned.glasses_heart && (
-        <g transform="rotate(-4, 176, 88) translate(176, 88)">
-          <path d="M-28 -4 C-28 -9 -24 -11 -20 -7 C-16 -11 -12 -9 -12 -4 C-12 2 -20 8 -20 8 C-20 8 -28 2 -28 -4Z"
-            fill="#ff7090" opacity="0.75"/>
-          <path d="M-28 -4 C-28 -9 -24 -11 -20 -7 C-16 -11 -12 -9 -12 -4 C-12 2 -20 8 -20 8 C-20 8 -28 2 -28 -4Z"
-            fill="none" stroke="#d04060" strokeWidth="1.5"/>
-          <path d="M12 -4 C12 -9 16 -11 20 -7 C24 -11 28 -9 28 -4 C28 2 20 8 20 8 C20 8 12 2 12 -4Z"
-            fill="#ff7090" opacity="0.75"/>
-          <path d="M12 -4 C12 -9 16 -11 20 -7 C24 -11 28 -9 28 -4 C28 2 20 8 20 8 C20 8 12 2 12 -4Z"
-            fill="none" stroke="#d04060" strokeWidth="1.5"/>
-          <path d="M-12 -2 C-6 -6 6 -6 12 -2" fill="none" stroke="#d04060" strokeWidth="2.5" strokeLinecap="round"/>
-          <line x1="-28" y1="-2" x2="-44" y2="-4" stroke="#d04060" strokeWidth="2.5" strokeLinecap="round"/>
-          <line x1="28" y1="-2" x2="44" y2="-4" stroke="#d04060" strokeWidth="2.5" strokeLinecap="round"/>
-          <ellipse cx="-22" cy="-5" rx="3" ry="2" fill="white" opacity="0.5" transform="rotate(-20 -22 -5)"/>
-          <ellipse cx="18" cy="-5" rx="3" ry="2" fill="white" opacity="0.5" transform="rotate(-20 18 -5)"/>
+        <g transform="rotate(-4, 176, 88) translate(176, 84)">
+          <path d="M-20 -1 C-20 -5 -17 -7 -14 -4 C-11 -7 -8 -5 -8 -1 C-8 3 -14 8 -14 8 C-14 8 -20 3 -20 -1Z" fill="#ff84a7" stroke="#b93d62" strokeWidth="1.5"/>
+          <path d="M8 -1 C8 -5 11 -7 14 -4 C17 -7 20 -5 20 -1 C20 3 14 8 14 8 C14 8 8 3 8 -1Z" fill="#ff84a7" stroke="#b93d62" strokeWidth="1.5"/>
+          <line x1="-8" y1="0" x2="8" y2="0" stroke="#b93d62" strokeWidth="2" strokeLinecap="round"/>
+          <line x1="-20" y1="0" x2="-29" y2="-2" stroke="#b93d62" strokeWidth="2" strokeLinecap="round"/>
+          <line x1="20" y1="0" x2="29" y2="-2" stroke="#b93d62" strokeWidth="2" strokeLinecap="round"/>
         </g>
       )}
 
       {owned.glasses_sun && (
-        <g transform="rotate(-4, 176, 88) translate(176, 88)">
-          <rect x="-34" y="-8" width="22" height="14" rx="7" fill="#1a3050" opacity="0.88"/>
-          <rect x="12" y="-8" width="22" height="14" rx="7" fill="#1a3050" opacity="0.88"/>
-          <line x1="-12" y1="-1" x2="12" y2="-1" stroke="#8a7030" strokeWidth="2.5" strokeLinecap="round"/>
-          <line x1="-34" y1="-2" x2="-48" y2="-5" stroke="#8a7030" strokeWidth="2.5" strokeLinecap="round"/>
-          <line x1="34" y1="-2" x2="48" y2="-5" stroke="#8a7030" strokeWidth="2.5" strokeLinecap="round"/>
-          <rect x="-32" y="-6" width="8" height="5" rx="3" fill="white" opacity="0.12"/>
-          <rect x="14" y="-6" width="8" height="5" rx="3" fill="white" opacity="0.12"/>
+        <g transform="rotate(-4, 176, 88) translate(176, 84)">
+          <rect x="-24" y="-7" width="16" height="11" rx="5.5" fill="#1b2230"/>
+          <rect x="8" y="-7" width="16" height="11" rx="5.5" fill="#1b2230"/>
+          <line x1="-8" y1="-1" x2="8" y2="-1" stroke="#2f3540" strokeWidth="2" strokeLinecap="round"/>
+          <line x1="-24" y1="-2" x2="-32" y2="-3" stroke="#2f3540" strokeWidth="2" strokeLinecap="round"/>
+          <line x1="24" y1="-2" x2="32" y2="-3" stroke="#2f3540" strokeWidth="2" strokeLinecap="round"/>
+          <rect x="-21" y="-5" width="5" height="3" rx="1.5" fill="#ffffff" opacity="0.18"/>
+          <rect x="11" y="-5" width="5" height="3" rx="1.5" fill="#ffffff" opacity="0.18"/>
+        </g>
+      )}
+
+      {owned.glasses_round && (
+        <g transform="rotate(-4, 176, 88) translate(176, 84)">
+          <circle cx="-12" cy="-1" r="7.2" fill="none" stroke="#6a6f78" strokeWidth="2"/>
+          <circle cx="12" cy="-1" r="7.2" fill="none" stroke="#6a6f78" strokeWidth="2"/>
+          <line x1="-4.8" y1="-1" x2="4.8" y2="-1" stroke="#6a6f78" strokeWidth="1.8" strokeLinecap="round"/>
+          <line x1="-19" y1="-2" x2="-27" y2="-3" stroke="#6a6f78" strokeWidth="1.8" strokeLinecap="round"/>
+          <line x1="19" y1="-2" x2="27" y2="-3" stroke="#6a6f78" strokeWidth="1.8" strokeLinecap="round"/>
+        </g>
+      )}
+
+      {owned.glasses_clear && (
+        <g transform="rotate(-4, 176, 88) translate(176, 84)">
+          <rect x="-22" y="-7" width="14" height="11" rx="4" fill="#d9eef9" opacity="0.35" stroke="#7891a0" strokeWidth="1.6"/>
+          <rect x="8" y="-7" width="14" height="11" rx="4" fill="#d9eef9" opacity="0.35" stroke="#7891a0" strokeWidth="1.6"/>
+          <line x1="-8" y1="-1" x2="8" y2="-1" stroke="#7891a0" strokeWidth="1.8" strokeLinecap="round"/>
+          <line x1="-22" y1="-2" x2="-30" y2="-3" stroke="#7891a0" strokeWidth="1.8" strokeLinecap="round"/>
+          <line x1="22" y1="-2" x2="30" y2="-3" stroke="#7891a0" strokeWidth="1.8" strokeLinecap="round"/>
+        </g>
+      )}
+
+      {owned.glasses_star && (
+        <g transform="rotate(-4, 176, 88) translate(176, 84)">
+          <path d="M-13 -8 L-11 -3 L-6 -3 L-10 -0.5 L-8.5 4.5 L-13 2 L-17.5 4.5 L-16 -0.5 L-20 -3 L-15 -3Z" fill="#ffd76a" stroke="#c28d1f" strokeWidth="1.2"/>
+          <path d="M13 -8 L15 -3 L20 -3 L16 -0.5 L17.5 4.5 L13 2 L8.5 4.5 L10 -0.5 L6 -3 L11 -3Z" fill="#ffd76a" stroke="#c28d1f" strokeWidth="1.2"/>
+          <line x1="-6" y1="-1" x2="6" y2="-1" stroke="#c28d1f" strokeWidth="1.8" strokeLinecap="round"/>
         </g>
       )}
 
@@ -1362,20 +1287,24 @@ function GardenScene({ garden, waterLevel }) {
       </g>}
 
       {/* Swallows */}
-      {g.swallow1 && <g>
-        <g transform="translate(160,70)">
-          <path d="M12 6 L2 1 L6 6 L0 9 L6 8 L4 14 L12 8Z" fill="#2a2a3a"/>
-          <path d="M12 6 L22 1 L18 6 L24 9 L18 8 L20 14 L12 8Z" fill="#2a2a3a"/>
-        </g>
+      {g.swallow1 && <g transform="translate(164,68)">
+        <path d="M0 -2 C-8 -14 -22 -18 -34 -13 C-24 -9 -16 -3 -10 3 C-18 1 -26 5 -32 11 C-20 11 -10 8 -1 2" fill="#263247" opacity="0.95"/>
+        <path d="M0 -2 C8 -14 22 -18 34 -13 C24 -9 16 -3 10 3 C18 1 26 5 32 11 C20 11 10 8 1 2" fill="#263247" opacity="0.95"/>
+        <ellipse cx="0" cy="2" rx="6.5" ry="3.6" fill="#1b2432"/>
+        <path d="M-1 4 L-9 14 L-3 12 L0 17 L3 12 L9 14 L1 4" fill="#1b2432"/>
       </g>}
       {g.swallow2 && <g>
-        <g transform="translate(130,55)">
-          <path d="M10 5 L2 1 L5 5 L0 8 L5 7 L3 12 L10 7Z" fill="#2a2a3a"/>
-          <path d="M10 5 L18 1 L15 5 L20 8 L15 7 L17 12 L10 7Z" fill="#2a2a3a"/>
+        <g transform="translate(130,54) scale(0.88)">
+          <path d="M0 -2 C-8 -14 -22 -18 -34 -13 C-24 -9 -16 -3 -10 3 C-18 1 -26 5 -32 11 C-20 11 -10 8 -1 2" fill="#263247" opacity="0.95"/>
+          <path d="M0 -2 C8 -14 22 -18 34 -13 C24 -9 16 -3 10 3 C18 1 26 5 32 11 C20 11 10 8 1 2" fill="#263247" opacity="0.95"/>
+          <ellipse cx="0" cy="2" rx="6.5" ry="3.6" fill="#1b2432"/>
+          <path d="M-1 4 L-9 14 L-3 12 L0 17 L3 12 L9 14 L1 4" fill="#1b2432"/>
         </g>
-        <g transform="translate(220,75)">
-          <path d="M10 5 L2 1 L5 5 L0 8 L5 7 L3 12 L10 7Z" fill="#2a2a3a"/>
-          <path d="M10 5 L18 1 L15 5 L20 8 L15 7 L17 12 L10 7Z" fill="#2a2a3a"/>
+        <g transform="translate(226,76) scale(0.72) rotate(8)">
+          <path d="M0 -2 C-8 -14 -22 -18 -34 -13 C-24 -9 -16 -3 -10 3 C-18 1 -26 5 -32 11 C-20 11 -10 8 -1 2" fill="#344158" opacity="0.92"/>
+          <path d="M0 -2 C8 -14 22 -18 34 -13 C24 -9 16 -3 10 3 C18 1 26 5 32 11 C20 11 10 8 1 2" fill="#344158" opacity="0.92"/>
+          <ellipse cx="0" cy="2" rx="6.5" ry="3.6" fill="#222c3c"/>
+          <path d="M-1 4 L-9 14 L-3 12 L0 17 L3 12 L9 14 L1 4" fill="#222c3c"/>
         </g>
       </g>}
 
@@ -1502,7 +1431,7 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
             <div style={{ position:"relative", display:"inline-block" }}>
               {/* Speech bubbles */}
               {pandaBubble?.textA && (
-                <div style={{ position:"absolute", bottom:"104%", left:"-58px", maxWidth:140, background:"white",
+                <div style={{ position:"absolute", bottom:"120%", left:"-56px", maxWidth:118, background:"white",
                   border:"2px solid #4a6e30", borderRadius:"14px 14px 4px 14px", padding:"6px 10px",
                   fontSize:"0.7rem", color:"#1e2b1e", fontWeight:700, lineHeight:1.4,
                   boxShadow:"0 2px 8px rgba(0,0,0,0.15)", zIndex:10, animation:"fadeIn 0.3s ease" }}>
@@ -1514,7 +1443,7 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
                 </div>
               )}
               {pandaBubble?.textB && (
-                <div style={{ position:"absolute", bottom:"78%", right:"-58px", maxWidth:140, background:"white",
+                <div style={{ position:"absolute", bottom:"58%", right:"-56px", maxWidth:118, background:"white",
                   border:"2px solid #e8907a", borderRadius:"14px 14px 14px 4px", padding:"6px 10px",
                   fontSize:"0.7rem", color:"#1e2b1e", fontWeight:700, lineHeight:1.4,
                   boxShadow:"0 2px 8px rgba(0,0,0,0.15)", zIndex:10, animation:"fadeIn 0.3s ease" }}>
@@ -1599,6 +1528,10 @@ function Mensajes({ user, messages, onSend }) {
   const [text, setText] = useState("");
   const [quick, setQuick] = useState(null);
   const [view, setView] = useState("inbox"); // "inbox" | "sent" | "compose"
+  const [momentos, setMomentos] = useState([]);
+  const [nuevoMomento, setNuevoMomento] = useState("");
+  const [gratitud, setGratitud] = useState([]);
+  const [nuevaGratitud, setNuevaGratitud] = useState("");
   const myEmail = user?.email || "guest";
 
   const inbox = messages.filter(m => m.senderEmail !== myEmail);
@@ -1606,6 +1539,21 @@ function Mensajes({ user, messages, onSend }) {
   const unread = inbox.filter(m => !m.read).length;
 
   const [sending, setSending] = useState(false);
+
+  const agregarMomento = () => {
+    const clean = nuevoMomento.trim();
+    if (!clean) return;
+    setMomentos(prev => [clean, ...prev]);
+    setNuevoMomento("");
+  };
+
+  const agregarGratitud = () => {
+    const clean = nuevaGratitud.trim();
+    if (!clean) return;
+    setGratitud(prev => [clean, ...prev]);
+    setNuevaGratitud("");
+  };
+
   const send = () => {
     const msg = quick || text.trim();
     if (!msg || sending) return;
@@ -1684,6 +1632,52 @@ function Mensajes({ user, messages, onSend }) {
               </div>
             </div>
           ))}
+      </div>
+
+      {/* Momentos Especiales */}
+      <div style={{ background:C.white, borderRadius:20, margin:"0 14px 12px", padding:18, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
+        <h3 style={{ margin:"0 0 10px", fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark }}>Momentos Especiales</h3>
+        <ul style={{ margin:"0 0 10px", paddingLeft:20, color:C.ink }}>
+          {momentos.map((momento, i) => (
+            <li key={`momento-${i}`} style={{ fontSize:"0.84rem", lineHeight:1.6, marginBottom:4 }}>{momento}</li>
+          ))}
+        </ul>
+        <div style={{ display:"flex", gap:8 }}>
+          <input
+            value={nuevoMomento}
+            onChange={e => setNuevoMomento(e.target.value)}
+            placeholder="Escribe un momento especial"
+            style={{ flex:1, border:`1.5px solid ${C.border}`, borderRadius:10, padding:"10px 12px", fontSize:"0.84rem", fontFamily:"'Nunito',sans-serif", color:C.ink, background:C.sandL }}
+          />
+          <button
+            onClick={agregarMomento}
+            style={{ border:"none", background:C.olive, color:C.cream2, borderRadius:10, padding:"10px 14px", fontWeight:800, cursor:"pointer" }}>
+            Agregar
+          </button>
+        </div>
+      </div>
+
+      {/* Gratitud */}
+      <div style={{ background:C.white, borderRadius:20, margin:"0 14px 14px", padding:18, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
+        <h3 style={{ margin:"0 0 10px", fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark }}>Gratitud</h3>
+        <ul style={{ margin:"0 0 10px", paddingLeft:20, color:C.ink }}>
+          {gratitud.map((item, i) => (
+            <li key={`gratitud-${i}`} style={{ fontSize:"0.84rem", lineHeight:1.6, marginBottom:4 }}>{item}</li>
+          ))}
+        </ul>
+        <div style={{ display:"flex", gap:8 }}>
+          <input
+            value={nuevaGratitud}
+            onChange={e => setNuevaGratitud(e.target.value)}
+            placeholder="Escribe algo por lo que agradeces"
+            style={{ flex:1, border:`1.5px solid ${C.border}`, borderRadius:10, padding:"10px 12px", fontSize:"0.84rem", fontFamily:"'Nunito',sans-serif", color:C.ink, background:C.sandL }}
+          />
+          <button
+            onClick={agregarGratitud}
+            style={{ border:"none", background:"#c05068", color:C.cream2, borderRadius:10, padding:"10px 14px", fontWeight:800, cursor:"pointer" }}>
+            Agregar
+          </button>
+        </div>
       </div>
 
       {/* Compose button */}
@@ -1769,6 +1763,27 @@ function Login({ onLogin }) {
       || msg.toLowerCase().includes("permissions");
   };
 
+  const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+  const ensureAuthReady = async (firebaseUser) => {
+    await firebaseUser?.getIdToken(true).catch(() => {});
+    await wait(350);
+  };
+
+  const retryFirestore = async (fn) => {
+    let lastErr;
+    for (const delay of [0, 500, 1000]) {
+      if (delay) await wait(delay);
+      try {
+        return await fn();
+      } catch (e) {
+        lastErr = e;
+        if (!isPermissionError(e)) throw e;
+      }
+    }
+    throw lastErr;
+  };
+
   const doLogin = async () => {
     if (!email || !pass) { setErr("Completa correo y contraseña"); return; }
     setLoading(true); setErr("");
@@ -1803,8 +1818,9 @@ function Login({ onLogin }) {
       const since = durN ? `Juntos ${durN} ${durU}` : "Juntos desde hoy";
       const cred = await fbRegister(email, pass);
       const uid = cred.user.uid;
-      await fbSaveUser(uid, { email, names, code, since, isOwner: true });
-      await fbSaveCode(code, { ownerEmail: email, ownerUid: uid, names, since });
+      await ensureAuthReady(cred.user);
+      await retryFirestore(() => fbSaveUser(uid, { email, names, code, since, isOwner: true }));
+      await retryFirestore(() => fbSaveCode(code, { ownerEmail: email, ownerUid: uid, names, since }));
       onLogin({ uid, email, names, code, since, isOwner: true, isGuest: false }, true);
     } catch(e) {
       if (e.code === "auth/email-already-in-use") {
@@ -1823,7 +1839,8 @@ function Login({ onLogin }) {
       const cleanCode = pCode.trim().toUpperCase();
       const cred = await fbRegister(pEmail, pPass);
       const uid = cred.user.uid;
-      const codeData = await fbGetCode(cleanCode);
+      await ensureAuthReady(cred.user);
+      const codeData = await retryFirestore(() => fbGetCode(cleanCode));
       if (!codeData) {
         await fbDeleteCurrentUser().catch(() => {});
         setErr("Código no encontrado — revisa que esté bien escrito");
@@ -1834,10 +1851,10 @@ function Login({ onLogin }) {
       const partnerName = nameB.trim() || "?";
       const names = ownerName + " & " + partnerName;
       const since = codeData.since || "Juntos desde hoy";
-      await fbSaveUser(uid, { email: pEmail, names, code: cleanCode, since, isOwner: false });
+      await retryFirestore(() => fbSaveUser(uid, { email: pEmail, names, code: cleanCode, since, isOwner: false }));
       // Update the shared code doc when rules allow it. If Firestore blocks this,
       // keep the partner account usable instead of aborting the join flow.
-      await fbSaveCode(cleanCode, { names, partnerEmail: pEmail, partnerUid: uid }).catch((err) => {
+      await retryFirestore(() => fbSaveCode(cleanCode, { names, partnerEmail: pEmail, partnerUid: uid })).catch((err) => {
         console.warn("Join: could not update code doc", err);
       });
       // Also update owner's user record with new names
@@ -1850,9 +1867,10 @@ function Login({ onLogin }) {
           const cred2 = await fbLogin(pEmail, pPass);
           const uid2 = cred2.user.uid;
           const cleanCode2 = pCode.trim().toUpperCase();
-          const codeData2 = await fbGetCode(cleanCode2).catch(()=>null);
+          await ensureAuthReady(cred2.user);
+          const codeData2 = await retryFirestore(() => fbGetCode(cleanCode2)).catch(()=>null);
           const names2 = codeData2?.names || "Nosotros";
-          await fbSaveUser(uid2, { email: pEmail, names: names2, code: cleanCode2, isOwner: false }).catch(()=>{});
+          await retryFirestore(() => fbSaveUser(uid2, { email: pEmail, names: names2, code: cleanCode2, isOwner: false })).catch(()=>{});
           onLogin({ uid: uid2, email: pEmail, names: names2, code: cleanCode2, since: codeData2?.since || "Juntos", isOwner: false, isGuest: false }, false);
           setLoading(false); return;
         } catch(e2) {
@@ -2454,6 +2472,8 @@ function Conocete({ conoce, onSave, user }) {
               </div>
             </div>;
           })}
+
+          <Cuestionarios conoce={conoce} onSave={onSave} user={user} />
         </div>
       </div>
     </div>
@@ -2479,15 +2499,19 @@ function Conocete({ conoce, onSave, user }) {
 }
 
 // BURBUJA
-function Burbuja({ burbuja, onSave, user }) {
+function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
   const nameA = user?.names ? user.names.split("&")[0].trim() : "Persona A";
   const nameB = user?.names ? user.names.split("&")[1]?.trim() || "Persona B" : "Persona B";
+  const myRole = user?.isOwner !== false ? "owner" : "partner";
+  const partnerRole = myRole === "owner" ? "partner" : "owner";
+  const myName = myRole === "owner" ? nameA : nameB;
+  const partnerName = myRole === "owner" ? nameB : nameA;
   const [open, setOpen] = useState({});
   const [tmp, setTmp] = useState({});
 
   const get = (id, f) => tmp[id]?.[f] ?? burbuja[id]?.[f] ?? "";
   const set_ = (id, f, v) => setTmp(p => ({ ...p, [id]: { ...p[id], [f]: v } }));
-  const save = (id) => { const a = get(id, "a"), b = get(id, "b"), c = get(id, "c"); if (!a && !b) return; onSave(id, { a, b, c }); };
+  const approvedCount = Object.values(burbuja).filter(v => v?.status === "approved").length;
   const total = BURBUJA_SECTIONS.reduce((s, sec) => s + sec.items.length, 0);
 
   return (
@@ -2500,8 +2524,8 @@ function Burbuja({ burbuja, onSave, user }) {
         <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.05rem", color: C.dark, marginBottom: 5 }}>¿Qué es la burbuja?</div>
         <div style={{ fontSize: "0.85rem", color: C.inkM, lineHeight: 1.7 }}>Su relación tiene sus propias reglas — únicas para ustedes. Este es el espacio para definirlas juntos, sin juicios.</div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
-          <ProgBar value={Object.keys(burbuja).length} max={total} color={C.olive} height={7} style={{ flex: 1 }} />
-          <div style={{ fontSize: "0.76rem", fontWeight: 800, color: C.olive, whiteSpace: "nowrap" }}>{Object.keys(burbuja).length} / {total}</div>
+          <ProgBar value={approvedCount} max={total} color={C.olive} height={7} style={{ flex: 1 }} />
+          <div style={{ fontSize: "0.76rem", fontWeight: 800, color: C.olive, whiteSpace: "nowrap" }}>{approvedCount} / {total}</div>
         </div>
       </div>
       {BURBUJA_SECTIONS.map(sec => (
@@ -2516,19 +2540,78 @@ function Burbuja({ burbuja, onSave, user }) {
           </div>
           {open[sec.id] && <div style={{ padding: "0 16px 16px" }}>
             {sec.items.map(item => {
-              const sv = !!burbuja[item.id];
-              return <div key={item.id} style={{ background: sv ? C.cream : C.sandL, borderRadius: 13, padding: 13, marginBottom: 9, borderLeft: `3px solid ${sv ? C.olive : C.border}` }}>
+              const entry = burbuja[item.id] || {};
+              const myText = get(item.id, myRole);
+              const partnerText = entry[partnerRole] || "";
+              const proposalText = get(item.id, "proposalText");
+              const bothDone = !!entry.owner && !!entry.partner;
+              const isApproved = entry.status === "approved";
+              const hasPending = entry.status === "pending" && !!entry.proposalText;
+              const pendingByMe = hasPending && entry.proposalBy === myRole;
+
+              return <div key={item.id} style={{ background: isApproved ? C.cream : C.sandL, borderRadius: 13, padding: 13, marginBottom: 9, borderLeft: `3px solid ${isApproved ? C.olive : C.border}` }}>
                 <div style={{ fontSize: "0.88rem", fontWeight: 700, color: C.ink, marginBottom: 10 }}>{item.q}</div>
                 {item.note && <div style={{ background: C.white, borderRadius: 9, padding: "9px 11px", marginBottom: 10, fontSize: "0.78rem", color: C.inkM, lineHeight: 1.6, border: `1px solid ${C.border}` }}>{item.note}</div>}
-                {[["A", "a", item.phA, nameA], ["B", "b", item.phB, nameB]].map(([w, f, ph, nm]) => <div key={w} style={{ marginBottom: 8 }}><PBadge who={w} name={nm} /><TA value={get(item.id, f)} onChange={v => set_(item.id, f, v)} placeholder={ph} rows={2} /></div>)}
-                {sv && <div style={{ background: C.white, borderRadius: 10, padding: 10, marginBottom: 8, border: `1.5px solid ${C.olive}` }}>
-                  <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.olive, marginBottom: 3, letterSpacing: "0.4px" }}>✓ NUESTRO ACUERDO</div>
-                  <div style={{ fontSize: "0.85rem", fontWeight: 700, color: C.ink }}>{burbuja[item.id].c || burbuja[item.id].a}</div>
-                </div>}
-                <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}>
-                  <TA value={get(item.id, "c")} onChange={v => set_(item.id, "c", v)} placeholder="Acuerdo compartido (opcional)... +10 bambú 🌿" rows={1} style={{ flex: 1, margin: 0 }} />
-                  <Btn onClick={() => save(item.id)} variant="olive" style={{ padding: "10px 14px", fontSize: "0.85rem", whiteSpace: "nowrap" }}>Guardar</Btn>
+
+                <div style={{ marginBottom: 8 }}>
+                  <PBadge who={myRole === "owner" ? "A" : "B"} name={myName} />
+                  <TA value={myText} onChange={v => set_(item.id, myRole, v)} placeholder={myRole === "owner" ? item.phA : item.phB} rows={2} />
+                  <div style={{ display:"flex", justifyContent:"flex-end", marginTop:6 }}>
+                    <Btn onClick={() => onSaveMine(item.id, myText)} variant="sand" style={{ padding:"8px 12px", fontSize:"0.8rem" }}>Guardar mi parte</Btn>
+                  </div>
                 </div>
+
+                {partnerText && (
+                  <div style={{ marginBottom: 8, background:C.white, borderRadius:10, padding:10, border:`1px solid ${C.border}` }}>
+                    <PBadge who={myRole === "owner" ? "B" : "A"} name={partnerName} />
+                    <div style={{ fontSize:"0.84rem", color:C.inkM, marginTop:6, lineHeight:1.6 }}>{partnerText}</div>
+                  </div>
+                )}
+
+                {!bothDone && (
+                  <div style={{ fontSize:"0.74rem", fontWeight:700, color:C.inkL }}>Esperando que ambos escriban su parte para abrir negociación del acuerdo final.</div>
+                )}
+
+                {bothDone && !isApproved && !hasPending && (
+                  <div style={{ marginTop: 8 }}>
+                    <TA value={proposalText} onChange={v => set_(item.id, "proposalText", v)} placeholder="Propón el acuerdo final para enviarlo a tu pareja..." rows={2} />
+                    <div style={{ display:"flex", justifyContent:"flex-end", marginTop:6 }}>
+                      <Btn onClick={() => onPropose(item.id, proposalText, false)} variant="olive" style={{ padding:"9px 12px", fontSize:"0.82rem" }}>Enviar propuesta</Btn>
+                    </div>
+                  </div>
+                )}
+
+                {bothDone && hasPending && (
+                  <div style={{ marginTop: 8, background:C.white, borderRadius:10, padding:10, border:`1.5px solid ${C.border}` }}>
+                    <div style={{ fontSize:"0.68rem", fontWeight:800, color:C.inkL, marginBottom:4, letterSpacing:"0.4px" }}>
+                      {pendingByMe ? "PROPUESTA ENVIADA" : "PROPUESTA RECIBIDA"}
+                    </div>
+                    <div style={{ fontSize:"0.88rem", color:C.ink, fontWeight:700, lineHeight:1.6 }}>{entry.proposalText}</div>
+
+                    {pendingByMe ? (
+                      <div style={{ marginTop:8, fontSize:"0.74rem", color:C.inkL, fontWeight:700 }}>Esperando respuesta de {partnerName}...</div>
+                    ) : (
+                      <>
+                        <div style={{ display:"flex", gap:8, marginTop:10 }}>
+                          <Btn onClick={() => onApprove(item.id)} variant="olive" style={{ flex:1, fontSize:"0.82rem", padding:"10px 12px" }}>Aprobar ✅</Btn>
+                        </div>
+                        <div style={{ marginTop:8 }}>
+                          <TA value={proposalText} onChange={v => set_(item.id, "proposalText", v)} placeholder="Si no te convence, propone ajuste para negociar..." rows={2} />
+                          <div style={{ display:"flex", justifyContent:"flex-end", marginTop:6 }}>
+                            <Btn onClick={() => onPropose(item.id, proposalText, true)} variant="sand" style={{ padding:"9px 12px", fontSize:"0.82rem" }}>Negociar ↔</Btn>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {isApproved && (
+                  <div style={{ background: C.white, borderRadius: 10, padding: 10, marginTop: 8, border: `1.5px solid ${C.olive}` }}>
+                    <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.olive, marginBottom: 3, letterSpacing: "0.4px" }}>✓ ACUERDO APROBADO</div>
+                    <div style={{ fontSize: "0.85rem", fontWeight: 700, color: C.ink, lineHeight:1.6 }}>{entry.approvedText || entry.proposalText}</div>
+                  </div>
+                )}
               </div>;
             })}
           </div>}
@@ -2539,7 +2622,7 @@ function Burbuja({ burbuja, onSave, user }) {
 }
 
 // PROFILE — Enhanced with more info fields
-function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento }) {
+function Perfil({ user, bamboo, exDone, messages, burbuja, conoce, coupleInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento }) {
   const [editMode, setEditMode] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(user?.names || "");
@@ -2559,8 +2642,20 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
   });
 
   const totalEx = Object.values(exDone).reduce((a, b) => a + b, 0);
+  const nameParts = String(user?.names || "").split("&").map(s => s.trim()).filter(Boolean);
+  const nameA = nameParts[0] || "Panda A";
+  const nameB = nameParts[1] || nameParts[0] || "Panda B";
   const myEmail = user?.email || "guest";
   const myMsgs = messages.filter(m => m.senderEmail === myEmail).length;
+  const ownerQuiz = getQuizAdviceFromConoce(conoce || {}, "owner");
+  const partnerQuiz = getQuizAdviceFromConoce(conoce || {}, "partner");
+  const approvedAgreements = Object.entries(burbuja || {})
+    .filter(([, v]) => v?.status === "approved" && (v?.approvedText || v?.proposalText))
+    .map(([id, v]) => ({
+      id,
+      text: v.approvedText || v.proposalText,
+      question: v.question || BURBUJA_ITEM_MAP[id]?.question || "Acuerdo"
+    }));
   const [connected, setConnected] = useState(false);
   useEffect(() => {
     if (user?.code && !user?.isGuest) {
@@ -2580,9 +2675,9 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
     { icon: "⭐", name: "10 ejercicios", done: totalEx >= 10 },
     { icon: "🔗", name: "Pareja conectada", done: connected },
     { icon: "💌", name: "5 mensajitos", done: myMsgs >= 5 },
-    { icon: "🌸", name: "5 acuerdos", done: Object.keys(burbuja).length >= 5 },
+    { icon: "🌸", name: "5 acuerdos", done: approvedAgreements.length >= 5 },
     { icon: "🌿", name: "100 bambú", done: bamboo >= 100 },
-    { icon: "💝", name: "Jardín lleno", done: Object.keys(burbuja).length >= 10 },
+    { icon: "💝", name: "Jardín lleno", done: approvedAgreements.length >= 10 },
     { icon: "🏆", name: "25 ejercicios", done: totalEx >= 25 },
   ];
 
@@ -2622,35 +2717,6 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
           </div>
         ))}
       </div>
-
-
-
-
-
-      {/* Test Initial Scores */}
-      {testScores && (() => {
-        const avgs = TEST_AREAS.map(a => { const s = testScores[a.id]||{}; return {...a, avg:((s.a||3)+(s.b||3))/2}; });
-        const total = (avgs.reduce((s,a)=>s+a.avg,0)/avgs.length).toFixed(1);
-        return (
-          <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:18, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
-            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
-              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.05rem", color:C.dark }}>📊 Diagnóstico de pareja</div>
-              <div style={{ background:C.olive, color:C.cream2, borderRadius:8, padding:"4px 12px", fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem" }}>{total}/5</div>
-            </div>
-            {avgs.map(a => (
-              <div key={a.id} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
-                <div style={{ fontSize:"1rem", minWidth:22 }}>{a.emoji}</div>
-                <div style={{ fontSize:"0.78rem", color:C.inkM, flex:1 }}>{a.label}</div>
-                <div style={{ display:"flex", gap:3 }}>{[1,2,3,4,5].map(i=>(
-                  <div key={i} style={{ width:11, height:11, borderRadius:"50%", background:i<=Math.round(a.avg)?TEST_COLORS[Math.round(a.avg)-1]:C.sand }}/>
-                ))}</div>
-              </div>
-            ))}
-            <Btn onClick={onRetakeTest} variant="sand" style={{ width:"100%", marginTop:10, fontSize:"0.82rem" }}>Repetir diagnóstico 🔄</Btn>
-          </div>
-        );
-      })()}
-
             {/* ── BAÚL DE GRATITUD ── */}
       <div style={{ margin:"0 14px 12px" }}>
         <BaulSection
@@ -2658,6 +2724,49 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
           onAddGratitud={onAddGratitud} onAddMomento={onAddMomento}
           user={user}
         />
+      </div>
+
+      {/* ── ACUERDOS HECHOS ── */}
+      <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:16, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
+        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:8 }}>🤝 Acuerdos hechos</div>
+        {!approvedAgreements.length ? (
+          <div style={{ fontSize:"0.82rem", color:C.inkL, lineHeight:1.6 }}>Todavía no tienen acuerdos aprobados. Vayan a Burbuja y cierren su primer acuerdo juntos.</div>
+        ) : approvedAgreements.slice(0, 20).map(a => (
+          <div key={a.id} style={{ background:C.cream, borderRadius:10, padding:10, marginBottom:8, border:`1px solid ${C.border}` }}>
+            <div style={{ fontSize:"0.7rem", color:C.inkL, fontWeight:800, marginBottom:4 }}>{a.question}</div>
+            <div style={{ fontSize:"0.84rem", color:C.ink, fontWeight:700, lineHeight:1.6 }}>{a.text}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── RESULTADOS CONOCETE: 3 TEST ── */}
+      <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:16, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
+        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:8 }}>🧠 Test para conocerse mejor</div>
+        <div style={{ fontSize:"0.78rem", color:C.inkL, lineHeight:1.6, marginBottom:10 }}>
+          Estos consejos se generan con los 3 cuestionarios de Conócete (fortalezas, valores y personalidad).
+        </div>
+
+        {[{ role:"owner", name:nameA, data:ownerQuiz }, { role:"partner", name:nameB, data:partnerQuiz }].map(person => (
+          <div key={person.role} style={{ background:C.cream, borderRadius:12, padding:10, marginBottom:8, border:`1px solid ${C.border}` }}>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:8, marginBottom:6 }}>
+              <div style={{ fontSize:"0.8rem", fontWeight:800, color:C.dark }}>🐼 {person.name}</div>
+              <div style={{ fontSize:"0.7rem", fontWeight:800, color:person.data.complete ? C.olive : C.inkL }}>
+                {person.data.progress.answered}/{person.data.progress.total}
+              </div>
+            </div>
+            {!person.data.complete ? (
+              <div style={{ fontSize:"0.76rem", color:C.inkM, lineHeight:1.6 }}>
+                Aún faltan respuestas para generar los 5 consejos de Mochi.
+              </div>
+            ) : (
+              <ol style={{ margin:0, paddingLeft:18, color:C.ink }}>
+                {person.data.tips.map((tip, idx) => (
+                  <li key={idx} style={{ fontSize:"0.78rem", fontWeight:700, lineHeight:1.6, marginBottom:3 }}>{tip}</li>
+                ))}
+              </ol>
+            )}
+          </div>
+        ))}
       </div>
 
       {/* Achievements */}
@@ -2689,6 +2798,30 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
             }} variant="sand" style={{ padding: "10px 14px", fontSize: "0.8rem" }}>Copiar</Btn>
           </div>
         </div>}
+
+        {/* Test Initial Scores */}
+        {testScores && (() => {
+          const avgs = TEST_AREAS.map(a => { const s = testScores[a.id]||{}; return {...a, avg:((s.a||3)+(s.b||3))/2}; });
+          const total = (avgs.reduce((s,a)=>s+a.avg,0)/avgs.length).toFixed(1);
+          return (
+            <div style={{ marginBottom:12, background:C.white, borderRadius:18, padding:18, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
+                <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.05rem", color:C.dark }}>📊 Diagnóstico de pareja</div>
+                <div style={{ background:C.olive, color:C.cream2, borderRadius:8, padding:"4px 12px", fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem" }}>{total}/5</div>
+              </div>
+              {avgs.map(a => (
+                <div key={a.id} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
+                  <div style={{ fontSize:"1rem", minWidth:22 }}>{a.emoji}</div>
+                  <div style={{ fontSize:"0.78rem", color:C.inkM, flex:1 }}>{a.label}</div>
+                  <div style={{ display:"flex", gap:3 }}>{[1,2,3,4,5].map(i=>(
+                    <div key={i} style={{ width:11, height:11, borderRadius:"50%", background:i<=Math.round(a.avg)?TEST_COLORS[Math.round(a.avg)-1]:C.sand }}/>
+                  ))}</div>
+                </div>
+              ))}
+              <Btn onClick={onRetakeTest} variant="sand" style={{ width:"100%", marginTop:10, fontSize:"0.82rem" }}>Repetir diagnóstico 🔄</Btn>
+            </div>
+          );
+        })()}
 
         {/* ── CAMBIAR NOMBRE ── */}
         <div style={{ background: C.white, borderRadius: 16, padding: "16px", border: `1.5px solid ${C.border}`, marginBottom: 12, boxShadow: `0 2px 0 ${C.border}` }}>
@@ -3377,6 +3510,15 @@ export default function App() {
       if (total !== null) setBamboo(total);
     }));
 
+    // Shared garden state (plants/accessories/water/happiness)
+    unsubs.push(fbListenGardenState(code, data => {
+      if (!data) return;
+      if (data.garden && typeof data.garden === "object") setGarden(data.garden);
+      if (data.accessories && typeof data.accessories === "object") setAccessories(data.accessories);
+      if (typeof data.water === "number") setWater(data.water);
+      if (typeof data.happiness === "number") setHappiness(data.happiness);
+    }));
+
     // Gratitud entries (real-time both ways)
     unsubs.push(fbListenGratitud(code, items => setGratitud(items)));
 
@@ -3385,6 +3527,9 @@ export default function App() {
 
     // Conocete answers (real-time both ways)
     unsubs.push(fbListenConoce(code, map => setConoce(map)));
+
+    // Burbuja agreements (real-time workflow)
+    unsubs.push(fbListenBurbuja(code, map => setBurbuja(map)));
 
     // Lessons (both must read)
     unsubs.push(fbListenLessons(code, map => setLessonsDone(map)));
@@ -3441,6 +3586,28 @@ export default function App() {
       if (bamboo < item.cost) { toast("Necesitas más bambú — completa ejercicios"); return; }
       const nb = bamboo - item.cost, ng = { ...safeGarden, [item.id]: true }, nh = Math.min(100, happiness + 10);
       const nv = new Date().toISOString();
+      if (user?.code && !user?.isGuest) {
+        fbSpendBamboo(user.code, item.cost)
+          .then(async (newTotal) => {
+            setBamboo(newTotal);
+            setGarden(ng);
+            setHappiness(nh);
+            setLastVisit(nv);
+            await fbSaveGardenState(user.code, { garden: ng, accessories, water, happiness: nh }).catch(() => {});
+            trigHappy();
+            toast(`${item.name} plantado 🌿`);
+            save(null, { bamboo:newTotal, happiness:nh, water, garden:ng, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit:nv, testScores, lessonsDone, gratitud, momentos });
+          })
+          .catch((e) => {
+            if (String(e?.message || "").includes("INSUFFICIENT_BAMBOO")) {
+              toast("Necesitas más bambú — completa ejercicios");
+              return;
+            }
+            console.error("buyItem error:", e);
+            toast("No se pudo comprar ese item");
+          });
+        return;
+      }
       setBamboo(nb); setGarden(ng); setHappiness(nh); setLastVisit(nv); trigHappy();
       toast(`${item.name} plantado 🌿`);
       save(null, { bamboo:nb, happiness:nh, water, garden:ng, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit:nv, testScores, lessonsDone, gratitud, momentos });
@@ -3462,6 +3629,9 @@ export default function App() {
       if (safeAccessories[item.id] === "owned") {
         const na = { ...safeAccessories, [item.id]: true };
         setAccessories(na);
+        if (user?.code && !user?.isGuest) {
+          fbSaveGardenState(user.code, { garden, accessories: na, water, happiness }).catch(() => {});
+        }
         save(null, { bamboo, happiness, water, garden, accessories: na, exDone, messages, conoce, burbuja, coupleInfo, lastVisit: new Date().toISOString(), testScores, lessonsDone });
         toast(`${item.name} puesto 🐼`);
         return;
@@ -3469,6 +3639,9 @@ export default function App() {
       if (safeAccessories[item.id] === true) {
         const na = { ...safeAccessories, [item.id]: "owned" };
         setAccessories(na);
+        if (user?.code && !user?.isGuest) {
+          fbSaveGardenState(user.code, { garden, accessories: na, water, happiness }).catch(() => {});
+        }
         save(null, { bamboo, happiness, water, garden, accessories: na, exDone, messages, conoce, burbuja, coupleInfo, lastVisit: new Date().toISOString(), testScores, lessonsDone });
         toast(`${item.name} quitado`);
         return;
@@ -3476,6 +3649,28 @@ export default function App() {
       if (bamboo < item.cost) { toast("Necesitas más bambú"); return; }
       const nb = bamboo - item.cost, na = { ...safeAccessories, [item.id]: true }, nh = Math.min(100, happiness + 5);
       const nv = new Date().toISOString();
+      if (user?.code && !user?.isGuest) {
+        fbSpendBamboo(user.code, item.cost)
+          .then(async (newTotal) => {
+            setBamboo(newTotal);
+            setAccessories(na);
+            setHappiness(nh);
+            setLastVisit(nv);
+            await fbSaveGardenState(user.code, { garden, accessories: na, water, happiness: nh }).catch(() => {});
+            trigHappy();
+            toast(`${item.name} puesto ${item.emoji} +5 amor`);
+            save(null, { bamboo:newTotal, happiness:nh, water, garden, accessories:na, exDone, messages, conoce, burbuja, coupleInfo, lastVisit:nv, testScores, lessonsDone, gratitud, momentos });
+          })
+          .catch((e) => {
+            if (String(e?.message || "").includes("INSUFFICIENT_BAMBOO")) {
+              toast("Necesitas más bambú");
+              return;
+            }
+            console.error("buyAccessory error:", e);
+            toast("No se pudo comprar ese accesorio");
+          });
+        return;
+      }
       setBamboo(nb); setAccessories(na); setHappiness(nh); setLastVisit(nv); trigHappy();
       toast(`${item.name} puesto ${item.emoji} +5 amor`);
       save(null, { bamboo:nb, happiness:nh, water, garden, accessories:na, exDone, messages, conoce, burbuja, coupleInfo, lastVisit:nv, testScores, lessonsDone, gratitud, momentos });
@@ -3489,6 +3684,9 @@ export default function App() {
     const nw = Math.min(100, water + 10), nh = Math.min(100, happiness + 2);
     const nv = new Date().toISOString();
     setWater(nw); setHappiness(nh); setLastVisit(nv); trigHappy();
+    if (user?.code && !user?.isGuest) {
+      fbSaveGardenState(user.code, { garden, accessories, water: nw, happiness: nh }).catch(() => {});
+    }
     toast("Jardín regado 💧 ¡Gracias por volver!");
     save(null, { bamboo, happiness:nh, water:nw, garden, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit:nv, testScores, lessonsDone, gratitud, momentos });
   };
@@ -3502,8 +3700,8 @@ export default function App() {
     const pandaBMsgs = [...messages].filter(m => user?.isOwner !== false ? m.senderEmail !== myEmail : m.senderEmail === myEmail);
     const msgA = pandaAMsgs[0];
     const msgB = pandaBMsgs[0];
-    const textA = msgA ? msgA.text.slice(0, 60) + (msgA.text.length > 60 ? "..." : "") : null;
-    const textB = msgB ? msgB.text.slice(0, 60) + (msgB.text.length > 60 ? "..." : "") : "¡Los quiero mucho! 🐼";
+    const textA = msgA ? msgA.text.slice(0, BUBBLE_PREVIEW_LENGTH) + (msgA.text.length > BUBBLE_PREVIEW_LENGTH ? "..." : "") : null;
+    const textB = msgB ? msgB.text.slice(0, BUBBLE_PREVIEW_LENGTH) + (msgB.text.length > BUBBLE_PREVIEW_LENGTH ? "..." : "") : "¡Los quiero mucho! 🐼";
     // Show speech bubbles over pandas for 5 seconds
     setPandaBubble({ nameA: msgA ? nameA : null, textA, nameB, textB });
     setTimeout(() => setPandaBubble(null), 5000);
@@ -3556,6 +3754,10 @@ export default function App() {
   const sendMsg = text => {
     if (!text || !text.trim()) return;
     const trimmedText = text.trim();
+    if (trimmedText.length > MAX_MESSAGE_LENGTH) {
+      toast(`Máximo ${MAX_MESSAGE_LENGTH} caracteres por mensaje`);
+      return;
+    }
     const nextMessages = [{
       id: Date.now(), text: trimmedText,
       sender: getMyName(user, "Yo"),
@@ -3621,17 +3823,112 @@ export default function App() {
     }
   };
 
-  const saveBurbuja = (id, data) => {
-    const nb2 = { ...burbuja, [id]: data }; setBurbuja(nb2);
-    const isNew = !burbuja[id];
-    if (isNew) {
-      const nb = bamboo + 10; setBamboo(nb); trigHappy();
-      toast("Acuerdo guardado ✓ +10 bambú 🌿");
-      save(null, { bamboo:nb, happiness, water, garden, accessories, exDone, messages, conoce, burbuja:nb2, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
-    } else {
-      trigHappy(); toast("Acuerdo actualizado ✓");
-      save(null, { bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja:nb2, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
+  const saveBurbujaMine = async (id, myText) => {
+    const clean = (myText || "").trim();
+    if (!clean) return;
+    const myRole = user?.isOwner !== false ? "owner" : "partner";
+    const meta = BURBUJA_ITEM_MAP[id] || {};
+    const prev = burbuja[id] || {};
+    const next = { ...prev, key:id, question:meta.question || "", section:meta.section || "", [myRole]: clean };
+    const map = { ...burbuja, [id]: next };
+    setBurbuja(map);
+    trigHappy();
+    toast("Tu parte quedó guardada ✓");
+    if (user?.code && !user?.isGuest) {
+      await fbSaveBurbuja(user.code, id, next).catch(() => {});
     }
+    save(null, { bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja:map, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
+  };
+
+  const proposeBurbuja = async (id, text, isCounter = false) => {
+    const clean = (text || "").trim();
+    if (!clean) return;
+    const myRole = user?.isOwner !== false ? "owner" : "partner";
+    const prev = burbuja[id] || {};
+    if (!prev.owner || !prev.partner) {
+      toast("Primero ambos deben escribir su parte");
+      return;
+    }
+    const history = [...(prev.history || []), { id: Date.now(), type: isCounter ? "counter" : "proposal", by: myRole, text: clean, at: new Date().toISOString() }];
+    const next = {
+      ...prev,
+      status: "pending",
+      proposalText: clean,
+      proposalBy: myRole,
+      history,
+      approvedText: null,
+      approvedBy: null,
+      approvedAt: null,
+    };
+    const map = { ...burbuja, [id]: next };
+    setBurbuja(map);
+    trigHappy();
+    toast(isCounter ? "Contraoferta enviada ↔" : "Propuesta enviada ✉️");
+
+    if (user?.code && !user?.isGuest) {
+      await fbSaveBurbuja(user.code, id, next).catch(() => {});
+      if (user?.uid) {
+        const me = getMyName(user, "Tu pareja");
+        fbSendNotif(user.code, {
+          type: "acuerdo",
+          msg: isCounter ? `${me} envió una contraoferta de acuerdo ↔` : `${me} te envió una propuesta de acuerdo ✉️`,
+          forUid: "partner",
+          fromUid: user.uid
+        }).catch(() => {});
+      }
+    }
+
+    save(null, { bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja:map, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
+  };
+
+  const approveBurbuja = async (id) => {
+    const myRole = user?.isOwner !== false ? "owner" : "partner";
+    const prev = burbuja[id] || {};
+    if (prev.status !== "pending" || !prev.proposalText) return;
+    if (prev.proposalBy === myRole) {
+      toast("Tu pareja debe aprobar esta propuesta");
+      return;
+    }
+    const wasApproved = prev.status === "approved";
+    const history = [...(prev.history || []), { id: Date.now(), type: "approved", by: myRole, text: prev.proposalText, at: new Date().toISOString() }];
+    const next = {
+      ...prev,
+      status: "approved",
+      approvedText: prev.proposalText,
+      approvedBy: myRole,
+      approvedAt: new Date().toISOString(),
+      history,
+    };
+    const map = { ...burbuja, [id]: next };
+    setBurbuja(map);
+
+    let nextBamboo = bamboo;
+    if (!wasApproved) {
+      if (user?.code && !user?.isGuest) {
+        nextBamboo = await fbIncrementBamboo(user.code, 10).catch(() => bamboo + 10);
+      } else {
+        nextBamboo = bamboo + 10;
+      }
+      setBamboo(nextBamboo);
+    }
+
+    trigHappy();
+    toast("Acuerdo aprobado ✓ +10 bambú 🌿");
+
+    if (user?.code && !user?.isGuest) {
+      await fbSaveBurbuja(user.code, id, next).catch(() => {});
+      if (user?.uid) {
+        const me = getMyName(user, "Tu pareja");
+        fbSendNotif(user.code, {
+          type: "acuerdo",
+          msg: `${me} aprobó su acuerdo ✅`,
+          forUid: "partner",
+          fromUid: user.uid
+        }).catch(() => {});
+      }
+    }
+
+    save(null, { bamboo:nextBamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja:map, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
   };
 
   const saveCoupleInfo = (info) => {
@@ -3724,14 +4021,14 @@ export default function App() {
         {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson}/>}
         {tab==="mensajes" && <Mensajes user={user} messages={messages} onSend={sendMsg}/>}
         {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user}/>}
-        {tab==="burbuja" && <Burbuja burbuja={burbuja} onSave={saveBurbuja} user={user}/>}
-        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} exDone={exDone} messages={messages} burbuja={burbuja} coupleInfo={coupleInfo} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento}/>}
+        {tab==="burbuja" && <Burbuja burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} user={user}/>}
+        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} coupleInfo={coupleInfo} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento}/>}
       </div>
       <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:480, background:C.white, borderTop:`1.5px solid ${C.border}`, display:"flex", zIndex:1000, boxShadow:`0 -3px 0 ${C.line}` }}>
         {NAV.map(n => {
           const active = tab === n.id;
           const msgBadge = n.id==="mensajes" && unread>0 ? unread : null;
-          const notifTypes = { "ejerc":["ejercicio","leccion"], "conocete":["conoce"], "burbuja":["gratitud","momento"], "mensajes":[] };
+          const notifTypes = { "ejerc":["ejercicio","leccion"], "conocete":["conoce"], "burbuja":["gratitud","momento","acuerdo"], "mensajes":[] };
           const nBadge = notifTypes[n.id] ? notifs.filter(x=>!x.read && x.forUid===user?.uid && notifTypes[n.id].includes(x.type)).length : 0;
           const badge = msgBadge || (nBadge > 0 ? nBadge : null);
           return (
