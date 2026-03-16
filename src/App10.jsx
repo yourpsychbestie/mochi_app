@@ -512,10 +512,7 @@ function CouplePandaSVG({ happy = false, size = 160 }) {
 
       {/* Always-visible tiny sparkles */}
       <circle cx="20" cy="55" r="1.5" fill="#f8e8c0" opacity="0.5"/>
-              {[ ["A", rA, setRA, nameA], ["B", rB, setRB, nameB] ].map(([w, v, fn, nm]) => {
-                const mine = (myRole === "owner" && w === "A") || (myRole === "partner" && w === "B");
-                return <div key={w} style={{ marginBottom: 12, opacity: mine ? 1 : 0.7 }}><PBadge who={w} name={nm} /><TA value={v} onChange={fn} placeholder={mine ? "Tu respuesta..." : "Respuesta de tu pareja"} rows={3} style={{ background: mine ? C.cream2 : C.sandL }} readOnly={!mine} /></div>;
-              })}
+      <circle cx="240" cy="60" r="1.5" fill="#f8e8c0" opacity="0.5"/>
     </svg>
   );
 }
@@ -2333,7 +2330,7 @@ function Conocete({ conoce, onSave, user }) {
         <div style={{ background: C.white, borderRadius: 20, padding: 18, boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
           <div style={{ fontSize: "0.7rem", fontWeight: 800, color: C.inkM, marginBottom: 8, letterSpacing: "0.5px" }}>{CONOCE_CATS[cat].emoji} {CONOCE_CATS[cat].label.toUpperCase()}</div>
           <div style={{ fontSize: "0.97rem", color: C.ink, lineHeight: 1.6, fontWeight: 700, marginBottom: 16 }}>{CONOCE_CATS[cat].preguntas[qIdx]}</div>
-          {[["A", rA, setRA, nameA], ["B", rB, setRB, nameB]].map(([w, v, fn, nm]) => <div key={w} style={{ marginBottom: 12 }}><PBadge who={w} name={nm} /><TA value={v} onChange={fn} placeholder="Tu respuesta..." rows={3} /></div>)}
+          {[["A", rA, setRA, nameA], ["B", rB, setRB, nameB]].map(([w, v, fn, nm]) => { const mine = (myRole === "owner" && w === "A") || (myRole === "partner" && w === "B"); return <div key={w} style={{ marginBottom: 12, opacity: mine ? 1 : 0.7 }}><PBadge who={w} name={nm} /><TA value={v} onChange={fn} placeholder={mine ? "Tu respuesta..." : "Respuesta de tu pareja"} rows={3} style={{ background: mine ? C.cream2 : C.sandL }} readOnly={!mine} /></div>; })}
           {saved && <div style={{ textAlign: "center", fontSize: "0.82rem", fontWeight: 800, color: C.olive, marginBottom: 10, background: C.cream, borderRadius: 9, padding: "8px", border: `1.5px solid ${C.border}` }}>✓ Guardado — +15 bambú 🌿</div>}
           <div style={{ display: "flex", gap: 9 }}><Btn onClick={saveQ} style={{ flex: 1 }}>Guardar 🌿</Btn><Btn onClick={() => setQIdx(null)} variant="ghost" style={{ padding: "12px 14px" }}>✕</Btn></div>
         </div>
