@@ -14,6 +14,7 @@ import {
   fbSaveLessonRead, fbListenLessons,
   fbSendNotif, fbListenNotifs, fbMarkNotifRead,
 } from "./firebase";
+import Cuestionarios, { getQuizAdviceFromConoce } from "./Cuestionarios";
 
 const C = {
   cream:"#f5edda", cream2:"#fdf8ef", dark:"#1e2b1e",
@@ -511,7 +512,10 @@ function CouplePandaSVG({ happy = false, size = 160 }) {
 
       {/* Always-visible tiny sparkles */}
       <circle cx="20" cy="55" r="1.5" fill="#f8e8c0" opacity="0.5"/>
-      <circle cx="240" cy="60" r="1.5" fill="#f8e8c0" opacity="0.5"/>
+              {[ ["A", rA, setRA, nameA], ["B", rB, setRB, nameB] ].map(([w, v, fn, nm]) => {
+                const mine = (myRole === "owner" && w === "A") || (myRole === "partner" && w === "B");
+                return <div key={w} style={{ marginBottom: 12, opacity: mine ? 1 : 0.7 }}><PBadge who={w} name={nm} /><TA value={v} onChange={fn} placeholder={mine ? "Tu respuesta..." : "Respuesta de tu pareja"} rows={3} style={{ background: mine ? C.cream2 : C.sandL }} readOnly={!mine} /></div>;
+              })}
     </svg>
   );
 }
@@ -1804,16 +1808,6 @@ function Login({ onLogin }) {
           ))}
         </div>
         {tab === "register" && (
-          <div style={{ fontSize:"0.75rem", color:C.inkM, textAlign:"center", marginBottom:12, lineHeight:1.5, padding:"0 4px" }}>
-            🌱 Eres el primero en crear la cuenta. Luego le pasas un código a tu pareja para que se una.
-          </div>
-        )}
-        {tab === "pair" && (
-          <div style={{ fontSize:"0.75rem", color:C.inkM, textAlign:"center", marginBottom:12, lineHeight:1.5, padding:"0 4px" }}>
-            🐾 Tu pareja ya creó una cuenta y te compartió su código. Úsalo aquí para conectarse.
-          </div>
-        )}
-        {tab === "register" && (
           <div style={{ background: "#f0f7e8", borderRadius: 12, padding: "9px 14px", marginBottom: 10, border: "1px solid #c8ddb0", textAlign: "center" }}>
             <div style={{ fontSize: "0.78rem", color: "#4a6a30", lineHeight: 1.6 }}>
               🌱 <strong>¿Eres el primero?</strong> Crea la cuenta y le mandas tu código a tu pareja para que se una.
@@ -2070,6 +2064,7 @@ function ExModal({ ex, onClose, onComplete, nameA, nameB, user }) {
   const [done, setDone] = useState(false);
   const [pts, setPts] = useState(0);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [showExamples, setShowExamples] = useState(false);
 
   const finish = (p = ex.bamboo) => { setDone(true); setPts(p); onComplete(ex, p); };
 
@@ -2122,6 +2117,23 @@ function ExModal({ ex, onClose, onComplete, nameA, nameB, user }) {
           )}
         </div>
       )}
+      <div style={{ background: "#fffaf0", borderRadius: 14, padding: 14, marginBottom: 14, border: `1.5px solid ${C.border}` }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}
+          onClick={() => setShowExamples(!showExamples)}>
+          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark }}>🧭 Ejemplos: cómo no / cómo sí</div>
+          <div style={{ color: C.inkL, transition: "transform 0.2s", transform: showExamples ? "rotate(180deg)" : "none", fontSize: "0.8rem" }}>▼</div>
+        </div>
+        {showExamples && (
+          <div style={{ marginTop: 10 }}>
+            <div style={{ fontSize: "0.7rem", fontWeight: 800, color: "#a04040", marginBottom: 6 }}>❌ Cómo NO</div>
+            <div style={{ background: "#ffeaea", borderRadius: 10, padding: "8px 10px", marginBottom: 6, fontSize: "0.82rem", color: C.inkM }}>"Ya vas a empezar con lo mismo, exageras."</div>
+            <div style={{ background: "#ffeaea", borderRadius: 10, padding: "8px 10px", marginBottom: 10, fontSize: "0.82rem", color: C.inkM }}>"Eso no es para tanto, deberías calmarte."</div>
+            <div style={{ fontSize: "0.7rem", fontWeight: 800, color: C.olive, marginBottom: 6 }}>✅ Cómo SÍ</div>
+            <div style={{ background: "#eaf7e8", borderRadius: 10, padding: "8px 10px", marginBottom: 6, fontSize: "0.82rem", color: C.inkM }}>"Tiene sentido que te sintieras así con lo que pasó."</div>
+            <div style={{ background: "#eaf7e8", borderRadius: 10, padding: "8px 10px", fontSize: "0.82rem", color: C.inkM }}>"Quiero entenderte bien, cuéntame más de cómo lo viviste."</div>
+          </div>
+        )}
+      </div>
 
       {ex.phases && <ChatEx ex={ex} onDone={finish} nameA={nameA} nameB={nameB} user={user} />}
       {ex.timer && <TimerEx ex={ex} onDone={finish} nameA={nameA} nameB={nameB} />}
@@ -2183,7 +2195,7 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
       </div>
       {ejTab === "lecciones" && (
       <div style={{ background: C.sandL, minHeight:"60vh", paddingBottom:14 }}>
-        <div style={{ margin:"10px 14px 0" }}>
+        <div style={{ margin:"0 14px 0" }}>
         <div style={{ background:"#e8f0ff", borderRadius:14, padding:"9px 14px", marginBottom:10, border:`1px solid #a8b8e830` }}>
           <div style={{ fontSize:"0.8rem", color:"#4050a0", lineHeight:1.5 }}>💡 Herramientas reales de psicología de pareja.</div>
         </div>
@@ -2290,13 +2302,29 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
 function Conocete({ conoce, onSave, user }) {
   const nameA = user?.names ? user.names.split("&")[0].trim() : "Persona A";
   const nameB = user?.names ? user.names.split("&")[1]?.trim() || "Persona B" : "Persona B";
+  const myRole = user?.isOwner !== false ? "owner" : "partner";
   const [cat, setCat] = useState(null);
   const [qIdx, setQIdx] = useState(null);
   const [rA, setRA] = useState(""); const [rB, setRB] = useState("");
   const [saved, setSaved] = useState(false);
 
-  const openQ = (c, i) => { setCat(c); setQIdx(i); setSaved(false); const ex = conoce[`${c}-${i}`] || {}; setRA(ex.a || ""); setRB(ex.b || ""); };
-  const saveQ = () => { if (!rA && !rB) return; onSave(cat, qIdx, rA, rB, !conoce[`${cat}-${qIdx}`]); setSaved(true); };
+  const openQ = (c, i) => {
+    setCat(c);
+    setQIdx(i);
+    setSaved(false);
+    const ex = conoce[`${c}-${i}`] || {};
+    setRA(ex.owner || ex.a || "");
+    setRB(ex.partner || ex.b || "");
+  };
+  const saveQ = () => {
+    if (!rA && !rB) return;
+    const key = `${cat}-${qIdx}`;
+    const mine = myRole === "owner" ? rA : rB;
+    if (!mine?.trim()) return;
+    const isNewMine = !(conoce[key]?.[myRole]);
+    onSave(cat, qIdx, mine.trim(), null, isNewMine);
+    setSaved(true);
+  };
 
   if (qIdx !== null) return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
@@ -2337,6 +2365,9 @@ function Conocete({ conoce, onSave, user }) {
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
       <ScreenTop title="Conócete" sub="Preguntas para descubrirse" />
+      <div style={{ margin: "10px 14px 0" }}>
+        <Cuestionarios conoce={conoce} onSave={onSave} user={user} />
+      </div>
       <div style={{ padding: "8px 14px 0", fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark }}>Elige una categoría</div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 11, padding: "10px 14px" }}>
         {Object.entries(CONOCE_CATS).map(([key, data]) => {
@@ -2414,10 +2445,12 @@ function Burbuja({ burbuja, onSave, user }) {
 }
 
 // PROFILE — Enhanced with more info fields
-function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento }) {
+function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento, conoce, onOpenConocete, onSendMessage }) {
   const [editMode, setEditMode] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [showStreakTools, setShowStreakTools] = useState(false);
+  const [showAdvice, setShowAdvice] = useState(false);
+  const [streakRecord, setStreakRecord] = useState(0);
   const [nameInput, setNameInput] = useState(user?.names || "");
   const [form, setForm] = useState({
     anniversary: coupleInfo.anniversary || "",
@@ -2472,6 +2505,17 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
     }
     return yStreak;
   })();
+  const myRole = user?.isOwner !== false ? "owner" : "partner";
+  const quizAdvice = getQuizAdviceFromConoce(conoce || {}, myRole);
+
+  useEffect(() => {
+    const key = `mochi_streak_record_${user?.uid || user?.email || "guest"}`;
+    const prev = Number(ls.get(key) || 0);
+    const next = Math.max(prev, streakDays);
+    setStreakRecord(next);
+    if (next !== prev) ls.set(key, next);
+  }, [streakDays, user?.uid, user?.email]);
+
   const [connected, setConnected] = useState(false);
   useEffect(() => {
     if (user?.code && !user?.isGuest) {
@@ -2487,14 +2531,14 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
   }, [user?.code]);
 
   const ACHS = [
-    { icon: "🌱", name: "Primer ejercicio", done: totalEx >= 1 },
-    { icon: "⭐", name: "10 ejercicios", done: totalEx >= 10 },
-    { icon: "🔗", name: "Pareja conectada", done: connected },
-    { icon: "💌", name: "5 mensajitos", done: myMsgs >= 5 },
-    { icon: "🌸", name: "5 acuerdos", done: Object.keys(burbuja).length >= 5 },
-    { icon: "🌿", name: "100 bambú", done: bamboo >= 100 },
-    { icon: "💝", name: "Jardín lleno", done: Object.keys(burbuja).length >= 10 },
-    { icon: "🏆", name: "25 ejercicios", done: totalEx >= 25 },
+    { icon: "🌱", name: "Primer ejercicio", desc: "Completa 1 ejercicio", done: totalEx >= 1 },
+    { icon: "⭐", name: "10 ejercicios", desc: "Completa 10 ejercicios", done: totalEx >= 10 },
+    { icon: "🔗", name: "Pareja conectada", desc: "Ambos unidos por código", done: connected },
+    { icon: "💌", name: "5 mensajitos", desc: "Enviar o recibir 5 mensajes", done: myMsgs + inboxMsgs >= 5 },
+    { icon: "🌸", name: "5 acuerdos", desc: "Guardar 5 acuerdos de burbuja", done: Object.keys(burbuja).length >= 5 },
+    { icon: "🌿", name: "100 bambú", desc: "Llegar a 100 bambú", done: bamboo >= 100 },
+    { icon: "💝", name: "Jardín lleno", desc: "10 elementos de relación activos", done: Object.keys(burbuja).length >= 10 },
+    { icon: "🏆", name: "25 ejercicios", desc: "Constancia total", done: totalEx >= 25 },
   ];
 
   const FIELDS = [
@@ -2549,13 +2593,13 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
             Aún no hay mensaje de hoy. Recibidos: {inboxMsgs}
           </div>
         )}
+        <Btn onClick={() => onSendMessage?.("Te amo 💚") } variant="sand" style={{ width:"100%", marginTop:10, fontSize:"0.8rem" }}>Enviar mensajito rápido</Btn>
       </div>
 
       {/* 3. Consejo del día */}
       <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:16, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
-        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:8 }}>📖 Consejo del día</div>
-        <div style={{ fontSize:"0.72rem", color:C.inkL, fontWeight:800, marginBottom:4 }}>{todayLesson?.tag || "Lección"}</div>
-        <div style={{ fontSize:"0.9rem", color:C.ink, fontWeight:800 }}>{todayLesson?.title || "Lección recomendada"}</div>
+        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:10 }}>📖 Consejo del dia</div>
+        <Btn onClick={() => setShowAdvice(true)} variant="sand" style={{ width:"100%", fontSize:"0.82rem" }}>Consejo del dia</Btn>
       </div>
 
       {/* 4. Gratitud y momentos */}
@@ -2571,7 +2615,7 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
       <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:16, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
         <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:8 }}>🔥 Racha</div>
         <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.4rem", color:C.olive }}>{streakDays} días seguidos</div>
-        <div style={{ fontSize:"0.78rem", color:C.inkL, fontWeight:700, marginTop:4 }}>Basado en mensajes, gratitud y momentos</div>
+        <div style={{ fontSize:"0.78rem", color:C.inkL, fontWeight:700, marginTop:4 }}>Récord: {streakRecord} días · Basado en mensajes, gratitud y momentos</div>
       </div>
 
       {/* 6. Logros */}
@@ -2580,6 +2624,7 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
         {ACHS.map(a => <div key={a.name} style={{ background: a.done ? C.cream : C.sandL, borderRadius: 16, padding: "14px 11px", textAlign: "center", minWidth: 88, flexShrink: 0, opacity: a.done ? 1 : 0.4, boxShadow: `0 2px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
           <div style={{ fontSize: "1.7rem", marginBottom: 5 }}>{a.icon}</div>
           <div style={{ fontSize: "0.7rem", fontWeight: 800, color: C.ink, lineHeight: 1.3 }}>{a.name}</div>
+          <div style={{ fontSize: "0.62rem", fontWeight: 700, color: C.inkL, lineHeight: 1.35, marginTop: 4 }}>{a.desc}</div>
         </div>)}
       </div>
 
@@ -2588,15 +2633,15 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
         <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.08rem", color:C.dark, marginBottom:10 }}>Recursos para su relación</div>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8 }}>
           {[
-            {icon:"📚", title:"Libros", sub:"Lecturas para crecer"},
-            {icon:"🎙", title:"Podcasts", sub:"Conversaciones útiles"},
-            {icon:"🎧", title:"Audios", sub:"Escuchen juntos"},
+            {icon:"📚", title:"Libros", sub:"Lecturas para crecer", href:"https://www.amazon.com/s?k=libros+parejas"},
+            {icon:"🎙", title:"Podcasts", sub:"Conversaciones útiles", href:"https://open.spotify.com/search/podcast%20parejas"},
+            {icon:"🎧", title:"Audios", sub:"Escuchen juntos", href:"https://www.youtube.com/results?search_query=meditacion+parejas"},
           ].map((r) => (
-            <div key={r.title} style={{ background:C.sandL, border:`1.5px solid ${C.border}`, borderRadius:12, padding:"10px 8px", textAlign:"center" }}>
+            <a key={r.title} href={r.href} target="_blank" rel="noreferrer" style={{ background:C.sandL, border:`1.5px solid ${C.border}`, borderRadius:12, padding:"10px 8px", textAlign:"center", textDecoration:"none" }}>
               <div style={{ fontSize:"1.2rem", marginBottom:3 }}>{r.icon}</div>
               <div style={{ fontSize:"0.75rem", fontWeight:800, color:C.dark }}>{r.title}</div>
               <div style={{ fontSize:"0.64rem", color:C.inkL, marginTop:2 }}>{r.sub}</div>
-            </div>
+            </a>
           ))}
         </div>
       </div>
@@ -2604,8 +2649,13 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
       {/* 10. Tests */}
       <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:16, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
         <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:7 }}>🧪 Tests</div>
-        <div style={{ fontSize:"0.8rem", color:C.inkL, fontWeight:700, marginBottom:10 }}>Resueltos: {totalEx} ejercicios · Puedes repetir el test cuando quieran</div>
-        <Btn onClick={onRetakeTest} variant="sand" style={{ width:"100%", fontSize:"0.82rem" }}>Abrir tests de relación</Btn>
+        <div style={{ fontSize:"0.8rem", color:C.inkL, fontWeight:700, marginBottom:8 }}>
+          Resultado de tests de personalidad: {quizAdvice.progress.answered}/{quizAdvice.progress.total}
+        </div>
+        <div style={{ fontSize:"0.74rem", color:C.inkM, lineHeight:1.5, marginBottom:10 }}>
+          {quizAdvice.complete ? "Completados. Ya puedes revisar tus 5 consejos personalizados." : "Completen los 3 tests en Conocerse para desbloquear recomendaciones."}
+        </div>
+        <Btn onClick={onOpenConocete} variant="sand" style={{ width:"100%", fontSize:"0.82rem" }}>Abrir tests de personalidad</Btn>
       </div>
 
       {/* 11. Diagnóstico */}
@@ -2631,6 +2681,21 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
           </div>
         );
       })()}
+
+      {showAdvice && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(15,25,15,0.65)", zIndex:5000, display:"flex", alignItems:"flex-end" }} onClick={(e)=>{ if (e.target===e.currentTarget) setShowAdvice(false); }}>
+          <div style={{ background:C.white, borderRadius:"22px 22px 0 0", padding:"16px 18px 34px", width:"100%", maxWidth:480, margin:"0 auto", border:`1.5px solid ${C.border}` }}>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
+              <div style={{ width:34, height:5, background:C.sand, borderRadius:50 }}/>
+              <button onClick={() => setShowAdvice(false)} style={{ width:30, height:30, borderRadius:"50%", border:`1.5px solid ${C.border}`, background:C.sandL, cursor:"pointer" }}>✕</button>
+            </div>
+            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.15rem", color:C.dark, marginBottom:8 }}>📖 Consejo del dia</div>
+            <div style={{ fontSize:"0.72rem", color:C.inkL, fontWeight:800, marginBottom:6 }}>{todayLesson?.tag || "Lección"}</div>
+            <div style={{ fontSize:"0.95rem", color:C.ink, fontWeight:800, lineHeight:1.45, marginBottom:8 }}>{todayLesson?.title || "Lección recomendada"}</div>
+            <div style={{ fontSize:"0.82rem", color:C.inkM, lineHeight:1.6 }}>{todayLesson?.intro || "Tómense 10 minutos para hablar con calma y curiosidad."}</div>
+          </div>
+        </div>
+      )}
 
       <div style={{ padding: "0 14px 20px" }}>
 
@@ -3213,7 +3278,6 @@ function Onboarding({ onDone }) {
 const NAV = [
   { id: "jardin", emoji: "🌿", label: "Jardín" },
   { id: "ejerc", emoji: "⭐", label: "Ejerc." },
-  { id: "mensajes", emoji: "💌", label: "Mensajes" },
   { id: "conocete", emoji: "💬", label: "Conócete" },
   { id: "burbuja", emoji: "🫧", label: "Burbuja" },
   { id: "perfil", emoji: "👤", label: "Nosotros" },
@@ -3465,18 +3529,10 @@ export default function App() {
     if (lessonsDone[lessonId]?.[myKey]) return; // already done by me
     if (user?.code && !user?.isGuest) {
       await fbSaveLessonRead(user.code, lessonId, myKey).catch(() => {});
-      const existing = lessonsDone[lessonId] || {};
-      const partnerKey = myKey === "owner" ? "partner" : "owner";
-      const bothRead = existing[partnerKey];
-      if (bothRead) {
-        const nb = await fbIncrementBamboo(user.code, 10).catch(() => bamboo + 10);
-        setBamboo(nb); trigHappy();
-        toast("¡Ambos leyeron la lección! +10 bambú 🌿");
-      } else {
-        trigHappy();
-        toast("Lección leída ✓ — cuando tu pareja también la lea, ganan bambú juntos 🌿");
-        fbSendNotif(user.code, { type:"leccion", msg:`${myName} leyó una lección — ¡léela tú también! 📖`, forUid:"partner", fromUid: user.uid }).catch(()=>{});
-      }
+      const nb = await fbIncrementBamboo(user.code, 10).catch(() => bamboo + 10);
+      setBamboo(nb); trigHappy();
+      toast("Lección leída ✓ +10 bambú 🌿");
+      fbSendNotif(user.code, { type:"leccion", msg:`${myName} leyó una lección — ¡léela tú también! 📖`, forUid:"partner", fromUid: user.uid }).catch(()=>{});
     } else {
       const nl = { ...lessonsDone, [lessonId]: { ...(lessonsDone[lessonId] || {}), [myKey]: true } };
       setLessonsDone(nl);
@@ -3498,15 +3554,16 @@ export default function App() {
     const nh = Math.min(100, happiness + 8);
     setHappiness(nh); setExDone(nd); trigHappy();
     const myName = user?.names ? user.names.split("&")[user?.isOwner !== false ? 0 : 1].trim() : "Yo";
+    let nextBamboo = bamboo + total;
     if (user?.code && !user?.isGuest) {
-      const nb = await fbIncrementBamboo(user.code, total).catch(() => bamboo + total);
-      setBamboo(nb);
+      nextBamboo = await fbIncrementBamboo(user.code, total).catch(() => bamboo + total);
+      setBamboo(nextBamboo);
       fbSendNotif(user.code, { type:"ejercicio", msg:`${myName} completó un ejercicio — ¡complétalo tú también! 🌿`, forUid:"partner", fromUid: user.uid }).catch(()=>{});
     } else {
-      setBamboo(b => b + total);
+      setBamboo(nextBamboo);
     }
     toast(bonus ? `¡Maestría! +${total} bambú 🌟` : `+${total} bambú 🌿`);
-    save(null, { bamboo: bamboo + total, happiness:nh, water, garden, accessories, exDone:nd, messages, conoce, burbuja, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
+    save(null, { bamboo: nextBamboo, happiness:nh, water, garden, accessories, exDone:nd, messages, conoce, burbuja, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
   };
 
   const sendMsg = text => {
@@ -3517,8 +3574,9 @@ export default function App() {
       senderEmail: user?.email || "guest",
       time: new Date().toISOString(), read: false
     };
+    const nextMessages = [msg, ...messages];
     // Always update local state first so UI doesn't freeze
-    setMessages(prev => [msg, ...prev]);
+    setMessages(nextMessages);
     if (user?.code && !user?.isGuest) {
       // Fire and forget — listener will sync
       fbSendMessage(user.code, msg).catch(e => console.warn("Send failed:", e));
@@ -3529,7 +3587,7 @@ export default function App() {
     }
     const nb = bamboo + 5; setBamboo(nb); trigHappy();
     toast("Mensajito enviado 💌 +5 bambú");
-    save(null, { bamboo:nb, happiness, water, garden, accessories, exDone, messages:nm, conoce, burbuja, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
+    save(null, { bamboo:nb, happiness, water, garden, accessories, exDone, messages:nextMessages, conoce, burbuja, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
   };
 
   // Poll partner messages
@@ -3544,6 +3602,12 @@ export default function App() {
     const key = `${cat}-${qIdx}`;
     const myRole = user?.isOwner !== false ? "owner" : "partner";
     const myName = user?.names ? user.names.split("&")[user?.isOwner !== false ? 0 : 1].trim() : "Yo";
+    const optimistic = {
+      ...(conoce[key] || {}),
+      [myRole]: myAnswer,
+      updatedAt: new Date().toISOString(),
+    };
+    setConoce(prev => ({ ...prev, [key]: optimistic }));
     if (user?.code && !user?.isGuest) {
       // Save my answer to Firebase (keyed by role)
       await fbSaveConoce(user.code, key, { [myRole]: myAnswer, updatedAt: new Date().toISOString() }).catch(() => {});
@@ -3667,16 +3731,15 @@ export default function App() {
       <div style={{ paddingBottom:72 }}>
         {tab==="jardin" && <Jardin bamboo={bamboo} happiness={happiness} water={water} garden={garden} accessories={accessories} mochiHappy={mochiHappy} pandaBubble={pandaBubble} onPet={petMochi} onBuy={buyItem} onWater={waterGarden} onBuyAccessory={buyAccessory}/>}
         {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson}/>}
-        {tab==="mensajes" && <Mensajes user={user} messages={messages} onSend={sendMsg}/>}
         {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user}/>}
         {tab==="burbuja" && <Burbuja burbuja={burbuja} onSave={saveBurbuja} user={user}/>}
-        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} exDone={exDone} messages={messages} burbuja={burbuja} coupleInfo={coupleInfo} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento}/>}
+        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} exDone={exDone} messages={messages} burbuja={burbuja} coupleInfo={coupleInfo} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} conoce={conoce} onOpenConocete={() => setTab("conocete")} onSendMessage={sendMsg}/>}
       </div>
       <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:480, background:C.white, borderTop:`1.5px solid ${C.border}`, display:"flex", zIndex:1000, boxShadow:`0 -3px 0 ${C.line}` }}>
         {NAV.map(n => {
           const active = tab === n.id;
           const msgBadge = n.id==="mensajes" && unread>0 ? unread : null;
-          const notifTypes = { "ejerc":["ejercicio","leccion"], "conocete":["conoce"], "burbuja":["gratitud","momento"], "mensajes":[] };
+          const notifTypes = { "ejerc":["ejercicio","leccion"], "conocete":["conoce"], "burbuja":["gratitud","momento"], "perfil":[] };
           const nBadge = notifTypes[n.id] ? notifs.filter(x=>!x.read && x.forUid===user?.uid && notifTypes[n.id].includes(x.type)).length : 0;
           const badge = msgBadge || (nBadge > 0 ? nBadge : null);
           return (
