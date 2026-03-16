@@ -626,72 +626,187 @@ const getDayNumberLocal = (date = new Date()) => {
 
 function CouplePandaSVG({ happy = false, size = 160 }) {
   const s = size;
-
-  const Panda = ({ x, y, tilt = 0, isHappy = false, tuft = false }) => (
-    <g transform={`translate(${x} ${y}) rotate(${tilt})`}>
-      <ellipse cx="0" cy="126" rx="35" ry="6.5" fill="#1a1a1a" opacity="0.12" />
-
-      <path d="M-27 44 C-27 31 -18 22 -6 22 L6 22 C18 22 27 31 27 44 L27 88 C27 101 18 111 5 111 L-5 111 C-18 111 -27 101 -27 88 Z" fill="#f7fbff" stroke="#2c1b23" strokeWidth="2.4" />
-      <path d="M-22 46 C-18 35 -9 30 0 30 C9 30 18 35 22 46" fill="none" stroke="#c7d9f1" strokeWidth="3.4" strokeLinecap="round" />
-      <path d="M-18 58 L0 72 L18 58" fill="none" stroke="#6d88ce" strokeWidth="3.8" strokeLinecap="round" strokeLinejoin="round" />
-      <rect x="-18" y="73" width="36" height="10" rx="5" fill="#6d88ce" opacity="0.96" />
-      <circle cx="0" cy="69" r="3.8" fill="#f39eb0" />
-      <path d="M-14 86 C-10 82 -5 80 0 80 C5 80 10 82 14 86" fill="none" stroke="#dce6f4" strokeWidth="3" strokeLinecap="round" />
-
-      <ellipse cx="-24" cy="62" rx="8.2" ry="17" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(-16 -24 62)" />
-      <ellipse cx="24" cy="62" rx="8.2" ry="17" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(16 24 62)" />
-
-      <ellipse cx="-13" cy="108" rx="10.5" ry="13.2" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(-7 -13 108)" />
-      <ellipse cx="13" cy="108" rx="10.5" ry="13.2" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(7 13 108)" />
-
-      <circle cx="0" cy="0" r="39" fill="#fcfeff" stroke="#2c1b23" strokeWidth="2.5" />
-
-      <circle cx="-22" cy="-33" r="11.8" fill="#3f4756" stroke="#2c1b23" strokeWidth="2.2" />
-      <circle cx="22" cy="-33" r="11.8" fill="#3f4756" stroke="#2c1b23" strokeWidth="2.2" />
-
-      {tuft && (
-        <path d="M-2 -46 C-3 -52 3 -55 7 -51 C4 -47 3 -43 4 -38" fill="none" stroke="#2c1b23" strokeWidth="2.2" strokeLinecap="round" />
-      )}
-
-      <ellipse cx="-14" cy="-2" rx="12.2" ry="11.2" fill="#4b5564" />
-      <ellipse cx="14" cy="-2" rx="12.2" ry="11.2" fill="#4b5564" />
-
-      <circle cx="-14" cy="-2" r="5.8" fill="#2a1018" />
-      <circle cx="14" cy="-2" r="5.8" fill="#2a1018" />
-      <circle cx="-12.3" cy="-3.6" r="1.6" fill="#ffffff" opacity="0.95" />
-      <circle cx="15.7" cy="-3.6" r="1.6" fill="#ffffff" opacity="0.95" />
-
-      <ellipse cx="0" cy="11" rx="4.1" ry="2.8" fill="#2c1b23" />
-
-      {isHappy ? (
-        <>
-          <path d="M-11 18 Q0 30 11 18" fill="#f58ca5" stroke="#2c1b23" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M-6 19 Q0 25 6 19" fill="none" stroke="#fff3f6" strokeWidth="1.3" strokeLinecap="round" />
-        </>
-      ) : (
-        <>
-          <ellipse cx="0" cy="18" rx="8.2" ry="7.2" fill="#f58ca5" stroke="#2c1b23" strokeWidth="2.1" />
-          <path d="M-4.5 18 Q0 14 4.5 18" fill="none" stroke="#fff3f6" strokeWidth="1.2" strokeLinecap="round" />
-        </>
-      )}
-
-      <ellipse cx="-21" cy="7" rx="6.1" ry="4" fill="#f58ca5" opacity="0.72" transform="rotate(14 -21 7)" />
-      <ellipse cx="21" cy="7" rx="6.3" ry="4" fill="#f58ca5" opacity="0.85" transform="rotate(-14 21 7)" />
-    </g>
-  );
-
   return (
-    <svg viewBox="0 0 260 220" width={s} height={s * 0.846} style={{ display: "block" }}>
-      <Panda x={76} y={88} tilt={4} isHappy={happy} />
-      <Panda x={176} y={88} tilt={-4} isHappy={happy} tuft />
+    <svg viewBox="0 0 260 220" width={s} height={s * 0.86} style={{ display: "block" }}>
+      <defs>
+        <radialGradient id="bodyL" cx="45%" cy="35%" r="60%">
+          <stop offset="0%" stopColor="#fdf9f0"/>
+          <stop offset="100%" stopColor="#ede4d0"/>
+        </radialGradient>
+        <radialGradient id="bodyR" cx="55%" cy="35%" r="60%">
+          <stop offset="0%" stopColor="#fdf9f0"/>
+          <stop offset="100%" stopColor="#ede4d0"/>
+        </radialGradient>
+        <radialGradient id="patchL" cx="40%" cy="30%" r="65%">
+          <stop offset="0%" stopColor="#2d3d2d"/>
+          <stop offset="100%" stopColor="#1a261a"/>
+        </radialGradient>
+        <radialGradient id="patchR" cx="60%" cy="30%" r="65%">
+          <stop offset="0%" stopColor="#2d3d2d"/>
+          <stop offset="100%" stopColor="#1a261a"/>
+        </radialGradient>
+        <radialGradient id="tummy" cx="50%" cy="40%" r="55%">
+          <stop offset="0%" stopColor="#fefcf6"/>
+          <stop offset="100%" stopColor="#f5eede"/>
+        </radialGradient>
+        <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="#1a261a" floodOpacity="0.12"/>
+        </filter>
+        <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+          <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#f8d0e8" floodOpacity="0.6"/>
+        </filter>
+      </defs>
+
+      <ellipse cx="82" cy="208" rx="45" ry="7.5" fill="#1a261a" opacity="0.08"/>
+      <ellipse cx="76" cy="168" rx="49" ry="41" fill="url(#bodyL)" filter="url(#softShadow)"/>
+      <ellipse cx="76" cy="172" rx="27" ry="29" fill="url(#tummy)" opacity="0.9"/>
+
+      <path d="M116 156 C126 148 138 146 145 150 C149 153 146 162 139 162"
+        fill="none" stroke="#1a261a" strokeWidth="18" strokeLinecap="round"/>
+      <path d="M116 156 C126 148 138 146 145 150 C149 153 146 162 139 162"
+        fill="none" stroke="#2d3d2d" strokeWidth="14" strokeLinecap="round"/>
+      <path d="M34 162 C26 170 23 180 27 188" fill="none" stroke="#1a261a" strokeWidth="16" strokeLinecap="round"/>
+      <path d="M34 162 C26 170 23 180 27 188" fill="none" stroke="#2d3d2d" strokeWidth="12.5" strokeLinecap="round"/>
+
+      <ellipse cx="57" cy="197" rx="22" ry="13" fill="#1a261a"/>
+      <ellipse cx="57" cy="195" rx="18" ry="10.5" fill="#2d3d2d"/>
+      <ellipse cx="98" cy="197" rx="22" ry="13" fill="#1a261a"/>
+      <ellipse cx="98" cy="195" rx="18" ry="10.5" fill="#2d3d2d"/>
+      <ellipse cx="57" cy="205" rx="12" ry="6.2" fill="#f0e8d8" opacity="0.6"/>
+      <ellipse cx="98" cy="205" rx="12" ry="6.2" fill="#f0e8d8" opacity="0.6"/>
+
+      <g transform="rotate(6, 76, 95)">
+        <ellipse cx="76" cy="88" rx="44" ry="42" fill="url(#bodyL)" filter="url(#softShadow)"/>
+
+        <circle cx="42" cy="54" r="16" fill="#1a261a"/>
+        <circle cx="42" cy="54" r="10" fill="#2d3d2d"/>
+        <circle cx="110" cy="54" r="16" fill="#1a261a"/>
+        <circle cx="110" cy="54" r="10" fill="#2d3d2d"/>
+        <circle cx="42" cy="54" r="6" fill="#d87888" opacity="0.25"/>
+        <circle cx="110" cy="54" r="6" fill="#d87888" opacity="0.25"/>
+
+        <ellipse cx="60" cy="85" rx="14" ry="12" fill="url(#patchL)" transform="rotate(-10 60 85)"/>
+        <ellipse cx="92" cy="85" rx="14" ry="12" fill="url(#patchR)" transform="rotate(10 92 85)"/>
+
+        {happy ? (
+          <>
+            <path d="M53 85 Q60 92 67 85" fill="none" stroke="#fdf9f0" strokeWidth="3" strokeLinecap="round"/>
+            <path d="M85 85 Q92 92 99 85" fill="none" stroke="#fdf9f0" strokeWidth="3" strokeLinecap="round"/>
+          </>
+        ) : (
+          <>
+            <ellipse cx="60" cy="86" rx="7.6" ry="6.5" fill="#fdf9f0"/>
+            <ellipse cx="92" cy="86" rx="7.6" ry="6.5" fill="#fdf9f0"/>
+            <ellipse cx="61" cy="87" rx="4.8" ry="4.2" fill="#1a1a2a"/>
+            <ellipse cx="93" cy="87" rx="4.8" ry="4.2" fill="#1a1a2a"/>
+            <circle cx="63" cy="85" r="1.6" fill="white"/>
+            <circle cx="95" cy="85" r="1.6" fill="white"/>
+          </>
+        )}
+
+        <ellipse cx="76" cy="97" rx="4" ry="2.8" fill="#1a261a" opacity="0.7"/>
+        {happy
+          ? <path d="M68 104 Q72 110 76 106 Q80 110 84 104" fill="none" stroke="#1a261a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+          : <path d="M70 103 Q73 107 76 104 Q79 107 82 103" fill="none" stroke="#1a261a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+        }
+
+        <ellipse cx="44" cy="98" rx="12.4" ry="7.6" fill="#f0907a" opacity={happy ? "0.45" : "0.18"}/>
+        <ellipse cx="108" cy="98" rx="12.4" ry="7.6" fill="#f0907a" opacity={happy ? "0.45" : "0.18"}/>
+
+        <g transform="translate(106, 46)">
+          {[0,60,120,180,240,300].map((a,i) => (
+            <ellipse key={i}
+              cx={Math.cos(a*Math.PI/180)*6} cy={Math.sin(a*Math.PI/180)*6}
+              rx="3.5" ry="2.8"
+              fill={["#f9b8cc","#f4d0e0","#fce8f0","#f9b8cc","#f4d0e0","#fce8f0"][i]}
+              transform={`rotate(${a})`} opacity="0.95"/>
+          ))}
+          <circle cx="0" cy="0" r="3" fill="#f8e870"/>
+        </g>
+      </g>
+
+      <ellipse cx="182" cy="208" rx="47" ry="7.5" fill="#1a261a" opacity="0.08"/>
+      <ellipse cx="176" cy="168" rx="51" ry="42" fill="url(#bodyR)" filter="url(#softShadow)"/>
+      <ellipse cx="176" cy="172" rx="28" ry="30" fill="url(#tummy)" opacity="0.9"/>
+
+      <path d="M134 156 C126 149 118 147 113 150 C109 153 112 162 118 162"
+        fill="none" stroke="#1a261a" strokeWidth="18" strokeLinecap="round"/>
+      <path d="M134 156 C126 149 118 147 113 150 C109 153 112 162 118 162"
+        fill="none" stroke="#2d3d2d" strokeWidth="14" strokeLinecap="round"/>
+      <path d="M222 162 C230 170 233 180 229 188" fill="none" stroke="#1a261a" strokeWidth="16" strokeLinecap="round"/>
+      <path d="M222 162 C230 170 233 180 229 188" fill="none" stroke="#2d3d2d" strokeWidth="12.5" strokeLinecap="round"/>
+
+      <ellipse cx="157" cy="197" rx="23" ry="13" fill="#1a261a"/>
+      <ellipse cx="157" cy="195" rx="19" ry="10.5" fill="#2d3d2d"/>
+      <ellipse cx="198" cy="197" rx="23" ry="13" fill="#1a261a"/>
+      <ellipse cx="198" cy="195" rx="19" ry="10.5" fill="#2d3d2d"/>
+      <ellipse cx="157" cy="205" rx="12.5" ry="6.2" fill="#f0e8d8" opacity="0.6"/>
+      <ellipse cx="198" cy="205" rx="12.5" ry="6.2" fill="#f0e8d8" opacity="0.6"/>
+
+      <g transform="rotate(-4, 176, 90)">
+        <ellipse cx="176" cy="88" rx="46" ry="44" fill="url(#bodyR)" filter="url(#softShadow)"/>
+
+        <circle cx="140" cy="52" r="17" fill="#1a261a"/>
+        <circle cx="140" cy="52" r="11" fill="#2d3d2d"/>
+        <circle cx="140" cy="52" r="6" fill="#d87888" opacity="0.25"/>
+
+        <circle cx="212" cy="52" r="17" fill="#1a261a"/>
+        <circle cx="212" cy="52" r="11" fill="#2d3d2d"/>
+        <circle cx="212" cy="52" r="6" fill="#d87888" opacity="0.25"/>
+
+        <ellipse cx="162" cy="87" rx="15" ry="12.5" fill="url(#patchL)" transform="rotate(-8 162 87)"/>
+        <ellipse cx="190" cy="87" rx="15" ry="12.5" fill="url(#patchR)" transform="rotate(8 190 87)"/>
+
+        {happy ? (
+          <>
+            <path d="M155 87 Q162 94 169 87" fill="none" stroke="#fdf9f0" strokeWidth="3" strokeLinecap="round"/>
+            <path d="M183 87 Q190 94 197 87" fill="none" stroke="#fdf9f0" strokeWidth="3" strokeLinecap="round"/>
+          </>
+        ) : (
+          <>
+            <ellipse cx="162" cy="88" rx="7.8" ry="6.6" fill="#fdf9f0"/>
+            <ellipse cx="190" cy="88" rx="7.8" ry="6.6" fill="#fdf9f0"/>
+            <ellipse cx="163" cy="89" rx="5" ry="4.25" fill="#1a1a2a"/>
+            <ellipse cx="191" cy="89" rx="5" ry="4.25" fill="#1a1a2a"/>
+            <circle cx="165" cy="87" r="1.6" fill="white"/>
+            <circle cx="193" cy="87" r="1.6" fill="white"/>
+          </>
+        )}
+
+        <ellipse cx="176" cy="100" rx="4" ry="2.8" fill="#1a261a" opacity="0.7"/>
+        {happy
+          ? <path d="M168 107 Q172 113 176 109 Q180 113 184 107" fill="none" stroke="#1a261a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+          : <path d="M170 106 Q173 110 176 107 Q179 110 182 106" fill="none" stroke="#1a261a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+        }
+
+        <ellipse cx="140" cy="102" rx="13" ry="7.8" fill="#f0907a" opacity={happy ? "0.45" : "0.18"}/>
+        <ellipse cx="212" cy="102" rx="13" ry="7.8" fill="#f0907a" opacity={happy ? "0.45" : "0.18"}/>
+
+        <path d="M172 40 C170 30 168 22 172 16" fill="none" stroke="#1a261a" strokeWidth="4" strokeLinecap="round"/>
+        <path d="M177 41 C179 31 182 24 178 18" fill="none" stroke="#1a261a" strokeWidth="3" strokeLinecap="round"/>
+        <path d="M167 41 C163 33 161 27 163 21" fill="none" stroke="#1a261a" strokeWidth="2.5" strokeLinecap="round"/>
+      </g>
 
       {happy && (
         <>
-          <path d="M122 86 C122 81 126 79 130 83 C134 79 138 81 138 86 C138 92 130 100 130 100 C130 100 122 92 122 86Z" fill="#ea607d" opacity="0.95" />
-          <circle cx="110" cy="116" r="2" fill="#ffd7e0" opacity="0.85" />
-          <circle cx="149" cy="113" r="2" fill="#ffd7e0" opacity="0.75" />
+          <g filter="url(#softGlow)">
+            <path d="M122 100 C122 95 126 93 130 97 C134 93 138 95 138 100 C138 106 130 115 130 115 C130 115 122 106 122 100Z"
+              fill="#e8607a" opacity="0.95"/>
+          </g>
+          <path d="M106 78 C106 75 108 74 110 76 C112 74 114 75 114 78 C114 81 110 85 110 85 C110 85 106 81 106 78Z"
+            fill="#f4a0b8" opacity="0.7"/>
+          <path d="M144 72 C144 70 145.5 69 147 71 C148.5 69 150 70 150 72 C150 74.5 147 78 147 78 C147 78 144 74.5 144 72Z"
+            fill="#f4a0b8" opacity="0.6"/>
+          <path d="M12 38 L14 44 L20 44 L15 48 L17 54 L12 50 L7 54 L9 48 L4 44 L10 44Z" fill="#d4a843" opacity="0.85"/>
+          <path d="M240 32 L241.5 37 L247 37 L242.5 40.5 L244 46 L240 43 L236 46 L237.5 40.5 L233 37 L238.5 37Z" fill="#d4a843" opacity="0.8"/>
+          <circle cx="130" cy="142" r="3" fill="#f8e0a0" opacity="0.75"/>
+          <circle cx="108" cy="130" r="2" fill="#f9b8cc" opacity="0.7"/>
+          <circle cx="152" cy="128" r="2" fill="#f9b8cc" opacity="0.65"/>
         </>
       )}
+
+      <circle cx="20" cy="55" r="1.5" fill="#f8e8c0" opacity="0.5"/>
+      <circle cx="240" cy="60" r="1.5" fill="#f8e8c0" opacity="0.5"/>
     </svg>
   );
 }
@@ -699,42 +814,50 @@ function CouplePandaSVG({ happy = false, size = 160 }) {
 // Small side-view single panda for login
 function SinglePandaSVG({ size = 100 }) {
   return (
-    <svg viewBox="0 0 160 200" width={size} height={size * 1.25} style={{ display: "block" }}>
-      <ellipse cx="80" cy="191" rx="33" ry="6" fill="#1a1a1a" opacity="0.12" />
-
-      <path d="M53 116 C53 102 63 92 76 92 L84 92 C97 92 107 102 107 116 L107 159 C107 173 96 183 83 183 L77 183 C64 183 53 173 53 159 Z" fill="#f7fbff" stroke="#2c1b23" strokeWidth="2.4" />
-      <path d="M58 118 C62 108 70 102 80 102 C90 102 98 108 102 118" fill="none" stroke="#c7d9f1" strokeWidth="3.4" strokeLinecap="round" />
-      <path d="M62 129 L80 143 L98 129" fill="none" stroke="#6d88ce" strokeWidth="3.8" strokeLinecap="round" strokeLinejoin="round" />
-      <rect x="62" y="144" width="36" height="10" rx="5" fill="#6d88ce" opacity="0.96" />
-      <circle cx="80" cy="140" r="3.8" fill="#f39eb0" />
-      <path d="M66 157 C70 153 75 151 80 151 C85 151 90 153 94 157" fill="none" stroke="#dce6f4" strokeWidth="3" strokeLinecap="round" />
-
-      <ellipse cx="56" cy="131" rx="8.2" ry="17" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(-16 56 131)" />
-      <ellipse cx="104" cy="131" rx="8.2" ry="17" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(16 104 131)" />
-
-      <ellipse cx="68" cy="179" rx="10.5" ry="13.2" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(-7 68 179)" />
-      <ellipse cx="92" cy="179" rx="10.5" ry="13.2" fill="#3f4756" stroke="#2c1b23" strokeWidth="2" transform="rotate(7 92 179)" />
-
-      <circle cx="80" cy="74" r="39" fill="#fcfeff" stroke="#2c1b23" strokeWidth="2.5" />
-      <circle cx="58" cy="41" r="11.5" fill="#3f4756" stroke="#2c1b23" strokeWidth="2.2" />
-      <circle cx="102" cy="41" r="11.5" fill="#3f4756" stroke="#2c1b23" strokeWidth="2.2" />
-
-      <path d="M78 28 C77 22 83 19 87 23 C84 28 83 32 84 36" fill="none" stroke="#2c1b23" strokeWidth="2.2" strokeLinecap="round" />
-
-      <ellipse cx="66" cy="72" rx="12.2" ry="11.2" fill="#4b5564" />
-      <ellipse cx="94" cy="72" rx="12.2" ry="11.2" fill="#4b5564" />
-
-      <circle cx="66" cy="72" r="5.8" fill="#2a1018" />
-      <circle cx="94" cy="72" r="5.8" fill="#2a1018" />
-      <circle cx="67.7" cy="70.4" r="1.6" fill="#ffffff" />
-      <circle cx="95.7" cy="70.4" r="1.6" fill="#ffffff" />
-
-      <ellipse cx="80" cy="83" rx="4.1" ry="2.8" fill="#2c1b23" />
-      <path d="M69 90 Q80 102 91 90" fill="#f58ca5" stroke="#2c1b23" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M74 91 Q80 97 86 91" fill="none" stroke="#fff3f6" strokeWidth="1.3" strokeLinecap="round" />
-
-      <ellipse cx="59" cy="79" rx="6.1" ry="4" fill="#f58ca5" opacity="0.72" transform="rotate(14 59 79)" />
-      <ellipse cx="101" cy="79" rx="6.3" ry="4" fill="#f58ca5" opacity="0.85" transform="rotate(-14 101 79)" />
+    <svg viewBox="0 0 160 200" width={size} height={size * 1.22} style={{ display: "block" }}>
+      <defs>
+        <radialGradient id="sb" cx="45%" cy="35%" r="60%">
+          <stop offset="0%" stopColor="#fdf9f0"/><stop offset="100%" stopColor="#ede4d0"/>
+        </radialGradient>
+      </defs>
+      <ellipse cx="80" cy="196" rx="40" ry="6.2" fill="#1a261a" opacity="0.1"/>
+      <ellipse cx="78" cy="160" rx="52" ry="40" fill="url(#sb)"/>
+      <ellipse cx="78" cy="164" rx="26" ry="29" fill="#fefcf6" opacity="0.85"/>
+      <ellipse cx="57" cy="191" rx="20" ry="11" fill="#1a261a"/>
+      <ellipse cx="99" cy="191" rx="20" ry="11" fill="#1a261a"/>
+      <ellipse cx="57" cy="197" rx="12.5" ry="5.2" fill="#f0e8d8" opacity="0.5"/>
+      <ellipse cx="99" cy="197" rx="12.5" ry="5.2" fill="#f0e8d8" opacity="0.5"/>
+      <path d="M34 156 C26 164 22 175 26 183" fill="none" stroke="#1a261a" strokeWidth="15" strokeLinecap="round"/>
+      <path d="M34 156 C26 164 22 175 26 183" fill="none" stroke="#2d3d2d" strokeWidth="11.5" strokeLinecap="round"/>
+      <path d="M120 156 C129 164 133 175 129 183" fill="none" stroke="#1a261a" strokeWidth="15" strokeLinecap="round"/>
+      <path d="M120 156 C129 164 133 175 129 183" fill="none" stroke="#2d3d2d" strokeWidth="11.5" strokeLinecap="round"/>
+      <circle cx="80" cy="76" r="50" fill="url(#sb)"/>
+      <circle cx="42" cy="38" r="22" fill="#1a261a"/>
+      <circle cx="42" cy="38" r="14" fill="#2d3d2d"/>
+      <circle cx="42" cy="38" r="7" fill="#3d4d3d" opacity="0.4"/>
+      <circle cx="118" cy="38" r="22" fill="#1a261a"/>
+      <circle cx="118" cy="38" r="14" fill="#2d3d2d"/>
+      <circle cx="118" cy="38" r="7" fill="#3d4d3d" opacity="0.4"/>
+      <ellipse cx="62" cy="76" rx="20" ry="18.5" fill="#1a261a" transform="rotate(-8 62 76)"/>
+      <ellipse cx="98" cy="76" rx="20" ry="18.5" fill="#1a261a" transform="rotate(8 98 76)"/>
+      <circle cx="62" cy="77" r="11.5" fill="#fdf9f0"/>
+      <circle cx="98" cy="77" r="11.5" fill="#fdf9f0"/>
+      <circle cx="64" cy="78" r="7.3" fill="#1a1a2a"/>
+      <circle cx="100" cy="78" r="7.3" fill="#1a1a2a"/>
+      <circle cx="66" cy="75" r="2.8" fill="white"/>
+      <circle cx="102" cy="75" r="2.8" fill="white"/>
+      <path d="M76 94 C76 91 78 90 80 92 C82 90 84 91 84 94 C84 97 80 100 80 100 C80 100 76 97 76 94Z" fill="#1a261a" opacity="0.85"/>
+      <path d="M72 103 Q80 112 88 103" fill="none" stroke="#1a261a" strokeWidth="2.5" strokeLinecap="round"/>
+      <ellipse cx="40" cy="92" rx="16.2" ry="9.2" fill="#f0907a" opacity="0.34"/>
+      <ellipse cx="120" cy="92" rx="16.2" ry="9.2" fill="#f0907a" opacity="0.34"/>
+      <g transform="translate(112, 42)">
+        {[0,72,144,216,288].map((a,i) => (
+          <ellipse key={i} cx={Math.cos(a*Math.PI/180)*6} cy={Math.sin(a*Math.PI/180)*6}
+            rx="4" ry="2.5" fill={["#ffb8cc","#f4d0e0","#fce8f0","#ffb8cc","#f4d0e0"][i]}
+            transform={`rotate(${a})`} opacity="0.9"/>
+        ))}
+        <circle cx="0" cy="0" r="3.5" fill="#fff8d0"/>
+      </g>
     </svg>
   );
 }
