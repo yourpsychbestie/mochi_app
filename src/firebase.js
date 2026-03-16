@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, deleteUser } from "firebase/auth";
-import { getFirestore, doc, setDoc, getDoc, collection, addDoc, onSnapshot, query, where, serverTimestamp, orderBy, runTransaction } from "firebase/firestore";
+import { getFirestore, doc, setDoc, getDoc, collection, addDoc, onSnapshot, query, where, serverTimestamp, orderBy, runTransaction, getDocs, writeBatch, deleteDoc, limit } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBkKnVX0kStBOrujGMFA_mUCmQmt2P245g",
@@ -24,6 +24,81 @@ export const fbLogout = () => signOut(auth);
 export const fbOnAuthChange = (cb) => onAuthStateChanged(auth, cb);
 export const fbDeleteCurrentUser = () =>
   auth.currentUser ? deleteUser(auth.currentUser) : Promise.resolve();
+
+const deleteByCoupleCode = async (collectionName, coupleCode) => {
+  while (true) {
+    const q = query(
+      collection(db, collectionName),
+      where("coupleCode", "==", coupleCode),
+      limit(200)
+    );
+    const snap = await getDocs(q);
+    if (snap.empty) break;
+
+    const batch = writeBatch(db);
+    snap.docs.forEach((d) => batch.delete(d.ref));
+    await batch.commit();
+
+    if (snap.size < 200) break;
+  }
+};
+
+// Cleanup Firestore data before deleting the authenticated account.
+// - Owner: removes couple-scoped documents and the code document.
+// - Partner: only unlinks partner slot from code to avoid deleting the owner's data.
+export const fbCleanupBeforeAccountDelete = async ({ uid, code, isOwner }) => {
+  if (!uid) return;
+
+  await Promise.allSettled([
+    deleteDoc(doc(db, "users", uid)),
+    deleteDoc(doc(db, "progress", uid)),
+  ]);
+
+  if (!code) return;
+
+  if (isOwner) {
+    await Promise.allSettled([
+      deleteDoc(doc(db, "bamboo", code)),
+      deleteDoc(doc(db, "garden", code)),
+      deleteDoc(doc(db, "tests", code)),
+      deleteDoc(doc(db, "streaks", code)),
+      deleteDoc(doc(db, "codes", code)),
+    ]);
+
+    const coupleCollections = [
+      "messages",
+      "gratitud",
+      "momentos",
+      "conoce",
+      "lessons",
+      "burbuja",
+      "notifs",
+      "streakInteractions",
+    ];
+
+    for (const name of coupleCollections) {
+      await deleteByCoupleCode(name, code);
+    }
+    return;
+  }
+
+  const codeRef = doc(db, "codes", code);
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(codeRef);
+    if (!snap.exists()) return;
+
+    const data = snap.data() || {};
+    if (data.partnerUid && data.partnerUid !== uid) return;
+
+    const ownerName = String(data.names || "Nosotros").split(" & ")[0].trim() || "Nosotros";
+    tx.set(codeRef, {
+      partnerUid: null,
+      partnerEmail: null,
+      names: `${ownerName} & ?`,
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
+  });
+};
 
 // ─── USER PROFILE ──────────────────────────────────────
 export const fbSaveUser = (uid, data) =>

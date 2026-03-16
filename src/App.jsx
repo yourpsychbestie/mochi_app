@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import {
   fbRegister, fbLogin, fbLogout, fbOnAuthChange,
   fbDeleteCurrentUser,
+  fbCleanupBeforeAccountDelete,
   fbSaveUser, fbGetUser,
   fbGetCode, fbCreateCodeOwner, fbClaimPartnerCode,
   fbSaveProgress, fbGetProgress,
@@ -508,6 +509,117 @@ const LOVE_PROMPTS = [
   { icon:"💫", idea:"Cuando estás cerca siento " },
 ];
 
+const CONSEJOS_BASE = [
+  {
+    id: 1,
+    texto: "¡Expresa tu amor como un panda enamorado! Dále abrazos achuchables, besitos esquimales y muchos 'te quiero' todos los días. La ciencia dice que los panditas que se demuestran su amor con frecuencia son los más felices. ¡Llena tu relación de ternura y cariño!",
+    fijo: "Consejo del día"
+  },
+  {
+    id: 2,
+    texto: "¡Escucha a tu pareja con las orejitas bien atentas! Presta atención a sus pensamientos y sentimientos como si fueran las últimas hojitas de bambú del bosque. Los estudios pandísticos demuestran que cuando las parejitas de pandas se sienten escuchadas, su amor crece más que su barriguita después de un festín de brotes tiernos. ¡La comunicación es la clave para un amor de cuento!",
+    fijo: "Consejo del día"
+  },
+  {
+    id: 3,
+    texto: "¡Sé honesto y transparente como un panda de cristal! No le ocultes nada a tu pareja, ni siquiera las hojitas de bambú que te robaste para el postre. Las investigaciones panderas indican que las parejas sinceras y abiertas tienen un amor más fuerte que la rama más alta del árbol. ¡La confianza es el bambú que sostiene su amor!",
+    fijo: "Consejo del día"
+  },
+  {
+    id: 4,
+    texto: "¡Diviértanse juntos como pandas en un parque de juegos! Hagan actividades emocionantes y prueben cosas nuevas, como deslizarse por las ramas o hacer ángeles de hojas. Los estudios pandísticos sugieren que las parejitas que se divierten y exploran juntitas son las más felices y unidas. ¡Mantengan viva la chispa de la aventura!",
+    fijo: "Consejo del día"
+  },
+  {
+    id: 5,
+    texto: "¡Agradece hasta por las hojitas más pequeñas que tu pareja hace por ti! Cada vez que te traiga un brote tierno o te rasque la barriguita, dile 'gracias' con una sonrisa de panda. La investigación pandera muestra que las parejas que practican la gratitud se sienten más conectadas y apreciadas. ¡Un simple 'gracias' puede hacer que su amor brille más que el sol en un día de primavera!",
+    fijo: "Consejo del día"
+  },
+  {
+    id: 6,
+    texto: "¡Sé comprensivo y empático como un panda amoroso! Si tu pareja está pasando por un momento difícil, abrázala fuerte y dile que todo estará bien. Tu apoyo significa el mundo para ella, como un tronco de bambú en medio de la tormenta. ¡Sé el panda que tu pareja necesita!",
+    fijo: "Consejo del día"
+  },
+  {
+    id: 7,
+    texto: "¡Resuelvan los conflictos con la sabiduría de un panda anciano! No se peleen por quién se comió la última hoja de bambú. En vez de eso, hablen y encuentren una solución juntos. ¡Recuerden que son un equipo más fuerte que una manada de pandas!",
+    fijo: "Consejo del día"
+  },
+  {
+    id: 8,
+    texto: "¡Comunícate con tu pareja como si cada palabra fuera una hoja de bambú fresca! Habla de tus sentimientos y necesidades con un corazón abierto. La ciencia pandera dice que la comunicación honesta es el abono que hace crecer el amor. ¡Deja que tus palabras sean el viento que lleva sus corazones!",
+    fijo: "Consejo del día"
+  },
+  {
+    id: 9,
+    texto: "¡Demuestra tu afecto como un panda mimoso! Dale abrazos, besos y caricias a tu pareja todos los días. Un abrazo de panda puede alegrar hasta el día más nublado. La ciencia dice que el contacto físico es como el sol que nutre el amor y la intimidad. ¡Llena tu relación de ternura y calor!",
+    fijo: "Consejo del día"
+  },
+  {
+    id: 10,
+    texto: "¡Celebra los logros de tu pareja como si fueran una montaña de bambú recién descubierta! Aplaude sus éxitos y anímala en sus sueños. La ciencia pandera dice que cuando las parejas se apoyan mutuamente, su amor crece más fuerte que el árbol de bambú más alto. ¡Sean el viento que impulsa las alas del otro!",
+    fijo: "Consejo del día"
+  }
+];
+
+const CONSEJOS_CIENCIA_POOL = [
+  { accion: "Hagan un check-in emocional de 10 minutos", evidencia: "nombrar emociones reduce la reactividad y mejora la regulación" },
+  { accion: "Usen la frase 'entiendo que te sientas así' antes de responder", evidencia: "la validación disminuye defensividad" },
+  { accion: "Apliquen 20 segundos de abrazo consciente", evidencia: "el contacto cálido favorece oxitocina y seguridad" },
+  { accion: "Pregunten '¿qué necesitas hoy de mí?'", evidencia: "expresar necesidades mejora el ajuste diádico" },
+  { accion: "Cierren el día con una gratitud específica", evidencia: "la gratitud fortalece percepción de apoyo" },
+  { accion: "Practiquen escucha sin interrumpir por 3 minutos", evidencia: "la escucha activa aumenta conexión y confianza" },
+  { accion: "Transformen una crítica en petición concreta", evidencia: "pedidos claros reducen escalada de conflicto" },
+  { accion: "Programen una mini cita sin pantallas", evidencia: "tiempo de calidad protege satisfacción" },
+  { accion: "Reparen rápido tras un roce con una frase cariñosa", evidencia: "los intentos de reparación predicen estabilidad" },
+  { accion: "Compartan un recuerdo positivo de ustedes", evidencia: "la memoria positiva mejora resiliencia relacional" },
+  { accion: "Respiren juntos por 2 minutos antes de discutir", evidencia: "la co-regulación baja activación fisiológica" },
+  { accion: "Reconozcan el esfuerzo del otro, no solo el resultado", evidencia: "el reconocimiento nutre vínculo seguro" },
+  { accion: "Hagan una pregunta curiosa en vez de asumir", evidencia: "la curiosidad reduce sesgos negativos" },
+  { accion: "Definan un ritual de reconexión al volver a casa", evidencia: "los rituales fortalecen pertenencia" },
+  { accion: "Incluyan humor amable en días tensos", evidencia: "el humor prosocial amortigua estrés de pareja" },
+  { accion: "Acorden una pausa de 20 minutos si sube el tono", evidencia: "la pausa previene palabras hirientes" },
+  { accion: "Digan una admiración diaria sobre el carácter del otro", evidencia: "la admiración protege la relación a largo plazo" },
+  { accion: "Revisen finanzas sin culpas, con objetivos comunes", evidencia: "la colaboración económica reduce conflicto crónico" },
+  { accion: "Practiquen una disculpa completa: hecho, impacto y reparación", evidencia: "la responsabilidad restaura confianza" },
+  { accion: "Planeen una meta compartida de la semana", evidencia: "las metas comunes aumentan sentido de equipo" },
+];
+
+const CONSEJOS_EXTRA_80 = Array.from({ length: 80 }, (_, i) => {
+  const tip = CONSEJOS_CIENCIA_POOL[i % CONSEJOS_CIENCIA_POOL.length];
+  const apertura = [
+    "Panda tip terapéutico",
+    "Tip de conexión",
+    "Consejo validado",
+    "Mini hábito de amor",
+  ][i % 4];
+  const cierre = [
+    "Un pasito diario también cuenta.",
+    "Pequeño, constante y con ternura: así crece el amor.",
+    "Menos perfección, más presencia juntos.",
+    "Lo importante no es ganar, es acercarse.",
+  ][(i + 1) % 4];
+
+  return {
+    id: 11 + i,
+    texto: `${apertura} 🐼: ${tip.accion}. La evidencia en terapia de pareja muestra que ${tip.evidencia}. ${cierre}`,
+    fijo: "Consejo del día",
+  };
+});
+
+const CONSEJOS_DIARIOS = [...CONSEJOS_BASE, ...CONSEJOS_EXTRA_80];
+
+const hashSeed = (str) => {
+  let h = 0;
+  for (let i = 0; i < str.length; i += 1) h = (h * 31 + str.charCodeAt(i)) % 2147483647;
+  return Math.abs(h);
+};
+
+const getDayNumberLocal = (date = new Date()) => {
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  return Math.floor(d.getTime() / 86400000);
+};
+
 // ═══════════════════════════════════════════════════════
 // COUPLE PANDA SVG — inspired by the uploaded images
 // ═══════════════════════════════════════════════════════
@@ -657,8 +769,8 @@ function TA({ value, onChange, placeholder, rows = 2, style = {} }) {
     style={{ width: "100%", border: `2px solid ${C.border}`, borderRadius: 12, padding: "10px 13px", fontFamily: "'Nunito',sans-serif", fontSize: "0.9rem", resize: "none", outline: "none", color: C.ink, background: C.cream2, boxSizing: "border-box", lineHeight: 1.5, ...style }} />;
 }
 
-function Inp({ value, onChange, placeholder, type = "text", style = {} }) {
-  return <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+function Inp({ value, onChange, placeholder, type = "text", autoFocus = false, style = {} }) {
+  return <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} autoFocus={autoFocus}
     style={{ width: "100%", border: `2px solid ${C.border}`, borderRadius: 12, padding: "11px 14px", fontFamily: "'Nunito',sans-serif", fontSize: "0.9rem", outline: "none", color: C.ink, background: C.cream2, boxSizing: "border-box", ...style }} />;
 }
 
@@ -2848,11 +2960,69 @@ function StreakSection({ streakInfo, streakAnalytics, onUpdateSettings, user }) 
   );
 }
 
+function ConsejoDelDiaSection({ user }) {
+  const ownerKey = user?.code || user?.email || "guest";
+  const favKey = `mochi_consejos_fav_${ownerKey}`;
+  const [offset, setOffset] = useState(0);
+  const [favs, setFavs] = useState(() => ls.get(favKey) || []);
+  const dayKey = getDateKeyLocal();
+
+  useEffect(() => {
+    setOffset(0);
+  }, [dayKey, ownerKey]);
+
+  useEffect(() => {
+    ls.set(favKey, favs);
+  }, [favKey, favs]);
+
+  const dayNumber = getDayNumberLocal();
+  const baseIndex = (dayNumber + hashSeed(ownerKey)) % CONSEJOS_DIARIOS.length;
+  const idx = (baseIndex + offset) % CONSEJOS_DIARIOS.length;
+  const consejo = CONSEJOS_DIARIOS[idx];
+  const isFav = favs.includes(consejo.id);
+
+  const toggleFav = () => {
+    setFavs(prev => isFav ? prev.filter(id => id !== consejo.id) : [...prev, consejo.id]);
+  };
+
+  return (
+    <div style={{ margin: "0 14px 12px", background: C.white, borderRadius: 18, padding: 16, boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
+        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark }}>Consejo del Día</div>
+        <div style={{ background: C.cream, borderRadius: 999, padding: "5px 10px", fontSize: "0.68rem", fontWeight: 800, color: C.inkL }}>
+          #{consejo.id}
+        </div>
+      </div>
+
+      <div style={{ background: "linear-gradient(130deg, #fff7e8 0%, #f3ffe9 100%)", borderRadius: 12, padding: "11px 12px", border: `1px solid ${C.border}`, marginBottom: 10 }}>
+        <div style={{ fontSize: "0.88rem", color: C.ink, lineHeight: 1.7, fontWeight: 700 }}>{consejo.texto}</div>
+      </div>
+
+      <div style={{ display: "flex", gap: 8 }}>
+        <Btn onClick={() => setOffset(v => (v + 1) % CONSEJOS_DIARIOS.length)} variant="sand" style={{ flex: 1, padding: "10px 12px", fontSize: "0.82rem" }}>
+          Ver otro consejo
+        </Btn>
+        <Btn onClick={toggleFav} variant={isFav ? "olive" : "cream"} style={{ flex: 1, padding: "10px 12px", fontSize: "0.82rem" }}>
+          {isFav ? "Guardado ✓" : "Guardar favorito"}
+        </Btn>
+      </div>
+
+      <div style={{ marginTop: 8, fontSize: "0.68rem", color: C.inkL, fontWeight: 700 }}>
+        Favoritos guardados: {favs.length}
+      </div>
+    </div>
+  );
+}
+
 // PROFILE — Enhanced with more info fields
 function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, conoce, lessonsDone, coupleInfo, streakInfo, streakAnalytics, onUpdateStreakSettings, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento, onSendMessage }) {
   const [editMode, setEditMode] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [showLoveModal, setShowLoveModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteModalClosing, setDeleteModalClosing] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deletingAccount, setDeletingAccount] = useState(false);
   const [loveText, setLoveText] = useState("");
   const [quickLove, setQuickLove] = useState(null);
   const [debugTapCount, setDebugTapCount] = useState(0);
@@ -2866,6 +3036,7 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
     }
   });
   const [nameInput, setNameInput] = useState(user?.names || "");
+  const deleteCloseTimer = useRef(null);
   const [form, setForm] = useState({
     anniversary: coupleInfo.anniversary || "",
     firstDate: coupleInfo.firstDate || "",
@@ -3003,6 +3174,28 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
     setQuickLove(null);
   };
 
+  const closeDeleteModal = useCallback(() => {
+    if (deletingAccount || deleteModalClosing) return;
+    setDeleteModalClosing(true);
+    clearTimeout(deleteCloseTimer.current);
+    deleteCloseTimer.current = setTimeout(() => {
+      setShowDeleteModal(false);
+      setDeleteConfirmText("");
+      setDeleteModalClosing(false);
+    }, 180);
+  }, [deletingAccount, deleteModalClosing]);
+
+  useEffect(() => {
+    if (!showDeleteModal) return;
+    const onEsc = (e) => {
+      if (e.key === "Escape") closeDeleteModal();
+    };
+    window.addEventListener("keydown", onEsc);
+    return () => window.removeEventListener("keydown", onEsc);
+  }, [showDeleteModal, closeDeleteModal]);
+
+  useEffect(() => () => clearTimeout(deleteCloseTimer.current), []);
+
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
       <div style={{ background: C.dark, padding: "38px 20px 28px", textAlign: "center" }}>
@@ -3040,6 +3233,8 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
           )}
         </div>
       </div>
+
+      <ConsejoDelDiaSection user={user} />
 
       <StreakSection streakInfo={streakInfo} streakAnalytics={streakAnalytics} onUpdateSettings={onUpdateStreakSettings} user={user} />
 
@@ -3214,7 +3409,7 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
         </div>
 
         <Btn onClick={onLogout} variant="ghost" style={{ width: "100%", color: "#c04040", borderColor: "#f0d0d0", marginBottom: 8 }}>Cerrar sesión</Btn>
-        {onDeleteAccount && <Btn onClick={onDeleteAccount} variant="ghost" style={{ width: "100%", color: "#a02020", borderColor: "#f0c0c0", fontSize: "0.82rem", marginBottom: 16 }}>Eliminar cuenta 🗑️</Btn>}
+        {onDeleteAccount && <Btn onClick={() => { setDeleteModalClosing(false); setDeleteConfirmText(""); setShowDeleteModal(true); }} variant="ghost" style={{ width: "100%", color: "#a02020", borderColor: "#f0c0c0", fontSize: "0.82rem", marginBottom: 16 }}>Eliminar cuenta 🗑️</Btn>}
 
         {/* Legal & Privacy */}
         <div style={{ background: C.cream, borderRadius: 16, padding: "14px 16px", border: `1.5px solid ${C.border}`, marginBottom: 8 }}>
@@ -3259,6 +3454,60 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
           </div>
         </div>
       )}
+
+      {showDeleteModal && (
+        <div
+          style={{ position:"fixed", inset:0, background:"rgba(15,20,15,0.66)", zIndex:5200, display:"flex", alignItems:"center", justifyContent:"center", padding:"18px", animation: deleteModalClosing ? "fadeOutOverlay 0.18s ease forwards" : "fadeInOverlay 0.2s ease forwards" }}
+          onClick={e => {
+            if (deletingAccount || deleteModalClosing) return;
+            if (e.target === e.currentTarget) {
+              closeDeleteModal();
+            }
+          }}
+        >
+          <div style={{ width:"100%", maxWidth:430, background:C.white, border:`1.5px solid ${C.border}`, borderRadius:18, boxShadow:"0 10px 34px rgba(0,0,0,0.22)", padding:"16px 16px 14px", animation: deleteModalClosing ? "popOutCard 0.18s ease forwards" : "popInCard 0.24s cubic-bezier(.2,.9,.2,1) forwards" }}>
+            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.05rem", color:"#8b2020", marginBottom:6 }}>Eliminar cuenta</div>
+            <div style={{ fontSize:"0.8rem", color:C.inkM, lineHeight:1.6, fontWeight:700, marginBottom:10 }}>
+              Esta acción borra tu acceso y tus datos. Escribe <b>ELIMINAR</b> para confirmar.
+            </div>
+            <Inp
+              value={deleteConfirmText}
+              onChange={setDeleteConfirmText}
+              placeholder="Escribe ELIMINAR"
+              autoFocus={showDeleteModal && !deleteModalClosing}
+              style={{ marginBottom:12, borderColor: deleteConfirmText ? "#e8b0b0" : C.border, background:"#fff8f8" }}
+            />
+            <div style={{ display:"flex", gap:8 }}>
+              <Btn
+                variant="ghost"
+                disabled={deletingAccount}
+                onClick={closeDeleteModal}
+                style={{ flex:1, padding:"10px 12px", fontSize:"0.82rem", borderColor:C.border, color:C.inkM }}
+              >
+                Cancelar
+              </Btn>
+              <Btn
+                variant="salmon"
+                disabled={deletingAccount || deleteConfirmText.trim().toUpperCase() !== "ELIMINAR"}
+                onClick={async () => {
+                  setDeletingAccount(true);
+                  try {
+                    await onDeleteAccount(deleteConfirmText.trim());
+                    setShowDeleteModal(false);
+                    setDeleteConfirmText("");
+                    setDeleteModalClosing(false);
+                  } finally {
+                    setDeletingAccount(false);
+                  }
+                }}
+                style={{ flex:1, padding:"10px 12px", fontSize:"0.82rem", background:"#b93434", color:"#fff" }}
+              >
+                {deletingAccount ? "Eliminando..." : "Eliminar ahora"}
+              </Btn>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -3278,6 +3527,10 @@ textarea:focus, input:focus { border-color: #4a6e30 !important; box-shadow: 0 0 
 ::-webkit-scrollbar-thumb { background:#ede4cc; border-radius:50px; }
 select { appearance: none; }
 @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeOutOverlay { from { opacity: 1; } to { opacity: 0; } }
+@keyframes popInCard { from { opacity: 0; transform: translateY(14px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes popOutCard { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(8px) scale(0.98); } }
 `;
 
 const OB = [
@@ -3970,9 +4223,15 @@ export default function App() {
           const last = ls.get("mochi_last");
           if (last && last !== "guest") {
             const u = ls.get("mochi_users") || {};
-            if (u[last]) afterLogin({ email: last, ...u[last], isGuest: false }, false);
+            if (u[last]) {
+              afterLogin({ uid: firebaseUser.uid, email: firebaseUser.email || last, ...u[last], isGuest: false }, false);
+            }
           }
         }
+      } else {
+        // If Firebase session is gone, ensure app state returns to login.
+        setUser(null);
+        setScreen("login");
       }
     });
     return () => unsub();
@@ -4506,7 +4765,8 @@ export default function App() {
     toast("✨ Guardado en el baúl de momentos +5 bambú 🌿");
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await fbLogout().catch(() => {});
     ls.set("mochi_last", null); setUser(null); setScreen("login");
     setBamboo(0); setHappiness(20); setWater(40); setGarden({});
     setAccessories({}); setExDone({}); setMessages([]); setConoce({}); setBurbuja({}); setCoupleInfo({});
@@ -4525,8 +4785,32 @@ export default function App() {
     });
   };
 
-  const deleteAccount = () => {
-    if (!window.confirm("¿Seguro que quieres eliminar tu cuenta? Esta acción no se puede deshacer.")) return;
+  const deleteAccount = async (confirmText = "") => {
+    if (String(confirmText).trim().toUpperCase() !== "ELIMINAR") {
+      toast("Eliminación cancelada");
+      return;
+    }
+
+    try {
+      if (user?.uid && !user?.isGuest) {
+        await fbCleanupBeforeAccountDelete({
+          uid: user.uid,
+          code: user.code || "",
+          isOwner: user?.isOwner !== false,
+        });
+        await fbDeleteCurrentUser();
+      }
+    } catch (e) {
+      const errCode = e?.code || "";
+      if (errCode === "auth/requires-recent-login") {
+        toast("Por seguridad, vuelve a iniciar sesión y repite la eliminación de cuenta.");
+        return;
+      }
+      console.error("deleteAccount error:", e);
+      toast("No se pudo eliminar la cuenta completa. Intenta de nuevo.");
+      return;
+    }
+
     const u = ls.get("mochi_users") || {};
     const c = ls.get("mochi_codes") || {};
     if (user?.email) delete u[user.email];
@@ -4536,7 +4820,8 @@ export default function App() {
     }
     ls.set("mochi_users", u); ls.set("mochi_codes", c);
     ls.set("mochi_prog_" + (user?.email || ""), null);
-    logout();
+    toast("Cuenta eliminada correctamente");
+    await logout();
   };
 
   if (screen === "login") return <><style>{STYLES}</style><Login onLogin={afterLogin}/></>;
