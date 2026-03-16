@@ -540,27 +540,30 @@ const CONSEJOS_DIARIOS = [
   { id: 10, texto: "Elijan un ritual diario de conexión de 5 minutos sin pantallas." },
 ];
 
-function CouplePandaSVG({ happy = false, size = 160 }) {
+function CouplePandaSVG({ happy = false, size = 160, pairOffset = 0 }) {
+  const leftCx = 76 - pairOffset / 2;
+  const rightCx = 176 + pairOffset / 2;
   return (
     <svg viewBox="0 0 260 220" width={size} height={size * 0.846}>
       <ellipse cx="130" cy="206" rx="88" ry="10" fill="#122015" opacity="0.16" />
-      {[70, 165].map((x, idx) => (
-        <g key={x} transform={`rotate(${idx === 0 ? 4 : -4} ${x + 30} 90)`}>
-          <ellipse cx={x + 30} cy="164" rx="34" ry="37" fill="#f7f1e8" />
-          <ellipse cx={x + 30} cy="126" rx="18" ry="16" fill="#f7f1e8" />
-          <ellipse cx={x + 30} cy="88" rx="33" ry="29" fill="#f7f1e8" />
-          <ellipse cx={x + 10} cy="67" rx="10" ry="11" fill="#243629" />
-          <ellipse cx={x + 50} cy="67" rx="10" ry="11" fill="#243629" />
-          <ellipse cx={x + 17} cy="89" rx="11" ry="8" fill="#243629" />
-          <ellipse cx={x + 43} cy="89" rx="11" ry="8" fill="#243629" />
-          <ellipse cx={x + 17} cy="90" rx="4" ry="3" fill="#f7f1e8" />
-          <ellipse cx={x + 43} cy="90" rx="4" ry="3" fill="#f7f1e8" />
-          <ellipse cx={x + 30} cy="97" rx="4" ry="3" fill="#243629" />
-          <path d={`M${x + 24} 103 Q${x + 30} 108 ${x + 36} 103`} fill="none" stroke="#243629" strokeWidth="2" strokeLinecap="round"/>
-          <ellipse cx={x + 8} cy="168" rx="9" ry="15" fill="#243629" />
-          <ellipse cx={x + 52} cy="168" rx="9" ry="15" fill="#243629" />
-          <ellipse cx={x + 20} cy="202" rx="11" ry="7" fill="#243629" />
-          <ellipse cx={x + 41} cy="202" rx="11" ry="7" fill="#243629" />
+      {[leftCx, rightCx].map((cx, idx) => (
+        <g key={cx} transform={`rotate(${idx === 0 ? 4 : -4} ${cx} 94)`}>
+          <ellipse cx={cx} cy="154" rx="34" ry="37" fill="#f1eadc" stroke="#d8cfbf" strokeWidth="1.1" />
+          <ellipse cx={cx} cy="121" rx="19" ry="17" fill="#f1eadc" stroke="#d8cfbf" strokeWidth="1" />
+          <ellipse cx={cx} cy="88" rx="33" ry="29" fill="#f1eadc" stroke="#d8cfbf" strokeWidth="1.1" />
+          <ellipse cx={cx} cy="158" rx="18" ry="22" fill="#faf6ef" opacity="0.62" />
+          <ellipse cx={cx - 20} cy="67" rx="10" ry="11" fill="#243629" />
+          <ellipse cx={cx + 20} cy="67" rx="10" ry="11" fill="#243629" />
+          <ellipse cx={cx - 13} cy="89" rx="11" ry="8" fill="#243629" />
+          <ellipse cx={cx + 13} cy="89" rx="11" ry="8" fill="#243629" />
+          <ellipse cx={cx - 13} cy="90" rx="4" ry="3" fill="#f7f1e8" />
+          <ellipse cx={cx + 13} cy="90" rx="4" ry="3" fill="#f7f1e8" />
+          <ellipse cx={cx} cy="97" rx="4" ry="3" fill="#243629" />
+          <path d={`M${cx - 6} 103 Q${cx} 108 ${cx + 6} 103`} fill="none" stroke="#243629" strokeWidth="2" strokeLinecap="round"/>
+          <ellipse cx={cx - 22} cy="165" rx="9" ry="15" fill="#243629" />
+          <ellipse cx={cx + 22} cy="165" rx="9" ry="15" fill="#243629" />
+          <ellipse cx={cx - 10} cy="200" rx="11" ry="7" fill="#243629" />
+          <ellipse cx={cx + 11} cy="200" rx="11" ry="7" fill="#243629" />
         </g>
       ))}
       <path d="M123 108 C123 104 126 101 130 101 C134 101 137 104 137 108 C137 113 130 119 130 119 C130 119 123 113 123 108Z" fill={happy ? "#e8607a" : "#d08092"} />
@@ -572,8 +575,10 @@ function SinglePandaSVG({ size = 100 }) {
   return (
     <svg viewBox="0 0 140 150" width={size} height={size * 1.07}>
       <ellipse cx="70" cy="142" rx="42" ry="6" fill="#122015" opacity="0.16" />
-      <ellipse cx="70" cy="112" rx="32" ry="34" fill="#f7f1e8" />
-      <ellipse cx="70" cy="58" rx="32" ry="28" fill="#f7f1e8" />
+      <ellipse cx="70" cy="111" rx="32" ry="34" fill="#f1eadc" stroke="#d8cfbf" strokeWidth="1.1" />
+      <ellipse cx="70" cy="84" rx="18" ry="14" fill="#f1eadc" stroke="#d8cfbf" strokeWidth="1" />
+      <ellipse cx="70" cy="58" rx="32" ry="28" fill="#f1eadc" stroke="#d8cfbf" strokeWidth="1.1" />
+      <ellipse cx="70" cy="113" rx="16" ry="20" fill="#faf6ef" opacity="0.62" />
       <ellipse cx="49" cy="38" rx="10" ry="10" fill="#243629" />
       <ellipse cx="91" cy="38" rx="10" ry="10" fill="#243629" />
       <ellipse cx="56" cy="60" rx="11" ry="8" fill="#243629" />
@@ -1700,6 +1705,15 @@ function Login({ onLogin }) {
   const [codeStatus, setCodeStatus] = useState("checking"); // checking | available | taken | error
 
   const [loading, setLoading] = useState(false);
+  const getIsNarrow = () => (typeof window !== "undefined" ? window.innerWidth <= 390 : false);
+  const [isNarrowScreen, setIsNarrowScreen] = useState(getIsNarrow);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const onResize = () => setIsNarrowScreen(getIsNarrow());
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -1949,11 +1963,11 @@ function Login({ onLogin }) {
   const TABS = [{ id: "login", label: "Entrar" }, { id: "register", label: "Crear" }, { id: "pair", label: "Unirse" }];
 
   return (
-    <div style={{ minHeight: "100vh", background: C.sandL, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "28px 20px", fontFamily: "'Nunito',sans-serif" }}>
-      <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "3rem", color: C.dark, letterSpacing: "2px" }}>mochi</div>
-      <div style={{ color: C.inkL, fontWeight: 700, marginBottom: 12, fontSize: "0.85rem", letterSpacing: "0.6px" }}>TU JARDÍN DE PAREJA 🌿</div>
-      <div style={{ marginBottom: 18, animation: "float 3s ease-in-out infinite" }}>
-        <CouplePandaSVG size={160} happy={true} />
+    <div style={{ minHeight: "100vh", background: C.sandL, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: isNarrowScreen ? "22px 16px" : "28px 20px", fontFamily: "'Nunito',sans-serif" }}>
+      <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: isNarrowScreen ? "2.65rem" : "3rem", color: C.dark, letterSpacing: isNarrowScreen ? "1.4px" : "2px" }}>mochi</div>
+      <div style={{ color: C.inkL, fontWeight: 700, marginBottom: isNarrowScreen ? 8 : 12, fontSize: isNarrowScreen ? "0.8rem" : "0.85rem", letterSpacing: "0.6px" }}>TU JARDÍN DE PAREJA 🌿</div>
+      <div style={{ marginBottom: isNarrowScreen ? 14 : 18, animation: "float 3s ease-in-out infinite" }}>
+        <CouplePandaSVG size={isNarrowScreen ? 138 : 150} pairOffset={isNarrowScreen ? -18 : -10} happy={true} />
       </div>
       <div style={{ background: C.white, borderRadius: 24, padding: "22px 20px", width: "100%", maxWidth: 380, boxShadow: `0 4px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
         <div style={{ display: "flex", background: C.sand, borderRadius: 12, padding: 3, marginBottom: 18, gap: 3 }}>
