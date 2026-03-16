@@ -265,6 +265,17 @@ const getMyName = (user, fallback = "Yo") => {
   return parts[0] || parts[1] || fallback;
 };
 
+const getCoupleNames = (user) => {
+  const parts = String(user?.names || "")
+    .split("&")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return {
+    nameA: parts[0] || "Persona A",
+    nameB: parts[1] || parts[0] || "Persona B",
+  };
+};
+
 // ═══════════════════════════════════════════════
 // GARDEN ITEMS — multiple quantities, koi/lotus aesthetic
 // ═══════════════════════════════════════════════
@@ -2572,8 +2583,7 @@ function ExModal({ ex, onClose, onComplete, nameA, nameB, user }) {
 }
 
 function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson }) {
-  const nameA = user?.names ? user.names.split("&")[0].trim() : "Persona A";
-  const nameB = user?.names ? user.names.split("&")[1]?.trim() || "Persona B" : "Persona B";
+  const { nameA, nameB } = getCoupleNames(user);
   const [openId, setOpenId] = useState(null);
   const [openLesson, setOpenLesson] = useState(null);
   const [ejTab, setEjTab] = useState("ejerc");
@@ -2730,8 +2740,7 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
 
 // CONOCETE
 function Conocete({ conoce, onSave, user }) {
-  const nameA = user?.names ? user.names.split("&")[0].trim() : "Persona A";
-  const nameB = user?.names ? user.names.split("&")[1]?.trim() || "Persona B" : "Persona B";
+  const { nameA, nameB } = getCoupleNames(user);
   const myRole = user?.isOwner !== false ? "owner" : "partner";
   const partnerRole = myRole === "owner" ? "partner" : "owner";
   const myWho = myRole === "owner" ? "A" : "B";
@@ -2835,8 +2844,7 @@ function Conocete({ conoce, onSave, user }) {
 
 // BURBUJA
 function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
-  const nameA = user?.names ? user.names.split("&")[0].trim() : "Persona A";
-  const nameB = user?.names ? user.names.split("&")[1]?.trim() || "Persona B" : "Persona B";
+  const { nameA, nameB } = getCoupleNames(user);
   const myRole = user?.isOwner !== false ? "owner" : "partner";
   const partnerRole = myRole === "owner" ? "partner" : "owner";
   const myName = myRole === "owner" ? nameA : nameB;
