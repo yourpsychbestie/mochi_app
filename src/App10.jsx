@@ -3211,8 +3211,8 @@ function LeccionDia({ lessonsDone, onComplete }) {
           {!isDone ? (
             <button onClick={() => { onComplete(open.id); setReading(false); }}
               style={{ width:"100%", background:C.olive, color:C.cream2, border:"none", borderRadius:14, padding:16,
-                fontFamily:"'Fredoka One',cursive", fontSize:"1.05rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.2)" }}>
-              ✓ Leímos esto juntos · +10 bambú 🌿
+                fontFamily:"'Fredoka One',cursive", fontSize:"0.98rem", lineHeight:1.35, whiteSpace:"normal", wordBreak:"break-word", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.2)" }}>
+              ✓ Completar lección (+10 🌿)
             </button>
           ) : (
             <div style={{ textAlign:"center", background:C.cream, borderRadius:14, padding:14, border:`1.5px solid ${C.border}` }}>
