@@ -4,7 +4,7 @@ import {
   fbDeleteCurrentUser,
   fbCleanupBeforeAccountDelete,
   fbSaveUser, fbGetUser,
-  fbGetCode, fbCreateCodeOwner, fbClaimPartnerCode,
+  fbGetCode, fbCreateCodeOwner, fbClaimPartnerCode, fbFindCodeByUid,
   fbSaveProgress, fbGetProgress,
   fbSendMessage, fbListenMessages,
   fbSaveTestAnswers, fbListenTest, fbResetTest,
@@ -2055,6 +2055,22 @@ function Login({ onLogin }) {
       if (!userData) {
         userData = { email: cleanEmail, names: cleanEmail.split("@")[0] + " & ?", code: "", isOwner: true };
       }
+      if (!userData?.code) {
+        const found = await fbFindCodeByUid(cred.user.uid).catch(() => null);
+        if (found?.code) {
+          userData = {
+            ...userData,
+            code: found.code,
+            names: userData?.names || found.names || (cleanEmail.split("@")[0] + " & ?"),
+            since: userData?.since || found.since || "Juntos",
+          };
+          await fbSaveUser(cred.user.uid, {
+            code: found.code,
+            names: userData.names,
+            since: userData.since,
+          }).catch(() => {});
+        }
+      }
       onLogin({ uid: cred.user.uid, email: cleanEmail, ...userData, isGuest: false }, false);
     } catch(e) {
       const code = e.code || "";
@@ -3798,8 +3814,13 @@ const DAILY_LESSONS = [
 // RELATIONSHIP TEST SCREEN
 // ═══════════════════════════════════════════════
 function RelTest({ user, onDone }) {
-  const nameA = user?.names ? user.names.split("&")[0].trim() : "Persona A";
-  const nameB = user?.names ? user.names.split("&")[1]?.trim() || "Persona B" : "Persona B";
+  const nameParts = String(user?.names || "")
+    .split("&")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const nameA = nameParts[0] || "Persona A";
+  const nameB = nameParts[1] || "Persona B";
+  const safeCode = String(user?.code || "").trim().toUpperCase();
   const isOwner = user?.isOwner !== false; // owner = Panda A
   const myKey = isOwner ? "owner" : "partner";
   const otherKey = isOwner ? "partner" : "owner";
@@ -3810,14 +3831,14 @@ function RelTest({ user, onDone }) {
   const [myScores, setMyScores] = useState({});
   const [testData, setTestData] = useState(null);
   const [saving, setSaving] = useState(false);
-  const isGuest = user?.isGuest || !user?.code;
+  const isGuest = user?.isGuest || !safeCode;
 
   // Listen to test doc in Firebase (or just local for guests)
   useEffect(() => {
     if (isGuest) return;
-    const unsub = fbListenTest(user.code, data => setTestData(data));
+    const unsub = fbListenTest(safeCode, data => setTestData(data));
     return () => unsub();
-  }, [user?.code]);
+  }, [isGuest, safeCode]);
 
   const myDoneKey = `${myKey}Done`;
   const otherDoneKey = `${otherKey}Done`;
@@ -3841,7 +3862,7 @@ function RelTest({ user, onDone }) {
   const submitMyAnswers = async () => {
     setSaving(true);
     if (!isGuest) {
-      await fbSaveTestAnswers(user.code, myKey, myScores).catch(() => {});
+      await fbSaveTestAnswers(safeCode, myKey, myScores).catch(() => {});
     }
     setSaving(false);
   };
@@ -3927,9 +3948,9 @@ function RelTest({ user, onDone }) {
         </div>
         <div style={{ background:C.white, borderRadius:18, padding:18, border:`1.5px solid ${C.border}`, width:"100%", maxWidth:340, textAlign:"center" }}>
           <div style={{ fontSize:"0.72rem", fontWeight:800, color:C.inkL, letterSpacing:"0.6px", marginBottom:10 }}>COMPARTE ESTE CÓDIGO</div>
-          <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"2rem", letterSpacing:8, color:C.dark, marginBottom:10 }}>{user?.code}</div>
+            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"2rem", letterSpacing:8, color:C.dark, marginBottom:10 }}>{safeCode || "----"}</div>
           <Btn onClick={() => { 
-              const c = (user?.code || "").toUpperCase();
+              const c = safeCode;
               if(navigator.clipboard) { navigator.clipboard.writeText(c).then(()=>alert("Código copiado: "+c)).catch(()=>alert("Tu código: "+c)); }
               else { alert("Tu código: "+c); }
             }} variant="sand" style={{ width:"100%" }}>Copiar código 📋</Btn>
@@ -4231,13 +4252,31 @@ export default function App() {
   };
 
   const afterLogin = async (u, isNew) => {
-    setUser(u);
-    ls.set("mochi_last", u.email || "guest");
+    let resolvedUser = { ...u };
+    if (!resolvedUser?.isGuest && resolvedUser?.uid && !resolvedUser?.code) {
+      const found = await fbFindCodeByUid(resolvedUser.uid).catch(() => null);
+      if (found?.code) {
+        resolvedUser = {
+          ...resolvedUser,
+          code: found.code,
+          names: resolvedUser.names || found.names || resolvedUser.names,
+          since: resolvedUser.since || found.since || resolvedUser.since,
+        };
+        await fbSaveUser(resolvedUser.uid, {
+          code: found.code,
+          names: resolvedUser.names,
+          since: resolvedUser.since,
+        }).catch(() => {});
+      }
+    }
+
+    setUser(resolvedUser);
+    ls.set("mochi_last", resolvedUser.email || "guest");
     let s = null;
-    if (!isNew && u.uid) {
+    if (!isNew && resolvedUser.uid) {
       // Try Firebase first, fallback to localStorage
-      try { s = await fbGetProgress(u.uid); } catch(e) {}
-      if (!s) s = ls.get(saveKey(u));
+      try { s = await fbGetProgress(resolvedUser.uid); } catch(e) {}
+      if (!s) s = ls.get(saveKey(resolvedUser));
       if (s) {
         s = applyDecay(s);
         if (s.bamboo != null) setBamboo(s.bamboo);
@@ -4258,11 +4297,11 @@ export default function App() {
       }
     }
     // Listen to real-time messages if couple code exists
-    if (u.code && !u.isGuest) {
-      const unsub = fbListenMessages(u.code, msgs => setMessages(msgs));
+    if (resolvedUser.code && !resolvedUser.isGuest) {
+      const unsub = fbListenMessages(resolvedUser.code, msgs => setMessages(msgs));
       window._mochiMsgUnsub = unsub;
     } else {
-      const sharedMsgs = u.code ? (ls.get("mochi_msgs_" + u.code) || []) : [];
+      const sharedMsgs = resolvedUser.code ? (ls.get("mochi_msgs_" + resolvedUser.code) || []) : [];
       setMessages(sharedMsgs);
     }
     setLastVisit(new Date().toISOString());
@@ -4965,7 +5004,7 @@ export default function App() {
   if (screen === "login") return <><style>{STYLES}</style><Login onLogin={afterLogin}/></>;
   if (screen === "onboarding") return <><style>{STYLES}</style><Onboarding onDone={()=>setScreen("reltest")}/></>;
   if (screen === "reltest") return <><style>{STYLES}</style><RelTest user={user} onDone={finishTest}/></>;
-  if (user && !user?.isGuest && !testScores) return <><style>{STYLES}</style><RelTest user={user} onDone={finishTest}/></>;
+  if (user && !user?.isGuest && user?.code && !testScores) return <><style>{STYLES}</style><RelTest user={user} onDone={finishTest}/></>;
 
   return (
     <div style={{ fontFamily:"'Nunito',sans-serif", maxWidth:480, margin:"0 auto", minHeight:"100vh", background:C.sandL, position:"relative" }}>

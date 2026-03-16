@@ -116,6 +116,26 @@ export const fbGetCode = async (code) => {
   return snap.exists() ? snap.data() : null;
 };
 
+export const fbFindCodeByUid = async (uid) => {
+  if (!uid) return null;
+
+  const ownerQ = query(collection(db, "codes"), where("ownerUid", "==", uid), limit(1));
+  const ownerSnap = await getDocs(ownerQ);
+  if (!ownerSnap.empty) {
+    const d = ownerSnap.docs[0];
+    return { code: d.id, ...(d.data() || {}) };
+  }
+
+  const partnerQ = query(collection(db, "codes"), where("partnerUid", "==", uid), limit(1));
+  const partnerSnap = await getDocs(partnerQ);
+  if (!partnerSnap.empty) {
+    const d = partnerSnap.docs[0];
+    return { code: d.id, ...(d.data() || {}) };
+  }
+
+  return null;
+};
+
 // Create an owner code only when it does not already exist.
 export const fbCreateCodeOwner = async (code, data) => {
   const ref = doc(db, "codes", code);
