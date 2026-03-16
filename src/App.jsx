@@ -3661,6 +3661,7 @@ function RelTest({ user, onDone }) {
   const [testData, setTestData] = useState(null);
   const [saving, setSaving] = useState(false);
   const isGuest = user?.isGuest || !safeCode;
+  const hasValidAreas = Array.isArray(TEST_AREAS) && TEST_AREAS.length > 0;
 
   // Listen to test doc in Firebase (or just local for guests)
   useEffect(() => {
@@ -3675,26 +3676,40 @@ function RelTest({ user, onDone }) {
   const iOtherDone = testData?.[otherDoneKey] === true;
   const bothDone = iMyDone && iOtherDone;
 
-  const area = TEST_AREAS[step];
+  const area = hasValidAreas ? (TEST_AREAS[step] || TEST_AREAS[0]) : null;
   const myScore = myScores[area?.id];
   const canNext = myScore != null;
 
   const setScore = (val) => {
+    if (!area?.id) return;
     setMyScores(s => ({ ...s, [area.id]: val }));
   };
 
   const next = () => {
+    if (!hasValidAreas) return;
     if (step < TEST_AREAS.length - 1) setStep(s => s + 1);
     else submitMyAnswers();
   };
 
   const submitMyAnswers = async () => {
     setSaving(true);
-    if (!isGuest) {
-      await fbSaveTestAnswers(safeCode, myKey, myScores).catch(() => {});
+    try {
+      if (!isGuest) {
+        await fbSaveTestAnswers(safeCode, myKey, myScores).catch(() => {});
+      }
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
+
+  if (!hasValidAreas || !area) {
+    return (
+      <div style={{ minHeight:"100vh", background:C.sandL, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"24px 20px", fontFamily:"'Nunito',sans-serif" }}>
+        <div style={{ fontFamily:"'Fredoka One',cursive", color:C.dark, fontSize:"1.2rem", marginBottom:8 }}>No pudimos cargar el test</div>
+        <div style={{ fontSize:"0.9rem", color:C.inkM, textAlign:"center", lineHeight:1.6, maxWidth:320 }}>Intenta salir y volver a entrar. Si sigue pasando, avísame y lo depuramos contigo paso a paso.</div>
+      </div>
+    );
+  }
 
   // Results screen — both done
   const guestDone = isGuest && Object.keys(myScores).length === TEST_AREAS.length;
@@ -3796,7 +3811,7 @@ function RelTest({ user, onDone }) {
     <div style={{ minHeight:"100vh", background:C.sandL, display:"flex", flexDirection:"column", fontFamily:"'Nunito',sans-serif" }}>
       <div style={{ background:C.dark, padding:"44px 20px 20px" }}>
         <div style={{ display:"flex", gap:5, marginBottom:12 }}>
-          {TEST_AREAS.map((a,i) => (
+          {(TEST_AREAS || []).map((a,i) => (
             <div key={a.id} style={{ flex:1, height:4, borderRadius:50,
               background: i < step ? C.olive : i === step ? C.oliveL : "rgba(255,255,255,0.2)" }}/>
           ))}
@@ -4870,8 +4885,16 @@ export default function App() {
 
   if (screen === "login") return <><style>{STYLES}</style><Login onLogin={afterLogin}/></>;
   if (screen === "onboarding") return <><style>{STYLES}</style><Onboarding onDone={()=>setScreen("reltest")}/></>;
-  if (screen === "reltest") return <><style>{STYLES}</style><RelTest user={user} onDone={finishTest}/></>;
-  if (user && !user?.isGuest && user?.code && !testScores) return <><style>{STYLES}</style><RelTest user={user} onDone={finishTest}/></>;
+  const relTestFallback = (
+    <div style={{ minHeight:"100vh", background:C.sandL, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"24px 20px", fontFamily:"'Nunito',sans-serif" }}>
+      <div style={{ fontFamily:"'Fredoka One',cursive", color:C.dark, fontSize:"1.2rem", marginBottom:8 }}>Hubo un error en el test</div>
+      <div style={{ fontSize:"0.9rem", color:C.inkM, textAlign:"center", lineHeight:1.6, maxWidth:320, marginBottom:14 }}>No te preocupes, tus datos siguen guardados. Puedes reintentar sin cerrar sesión.</div>
+      <Btn onClick={() => setScreen("reltest")}>Reintentar test</Btn>
+    </div>
+  );
+
+  if (screen === "reltest") return <><style>{STYLES}</style><SectionErrorBoundary fallback={relTestFallback}><RelTest user={user} onDone={finishTest}/></SectionErrorBoundary></>;
+  if (user && !user?.isGuest && user?.code && !testScores) return <><style>{STYLES}</style><SectionErrorBoundary fallback={relTestFallback}><RelTest user={user} onDone={finishTest}/></SectionErrorBoundary></>;
 
   return (
     <div style={{ fontFamily:"'Nunito',sans-serif", maxWidth:480, margin:"0 auto", minHeight:"100vh", background:C.sandL, position:"relative" }}>
