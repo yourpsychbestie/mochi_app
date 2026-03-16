@@ -1776,8 +1776,8 @@ function Login({ onLogin }) {
           setErr("Este correo ya tiene cuenta — verifica tu contraseña");
           setLoading(false); return;
         }
-      } else if (e.code === "missing-or-insufficient-permissions" || e.message?.includes("permissions")) {
-        setErr("Error de permisos — intenta de nuevo");
+      } else if (e.code === "permission-denied" || e.message?.includes("permission") || e.message?.includes("Missing")) {
+        setErr("Firebase bloqueó el acceso al código de pareja. Revisa Firestore Rules para la colección codes.");
       } else {
         setErr("Error al unirse: " + (e.message || e.code || "desconocido"));
       }
@@ -2417,6 +2417,7 @@ function Burbuja({ burbuja, onSave, user }) {
 function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento }) {
   const [editMode, setEditMode] = useState(false);
   const [editingName, setEditingName] = useState(false);
+  const [showStreakTools, setShowStreakTools] = useState(false);
   const [nameInput, setNameInput] = useState(user?.names || "");
   const [form, setForm] = useState({
     anniversary: coupleInfo.anniversary || "",
@@ -2436,6 +2437,41 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
   const totalEx = Object.values(exDone).reduce((a, b) => a + b, 0);
   const myEmail = user?.email || "guest";
   const myMsgs = messages.filter(m => m.senderEmail === myEmail).length;
+  const inboxMsgs = messages.filter(m => m.senderEmail !== myEmail).length;
+  const todayStr = new Date().toDateString();
+  const todayLoveMsg = messages.find(m => m.senderEmail !== myEmail && new Date(m.time).toDateString() === todayStr);
+  const todayLesson = DAILY_LESSONS[new Date().getDate() % DAILY_LESSONS.length];
+  const activityDateKeys = [
+    ...(gratitud || []).map(x => x?.createdAt?.toDate ? x.createdAt.toDate() : new Date(x?.date || Date.now())),
+    ...(momentos || []).map(x => x?.createdAt?.toDate ? x.createdAt.toDate() : new Date(x?.date || Date.now())),
+    ...(messages || []).filter(m => m.senderEmail === myEmail).map(m => new Date(m.time || Date.now())),
+  ]
+    .filter(d => d && !Number.isNaN(new Date(d).getTime()))
+    .map(d => new Date(d).toISOString().slice(0, 10));
+  const uniqueActivityDays = Array.from(new Set(activityDateKeys)).sort();
+  const streakDays = (() => {
+    if (!uniqueActivityDays.length) return 0;
+    let streak = 0;
+    let cursor = new Date();
+    while (true) {
+      const key = cursor.toISOString().slice(0, 10);
+      if (!uniqueActivityDays.includes(key)) break;
+      streak += 1;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+    if (streak > 0) return streak;
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    let yStreak = 0;
+    cursor = yesterday;
+    while (true) {
+      const key = cursor.toISOString().slice(0, 10);
+      if (!uniqueActivityDays.includes(key)) break;
+      yStreak += 1;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+    return yStreak;
+  })();
   const [connected, setConnected] = useState(false);
   useEffect(() => {
     if (user?.code && !user?.isGuest) {
@@ -2498,11 +2534,81 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
         ))}
       </div>
 
+      {/* 2. Mensajes de amor */}
+      <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:16, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
+        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:8 }}>💌 Mensajes de amor</div>
+        {todayLoveMsg ? (
+          <>
+            <div style={{ fontSize:"0.84rem", color:C.ink, lineHeight:1.55 }}>
+              "{todayLoveMsg.text}"
+            </div>
+            <div style={{ fontSize:"0.7rem", color:C.inkL, fontWeight:700, marginTop:6 }}>Mensaje de hoy ✓</div>
+          </>
+        ) : (
+          <div style={{ fontSize:"0.82rem", color:C.inkL, fontWeight:700 }}>
+            Aún no hay mensaje de hoy. Recibidos: {inboxMsgs}
+          </div>
+        )}
+      </div>
 
+      {/* 3. Consejo del día */}
+      <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:16, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
+        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:8 }}>📖 Consejo del día</div>
+        <div style={{ fontSize:"0.72rem", color:C.inkL, fontWeight:800, marginBottom:4 }}>{todayLesson?.tag || "Lección"}</div>
+        <div style={{ fontSize:"0.9rem", color:C.ink, fontWeight:800 }}>{todayLesson?.title || "Lección recomendada"}</div>
+      </div>
 
+      {/* 4. Gratitud y momentos */}
+      <div style={{ margin:"0 14px 12px" }}>
+        <BaulSection
+          gratitud={gratitud} momentos={momentos}
+          onAddGratitud={onAddGratitud} onAddMomento={onAddMomento}
+          user={user}
+        />
+      </div>
 
+      {/* 5. Racha */}
+      <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:16, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
+        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:8 }}>🔥 Racha</div>
+        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.4rem", color:C.olive }}>{streakDays} días seguidos</div>
+        <div style={{ fontSize:"0.78rem", color:C.inkL, fontWeight:700, marginTop:4 }}>Basado en mensajes, gratitud y momentos</div>
+      </div>
 
-      {/* Test Initial Scores */}
+      {/* 6. Logros */}
+      <div style={{ padding: "4px 14px 6px", fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark }}>Logros</div>
+      <div style={{ display: "flex", gap: 10, padding: "4px 14px 18px", overflowX: "auto" }}>
+        {ACHS.map(a => <div key={a.name} style={{ background: a.done ? C.cream : C.sandL, borderRadius: 16, padding: "14px 11px", textAlign: "center", minWidth: 88, flexShrink: 0, opacity: a.done ? 1 : 0.4, boxShadow: `0 2px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
+          <div style={{ fontSize: "1.7rem", marginBottom: 5 }}>{a.icon}</div>
+          <div style={{ fontSize: "0.7rem", fontWeight: 800, color: C.ink, lineHeight: 1.3 }}>{a.name}</div>
+        </div>)}
+      </div>
+
+      {/* 7. Recursos */}
+      <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:16, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
+        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.08rem", color:C.dark, marginBottom:10 }}>Recursos para su relación</div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8 }}>
+          {[
+            {icon:"📚", title:"Libros", sub:"Lecturas para crecer"},
+            {icon:"🎙", title:"Podcasts", sub:"Conversaciones útiles"},
+            {icon:"🎧", title:"Audios", sub:"Escuchen juntos"},
+          ].map((r) => (
+            <div key={r.title} style={{ background:C.sandL, border:`1.5px solid ${C.border}`, borderRadius:12, padding:"10px 8px", textAlign:"center" }}>
+              <div style={{ fontSize:"1.2rem", marginBottom:3 }}>{r.icon}</div>
+              <div style={{ fontSize:"0.75rem", fontWeight:800, color:C.dark }}>{r.title}</div>
+              <div style={{ fontSize:"0.64rem", color:C.inkL, marginTop:2 }}>{r.sub}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 10. Tests */}
+      <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:16, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
+        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:7 }}>🧪 Tests</div>
+        <div style={{ fontSize:"0.8rem", color:C.inkL, fontWeight:700, marginBottom:10 }}>Resueltos: {totalEx} ejercicios · Puedes repetir el test cuando quieran</div>
+        <Btn onClick={onRetakeTest} variant="sand" style={{ width:"100%", fontSize:"0.82rem" }}>Abrir tests de relación</Btn>
+      </div>
+
+      {/* 11. Diagnóstico */}
       {testScores && (() => {
         const avgs = TEST_AREAS.map(a => { const s = testScores[a.id]||{}; return {...a, avg:((s.a||3)+(s.b||3))/2}; });
         const total = (avgs.reduce((s,a)=>s+a.avg,0)/avgs.length).toFixed(1);
@@ -2525,24 +2631,6 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
           </div>
         );
       })()}
-
-            {/* ── BAÚL DE GRATITUD ── */}
-      <div style={{ margin:"0 14px 12px" }}>
-        <BaulSection
-          gratitud={gratitud} momentos={momentos}
-          onAddGratitud={onAddGratitud} onAddMomento={onAddMomento}
-          user={user}
-        />
-      </div>
-
-      {/* Achievements */}
-      <div style={{ padding: "4px 14px 6px", fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark }}>Logros</div>
-      <div style={{ display: "flex", gap: 10, padding: "4px 14px 18px", overflowX: "auto" }}>
-        {ACHS.map(a => <div key={a.name} style={{ background: a.done ? C.cream : C.sandL, borderRadius: 16, padding: "14px 11px", textAlign: "center", minWidth: 88, flexShrink: 0, opacity: a.done ? 1 : 0.4, boxShadow: `0 2px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
-          <div style={{ fontSize: "1.7rem", marginBottom: 5 }}>{a.icon}</div>
-          <div style={{ fontSize: "0.7rem", fontWeight: 800, color: C.ink, lineHeight: 1.3 }}>{a.name}</div>
-        </div>)}
-      </div>
 
       <div style={{ padding: "0 14px 20px" }}>
 
@@ -2592,6 +2680,29 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
               <Btn onClick={() => { setNameInput(user?.names || ""); setEditingName(true); }} variant="sand" style={{ fontSize: "0.8rem", padding: "7px 14px" }}>
                 Cambiar
               </Btn>
+            </div>
+          )}
+        </div>
+
+        <div style={{ background:C.white, borderRadius:16, padding:14, border:`1.5px solid ${C.border}`, marginBottom:12, boxShadow:`0 2px 0 ${C.border}` }}>
+          <Btn onClick={() => setShowStreakTools(v => !v)} variant="sand" style={{ width:"100%", fontSize:"0.82rem" }}>
+            {showStreakTools ? "Ocultar analíticas y preguntas" : "Mostrar analíticas y preguntas de racha"}
+          </Btn>
+          {showStreakTools && (
+            <div style={{ marginTop:10, background:C.sandL, border:`1.5px solid ${C.border}`, borderRadius:12, padding:12 }}>
+              <div style={{ fontSize:"0.72rem", fontWeight:800, color:C.inkL, marginBottom:8, letterSpacing:"0.6px" }}>ANALÍTICAS RÁPIDAS</div>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginBottom:10 }}>
+                {[["🌿", bamboo, "Bambú"], ["💌", myMsgs, "Mensajes"], ["🔥", streakDays, "Racha"]].map(([i,v,l]) => (
+                  <div key={l} style={{ background:C.white, borderRadius:10, border:`1px solid ${C.border}`, textAlign:"center", padding:"8px 6px" }}>
+                    <div style={{ fontSize:"0.95rem" }}>{i}</div>
+                    <div style={{ fontFamily:"'Fredoka One',cursive", color:C.dark, fontSize:"1rem" }}>{v}</div>
+                    <div style={{ fontSize:"0.64rem", color:C.inkL, fontWeight:700 }}>{l}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ fontSize:"0.72rem", fontWeight:800, color:C.inkL, marginBottom:6, letterSpacing:"0.6px" }}>PREGUNTAS SOBRE LA RACHA</div>
+              <div style={{ fontSize:"0.8rem", color:C.inkM, lineHeight:1.55 }}>• ¿Qué hábito pequeño podemos mantener diario para no romperla?</div>
+              <div style={{ fontSize:"0.8rem", color:C.inkM, lineHeight:1.55 }}>• ¿Cuál fue el día más difícil de la racha y cómo lo superamos juntos?</div>
             </div>
           )}
         </div>
