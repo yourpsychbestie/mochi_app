@@ -547,6 +547,7 @@ function CouplePandaSVG({ happy = false, size = 160 }) {
       {[70, 165].map((x, idx) => (
         <g key={x} transform={`rotate(${idx === 0 ? 4 : -4} ${x + 30} 90)`}>
           <ellipse cx={x + 30} cy="164" rx="34" ry="37" fill="#f7f1e8" />
+          <ellipse cx={x + 30} cy="126" rx="18" ry="16" fill="#f7f1e8" />
           <ellipse cx={x + 30} cy="88" rx="33" ry="29" fill="#f7f1e8" />
           <ellipse cx={x + 10} cy="67" rx="10" ry="11" fill="#243629" />
           <ellipse cx={x + 50} cy="67" rx="10" ry="11" fill="#243629" />
