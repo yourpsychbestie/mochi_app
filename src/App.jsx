@@ -1995,6 +1995,9 @@ function Login({ onLogin }) {
 
   const authErrMsg = (e, fallback) => {
     const code = e?.code || "";
+    if (code === "auth/invalid-email") {
+      return "Correo inválido. Revisa que esté bien escrito.";
+    }
     if (code === "auth/unauthorized-domain") {
       return "Dominio no autorizado en Firebase. Agrega tu dominio de Netlify en Authentication > Settings > Authorized domains.";
     }
@@ -2020,6 +2023,7 @@ function Login({ onLogin }) {
   };
 
   const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+  const normalizeEmail = (value) => String(value || "").trim().toLowerCase();
 
   const ensureAuthReady = async (firebaseUser) => {
     await firebaseUser?.getIdToken(true).catch(() => {});
@@ -2041,16 +2045,17 @@ function Login({ onLogin }) {
   };
 
   const doLogin = async () => {
-    if (!email || !pass) { setErr("Completa correo y contraseña"); return; }
+    const cleanEmail = normalizeEmail(email);
+    if (!cleanEmail || !pass) { setErr("Completa correo y contraseña"); return; }
     setLoading(true); setErr("");
     try {
-      const cred = await fbLogin(email, pass);
+      const cred = await fbLogin(cleanEmail, pass);
       let userData = await fbGetUser(cred.user.uid);
       // If no Firestore data found, still let them in with basic info
       if (!userData) {
-        userData = { email, names: email.split("@")[0] + " & ?", code: "", isOwner: true };
+        userData = { email: cleanEmail, names: cleanEmail.split("@")[0] + " & ?", code: "", isOwner: true };
       }
-      onLogin({ uid: cred.user.uid, email, ...userData, isGuest: false }, false);
+      onLogin({ uid: cred.user.uid, email: cleanEmail, ...userData, isGuest: false }, false);
     } catch(e) {
       const code = e.code || "";
       if (code === "auth/invalid-credential" || code === "auth/wrong-password") {
@@ -2068,18 +2073,19 @@ function Login({ onLogin }) {
 
   const doReg = async () => {
     const names = nameA.trim() + " & ?";
-    if (!nameA || !email || pass.length < 6) { setErr("Completa tu nombre, correo y contraseña (mín. 6 caracteres)"); return; }
+    const cleanEmail = normalizeEmail(email);
+    if (!nameA || !cleanEmail || pass.length < 6) { setErr("Completa tu nombre, correo y contraseña (mín. 6 caracteres)"); return; }
     setLoading(true); setErr("");
     try {
       const since = durN ? `Juntos ${durN} ${durU}` : "Juntos desde hoy";
-      const cred = await fbRegister(email, pass);
+      const cred = await fbRegister(cleanEmail, pass);
       const uid = cred.user.uid;
       await ensureAuthReady(cred.user);
       let finalCode = code;
       let created = false;
       for (let i = 0; i < 8; i += 1) {
         try {
-          await retryFirestore(() => fbCreateCodeOwner(finalCode, { ownerEmail: email, ownerUid: uid, names, since }));
+          await retryFirestore(() => fbCreateCodeOwner(finalCode, { ownerEmail: cleanEmail, ownerUid: uid, names, since }));
           created = true;
           break;
         } catch (e) {
@@ -2097,11 +2103,13 @@ function Login({ onLogin }) {
         return;
       }
       if (finalCode !== code) setCode(finalCode);
-      await retryFirestore(() => fbSaveUser(uid, { email, names, code: finalCode, since, isOwner: true }));
-      onLogin({ uid, email, names, code: finalCode, since, isOwner: true, isGuest: false }, true);
+      await retryFirestore(() => fbSaveUser(uid, { email: cleanEmail, names, code: finalCode, since, isOwner: true }));
+      onLogin({ uid, email: cleanEmail, names, code: finalCode, since, isOwner: true, isGuest: false }, true);
     } catch(e) {
       if (e.code === "auth/email-already-in-use") {
         setErr("Este correo ya tiene cuenta");
+      } else if (e.code === "auth/weak-password") {
+        setErr("La contraseña debe tener al menos 6 caracteres");
       } else {
         setErr(authErrMsg(e, "Error al crear cuenta"));
       }
@@ -2110,58 +2118,65 @@ function Login({ onLogin }) {
   };
 
   const doJoin = async () => {
-    if (!nameB || !pCode || !pEmail || pPass.length < 6) { setErr("Completa tu nombre, código, correo y contraseña"); return; }
+    const cleanCode = pCode.trim().toUpperCase();
+    const cleanPartnerEmail = normalizeEmail(pEmail);
+    const cleanPartnerName = nameB.trim() || "?";
+    if (!cleanPartnerName || !cleanCode || !cleanPartnerEmail || pPass.length < 6) { setErr("Completa tu nombre, código, correo y contraseña"); return; }
     setLoading(true); setErr("");
     let justCreated = false;
     try {
-      const cleanCode = pCode.trim().toUpperCase();
-      const cred = await fbRegister(pEmail, pPass);
+      const cred = await fbRegister(cleanPartnerEmail, pPass);
       justCreated = true;
       const uid = cred.user.uid;
       await ensureAuthReady(cred.user);
       const claim = await retryFirestore(() => fbClaimPartnerCode(cleanCode, {
-        partnerEmail: pEmail,
+        partnerEmail: cleanPartnerEmail,
         partnerUid: uid,
-        partnerName: nameB.trim() || "?",
+        partnerName: cleanPartnerName,
       }));
       const names = claim.names || "Nosotros";
       const since = claim.since || "Juntos desde hoy";
-      await retryFirestore(() => fbSaveUser(uid, { email: pEmail, names, code: cleanCode, since, isOwner: false }));
+      await retryFirestore(() => fbSaveUser(uid, { email: cleanPartnerEmail, names, code: cleanCode, since, isOwner: false }));
       // Also update owner's user record with new names
       if (claim.ownerUid) await retryFirestore(() => fbSaveUser(claim.ownerUid, { names }));
-      onLogin({ uid, email: pEmail, names, code: cleanCode, since, isOwner: false, isGuest: false }, true);
+      onLogin({ uid, email: cleanPartnerEmail, names, code: cleanCode, since, isOwner: false, isGuest: false }, true);
     } catch(e) {
       if (e.code === "auth/email-already-in-use") {
         // Account exists — try logging them in instead
         try {
-          const cred2 = await fbLogin(pEmail, pPass);
+          const cred2 = await fbLogin(cleanPartnerEmail, pPass);
           const uid2 = cred2.user.uid;
-          const cleanCode2 = pCode.trim().toUpperCase();
           await ensureAuthReady(cred2.user);
-          const claim2 = await retryFirestore(() => fbClaimPartnerCode(cleanCode2, {
-            partnerEmail: pEmail,
+          const claim2 = await retryFirestore(() => fbClaimPartnerCode(cleanCode, {
+            partnerEmail: cleanPartnerEmail,
             partnerUid: uid2,
-            partnerName: nameB.trim() || "?",
+            partnerName: cleanPartnerName,
           }));
           const names2 = claim2.names || "Nosotros";
-          await retryFirestore(() => fbSaveUser(uid2, { email: pEmail, names: names2, code: cleanCode2, isOwner: false }));
+          await retryFirestore(() => fbSaveUser(uid2, { email: cleanPartnerEmail, names: names2, code: cleanCode, isOwner: false }));
           if (claim2.ownerUid) await retryFirestore(() => fbSaveUser(claim2.ownerUid, { names: names2 }));
-          onLogin({ uid: uid2, email: pEmail, names: names2, code: cleanCode2, since: claim2.since || "Juntos", isOwner: false, isGuest: false }, false);
+          onLogin({ uid: uid2, email: cleanPartnerEmail, names: names2, code: cleanCode, since: claim2.since || "Juntos", isOwner: false, isGuest: false }, false);
           setLoading(false); return;
         } catch(e2) {
+          const code2 = e2?.code || "";
           const msg2 = String(e2?.message || "");
-          if (msg2.includes("CODE_ALREADY_LINKED")) {
+          if (code2 === "auth/invalid-credential" || code2 === "auth/wrong-password") {
+            setErr("Ese correo ya existe. Verifica la contraseña para vincularlo.");
+          } else if (msg2.includes("CODE_ALREADY_LINKED")) {
             setErr("Ese código ya está vinculado con otra cuenta de pareja.");
           } else if (msg2.includes("CODE_NOT_FOUND")) {
             setErr("Código no encontrado — revisa que esté bien escrito");
-          } else
-          if (isPermissionError(e2)) {
+          } else if (isPermissionError(e2)) {
             setErr("No se pudo vincular la cuenta con ese código por permisos de Firebase.");
           } else {
-            setErr("Este correo ya tiene cuenta — verifica tu contraseña");
+            setErr(authErrMsg(e2, "No se pudo iniciar y vincular esta cuenta. Revisa correo, contraseña y código."));
           }
           setLoading(false); return;
         }
+      } else if (e.code === "auth/invalid-email") {
+        setErr("Correo inválido. Revisa que esté bien escrito.");
+      } else if (e.code === "auth/weak-password") {
+        setErr("La contraseña debe tener al menos 6 caracteres");
       } else if (isPermissionError(e)) {
         if (justCreated) await fbDeleteCurrentUser().catch(() => {});
         setErr("Firebase bloqueó el acceso al código de pareja. Revisa Firestore Rules para la colección codes.");
