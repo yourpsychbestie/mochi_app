@@ -485,7 +485,7 @@ const BURBUJA_SECTIONS = [
     ]},
   {id:"economia",icon:"💰",title:"Economía & Dinero",sub:"Finanzas, gastos y metas económicas",itemBg:"#fef8e0",
     items:[
-      {id:"eco1",q:"¿Cómo van a manejar el dinero? ¿Juntos, separados o mixto?",phA:"Para mí lo ideal es...",phB:"Para mí lo ideal es...",note:"No hay respuesta correcta: cuentas separadas, conjunta, o ambas. Lo importante es acordarlo."},
+      {id:"eco1",q:"¿Cómo van a manejar el dinero? ¿Juntos, separados o mixto?",phA:"Para mí lo ideal es...",phB:"Para mí lo ideal es..."},
       {id:"eco2",q:"¿Cuánto es 'gasto grande' que requiere consultarse?",phA:"Para mí, más de...",phB:"Para mí, más de..."},
       {id:"eco3",q:"¿Qué metas económicas tienen juntos?",phA:"Una meta que quiero es...",phB:"Una meta que quiero es..."},
       {id:"eco4",q:"¿Cómo manejan las deudas o situaciones económicas difíciles?",phA:"En esos momentos yo...",phB:"En esos momentos yo..."},
@@ -493,7 +493,7 @@ const BURBUJA_SECTIONS = [
     ]},
   {id:"familia",icon:"🏠",title:"Familia & Crianza",sub:"Familias de origen, hijos y límites",itemBg:"#ffe8f0",
     items:[
-      {id:"fam1",q:"¿Cuánto espacio tiene la familia de origen en su relación?",phA:"Para mí, mi familia...",phB:"Para mí, mi familia...",note:"Las familias de origen pueden ser una gran fuente de amor o de tensión. Acuerden los límites juntos."},
+      {id:"fam1",q:"¿Cuánto espacio tiene la familia de origen en su relación?",phA:"Para mí, mi familia...",phB:"Para mí, mi familia..."},
       {id:"fam2",q:"¿Cómo manejan las opiniones o críticas de sus familias sobre la relación?",phA:"Cuando mi familia opina...",phB:"Cuando mi familia opina..."},
       {id:"fam3",q:"¿Quieren tener hijos? ¿Cuántos y cuándo?",phA:"Sobre los hijos yo pienso...",phB:"Sobre los hijos yo pienso..."},
       {id:"fam4",q:"¿Cómo quieren criar a sus hijos? ¿Qué valores son innegociables?",phA:"Para mí es esencial enseñar...",phB:"Para mí es esencial enseñar..."},
@@ -520,355 +520,71 @@ const LOVE_PROMPTS = [
   { icon:"💫", idea:"Cuando estás cerca siento " },
 ];
 
-const CONSEJOS_BASE = [
-  {
-    id: 1,
-    texto: "¡Expresa tu amor como un panda enamorado! Dále abrazos achuchables, besitos esquimales y muchos 'te quiero' todos los días. La ciencia dice que los panditas que se demuestran su amor con frecuencia son los más felices. ¡Llena tu relación de ternura y cariño!",
-    fijo: "Consejo del día"
-  },
-  {
-    id: 2,
-    texto: "¡Escucha a tu pareja con las orejitas bien atentas! Presta atención a sus pensamientos y sentimientos como si fueran las últimas hojitas de bambú del bosque. Los estudios pandísticos demuestran que cuando las parejitas de pandas se sienten escuchadas, su amor crece más que su barriguita después de un festín de brotes tiernos. ¡La comunicación es la clave para un amor de cuento!",
-    fijo: "Consejo del día"
-  },
-  {
-    id: 3,
-    texto: "¡Sé honesto y transparente como un panda de cristal! No le ocultes nada a tu pareja, ni siquiera las hojitas de bambú que te robaste para el postre. Las investigaciones panderas indican que las parejas sinceras y abiertas tienen un amor más fuerte que la rama más alta del árbol. ¡La confianza es el bambú que sostiene su amor!",
-    fijo: "Consejo del día"
-  },
-  {
-    id: 4,
-    texto: "¡Diviértanse juntos como pandas en un parque de juegos! Hagan actividades emocionantes y prueben cosas nuevas, como deslizarse por las ramas o hacer ángeles de hojas. Los estudios pandísticos sugieren que las parejitas que se divierten y exploran juntitas son las más felices y unidas. ¡Mantengan viva la chispa de la aventura!",
-    fijo: "Consejo del día"
-  },
-  {
-    id: 5,
-    texto: "¡Agradece hasta por las hojitas más pequeñas que tu pareja hace por ti! Cada vez que te traiga un brote tierno o te rasque la barriguita, dile 'gracias' con una sonrisa de panda. La investigación pandera muestra que las parejas que practican la gratitud se sienten más conectadas y apreciadas. ¡Un simple 'gracias' puede hacer que su amor brille más que el sol en un día de primavera!",
-    fijo: "Consejo del día"
-  },
-  {
-    id: 6,
-    texto: "¡Sé comprensivo y empático como un panda amoroso! Si tu pareja está pasando por un momento difícil, abrázala fuerte y dile que todo estará bien. Tu apoyo significa el mundo para ella, como un tronco de bambú en medio de la tormenta. ¡Sé el panda que tu pareja necesita!",
-    fijo: "Consejo del día"
-  },
-  {
-    id: 7,
-    texto: "¡Resuelvan los conflictos con la sabiduría de un panda anciano! No se peleen por quién se comió la última hoja de bambú. En vez de eso, hablen y encuentren una solución juntos. ¡Recuerden que son un equipo más fuerte que una manada de pandas!",
-    fijo: "Consejo del día"
-  },
-  {
-    id: 8,
-    texto: "¡Comunícate con tu pareja como si cada palabra fuera una hoja de bambú fresca! Habla de tus sentimientos y necesidades con un corazón abierto. La ciencia pandera dice que la comunicación honesta es el abono que hace crecer el amor. ¡Deja que tus palabras sean el viento que lleva sus corazones!",
-    fijo: "Consejo del día"
-  },
-  {
-    id: 9,
-    texto: "¡Demuestra tu afecto como un panda mimoso! Dale abrazos, besos y caricias a tu pareja todos los días. Un abrazo de panda puede alegrar hasta el día más nublado. La ciencia dice que el contacto físico es como el sol que nutre el amor y la intimidad. ¡Llena tu relación de ternura y calor!",
-    fijo: "Consejo del día"
-  },
-  {
-    id: 10,
-    texto: "¡Celebra los logros de tu pareja como si fueran una montaña de bambú recién descubierta! Aplaude sus éxitos y anímala en sus sueños. La ciencia pandera dice que cuando las parejas se apoyan mutuamente, su amor crece más fuerte que el árbol de bambú más alto. ¡Sean el viento que impulsa las alas del otro!",
-    fijo: "Consejo del día"
-  }
-];
-
-const CONSEJOS_CIENCIA_POOL = [
-  { accion: "Hagan un check-in emocional de 10 minutos", evidencia: "nombrar emociones reduce la reactividad y mejora la regulación" },
-  { accion: "Usen la frase 'entiendo que te sientas así' antes de responder", evidencia: "la validación disminuye defensividad" },
-  { accion: "Apliquen 20 segundos de abrazo consciente", evidencia: "el contacto cálido favorece oxitocina y seguridad" },
-  { accion: "Pregunten '¿qué necesitas hoy de mí?'", evidencia: "expresar necesidades mejora el ajuste diádico" },
-  { accion: "Cierren el día con una gratitud específica", evidencia: "la gratitud fortalece percepción de apoyo" },
-  { accion: "Practiquen escucha sin interrumpir por 3 minutos", evidencia: "la escucha activa aumenta conexión y confianza" },
-  { accion: "Transformen una crítica en petición concreta", evidencia: "pedidos claros reducen escalada de conflicto" },
-  { accion: "Programen una mini cita sin pantallas", evidencia: "tiempo de calidad protege satisfacción" },
-  { accion: "Reparen rápido tras un roce con una frase cariñosa", evidencia: "los intentos de reparación predicen estabilidad" },
-  { accion: "Compartan un recuerdo positivo de ustedes", evidencia: "la memoria positiva mejora resiliencia relacional" },
-  { accion: "Respiren juntos por 2 minutos antes de discutir", evidencia: "la co-regulación baja activación fisiológica" },
-  { accion: "Reconozcan el esfuerzo del otro, no solo el resultado", evidencia: "el reconocimiento nutre vínculo seguro" },
-  { accion: "Hagan una pregunta curiosa en vez de asumir", evidencia: "la curiosidad reduce sesgos negativos" },
-  { accion: "Definan un ritual de reconexión al volver a casa", evidencia: "los rituales fortalecen pertenencia" },
-  { accion: "Incluyan humor amable en días tensos", evidencia: "el humor prosocial amortigua estrés de pareja" },
-  { accion: "Acorden una pausa de 20 minutos si sube el tono", evidencia: "la pausa previene palabras hirientes" },
-  { accion: "Digan una admiración diaria sobre el carácter del otro", evidencia: "la admiración protege la relación a largo plazo" },
-  { accion: "Revisen finanzas sin culpas, con objetivos comunes", evidencia: "la colaboración económica reduce conflicto crónico" },
-  { accion: "Practiquen una disculpa completa: hecho, impacto y reparación", evidencia: "la responsabilidad restaura confianza" },
-  { accion: "Planeen una meta compartida de la semana", evidencia: "las metas comunes aumentan sentido de equipo" },
-];
-
-const CONSEJOS_EXTRA_80 = Array.from({ length: 80 }, (_, i) => {
-  const tip = CONSEJOS_CIENCIA_POOL[i % CONSEJOS_CIENCIA_POOL.length];
-  const apertura = [
-    "Panda tip terapéutico",
-    "Tip de conexión",
-    "Consejo validado",
-    "Mini hábito de amor",
-  ][i % 4];
-  const cierre = [
-    "Un pasito diario también cuenta.",
-    "Pequeño, constante y con ternura: así crece el amor.",
-    "Menos perfección, más presencia juntos.",
-    "Lo importante no es ganar, es acercarse.",
-  ][(i + 1) % 4];
-
-  return {
-    id: 11 + i,
-    texto: `${apertura} 🐼: ${tip.accion}. La evidencia en terapia de pareja muestra que ${tip.evidencia}. ${cierre}`,
-    fijo: "Consejo del día",
-  };
-});
-
-const CONSEJOS_DIARIOS = [...CONSEJOS_BASE, ...CONSEJOS_EXTRA_80];
-
-const hashSeed = (str) => {
-  let h = 0;
-  for (let i = 0; i < str.length; i += 1) h = (h * 31 + str.charCodeAt(i)) % 2147483647;
-  return Math.abs(h);
-};
-
+const hashSeed = (txt = "") => String(txt).split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
 const getDayNumberLocal = (date = new Date()) => {
-  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  return Math.floor(d.getTime() / 86400000);
+  const start = new Date(date.getFullYear(), 0, 0);
+  const diff = date - start;
+  return Math.floor(diff / 86400000);
 };
 
-// ═══════════════════════════════════════════════════════
-// COUPLE PANDA SVG — inspired by the uploaded images
-// ═══════════════════════════════════════════════════════
+const CONSEJOS_DIARIOS = [
+  { id: 1, texto: "Panda tip terapéutico 🐼: hagan una pregunta curiosa en vez de asumir." },
+  { id: 2, texto: "Nombrar emociones baja la intensidad del conflicto: digan 'me siento...' antes de discutir." },
+  { id: 3, texto: "Una reparación rápida (perdón, abrazo o broma suave) vale oro después de un roce." },
+  { id: 4, texto: "Cinco interacciones positivas por cada negativa fortalecen el vínculo." },
+  { id: 5, texto: "Validar no es estar de acuerdo: es reconocer la experiencia del otro." },
+  { id: 6, texto: "Agradezcan algo pequeño del día. Lo cotidiano también construye amor." },
+  { id: 7, texto: "Escucha activa: repite con tus palabras lo que entendiste antes de responder." },
+  { id: 8, texto: "Antes de corregir, conecta: una frase cálida abre mejor la conversación." },
+  { id: 9, texto: "Hagan micro-pausas cuando suba el tono: respirar 20 segundos ayuda." },
+  { id: 10, texto: "Elijan un ritual diario de conexión de 5 minutos sin pantallas." },
+];
 
 function CouplePandaSVG({ happy = false, size = 160 }) {
-  const s = size;
   return (
-    <svg viewBox="0 0 260 220" width={s} height={s * 0.86} style={{ display: "block" }}>
-      <defs>
-        <radialGradient id="bodyL" cx="45%" cy="35%" r="60%">
-          <stop offset="0%" stopColor="#fdf9f0"/>
-          <stop offset="100%" stopColor="#ede4d0"/>
-        </radialGradient>
-        <radialGradient id="bodyR" cx="55%" cy="35%" r="60%">
-          <stop offset="0%" stopColor="#fdf9f0"/>
-          <stop offset="100%" stopColor="#ede4d0"/>
-        </radialGradient>
-        <radialGradient id="patchL" cx="40%" cy="30%" r="65%">
-          <stop offset="0%" stopColor="#2d3d2d"/>
-          <stop offset="100%" stopColor="#1a261a"/>
-        </radialGradient>
-        <radialGradient id="patchR" cx="60%" cy="30%" r="65%">
-          <stop offset="0%" stopColor="#2d3d2d"/>
-          <stop offset="100%" stopColor="#1a261a"/>
-        </radialGradient>
-        <radialGradient id="tummy" cx="50%" cy="40%" r="55%">
-          <stop offset="0%" stopColor="#fefcf6"/>
-          <stop offset="100%" stopColor="#f5eede"/>
-        </radialGradient>
-        <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="#1a261a" floodOpacity="0.12"/>
-        </filter>
-        <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
-          <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#f8d0e8" floodOpacity="0.6"/>
-        </filter>
-      </defs>
-
-      <ellipse cx="82" cy="208" rx="45" ry="7.5" fill="#1a261a" opacity="0.08"/>
-      <ellipse cx="76" cy="168" rx="49" ry="41" fill="url(#bodyL)" filter="url(#softShadow)"/>
-      <ellipse cx="76" cy="172" rx="27" ry="29" fill="url(#tummy)" opacity="0.9"/>
-
-      <path d="M116 156 C126 148 138 146 145 150 C149 153 146 162 139 162"
-        fill="none" stroke="#1a261a" strokeWidth="18" strokeLinecap="round"/>
-      <path d="M116 156 C126 148 138 146 145 150 C149 153 146 162 139 162"
-        fill="none" stroke="#2d3d2d" strokeWidth="14" strokeLinecap="round"/>
-      <path d="M34 162 C26 170 23 180 27 188" fill="none" stroke="#1a261a" strokeWidth="16" strokeLinecap="round"/>
-      <path d="M34 162 C26 170 23 180 27 188" fill="none" stroke="#2d3d2d" strokeWidth="12.5" strokeLinecap="round"/>
-
-      <ellipse cx="57" cy="197" rx="22" ry="13" fill="#1a261a"/>
-      <ellipse cx="57" cy="195" rx="18" ry="10.5" fill="#2d3d2d"/>
-      <ellipse cx="98" cy="197" rx="22" ry="13" fill="#1a261a"/>
-      <ellipse cx="98" cy="195" rx="18" ry="10.5" fill="#2d3d2d"/>
-      <ellipse cx="57" cy="205" rx="12" ry="6.2" fill="#f0e8d8" opacity="0.6"/>
-      <ellipse cx="98" cy="205" rx="12" ry="6.2" fill="#f0e8d8" opacity="0.6"/>
-
-      <g transform="rotate(6, 76, 95)">
-        <ellipse cx="76" cy="88" rx="44" ry="42" fill="url(#bodyL)" filter="url(#softShadow)"/>
-
-        <circle cx="42" cy="54" r="16" fill="#1a261a"/>
-        <circle cx="42" cy="54" r="10" fill="#2d3d2d"/>
-        <circle cx="110" cy="54" r="16" fill="#1a261a"/>
-        <circle cx="110" cy="54" r="10" fill="#2d3d2d"/>
-        <circle cx="42" cy="54" r="6" fill="#d87888" opacity="0.25"/>
-        <circle cx="110" cy="54" r="6" fill="#d87888" opacity="0.25"/>
-
-        <ellipse cx="60" cy="85" rx="14" ry="12" fill="url(#patchL)" transform="rotate(-10 60 85)"/>
-        <ellipse cx="92" cy="85" rx="14" ry="12" fill="url(#patchR)" transform="rotate(10 92 85)"/>
-
-        {happy ? (
-          <>
-            <path d="M53 85 Q60 92 67 85" fill="none" stroke="#fdf9f0" strokeWidth="3" strokeLinecap="round"/>
-            <path d="M85 85 Q92 92 99 85" fill="none" stroke="#fdf9f0" strokeWidth="3" strokeLinecap="round"/>
-          </>
-        ) : (
-          <>
-            <ellipse cx="60" cy="86" rx="7.6" ry="6.5" fill="#fdf9f0"/>
-            <ellipse cx="92" cy="86" rx="7.6" ry="6.5" fill="#fdf9f0"/>
-            <ellipse cx="61" cy="87" rx="4.8" ry="4.2" fill="#1a1a2a"/>
-            <ellipse cx="93" cy="87" rx="4.8" ry="4.2" fill="#1a1a2a"/>
-            <circle cx="63" cy="85" r="1.6" fill="white"/>
-            <circle cx="95" cy="85" r="1.6" fill="white"/>
-          </>
-        )}
-
-        <ellipse cx="76" cy="97" rx="4" ry="2.8" fill="#1a261a" opacity="0.7"/>
-        {happy
-          ? <path d="M68 104 Q72 110 76 106 Q80 110 84 104" fill="none" stroke="#1a261a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-          : <path d="M70 103 Q73 107 76 104 Q79 107 82 103" fill="none" stroke="#1a261a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-        }
-
-        <ellipse cx="44" cy="98" rx="12.4" ry="7.6" fill="#f0907a" opacity={happy ? "0.45" : "0.18"}/>
-        <ellipse cx="108" cy="98" rx="12.4" ry="7.6" fill="#f0907a" opacity={happy ? "0.45" : "0.18"}/>
-
-        <g transform="translate(106, 46)">
-          {[0,60,120,180,240,300].map((a,i) => (
-            <ellipse key={i}
-              cx={Math.cos(a*Math.PI/180)*6} cy={Math.sin(a*Math.PI/180)*6}
-              rx="3.5" ry="2.8"
-              fill={["#f9b8cc","#f4d0e0","#fce8f0","#f9b8cc","#f4d0e0","#fce8f0"][i]}
-              transform={`rotate(${a})`} opacity="0.95"/>
-          ))}
-          <circle cx="0" cy="0" r="3" fill="#f8e870"/>
+    <svg viewBox="0 0 260 220" width={size} height={size * 0.846}>
+      <ellipse cx="130" cy="206" rx="88" ry="10" fill="#122015" opacity="0.16" />
+      {[70, 165].map((x, idx) => (
+        <g key={x} transform={`rotate(${idx === 0 ? 4 : -4} ${x + 30} 90)`}>
+          <ellipse cx={x + 30} cy="164" rx="34" ry="37" fill="#f7f1e8" />
+          <ellipse cx={x + 30} cy="88" rx="33" ry="29" fill="#f7f1e8" />
+          <ellipse cx={x + 10} cy="67" rx="10" ry="11" fill="#243629" />
+          <ellipse cx={x + 50} cy="67" rx="10" ry="11" fill="#243629" />
+          <ellipse cx={x + 17} cy="89" rx="11" ry="8" fill="#243629" />
+          <ellipse cx={x + 43} cy="89" rx="11" ry="8" fill="#243629" />
+          <ellipse cx={x + 17} cy="90" rx="4" ry="3" fill="#f7f1e8" />
+          <ellipse cx={x + 43} cy="90" rx="4" ry="3" fill="#f7f1e8" />
+          <ellipse cx={x + 30} cy="97" rx="4" ry="3" fill="#243629" />
+          <path d={`M${x + 24} 103 Q${x + 30} 108 ${x + 36} 103`} fill="none" stroke="#243629" strokeWidth="2" strokeLinecap="round"/>
+          <ellipse cx={x + 8} cy="168" rx="9" ry="15" fill="#243629" />
+          <ellipse cx={x + 52} cy="168" rx="9" ry="15" fill="#243629" />
+          <ellipse cx={x + 20} cy="202" rx="11" ry="7" fill="#243629" />
+          <ellipse cx={x + 41} cy="202" rx="11" ry="7" fill="#243629" />
         </g>
-      </g>
-
-      <ellipse cx="182" cy="208" rx="47" ry="7.5" fill="#1a261a" opacity="0.08"/>
-      <ellipse cx="176" cy="168" rx="51" ry="42" fill="url(#bodyR)" filter="url(#softShadow)"/>
-      <ellipse cx="176" cy="172" rx="28" ry="30" fill="url(#tummy)" opacity="0.9"/>
-
-      <path d="M134 156 C126 149 118 147 113 150 C109 153 112 162 118 162"
-        fill="none" stroke="#1a261a" strokeWidth="18" strokeLinecap="round"/>
-      <path d="M134 156 C126 149 118 147 113 150 C109 153 112 162 118 162"
-        fill="none" stroke="#2d3d2d" strokeWidth="14" strokeLinecap="round"/>
-      <path d="M222 162 C230 170 233 180 229 188" fill="none" stroke="#1a261a" strokeWidth="16" strokeLinecap="round"/>
-      <path d="M222 162 C230 170 233 180 229 188" fill="none" stroke="#2d3d2d" strokeWidth="12.5" strokeLinecap="round"/>
-
-      <ellipse cx="157" cy="197" rx="23" ry="13" fill="#1a261a"/>
-      <ellipse cx="157" cy="195" rx="19" ry="10.5" fill="#2d3d2d"/>
-      <ellipse cx="198" cy="197" rx="23" ry="13" fill="#1a261a"/>
-      <ellipse cx="198" cy="195" rx="19" ry="10.5" fill="#2d3d2d"/>
-      <ellipse cx="157" cy="205" rx="12.5" ry="6.2" fill="#f0e8d8" opacity="0.6"/>
-      <ellipse cx="198" cy="205" rx="12.5" ry="6.2" fill="#f0e8d8" opacity="0.6"/>
-
-      <g transform="rotate(-4, 176, 90)">
-        <ellipse cx="176" cy="88" rx="46" ry="44" fill="url(#bodyR)" filter="url(#softShadow)"/>
-
-        <circle cx="140" cy="52" r="17" fill="#1a261a"/>
-        <circle cx="140" cy="52" r="11" fill="#2d3d2d"/>
-        <circle cx="140" cy="52" r="6" fill="#d87888" opacity="0.25"/>
-
-        <circle cx="212" cy="52" r="17" fill="#1a261a"/>
-        <circle cx="212" cy="52" r="11" fill="#2d3d2d"/>
-        <circle cx="212" cy="52" r="6" fill="#d87888" opacity="0.25"/>
-
-        <ellipse cx="162" cy="87" rx="15" ry="12.5" fill="url(#patchL)" transform="rotate(-8 162 87)"/>
-        <ellipse cx="190" cy="87" rx="15" ry="12.5" fill="url(#patchR)" transform="rotate(8 190 87)"/>
-
-        {happy ? (
-          <>
-            <path d="M155 87 Q162 94 169 87" fill="none" stroke="#fdf9f0" strokeWidth="3" strokeLinecap="round"/>
-            <path d="M183 87 Q190 94 197 87" fill="none" stroke="#fdf9f0" strokeWidth="3" strokeLinecap="round"/>
-          </>
-        ) : (
-          <>
-            <ellipse cx="162" cy="88" rx="7.8" ry="6.6" fill="#fdf9f0"/>
-            <ellipse cx="190" cy="88" rx="7.8" ry="6.6" fill="#fdf9f0"/>
-            <ellipse cx="163" cy="89" rx="5" ry="4.25" fill="#1a1a2a"/>
-            <ellipse cx="191" cy="89" rx="5" ry="4.25" fill="#1a1a2a"/>
-            <circle cx="165" cy="87" r="1.6" fill="white"/>
-            <circle cx="193" cy="87" r="1.6" fill="white"/>
-          </>
-        )}
-
-        <ellipse cx="176" cy="100" rx="4" ry="2.8" fill="#1a261a" opacity="0.7"/>
-        {happy
-          ? <path d="M168 107 Q172 113 176 109 Q180 113 184 107" fill="none" stroke="#1a261a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-          : <path d="M170 106 Q173 110 176 107 Q179 110 182 106" fill="none" stroke="#1a261a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-        }
-
-        <ellipse cx="140" cy="102" rx="13" ry="7.8" fill="#f0907a" opacity={happy ? "0.45" : "0.18"}/>
-        <ellipse cx="212" cy="102" rx="13" ry="7.8" fill="#f0907a" opacity={happy ? "0.45" : "0.18"}/>
-
-        <path d="M172 40 C170 30 168 22 172 16" fill="none" stroke="#1a261a" strokeWidth="4" strokeLinecap="round"/>
-        <path d="M177 41 C179 31 182 24 178 18" fill="none" stroke="#1a261a" strokeWidth="3" strokeLinecap="round"/>
-        <path d="M167 41 C163 33 161 27 163 21" fill="none" stroke="#1a261a" strokeWidth="2.5" strokeLinecap="round"/>
-      </g>
-
-      {happy && (
-        <>
-          <g filter="url(#softGlow)">
-            <path d="M122 100 C122 95 126 93 130 97 C134 93 138 95 138 100 C138 106 130 115 130 115 C130 115 122 106 122 100Z"
-              fill="#e8607a" opacity="0.95"/>
-          </g>
-          <path d="M106 78 C106 75 108 74 110 76 C112 74 114 75 114 78 C114 81 110 85 110 85 C110 85 106 81 106 78Z"
-            fill="#f4a0b8" opacity="0.7"/>
-          <path d="M144 72 C144 70 145.5 69 147 71 C148.5 69 150 70 150 72 C150 74.5 147 78 147 78 C147 78 144 74.5 144 72Z"
-            fill="#f4a0b8" opacity="0.6"/>
-          <path d="M12 38 L14 44 L20 44 L15 48 L17 54 L12 50 L7 54 L9 48 L4 44 L10 44Z" fill="#d4a843" opacity="0.85"/>
-          <path d="M240 32 L241.5 37 L247 37 L242.5 40.5 L244 46 L240 43 L236 46 L237.5 40.5 L233 37 L238.5 37Z" fill="#d4a843" opacity="0.8"/>
-          <circle cx="130" cy="142" r="3" fill="#f8e0a0" opacity="0.75"/>
-          <circle cx="108" cy="130" r="2" fill="#f9b8cc" opacity="0.7"/>
-          <circle cx="152" cy="128" r="2" fill="#f9b8cc" opacity="0.65"/>
-        </>
-      )}
-
-      <circle cx="20" cy="55" r="1.5" fill="#f8e8c0" opacity="0.5"/>
-      <circle cx="240" cy="60" r="1.5" fill="#f8e8c0" opacity="0.5"/>
+      ))}
+      <path d="M123 108 C123 104 126 101 130 101 C134 101 137 104 137 108 C137 113 130 119 130 119 C130 119 123 113 123 108Z" fill={happy ? "#e8607a" : "#d08092"} />
     </svg>
   );
 }
 
-// Small side-view single panda for login
 function SinglePandaSVG({ size = 100 }) {
   return (
-    <svg viewBox="0 0 160 200" width={size} height={size * 1.22} style={{ display: "block" }}>
-      <defs>
-        <radialGradient id="sb" cx="45%" cy="35%" r="60%">
-          <stop offset="0%" stopColor="#fdf9f0"/><stop offset="100%" stopColor="#ede4d0"/>
-        </radialGradient>
-      </defs>
-      <ellipse cx="80" cy="196" rx="40" ry="6.2" fill="#1a261a" opacity="0.1"/>
-      <ellipse cx="78" cy="160" rx="52" ry="40" fill="url(#sb)"/>
-      <ellipse cx="78" cy="164" rx="26" ry="29" fill="#fefcf6" opacity="0.85"/>
-      <ellipse cx="57" cy="191" rx="20" ry="11" fill="#1a261a"/>
-      <ellipse cx="99" cy="191" rx="20" ry="11" fill="#1a261a"/>
-      <ellipse cx="57" cy="197" rx="12.5" ry="5.2" fill="#f0e8d8" opacity="0.5"/>
-      <ellipse cx="99" cy="197" rx="12.5" ry="5.2" fill="#f0e8d8" opacity="0.5"/>
-      <path d="M34 156 C26 164 22 175 26 183" fill="none" stroke="#1a261a" strokeWidth="15" strokeLinecap="round"/>
-      <path d="M34 156 C26 164 22 175 26 183" fill="none" stroke="#2d3d2d" strokeWidth="11.5" strokeLinecap="round"/>
-      <path d="M120 156 C129 164 133 175 129 183" fill="none" stroke="#1a261a" strokeWidth="15" strokeLinecap="round"/>
-      <path d="M120 156 C129 164 133 175 129 183" fill="none" stroke="#2d3d2d" strokeWidth="11.5" strokeLinecap="round"/>
-      <circle cx="80" cy="76" r="50" fill="url(#sb)"/>
-      <circle cx="42" cy="38" r="22" fill="#1a261a"/>
-      <circle cx="42" cy="38" r="14" fill="#2d3d2d"/>
-      <circle cx="42" cy="38" r="7" fill="#3d4d3d" opacity="0.4"/>
-      <circle cx="118" cy="38" r="22" fill="#1a261a"/>
-      <circle cx="118" cy="38" r="14" fill="#2d3d2d"/>
-      <circle cx="118" cy="38" r="7" fill="#3d4d3d" opacity="0.4"/>
-      <ellipse cx="62" cy="76" rx="20" ry="18.5" fill="#1a261a" transform="rotate(-8 62 76)"/>
-      <ellipse cx="98" cy="76" rx="20" ry="18.5" fill="#1a261a" transform="rotate(8 98 76)"/>
-      <circle cx="62" cy="77" r="11.5" fill="#fdf9f0"/>
-      <circle cx="98" cy="77" r="11.5" fill="#fdf9f0"/>
-      <circle cx="64" cy="78" r="7.3" fill="#1a1a2a"/>
-      <circle cx="100" cy="78" r="7.3" fill="#1a1a2a"/>
-      <circle cx="66" cy="75" r="2.8" fill="white"/>
-      <circle cx="102" cy="75" r="2.8" fill="white"/>
-      <path d="M76 94 C76 91 78 90 80 92 C82 90 84 91 84 94 C84 97 80 100 80 100 C80 100 76 97 76 94Z" fill="#1a261a" opacity="0.85"/>
-      <path d="M72 103 Q80 112 88 103" fill="none" stroke="#1a261a" strokeWidth="2.5" strokeLinecap="round"/>
-      <ellipse cx="40" cy="92" rx="16.2" ry="9.2" fill="#f0907a" opacity="0.34"/>
-      <ellipse cx="120" cy="92" rx="16.2" ry="9.2" fill="#f0907a" opacity="0.34"/>
-      <g transform="translate(112, 42)">
-        {[0,72,144,216,288].map((a,i) => (
-          <ellipse key={i} cx={Math.cos(a*Math.PI/180)*6} cy={Math.sin(a*Math.PI/180)*6}
-            rx="4" ry="2.5" fill={["#ffb8cc","#f4d0e0","#fce8f0","#ffb8cc","#f4d0e0"][i]}
-            transform={`rotate(${a})`} opacity="0.9"/>
-        ))}
-        <circle cx="0" cy="0" r="3.5" fill="#fff8d0"/>
-      </g>
+    <svg viewBox="0 0 140 150" width={size} height={size * 1.07}>
+      <ellipse cx="70" cy="142" rx="42" ry="6" fill="#122015" opacity="0.16" />
+      <ellipse cx="70" cy="112" rx="32" ry="34" fill="#f7f1e8" />
+      <ellipse cx="70" cy="58" rx="32" ry="28" fill="#f7f1e8" />
+      <ellipse cx="49" cy="38" rx="10" ry="10" fill="#243629" />
+      <ellipse cx="91" cy="38" rx="10" ry="10" fill="#243629" />
+      <ellipse cx="56" cy="60" rx="11" ry="8" fill="#243629" />
+      <ellipse cx="84" cy="60" rx="11" ry="8" fill="#243629" />
+      <ellipse cx="56" cy="60" rx="4" ry="3" fill="#f7f1e8" />
+      <ellipse cx="84" cy="60" rx="4" ry="3" fill="#f7f1e8" />
+      <ellipse cx="70" cy="68" rx="4" ry="3" fill="#243629" />
+      <path d="M63 74 Q70 79 77 74" fill="none" stroke="#243629" strokeWidth="2" strokeLinecap="round" />
+      <ellipse cx="45" cy="113" rx="9" ry="14" fill="#243629" />
+      <ellipse cx="95" cy="113" rx="9" ry="14" fill="#243629" />
+      <ellipse cx="59" cy="143" rx="10" ry="6" fill="#243629" />
+      <ellipse cx="81" cy="143" rx="10" ry="6" fill="#243629" />
     </svg>
   );
 }
@@ -2103,9 +1819,11 @@ function Login({ onLogin }) {
     const cleanEmail = normalizeEmail(email);
     if (!nameA || !cleanEmail || pass.length < 6) { setErr("Completa tu nombre, correo y contraseña (mín. 6 caracteres)"); return; }
     setLoading(true); setErr("");
+    let createdAuthUser = false;
     try {
       const since = durN ? `Juntos ${durN} ${durU}` : "Juntos desde hoy";
       const cred = await fbRegister(cleanEmail, pass);
+      createdAuthUser = true;
       const uid = cred.user.uid;
       await ensureAuthReady(cred.user);
       let finalCode = code;
@@ -2137,7 +1855,11 @@ function Login({ onLogin }) {
         setErr("Este correo ya tiene cuenta");
       } else if (e.code === "auth/weak-password") {
         setErr("La contraseña debe tener al menos 6 caracteres");
+      } else if (isPermissionError(e)) {
+        if (createdAuthUser) await fbDeleteCurrentUser().catch(() => {});
+        setErr("No se pudo crear el código de pareja por permisos de Firebase. Revisa Firestore Rules de codes.");
       } else {
+        if (createdAuthUser) await fbDeleteCurrentUser().catch(() => {});
         setErr(authErrMsg(e, "Error al crear cuenta"));
       }
     }
@@ -3126,11 +2848,13 @@ function ConsejoDelDiaSection({ user }) {
   const ownerKey = user?.code || user?.email || "guest";
   const favKey = `mochi_consejos_fav_${ownerKey}`;
   const [offset, setOffset] = useState(0);
+  const [open, setOpen] = useState(false);
   const [favs, setFavs] = useState(() => ls.get(favKey) || []);
   const dayKey = getDateKeyLocal();
 
   useEffect(() => {
     setOffset(0);
+    setOpen(false);
   }, [dayKey, ownerKey]);
 
   useEffect(() => {
@@ -3148,30 +2872,57 @@ function ConsejoDelDiaSection({ user }) {
   };
 
   return (
-    <div style={{ margin: "0 14px 12px", background: C.white, borderRadius: 18, padding: 16, boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
-        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark }}>Consejo del Día</div>
-        <div style={{ background: C.cream, borderRadius: 999, padding: "5px 10px", fontSize: "0.68rem", fontWeight: 800, color: C.inkL }}>
-          #{consejo.id}
+    <div style={{ margin: "0 14px 12px" }}>
+      <button
+        onClick={() => setOpen(v => !v)}
+        style={{
+          width: "100%",
+          background: C.white,
+          color: C.dark,
+          border: `1.5px solid ${C.border}`,
+          borderRadius: 14,
+          padding: "12px 14px",
+          fontFamily: "'Fredoka One',cursive",
+          fontSize: "0.98rem",
+          cursor: "pointer",
+          boxShadow: `0 3px 0 ${C.border}`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 8,
+        }}
+      >
+        <span>Consejo del Día 🐼</span>
+        <span style={{ fontSize: "0.86rem", color: C.inkL }}>{open ? "Cerrar" : "Abrir"}</span>
+      </button>
+
+      {open && (
+        <div style={{ marginTop: 10, background: C.white, borderRadius: 18, padding: 16, boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
+            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark }}>Consejo del Día</div>
+            <div style={{ background: C.cream, borderRadius: 999, padding: "5px 10px", fontSize: "0.68rem", fontWeight: 800, color: C.inkL }}>
+              #{consejo.id}
+            </div>
+          </div>
+
+          <div style={{ background: "linear-gradient(130deg, #fff7e8 0%, #f3ffe9 100%)", borderRadius: 12, padding: "11px 12px", border: `1px solid ${C.border}`, marginBottom: 10 }}>
+            <div style={{ fontSize: "0.88rem", color: C.ink, lineHeight: 1.7, fontWeight: 700 }}>{consejo.texto}</div>
+          </div>
+
+          <div style={{ display: "flex", gap: 8 }}>
+            <Btn onClick={() => setOffset(v => (v + 1) % CONSEJOS_DIARIOS.length)} variant="sand" style={{ flex: 1, padding: "10px 12px", fontSize: "0.82rem" }}>
+              Ver otro consejo
+            </Btn>
+            <Btn onClick={toggleFav} variant={isFav ? "olive" : "cream"} style={{ flex: 1, padding: "10px 12px", fontSize: "0.82rem" }}>
+              {isFav ? "Guardado ✓" : "Guardar favorito"}
+            </Btn>
+          </div>
+
+          <div style={{ marginTop: 8, fontSize: "0.68rem", color: C.inkL, fontWeight: 700 }}>
+            Favoritos guardados: {favs.length}
+          </div>
         </div>
-      </div>
-
-      <div style={{ background: "linear-gradient(130deg, #fff7e8 0%, #f3ffe9 100%)", borderRadius: 12, padding: "11px 12px", border: `1px solid ${C.border}`, marginBottom: 10 }}>
-        <div style={{ fontSize: "0.88rem", color: C.ink, lineHeight: 1.7, fontWeight: 700 }}>{consejo.texto}</div>
-      </div>
-
-      <div style={{ display: "flex", gap: 8 }}>
-        <Btn onClick={() => setOffset(v => (v + 1) % CONSEJOS_DIARIOS.length)} variant="sand" style={{ flex: 1, padding: "10px 12px", fontSize: "0.82rem" }}>
-          Ver otro consejo
-        </Btn>
-        <Btn onClick={toggleFav} variant={isFav ? "olive" : "cream"} style={{ flex: 1, padding: "10px 12px", fontSize: "0.82rem" }}>
-          {isFav ? "Guardado ✓" : "Guardar favorito"}
-        </Btn>
-      </div>
-
-      <div style={{ marginTop: 8, fontSize: "0.68rem", color: C.inkL, fontWeight: 700 }}>
-        Favoritos guardados: {favs.length}
-      </div>
+      )}
     </div>
   );
 }
@@ -4218,6 +3969,7 @@ export default function App() {
   const happyTimer = useRef(null);
   const screenRef = useRef("login");
   const streakAnalytics = useMemo(() => computeStreakAnalytics(streakInteractions), [streakInteractions]);
+  const makeCode = () => "MO" + Math.random().toString(36).slice(2, 6).toUpperCase();
 
   const saveKey = u => u?.email ? "mochi_prog_" + u.email : null;
   const toast = msg => { setToastMsg(msg); setTimeout(() => setToastMsg(null), 3000); };
@@ -4268,13 +4020,50 @@ export default function App() {
           ...resolvedUser,
           code: found.code,
           names: resolvedUser.names || found.names || resolvedUser.names,
-          since: resolvedUser.since || found.since || resolvedUser.since,
+          since: resolvedUser.since || found.since || "Juntos desde hoy",
         };
         await fbSaveUser(resolvedUser.uid, {
           code: found.code,
           names: resolvedUser.names,
           since: resolvedUser.since,
         }).catch(() => {});
+      } else if (resolvedUser?.isOwner !== false) {
+        const baseName = String(resolvedUser?.email || "nosotros").split("@")[0] || "Nosotros";
+        const names = resolvedUser.names || `${baseName} & ?`;
+        const since = resolvedUser.since || "Juntos desde hoy";
+        let provisionedCode = null;
+
+        for (let i = 0; i < 8; i += 1) {
+          const candidate = makeCode();
+          try {
+            await fbCreateCodeOwner(candidate, {
+              ownerEmail: resolvedUser.email || "",
+              ownerUid: resolvedUser.uid,
+              names,
+              since,
+            });
+            provisionedCode = candidate;
+            break;
+          } catch (e) {
+            if (!String(e?.message || "").includes("CODE_TAKEN")) break;
+          }
+        }
+
+        if (provisionedCode) {
+          resolvedUser = {
+            ...resolvedUser,
+            code: provisionedCode,
+            names,
+            since,
+            isOwner: true,
+          };
+          await fbSaveUser(resolvedUser.uid, {
+            code: provisionedCode,
+            names,
+            since,
+            isOwner: true,
+          }).catch(() => {});
+        }
       }
     }
 
