@@ -540,57 +540,121 @@ const CONSEJOS_DIARIOS = [
   { id: 10, texto: "Elijan un ritual diario de conexión de 5 minutos sin pantallas." },
 ];
 
-function CouplePandaSVG({ happy = false, size = 160, pairOffset = 0 }) {
-  const leftCx = 76 - pairOffset / 2;
-  const rightCx = 176 + pairOffset / 2;
+function CouplePandaSVG({ happy = false, size = 160 }) {
+  const s = size;
   return (
-    <svg viewBox="0 0 260 220" width={size} height={size * 0.846}>
-      <ellipse cx="130" cy="206" rx="88" ry="10" fill="#122015" opacity="0.16" />
-      {[leftCx, rightCx].map((cx, idx) => (
-        <g key={cx} transform={`rotate(${idx === 0 ? 4 : -4} ${cx} 94)`}>
-          <ellipse cx={cx} cy="154" rx="34" ry="37" fill="#f1eadc" stroke="#d8cfbf" strokeWidth="1.1" />
-          <ellipse cx={cx} cy="121" rx="19" ry="17" fill="#f1eadc" stroke="#d8cfbf" strokeWidth="1" />
-          <ellipse cx={cx} cy="88" rx="33" ry="29" fill="#f1eadc" stroke="#d8cfbf" strokeWidth="1.1" />
-          <ellipse cx={cx} cy="158" rx="18" ry="22" fill="#faf6ef" opacity="0.62" />
-          <ellipse cx={cx - 20} cy="67" rx="10" ry="11" fill="#243629" />
-          <ellipse cx={cx + 20} cy="67" rx="10" ry="11" fill="#243629" />
-          <ellipse cx={cx - 13} cy="89" rx="11" ry="8" fill="#243629" />
-          <ellipse cx={cx + 13} cy="89" rx="11" ry="8" fill="#243629" />
-          <ellipse cx={cx - 13} cy="90" rx="4" ry="3" fill="#f7f1e8" />
-          <ellipse cx={cx + 13} cy="90" rx="4" ry="3" fill="#f7f1e8" />
-          <ellipse cx={cx} cy="97" rx="4" ry="3" fill="#243629" />
-          <path d={`M${cx - 6} 103 Q${cx} 108 ${cx + 6} 103`} fill="none" stroke="#243629" strokeWidth="2" strokeLinecap="round"/>
-          <ellipse cx={cx - 22} cy="165" rx="9" ry="15" fill="#243629" />
-          <ellipse cx={cx + 22} cy="165" rx="9" ry="15" fill="#243629" />
-          <ellipse cx={cx - 10} cy="200" rx="11" ry="7" fill="#243629" />
-          <ellipse cx={cx + 11} cy="200" rx="11" ry="7" fill="#243629" />
-        </g>
-      ))}
-      <path d="M123 108 C123 104 126 101 130 101 C134 101 137 104 137 108 C137 113 130 119 130 119 C130 119 123 113 123 108Z" fill={happy ? "#e8607a" : "#d08092"} />
+    <svg viewBox="0 0 260 220" width={s} height={s * 0.846} style={{ display: "block" }}>
+      <defs>
+        <radialGradient id="bodyL" cx="45%" cy="35%" r="60%"><stop offset="0%" stopColor="#fdf9f0"/><stop offset="100%" stopColor="#ede4d0"/></radialGradient>
+        <radialGradient id="bodyR" cx="55%" cy="35%" r="60%"><stop offset="0%" stopColor="#fdf9f0"/><stop offset="100%" stopColor="#ede4d0"/></radialGradient>
+        <radialGradient id="patchL" cx="40%" cy="30%" r="65%"><stop offset="0%" stopColor="#2d3d2d"/><stop offset="100%" stopColor="#1a261a"/></radialGradient>
+        <radialGradient id="patchR" cx="60%" cy="30%" r="65%"><stop offset="0%" stopColor="#2d3d2d"/><stop offset="100%" stopColor="#1a261a"/></radialGradient>
+        <radialGradient id="tummy" cx="50%" cy="40%" r="55%"><stop offset="0%" stopColor="#fefcf6"/><stop offset="100%" stopColor="#f5eede"/></radialGradient>
+        <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="#1a261a" floodOpacity="0.12"/></filter>
+        <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#f8d0e8" floodOpacity="0.6"/></filter>
+      </defs>
+
+      <ellipse cx="82" cy="208" rx="42" ry="7" fill="#1a261a" opacity="0.08"/>
+      <path d="M52 205 C35 205 28 185 30 165 C32 145 42 132 62 128 C72 126 82 126 92 128 C112 132 122 145 122 165 C124 185 117 205 100 205 Z" fill="url(#bodyL)" filter="url(#softShadow)"/>
+      <ellipse cx="76" cy="168" rx="18" ry="22" fill="url(#tummy)" opacity="0.9"/>
+      <path d="M116 150 C128 142 142 140 150 145 C155 148 152 158 145 158 C138 158 130 155 120 158" fill="none" stroke="#1a261a" strokeWidth="16" strokeLinecap="round"/>
+      <path d="M116 150 C128 142 142 140 150 145 C155 148 152 158 145 158" fill="none" stroke="#2d3d2d" strokeWidth="13" strokeLinecap="round"/>
+      <path d="M38 158 C28 165 24 178 28 188" fill="none" stroke="#1a261a" strokeWidth="15" strokeLinecap="round"/>
+      <path d="M38 158 C28 165 24 178 28 188" fill="none" stroke="#2d3d2d" strokeWidth="12" strokeLinecap="round"/>
+      <ellipse cx="57" cy="198" rx="20" ry="12" fill="#1a261a"/>
+      <ellipse cx="57" cy="196" rx="17" ry="10" fill="#2d3d2d"/>
+      <ellipse cx="98" cy="198" rx="20" ry="12" fill="#1a261a"/>
+      <ellipse cx="98" cy="196" rx="17" ry="10" fill="#2d3d2d"/>
+      <ellipse cx="57" cy="205" rx="11" ry="6" fill="#f0e8d8" opacity="0.6"/>
+      <ellipse cx="98" cy="205" rx="11" ry="6" fill="#f0e8d8" opacity="0.6"/>
+
+      <g transform="rotate(6, 76, 95)">
+        <ellipse cx="76" cy="88" rx="44" ry="42" fill="url(#bodyL)" filter="url(#softShadow)"/>
+        <circle cx="42" cy="54" r="16" fill="#1a261a"/>
+        <circle cx="42" cy="54" r="10" fill="#2d3d2d"/>
+        <circle cx="110" cy="54" r="16" fill="#1a261a"/>
+        <circle cx="110" cy="54" r="10" fill="#2d3d2d"/>
+        <circle cx="42" cy="54" r="6" fill="#d87888" opacity="0.25"/>
+        <circle cx="110" cy="54" r="6" fill="#d87888" opacity="0.25"/>
+        <ellipse cx="60" cy="85" rx="13" ry="11" fill="url(#patchL)" transform="rotate(-10 60 85)"/>
+        <ellipse cx="92" cy="85" rx="13" ry="11" fill="url(#patchR)" transform="rotate(10 92 85)"/>
+        {happy ? <><path d="M53 85 Q60 92 67 85" fill="none" stroke="#fdf9f0" strokeWidth="3" strokeLinecap="round"/><path d="M85 85 Q92 92 99 85" fill="none" stroke="#fdf9f0" strokeWidth="3" strokeLinecap="round"/></> : <><ellipse cx="60" cy="86" rx="7" ry="6" fill="#fdf9f0"/><ellipse cx="92" cy="86" rx="7" ry="6" fill="#fdf9f0"/><ellipse cx="61" cy="87" rx="4.5" ry="4" fill="#1a1a2a"/><ellipse cx="93" cy="87" rx="4.5" ry="4" fill="#1a1a2a"/><circle cx="63" cy="85" r="1.6" fill="white"/><circle cx="95" cy="85" r="1.6" fill="white"/></>}
+        <ellipse cx="76" cy="97" rx="4" ry="2.8" fill="#1a261a" opacity="0.7"/>
+        {happy ? <path d="M68 104 Q72 110 76 106 Q80 110 84 104" fill="none" stroke="#1a261a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/> : <path d="M70 103 Q73 107 76 104 Q79 107 82 103" fill="none" stroke="#1a261a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>}
+        <ellipse cx="44" cy="98" rx="10" ry="6" fill="#f0907a" opacity={happy ? "0.4" : "0.15"}/>
+        <ellipse cx="108" cy="98" rx="10" ry="6" fill="#f0907a" opacity={happy ? "0.4" : "0.15"}/>
+      </g>
+
+      <ellipse cx="182" cy="208" rx="44" ry="7" fill="#1a261a" opacity="0.08"/>
+      <path d="M148 205 C131 205 124 185 126 165 C128 144 138 131 160 128 C170 126 182 126 194 128 C214 131 224 145 224 165 C226 185 219 205 202 205 Z" fill="url(#bodyR)" filter="url(#softShadow)"/>
+      <ellipse cx="176" cy="168" rx="19" ry="23" fill="url(#tummy)" opacity="0.9"/>
+      <path d="M134 148 C126 140 118 138 112 142 C108 145 110 155 116 156" fill="none" stroke="#1a261a" strokeWidth="16" strokeLinecap="round"/>
+      <path d="M134 148 C126 140 118 138 112 142 C108 145 110 155 116 156" fill="none" stroke="#2d3d2d" strokeWidth="13" strokeLinecap="round"/>
+      <path d="M218 158 C228 165 232 178 228 188" fill="none" stroke="#1a261a" strokeWidth="15" strokeLinecap="round"/>
+      <path d="M218 158 C228 165 232 178 228 188" fill="none" stroke="#2d3d2d" strokeWidth="12" strokeLinecap="round"/>
+      <ellipse cx="157" cy="198" rx="21" ry="12" fill="#1a261a"/>
+      <ellipse cx="157" cy="196" rx="18" ry="10" fill="#2d3d2d"/>
+      <ellipse cx="198" cy="198" rx="21" ry="12" fill="#1a261a"/>
+      <ellipse cx="198" cy="196" rx="18" ry="10" fill="#2d3d2d"/>
+      <ellipse cx="157" cy="205" rx="12" ry="6" fill="#f0e8d8" opacity="0.6"/>
+      <ellipse cx="198" cy="205" rx="12" ry="6" fill="#f0e8d8" opacity="0.6"/>
+
+      <g transform="rotate(-4, 176, 90)">
+        <ellipse cx="176" cy="88" rx="46" ry="44" fill="url(#bodyR)" filter="url(#softShadow)"/>
+        <circle cx="140" cy="52" r="17" fill="#1a261a"/>
+        <circle cx="140" cy="52" r="11" fill="#2d3d2d"/>
+        <circle cx="212" cy="52" r="17" fill="#1a261a"/>
+        <circle cx="212" cy="52" r="11" fill="#2d3d2d"/>
+        <ellipse cx="162" cy="87" rx="14" ry="12" fill="url(#patchL)" transform="rotate(-8 162 87)"/>
+        <ellipse cx="190" cy="87" rx="14" ry="12" fill="url(#patchR)" transform="rotate(8 190 87)"/>
+        {happy ? <><path d="M155 87 Q162 94 169 87" fill="none" stroke="#fdf9f0" strokeWidth="3" strokeLinecap="round"/><path d="M183 87 Q190 94 197 87" fill="none" stroke="#fdf9f0" strokeWidth="3" strokeLinecap="round"/></> : <><ellipse cx="162" cy="88" rx="7" ry="6" fill="#fdf9f0"/><ellipse cx="190" cy="88" rx="7" ry="6" fill="#fdf9f0"/><ellipse cx="163" cy="89" rx="4.5" ry="4" fill="#1a1a2a"/><ellipse cx="191" cy="89" rx="4.5" ry="4" fill="#1a1a2a"/><circle cx="165" cy="87" r="1.6" fill="white"/><circle cx="193" cy="87" r="1.6" fill="white"/></>}
+        <ellipse cx="176" cy="100" rx="4" ry="2.8" fill="#1a261a" opacity="0.7"/>
+        {happy ? <path d="M168 107 Q172 113 176 109 Q180 113 184 107" fill="none" stroke="#1a261a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/> : <path d="M170 106 Q173 110 176 107 Q179 110 182 106" fill="none" stroke="#1a261a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>}
+      </g>
+
+      {happy && (
+        <>
+          <g filter="url(#softGlow)"><path d="M122 100 C122 95 126 93 130 97 C134 93 138 95 138 100 C138 106 130 115 130 115 C130 115 122 106 122 100Z" fill="#e8607a" opacity="0.95"/></g>
+          <path d="M106 78 C106 75 108 74 110 76 C112 74 114 75 114 78 C114 81 110 85 110 85 C110 85 106 81 106 78Z" fill="#f4a0b8" opacity="0.7"/>
+          <path d="M144 72 C144 70 145.5 69 147 71 C148.5 69 150 70 150 72 C150 74.5 147 78 147 78 C147 78 144 74.5 144 72Z" fill="#f4a0b8" opacity="0.6"/>
+        </>
+      )}
     </svg>
   );
 }
 
 function SinglePandaSVG({ size = 100 }) {
   return (
-    <svg viewBox="0 0 140 150" width={size} height={size * 1.07}>
-      <ellipse cx="70" cy="142" rx="42" ry="6" fill="#122015" opacity="0.16" />
-      <ellipse cx="70" cy="111" rx="32" ry="34" fill="#f1eadc" stroke="#d8cfbf" strokeWidth="1.1" />
-      <ellipse cx="70" cy="84" rx="18" ry="14" fill="#f1eadc" stroke="#d8cfbf" strokeWidth="1" />
-      <ellipse cx="70" cy="58" rx="32" ry="28" fill="#f1eadc" stroke="#d8cfbf" strokeWidth="1.1" />
-      <ellipse cx="70" cy="113" rx="16" ry="20" fill="#faf6ef" opacity="0.62" />
-      <ellipse cx="49" cy="38" rx="10" ry="10" fill="#243629" />
-      <ellipse cx="91" cy="38" rx="10" ry="10" fill="#243629" />
-      <ellipse cx="56" cy="60" rx="11" ry="8" fill="#243629" />
-      <ellipse cx="84" cy="60" rx="11" ry="8" fill="#243629" />
-      <ellipse cx="56" cy="60" rx="4" ry="3" fill="#f7f1e8" />
-      <ellipse cx="84" cy="60" rx="4" ry="3" fill="#f7f1e8" />
-      <ellipse cx="70" cy="68" rx="4" ry="3" fill="#243629" />
-      <path d="M63 74 Q70 79 77 74" fill="none" stroke="#243629" strokeWidth="2" strokeLinecap="round" />
-      <ellipse cx="45" cy="113" rx="9" ry="14" fill="#243629" />
-      <ellipse cx="95" cy="113" rx="9" ry="14" fill="#243629" />
-      <ellipse cx="59" cy="143" rx="10" ry="6" fill="#243629" />
-      <ellipse cx="81" cy="143" rx="10" ry="6" fill="#243629" />
+    <svg viewBox="0 0 160 200" width={size} height={size * 1.25} style={{ display: "block" }}>
+      <defs><radialGradient id="sb" cx="45%" cy="35%" r="60%"><stop offset="0%" stopColor="#fdf9f0"/><stop offset="100%" stopColor="#ede4d0"/></radialGradient></defs>
+      <ellipse cx="80" cy="196" rx="38" ry="6" fill="#1a261a" opacity="0.1"/>
+      <path d="M42 195 C28 195 22 175 24 155 C26 138 38 126 58 122 C66 120 80 120 94 122 C114 126 126 138 128 155 C130 175 124 195 110 195Z" fill="url(#sb)"/>
+      <ellipse cx="76" cy="162" rx="20" ry="24" fill="#fefcf6" opacity="0.85"/>
+      <ellipse cx="57" cy="190" rx="18" ry="10" fill="#1a261a"/>
+      <ellipse cx="97" cy="190" rx="18" ry="10" fill="#1a261a"/>
+      <ellipse cx="57" cy="196" rx="12" ry="5" fill="#f0e8d8" opacity="0.5"/>
+      <ellipse cx="97" cy="196" rx="12" ry="5" fill="#f0e8d8" opacity="0.5"/>
+      <path d="M34 150 C24 158 20 172 24 180" fill="none" stroke="#1a261a" strokeWidth="13" strokeLinecap="round"/>
+      <path d="M34 150 C24 158 20 172 24 180" fill="none" stroke="#2d3d2d" strokeWidth="10" strokeLinecap="round"/>
+      <path d="M118 150 C128 158 132 172 128 180" fill="none" stroke="#1a261a" strokeWidth="13" strokeLinecap="round"/>
+      <path d="M118 150 C128 158 132 172 128 180" fill="none" stroke="#2d3d2d" strokeWidth="10" strokeLinecap="round"/>
+      <circle cx="80" cy="76" r="50" fill="url(#sb)"/>
+      <circle cx="42" cy="38" r="22" fill="#1a261a"/>
+      <circle cx="42" cy="38" r="14" fill="#2d3d2d"/>
+      <circle cx="118" cy="38" r="22" fill="#1a261a"/>
+      <circle cx="118" cy="38" r="14" fill="#2d3d2d"/>
+      <ellipse cx="62" cy="76" rx="19" ry="18" fill="#1a261a" transform="rotate(-8 62 76)"/>
+      <ellipse cx="98" cy="76" rx="19" ry="18" fill="#1a261a" transform="rotate(8 98 76)"/>
+      <circle cx="62" cy="77" r="11" fill="#fdf9f0"/>
+      <circle cx="98" cy="77" r="11" fill="#fdf9f0"/>
+      <circle cx="64" cy="78" r="7" fill="#1a1a2a"/>
+      <circle cx="100" cy="78" r="7" fill="#1a1a2a"/>
+      <circle cx="66" cy="75" r="2.8" fill="white"/>
+      <circle cx="102" cy="75" r="2.8" fill="white"/>
+      <path d="M76 94 C76 91 78 90 80 92 C82 90 84 91 84 94 C84 97 80 100 80 100 C80 100 76 97 76 94Z" fill="#1a261a" opacity="0.85"/>
+      <path d="M72 103 Q80 112 88 103" fill="none" stroke="#1a261a" strokeWidth="2.5" strokeLinecap="round"/>
+      <ellipse cx="40" cy="92" rx="14" ry="8" fill="#f0907a" opacity="0.3"/>
+      <ellipse cx="120" cy="92" rx="14" ry="8" fill="#f0907a" opacity="0.3"/>
     </svg>
   );
 }
@@ -1705,15 +1769,6 @@ function Login({ onLogin }) {
   const [codeStatus, setCodeStatus] = useState("checking"); // checking | available | taken | error
 
   const [loading, setLoading] = useState(false);
-  const getIsNarrow = () => (typeof window !== "undefined" ? window.innerWidth <= 390 : false);
-  const [isNarrowScreen, setIsNarrowScreen] = useState(getIsNarrow);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return undefined;
-    const onResize = () => setIsNarrowScreen(getIsNarrow());
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -1963,11 +2018,11 @@ function Login({ onLogin }) {
   const TABS = [{ id: "login", label: "Entrar" }, { id: "register", label: "Crear" }, { id: "pair", label: "Unirse" }];
 
   return (
-    <div style={{ minHeight: "100vh", background: C.sandL, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: isNarrowScreen ? "22px 16px" : "28px 20px", fontFamily: "'Nunito',sans-serif" }}>
-      <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: isNarrowScreen ? "2.65rem" : "3rem", color: C.dark, letterSpacing: isNarrowScreen ? "1.4px" : "2px" }}>mochi</div>
-      <div style={{ color: C.inkL, fontWeight: 700, marginBottom: isNarrowScreen ? 8 : 12, fontSize: isNarrowScreen ? "0.8rem" : "0.85rem", letterSpacing: "0.6px" }}>TU JARDÍN DE PAREJA 🌿</div>
-      <div style={{ marginBottom: isNarrowScreen ? 14 : 18, animation: "float 3s ease-in-out infinite" }}>
-        <CouplePandaSVG size={isNarrowScreen ? 138 : 150} pairOffset={isNarrowScreen ? -18 : -10} happy={true} />
+    <div style={{ minHeight: "100vh", background: C.sandL, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "28px 20px", fontFamily: "'Nunito',sans-serif" }}>
+      <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "3rem", color: C.dark, letterSpacing: "2px" }}>mochi</div>
+      <div style={{ color: C.inkL, fontWeight: 700, marginBottom: 12, fontSize: "0.85rem", letterSpacing: "0.6px" }}>TU JARDÍN DE PAREJA 🌿</div>
+      <div style={{ marginBottom: 18, animation: "float 3s ease-in-out infinite" }}>
+        <CouplePandaSVG size={160} happy={true} />
       </div>
       <div style={{ background: C.white, borderRadius: 24, padding: "22px 20px", width: "100%", maxWidth: 380, boxShadow: `0 4px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
         <div style={{ display: "flex", background: C.sand, borderRadius: 12, padding: 3, marginBottom: 18, gap: 3 }}>
