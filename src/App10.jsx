@@ -90,7 +90,7 @@ const PANDA_ACCESSORIES = [
 const EXERCISES = [
   {id:"validacion",emoji:"💬",title:"La Danza de la Validación",tags:"DBT · Sistémica",bamboo:40,time:"15 min",
     desc:"Aprendan a validar las emociones del otro sin defenderse ni explicar. La validación no significa estar de acuerdo — significa decir 'tiene sentido que sientas eso'.",
-    instructions:["Abran Mochi en sus celulares al mismo tiempo","Persona A escribe algo que le molestó recientemente","Persona B responde validando, sin defenderse ni explicar","Intercambien roles en el siguiente turno","Al terminar, compartan cómo se sintieron por mensaje"],
+    instructions:["Abran Mochi en sus celulares al mismo tiempo","Persona A escribe algo que le molestó recientemente","Persona B responde validando, sin defenderse ni explicar","Intercambien roles en el siguiente turno","Al terminar, cierren con una frase de cuidado: 'Gracias por escucharme'"],
     phases:[
       {role:0,q:"Persona A: Comparte algo que te molestó esta semana (no tiene que ser sobre tu pareja).",ph:"Esta semana me sentí… cuando…",hint:"Habla desde el 'yo'. Ej: 'Me sentí ignorado/a cuando…'"},
       {role:1,q:"Persona B: Valida con 'Tiene sentido porque...'",ph:"Tiene sentido porque…",hint:"Validar no es estar de acuerdo. Solo reconocer."},
@@ -2117,7 +2117,7 @@ function ExModal({ ex, onClose, onComplete, nameA, nameB, user }) {
       <div style={{ background: "#fffaf0", borderRadius: 14, padding: 14, marginBottom: 14, border: `1.5px solid ${C.border}` }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}
           onClick={() => setShowExamples(!showExamples)}>
-          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark }}>🧭 Ejemplos: cómo no / cómo sí</div>
+          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark }}>{ex.id === "validacion" ? "🧭 Ejemplos de validación: qué sí y qué no" : "🧭 Ejemplos: cómo no / cómo sí"}</div>
           <div style={{ color: C.inkL, transition: "transform 0.2s", transform: showExamples ? "rotate(180deg)" : "none", fontSize: "0.8rem" }}>▼</div>
         </div>
         {showExamples && (
@@ -2387,11 +2387,14 @@ function Burbuja({ burbuja, onSave, user }) {
   const nameB = user?.names ? user.names.split("&")[1]?.trim() || "Persona B" : "Persona B";
   const [open, setOpen] = useState({});
   const [tmp, setTmp] = useState({});
+  const [burTab, setBurTab] = useState("negociacion");
 
   const get = (id, f) => tmp[id]?.[f] ?? burbuja[id]?.[f] ?? "";
   const set_ = (id, f, v) => setTmp(p => ({ ...p, [id]: { ...p[id], [f]: v } }));
   const save = (id) => { const a = get(id, "a"), b = get(id, "b"), c = get(id, "c"); if (!a && !b) return; onSave(id, { a, b, c }); };
   const total = BURBUJA_SECTIONS.reduce((s, sec) => s + sec.items.length, 0);
+  const allItems = BURBUJA_SECTIONS.flatMap(sec => sec.items.map(item => ({ ...item, section: sec.title, icon: sec.icon })));
+  const savedItems = allItems.filter(item => !!burbuja[item.id]);
 
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
@@ -2407,7 +2410,17 @@ function Burbuja({ burbuja, onSave, user }) {
           <div style={{ fontSize: "0.76rem", fontWeight: 800, color: C.olive, whiteSpace: "nowrap" }}>{Object.keys(burbuja).length} / {total}</div>
         </div>
       </div>
-      {BURBUJA_SECTIONS.map(sec => (
+
+      <div style={{ margin: "0 14px 10px", background: C.white, borderRadius: 14, padding: 4, border: `1.5px solid ${C.border}`, display: "flex", gap: 4 }}>
+        {[{ id: "negociacion", label: "🫧 Zona de negociación" }, { id: "acuerdos", label: "✅ Acuerdos" }].map(t => (
+          <div key={t.id} onClick={() => setBurTab(t.id)}
+            style={{ flex: 1, padding: "9px 8px", borderRadius: 10, textAlign: "center", fontWeight: 800, fontSize: "0.76rem", cursor: "pointer", background: burTab === t.id ? C.dark : "transparent", color: burTab === t.id ? C.cream2 : C.inkL }}>
+            {t.label}
+          </div>
+        ))}
+      </div>
+
+      {burTab === "negociacion" && BURBUJA_SECTIONS.map(sec => (
         <div key={sec.id} style={{ background: C.white, borderRadius: 18, margin: "0 14px 10px", boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}`, overflow: "hidden" }}>
           <div onClick={() => setOpen(p => ({ ...p, [sec.id]: !p[sec.id] }))} style={{ display: "flex", alignItems: "center", gap: 12, padding: 16, cursor: "pointer" }}>
             <div style={{ width: 44, height: 44, background: sec.itemBg, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.7rem", flexShrink: 0 }}>{sec.icon}</div>
@@ -2437,6 +2450,25 @@ function Burbuja({ burbuja, onSave, user }) {
           </div>}
         </div>
       ))}
+
+      {burTab === "acuerdos" && (
+        <div style={{ margin: "0 14px 10px" }}>
+          {savedItems.length === 0 ? (
+            <div style={{ background: C.white, borderRadius: 16, padding: 18, border: `1.5px solid ${C.border}`, boxShadow: `0 3px 0 ${C.border}`, textAlign: "center", color: C.inkL, fontWeight: 700 }}>
+              Aún no tienen acuerdos guardados.
+            </div>
+          ) : savedItems.map(item => (
+            <div key={item.id} style={{ background: C.white, borderRadius: 16, padding: 14, marginBottom: 9, border: `1.5px solid ${C.border}`, boxShadow: `0 2px 0 ${C.border}` }}>
+              <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.inkL, marginBottom: 6 }}>{item.icon} {item.section}</div>
+              <div style={{ fontSize: "0.82rem", fontWeight: 800, color: C.ink, marginBottom: 7 }}>{item.q}</div>
+              <div style={{ background: C.cream, borderRadius: 10, padding: "9px 11px", fontSize: "0.84rem", fontWeight: 700, color: C.dark }}>
+                {burbuja[item.id]?.c || burbuja[item.id]?.a || "Sin texto"}
+              </div>
+            </div>
+          ))
+          }
+        </div>
+      )}
     </div>
   );
 }
@@ -3512,7 +3544,7 @@ export default function App() {
     const msgA = pandaAMsgs[0];
     const msgB = pandaBMsgs[0];
     const textA = msgA ? msgA.text.slice(0, 60) + (msgA.text.length > 60 ? "..." : "") : null;
-    const textB = msgB ? msgB.text.slice(0, 60) + (msgB.text.length > 60 ? "..." : "") : "¡Los quiero mucho! 🐼";
+    const textB = msgB ? msgB.text.slice(0, 60) + (msgB.text.length > 60 ? "..." : "") : "Aquí aparecerán los mensajes de amor que envíes 💌";
     // Show speech bubbles over pandas for 5 seconds
     setPandaBubble({ nameA: msgA ? nameA : null, textA, nameB, textB });
     setTimeout(() => setPandaBubble(null), 5000);
