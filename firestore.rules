@@ -17,6 +17,15 @@ service cloud.firestore {
         && (
           codeDoc(code).data.ownerUid == request.auth.uid
           || codeDoc(code).data.partnerUid == request.auth.uid
+          // Legacy fallback: older code docs may not have ownerUid/partnerUid yet.
+          || (
+            request.auth.token.email != null
+            && codeDoc(code).data.ownerEmail == request.auth.token.email
+          )
+          || (
+            request.auth.token.email != null
+            && codeDoc(code).data.partnerEmail == request.auth.token.email
+          )
         );
     }
 
