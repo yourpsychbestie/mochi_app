@@ -1870,7 +1870,11 @@ function Login({ onLogin }) {
       });
       const names = claimed?.names || codeData.names || "Nosotros";
       const since = claimed?.since || codeData.since || "Juntos desde hoy";
+      const ownerUid = claimed?.ownerUid || codeData?.ownerUid || null;
       await fbSaveUser(uid, { email: cleanPartnerEmail, names, code: resolvedCode, since, isOwner: false });
+      if (ownerUid) {
+        await fbSaveUser(ownerUid, { names, code: resolvedCode, since }).catch(() => {});
+      }
       onLogin({ uid, email: cleanPartnerEmail, names, code: resolvedCode, since, isOwner: false, isGuest: false }, true);
     } catch(e) {
       if (e.code === "auth/email-already-in-use") {
@@ -1895,7 +1899,11 @@ function Login({ onLogin }) {
           });
           const names2 = claimed2.names || "Nosotros";
           const since2 = claimed2.since || "Juntos";
+          const ownerUid2 = claimed2?.ownerUid || resolved2?.data?.ownerUid || null;
           await fbSaveUser(uid2, { email: cleanPartnerEmail, names: names2, code: resolved2.code, since: since2, isOwner: false }).catch(()=>{});
+          if (ownerUid2) {
+            await fbSaveUser(ownerUid2, { names: names2, code: resolved2.code, since: since2 }).catch(() => {});
+          }
           onLogin({ uid: uid2, email: cleanPartnerEmail, names: names2, code: resolved2.code, since: since2, isOwner: false, isGuest: false }, false);
           return;
         } catch(e2) {
@@ -2019,6 +2027,7 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
   const [session, setSession] = useState(null);
   const [val, setVal] = useState("");
   const [sending, setSending] = useState(false);
+  const [starting, setStarting] = useState(false);
   const [started, setStarted] = useState(false);
   const messagesEndRef = useRef(null);
 
@@ -2053,10 +2062,13 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
   }, [messages.length]);
 
   const startSession = async () => {
+    if (starting) return;
+    setStarting(true);
     if (isGuest || !user?.code) {
       // Local mode — just set session directly
       setSession({ messages: [], step: 0, totalSteps: phases.length, done: false, starterRole: myRole });
       setStarted(true);
+      setStarting(false);
       return;
     }
     try {
@@ -2065,6 +2077,8 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
       // Fallback to local if Firebase fails
       setSession({ messages: [], step: 0, totalSteps: phases.length, done: false, starterRole: myRole });
       setStarted(true);
+    } finally {
+      setStarting(false);
     }
   };
 
@@ -2108,7 +2122,7 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
         <div style={{ fontSize:"0.85rem", color:C.inkM, marginBottom:14 }}>
           Cualquiera puede empezar el ejercicio
         </div>
-        <Btn onClick={startSession} style={{ width:"100%" }}>Empezar ejercicio 🌿</Btn>
+        <Btn onClick={startSession} style={{ width:"100%" }} disabled={starting}>{starting ? "Iniciando..." : "Empezar ejercicio 🌿"}</Btn>
         <div style={{ fontSize:"0.75rem", color:C.inkL, marginTop:8, textAlign:"center" }}>La pantalla se actualizará automáticamente ✨</div>
       </div>
     );
@@ -2301,23 +2315,19 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
   return (
     <>
       <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
-        {/* Header with sub-tabs */}
         <div style={{ background: C.dark, padding:"44px 18px 0" }}>
           <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.9rem", color:C.cream2, marginBottom:4 }}>Ejercicios ⭐</div>
           <div style={{ color:`${C.cream}88`, fontSize:"0.84rem", fontWeight:600, marginBottom:14 }}>Actividades y aprendizaje en pareja</div>
           <div style={{ display:"flex", gap:4 }}>
             {[["ejerc","🌿 Ejercicios"],["lecciones","📖 Lecciones"]].map(([id,label]) => (
               <div key={id} onClick={() => setEjTab(id)}
-                style={{ flex:1, padding:"10px 0", textAlign:"center", fontFamily:"'Fredoka One',cursive",
-                  fontSize:"0.9rem", cursor:"pointer", borderRadius:"12px 12px 0 0",
-                  background: ejTab===id ? C.sandL : "transparent",
-                  color: ejTab===id ? C.dark : `${C.cream}88`,
-                  transition:"all 0.15s" }}>
+                style={{ flex:1, padding:"10px 0", textAlign:"center", fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", cursor:"pointer", borderRadius:"12px 12px 0 0", background: ejTab===id ? C.sandL : "transparent", color: ejTab===id ? C.dark : `${C.cream}88`, transition:"all 0.15s" }}>
                 {label}
               </div>
             ))}
           </div>
         </div>
+
         {ejTab === "ejerc" && EXERCISES.map(e => {
           const count = exDone[e.id] || 0;
           return (
@@ -2341,54 +2351,51 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
             </div>
           );
         })}
-      </div>
-      {ejTab === "lecciones" && (
-      <div style={{ background: C.sandL, minHeight:"60vh", paddingBottom:14 }}>
-        <div style={{ margin:"0 14px 0" }}>
-        <div style={{ background:"#e8f0ff", borderRadius:14, padding:"9px 14px", marginBottom:10, border:`1px solid #a8b8e830` }}>
-          <div style={{ fontSize:"0.8rem", color:"#4050a0", lineHeight:1.5 }}>💡 Herramientas reales de psicología de pareja.</div>
-        </div>
-        {(() => {
-          const lessonPool = DAILY_LESSONS.filter(Boolean);
-          const safeLessonPool = lessonPool.length ? lessonPool : [{ id:"fallback", emoji:"📘", title:"Lección", tag:"Mochi", intro:"", sections:[], reflect:"" }];
-          const dayOfYear = Math.floor((new Date()-new Date(new Date().getFullYear(),0,0))/86400000);
-          const todayLesson = safeLessonPool[dayOfYear % safeLessonPool.length] || safeLessonPool[0];
-          const todayId = todayLesson?.id;
-          return safeLessonPool.map(lesson => {
-            const doneData = lessonsDone?.[lesson.id] || {};
-            const myKey = user?.isOwner !== false ? "owner" : "partner";
-            const iDone = doneData[myKey] === true;
-            const ownerDone = doneData.owner === true;
-            const partnerDone = doneData.partner === true;
-            const bothDone = ownerDone && partnerDone;
-            const isToday = lesson.id === todayId;
-            return (
-              <div key={lesson.id} onClick={() => setOpenLesson(lesson)}
-                style={{ background: isToday&&!iDone ? C.dark : C.white, borderRadius:16,
-                  padding:"12px 15px", marginBottom:9, cursor:"pointer",
-                  border:`1.5px solid ${isToday&&!iDone ? C.dark : bothDone ? C.olive+"50" : C.border}`,
-                  boxShadow:`0 2px 0 ${isToday&&!iDone?"rgba(0,0,0,0.2)":C.border}` }}>
-                <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                  <div style={{ fontSize:"1.6rem" }}>{lesson.emoji}</div>
-                  <div style={{ flex:1 }}>
-                    <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.92rem", color:isToday&&!iDone?C.cream2:C.dark }}>{lesson.title}</div>
-                    <div style={{ fontSize:"0.7rem", fontWeight:700, marginTop:2, color:isToday&&!iDone?`${C.cream}88`:C.inkL }}>{lesson.tag}{isToday?" · HOY":""}</div>
-                  </div>
-                  <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:3 }}>
-                    {!iDone && <div style={{ background:isToday?C.olive:C.sandL, color:isToday?C.cream2:C.olive, borderRadius:7, padding:"3px 8px", fontSize:"0.68rem", fontWeight:800 }}>+10 🌿</div>}
-                    <div style={{ display:"flex", gap:4 }}>
-                      <div style={{ fontSize:"0.65rem", fontWeight:800, color: ownerDone ? C.olive : C.sand }}>🐼{ownerDone?"✓":"·"}</div>
-                      <div style={{ fontSize:"0.65rem", fontWeight:800, color: partnerDone ? C.teal : C.sand }}>🐾{partnerDone?"✓":"·"}</div>
+
+        {ejTab === "lecciones" && (
+          <div style={{ margin:"10px 14px 0" }}>
+            <div style={{ background:"#e8f0ff", borderRadius:14, padding:"9px 14px", marginBottom:10, border:`1px solid #a8b8e830` }}>
+              <div style={{ fontSize:"0.8rem", color:"#4050a0", lineHeight:1.5 }}>💡 Herramientas reales de psicología de pareja.</div>
+            </div>
+            {(() => {
+              const lessonPool = DAILY_LESSONS.filter(Boolean);
+              const safeLessonPool = lessonPool.length ? lessonPool : [{ id:"fallback", emoji:"📘", title:"Lección", tag:"Mochi", intro:"", sections:[], reflect:"" }];
+              const dayOfYear = Math.floor((new Date()-new Date(new Date().getFullYear(),0,0))/86400000);
+              const todayLesson = safeLessonPool[dayOfYear % safeLessonPool.length] || safeLessonPool[0];
+              const todayId = todayLesson?.id;
+              return safeLessonPool.map(lesson => {
+                const doneData = lessonsDone?.[lesson.id] || {};
+                const myKey = user?.isOwner !== false ? "owner" : "partner";
+                const iDone = doneData[myKey] === true;
+                const ownerDone = doneData.owner === true;
+                const partnerDone = doneData.partner === true;
+                const bothDone = ownerDone && partnerDone;
+                const isToday = lesson.id === todayId;
+                return (
+                  <div key={lesson.id} onClick={() => setOpenLesson(lesson)}
+                    style={{ background: isToday&&!iDone ? C.dark : C.white, borderRadius:16, padding:"12px 15px", marginBottom:9, cursor:"pointer", border:`1.5px solid ${isToday&&!iDone ? C.dark : bothDone ? C.olive+"50" : C.border}`, boxShadow:`0 2px 0 ${isToday&&!iDone?"rgba(0,0,0,0.2)":C.border}` }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                      <div style={{ fontSize:"1.6rem" }}>{lesson.emoji}</div>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.92rem", color:isToday&&!iDone?C.cream2:C.dark }}>{lesson.title}</div>
+                        <div style={{ fontSize:"0.7rem", fontWeight:700, marginTop:2, color:isToday&&!iDone?`${C.cream}88`:C.inkL }}>{lesson.tag}{isToday?" · HOY":""}</div>
+                      </div>
+                      <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:3 }}>
+                        {!iDone && <div style={{ background:isToday?C.olive:C.sandL, color:isToday?C.cream2:C.olive, borderRadius:7, padding:"3px 8px", fontSize:"0.68rem", fontWeight:800 }}>+10 🌿</div>}
+                        <div style={{ display:"flex", gap:4 }}>
+                          <div style={{ fontSize:"0.65rem", fontWeight:800, color: ownerDone ? C.olive : C.sand }}>🐼{ownerDone?"✓":"·"}</div>
+                          <div style={{ fontSize:"0.65rem", fontWeight:800, color: partnerDone ? C.teal : C.sand }}>🐾{partnerDone?"✓":"·"}</div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            );
-          });
-        })()}
+                );
+              });
+            })()}
+          </div>
+        )}
       </div>
 
-      {/* LESSON MODAL */}
       {openLesson && (
         <div style={{ position:"fixed", inset:0, background:"rgba(15,25,15,0.65)", zIndex:5000, display:"flex", alignItems:"flex-end" }} onClick={e => { if(e.target===e.currentTarget) setOpenLesson(null); }}>
           <div style={{ background:C.sandL, borderRadius:"22px 22px 0 0", width:"100%", maxHeight:"92vh", overflowY:"auto", border:`1.5px solid ${C.border}` }}>
@@ -2414,23 +2421,19 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
                 <div style={{ fontSize:"0.88rem", color:C.ink, lineHeight:1.7, fontWeight:700 }}>{openLesson.reflect}</div>
               </div>
               {!(lessonsDone?.[openLesson.id]?.[user?.isOwner !== false ? "owner" : "partner"])
-                ? <button onClick={() => { onCompleteLesson(openLesson.id); setOpenLesson(null); }}
-                    style={{ width:"100%", background:C.olive, color:C.cream2, border:"none", borderRadius:14, padding:15, fontFamily:"'Fredoka One',cursive", fontSize:"1rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.2)" }}>
+                ? <button onClick={() => { onCompleteLesson(openLesson.id); setOpenLesson(null); }} style={{ width:"100%", background:C.olive, color:C.cream2, border:"none", borderRadius:14, padding:15, fontFamily:"'Fredoka One',cursive", fontSize:"1rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.2)" }}>
                     ✓ Leímos esto juntos · +10 bambú 🌿
                   </button>
                 : <div style={{ textAlign:"center", background:C.cream, borderRadius:12, padding:12, border:`1.5px solid ${C.border}` }}>
                     <div style={{ fontFamily:"'Fredoka One',cursive", color:C.olive, marginBottom:6 }}>✓ Ya la completaste</div>
                     <div style={{ display:"flex", gap:10, justifyContent:"center" }}>
-                      <div style={{ fontSize:"0.75rem", fontWeight:800, color: lessonsDone?.[open?.id]?.owner ? C.olive : C.sand }}>🐼 {nameA} {lessonsDone?.[open?.id]?.owner ? "✓" : "pendiente"}</div>
-                      <div style={{ fontSize:"0.75rem", fontWeight:800, color: lessonsDone?.[open?.id]?.partner ? C.teal : C.sand }}>🐾 {nameB} {lessonsDone?.[open?.id]?.partner ? "✓" : "pendiente"}</div>
+                      <div style={{ fontSize:"0.75rem", fontWeight:800, color: lessonsDone?.[openLesson?.id]?.owner ? C.olive : C.sand }}>🐼 {nameA} {lessonsDone?.[openLesson?.id]?.owner ? "✓" : "pendiente"}</div>
+                      <div style={{ fontSize:"0.75rem", fontWeight:800, color: lessonsDone?.[openLesson?.id]?.partner ? C.teal : C.sand }}>🐾 {nameB} {lessonsDone?.[openLesson?.id]?.partner ? "✓" : "pendiente"}</div>
                     </div>
                   </div>}
             </div>
           </div>
         </div>
-      )}
-
-      </div>
       )}
 
       {openId && ex && (
@@ -2456,10 +2459,14 @@ function Conocete({ conoce, onSave, user }) {
   const nameA = parsedNames.a;
   const nameB = parsedNames.b;
   const myRole = user?.isOwner !== false ? "owner" : "partner";
+  const otherRole = myRole === "owner" ? "partner" : "owner";
+  const myName = myRole === "owner" ? nameA : nameB;
+  const otherName = myRole === "owner" ? nameB : nameA;
   const [cat, setCat] = useState(null);
   const [qIdx, setQIdx] = useState(null);
   const [rA, setRA] = useState(""); const [rB, setRB] = useState("");
   const [saved, setSaved] = useState(false);
+  const quizAdvice = getQuizAdviceFromConoce(conoce || {}, myRole);
 
   const openQ = (c, i) => {
     setCat(c);
@@ -2486,7 +2493,24 @@ function Conocete({ conoce, onSave, user }) {
         <div style={{ background: C.white, borderRadius: 20, padding: 18, boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
           <div style={{ fontSize: "0.7rem", fontWeight: 800, color: C.inkM, marginBottom: 8, letterSpacing: "0.5px" }}>{CONOCE_CATS[cat].emoji} {CONOCE_CATS[cat].label.toUpperCase()}</div>
           <div style={{ fontSize: "0.97rem", color: C.ink, lineHeight: 1.6, fontWeight: 700, marginBottom: 16 }}>{CONOCE_CATS[cat].preguntas[qIdx]}</div>
-          {[["A", rA, setRA, nameA], ["B", rB, setRB, nameB]].map(([w, v, fn, nm]) => { const mine = (myRole === "owner" && w === "A") || (myRole === "partner" && w === "B"); return <div key={w} style={{ marginBottom: 12, opacity: mine ? 1 : 0.7 }}><PBadge who={w} name={nm} /><TA value={v} onChange={fn} placeholder={mine ? "Tu respuesta..." : "Respuesta de tu pareja"} rows={3} style={{ background: mine ? C.cream2 : C.sandL }} readOnly={!mine} /></div>; })}
+          <div style={{ marginBottom: 12 }}>
+            <PBadge who={myRole === "owner" ? "A" : "B"} name={myName} />
+            <TA
+              value={myRole === "owner" ? rA : rB}
+              onChange={myRole === "owner" ? setRA : setRB}
+              placeholder="Tu respuesta..."
+              rows={4}
+              style={{ background: C.cream2 }}
+            />
+          </div>
+          {!!(conoce?.[`${cat}-${qIdx}`]?.[otherRole] || (myRole === "owner" ? rB : rA)) && (
+            <div style={{ marginBottom: 12 }}>
+              <PBadge who={myRole === "owner" ? "B" : "A"} name={otherName} />
+              <div style={{ background: C.sandL, borderRadius: 12, border: `1.5px solid ${C.border}`, padding: "10px 12px", fontSize: "0.84rem", color: C.inkM, lineHeight: 1.55 }}>
+                {conoce?.[`${cat}-${qIdx}`]?.[otherRole] || (myRole === "owner" ? rB : rA)}
+              </div>
+            </div>
+          )}
           {saved && <div style={{ textAlign: "center", fontSize: "0.82rem", fontWeight: 800, color: C.olive, marginBottom: 10, background: C.cream, borderRadius: 9, padding: "8px", border: `1.5px solid ${C.border}` }}>✓ Guardado — +15 bambú 🌿</div>}
           <div style={{ display: "flex", gap: 9 }}><Btn onClick={saveQ} style={{ flex: 1 }}>Guardar 🌿</Btn><Btn onClick={() => setQIdx(null)} variant="ghost" style={{ padding: "12px 14px" }}>✕</Btn></div>
         </div>
@@ -2518,6 +2542,11 @@ function Conocete({ conoce, onSave, user }) {
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
       <ScreenTop title="Conócete" sub="Preguntas para descubrirse" />
+      <div style={{ margin: "10px 14px 0", background: C.white, borderRadius: 16, padding: 14, border: `1.5px solid ${C.border}`, boxShadow: `0 2px 0 ${C.border}` }}>
+        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark, marginBottom: 6 }}>🧪 Resultado de tests de personalidad</div>
+        <div style={{ fontSize: "0.8rem", color: C.inkL, fontWeight: 700, marginBottom: 6 }}>{quizAdvice.progress.answered}/{quizAdvice.progress.total} completados</div>
+        <div style={{ fontSize: "0.75rem", color: C.inkM, lineHeight: 1.55 }}>{quizAdvice.complete ? "Completados. Revisa tus recomendaciones personalizadas aquí mismo en Conócete." : "Completen los tests para desbloquear recomendaciones personalizadas."}</div>
+      </div>
       <div style={{ margin: "10px 14px 0" }}>
         <Cuestionarios conoce={conoce} onSave={onSave} user={user} />
       </div>
@@ -2634,9 +2663,10 @@ function Burbuja({ burbuja, onSave, user }) {
 function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento, conoce, onOpenConocete, onSendMessage }) {
   const [editMode, setEditMode] = useState(false);
   const [editingName, setEditingName] = useState(false);
-  const [showStreakTools, setShowStreakTools] = useState(false);
-  const [showAdvice, setShowAdvice] = useState(false);
   const [streakRecord, setStreakRecord] = useState(0);
+  const [loveText, setLoveText] = useState("");
+  const [loveQuick, setLoveQuick] = useState(null);
+  const [sendingLove, setSendingLove] = useState(false);
   const [nameInput, setNameInput] = useState(user?.names || "");
   const [form, setForm] = useState({
     anniversary: coupleInfo.anniversary || "",
@@ -2660,9 +2690,16 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
   const inboxMsgs = messages.filter(m => m.senderEmail !== myEmail).length;
   const todayStr = new Date().toDateString();
   const todayLoveMsg = messages.find(m => m.senderEmail !== myEmail && new Date(m.time).toDateString() === todayStr);
-  const lessonPool = DAILY_LESSONS.filter(Boolean);
-  const safeLessonPool = lessonPool.length ? lessonPool : [{ id:"fallback", emoji:"📘", title:"Lección", tag:"Mochi", intro:"", sections:[], reflect:"" }];
-  const todayLesson = safeLessonPool[new Date().getDate() % safeLessonPool.length] || safeLessonPool[0];
+  const shortTips = [
+    "Escucha 2 minutos sin interrumpir.",
+    "Hoy valida una emoción de tu pareja.",
+    "Un abrazo largo vale más que un consejo.",
+    "Antes de responder, respira y pregunta.",
+    "Agradezcan una cosa pequeña del día.",
+    "Hablen con curiosidad, no con prisa.",
+    "Pregúntale: ¿Qué necesitas de mí hoy?",
+  ];
+  const todayTip = shortTips[new Date().getDate() % shortTips.length];
   const activityDateKeys = [
     ...(gratitud || []).map(x => x?.createdAt?.toDate ? x.createdAt.toDate() : new Date(x?.date || Date.now())),
     ...(momentos || []).map(x => x?.createdAt?.toDate ? x.createdAt.toDate() : new Date(x?.date || Date.now())),
@@ -2694,9 +2731,6 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
     }
     return yStreak;
   })();
-  const myRole = user?.isOwner !== false ? "owner" : "partner";
-  const quizAdvice = getQuizAdviceFromConoce(conoce || {}, myRole);
-
   useEffect(() => {
     const key = `mochi_streak_record_${user?.uid || user?.email || "guest"}`;
     const prev = Number(ls.get(key) || 0);
@@ -2773,6 +2807,19 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
         ))}
       </div>
 
+      <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:16, padding:12, border:`1.5px solid ${C.border}`, boxShadow:`0 2px 0 ${C.border}` }}>
+        <div style={{ fontSize:"0.72rem", fontWeight:800, color:C.inkL, marginBottom:8, letterSpacing:"0.6px" }}>ANALÍTICAS RÁPIDAS</div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8 }}>
+          {[["🌿", bamboo, "Bambú"], ["💌", myMsgs, "Mensajes"], ["🔥", streakDays, "Racha"]].map(([i,v,l]) => (
+            <div key={l} style={{ background:C.sandL, borderRadius:10, border:`1px solid ${C.border}`, textAlign:"center", padding:"8px 6px" }}>
+              <div style={{ fontSize:"0.95rem" }}>{i}</div>
+              <div style={{ fontFamily:"'Fredoka One',cursive", color:C.dark, fontSize:"1rem" }}>{v}</div>
+              <div style={{ fontSize:"0.64rem", color:C.inkL, fontWeight:700 }}>{l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* 2. Mensajes de amor */}
       <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:16, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
         <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:8 }}>💌 Mensajes de amor</div>
@@ -2788,13 +2835,65 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
             Aún no hay mensaje de hoy. Recibidos: {inboxMsgs}
           </div>
         )}
-        <Btn onClick={() => onSendMessage?.("Te amo 💚") } variant="sand" style={{ width:"100%", marginTop:10, fontSize:"0.8rem" }}>Enviar mensajito rápido</Btn>
+
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:6, marginTop:10 }}>
+          {LOVE_PROMPTS.slice(0, 4).map((p, i) => (
+            <div
+              key={i}
+              onClick={() => {
+                setLoveQuick(p.idea);
+                setLoveText(p.idea);
+              }}
+              style={{
+                background: loveQuick === p.idea ? C.cream : C.sandL,
+                borderRadius: 10,
+                padding: "7px 9px",
+                border: `1.5px solid ${loveQuick === p.idea ? C.olive : C.border}`,
+                cursor: "pointer",
+                fontSize: "0.72rem",
+                color: C.inkM,
+                lineHeight: 1.35,
+                fontWeight: 700,
+              }}
+            >
+              {p.icon} {p.idea}
+            </div>
+          ))}
+        </div>
+
+        <TA
+          value={loveText}
+          onChange={(v) => {
+            setLoveText(v);
+            setLoveQuick(null);
+          }}
+          placeholder="Completa una frase o escribe tu mensaje de amor..."
+          rows={2}
+          style={{ marginTop: 10, marginBottom: 0 }}
+        />
+
+        <Btn
+          onClick={async () => {
+            const cleanMsg = (loveText || "").trim();
+            if (!cleanMsg || sendingLove) return;
+            setSendingLove(true);
+            await Promise.resolve(onSendMessage?.(cleanMsg)).catch(() => {});
+            setLoveText("");
+            setLoveQuick(null);
+            setSendingLove(false);
+          }}
+          variant="sand"
+          style={{ width:"100%", marginTop:10, fontSize:"0.8rem" }}
+          disabled={sendingLove}
+        >
+          {sendingLove ? "Enviando..." : "Enviar mensaje de amor"}
+        </Btn>
       </div>
 
       {/* 3. Consejo del día */}
       <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:16, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
         <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:10 }}>📖 Consejo del dia</div>
-        <Btn onClick={() => setShowAdvice(true)} variant="sand" style={{ width:"100%", fontSize:"0.82rem" }}>Consejo del dia</Btn>
+        <div style={{ background:C.cream, border:`1.5px solid ${C.border}`, borderRadius:12, padding:"10px 12px", fontSize:"0.84rem", color:C.ink, fontWeight:700, lineHeight:1.45 }}>{todayTip}</div>
       </div>
 
       {/* 4. Gratitud y momentos */}
@@ -2823,36 +2922,6 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
         </div>)}
       </div>
 
-      {/* 7. Recursos */}
-      <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:16, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
-        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.08rem", color:C.dark, marginBottom:10 }}>Recursos para su relación</div>
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8 }}>
-          {[
-            {icon:"📚", title:"Libros", sub:"Lecturas para crecer", href:"https://www.amazon.com/s?k=libros+parejas"},
-            {icon:"🎙", title:"Podcasts", sub:"Conversaciones útiles", href:"https://open.spotify.com/search/podcast%20parejas"},
-            {icon:"🎧", title:"Audios", sub:"Escuchen juntos", href:"https://www.youtube.com/results?search_query=meditacion+parejas"},
-          ].map((r) => (
-            <a key={r.title} href={r.href} target="_blank" rel="noreferrer" style={{ background:C.sandL, border:`1.5px solid ${C.border}`, borderRadius:12, padding:"10px 8px", textAlign:"center", textDecoration:"none" }}>
-              <div style={{ fontSize:"1.2rem", marginBottom:3 }}>{r.icon}</div>
-              <div style={{ fontSize:"0.75rem", fontWeight:800, color:C.dark }}>{r.title}</div>
-              <div style={{ fontSize:"0.64rem", color:C.inkL, marginTop:2 }}>{r.sub}</div>
-            </a>
-          ))}
-        </div>
-      </div>
-
-      {/* 10. Tests */}
-      <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:16, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
-        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:7 }}>🧪 Tests</div>
-        <div style={{ fontSize:"0.8rem", color:C.inkL, fontWeight:700, marginBottom:8 }}>
-          Resultado de tests de personalidad: {quizAdvice.progress.answered}/{quizAdvice.progress.total}
-        </div>
-        <div style={{ fontSize:"0.74rem", color:C.inkM, lineHeight:1.5, marginBottom:10 }}>
-          {quizAdvice.complete ? "Completados. Ya puedes revisar tus 5 consejos personalizados." : "Completen los 3 tests en Conocerse para desbloquear recomendaciones."}
-        </div>
-        <Btn onClick={onOpenConocete} variant="sand" style={{ width:"100%", fontSize:"0.82rem" }}>Abrir tests de personalidad</Btn>
-      </div>
-
       {/* 11. Diagnóstico */}
       {testScores && (() => {
         const avgs = TEST_AREAS.map(a => { const s = testScores[a.id]||{}; return {...a, avg:((s.a||3)+(s.b||3))/2}; });
@@ -2876,21 +2945,6 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
           </div>
         );
       })()}
-
-      {showAdvice && (
-        <div style={{ position:"fixed", inset:0, background:"rgba(15,25,15,0.65)", zIndex:5000, display:"flex", alignItems:"flex-end" }} onClick={(e)=>{ if (e.target===e.currentTarget) setShowAdvice(false); }}>
-          <div style={{ background:C.white, borderRadius:"22px 22px 0 0", padding:"16px 18px 34px", width:"100%", maxWidth:480, margin:"0 auto", border:`1.5px solid ${C.border}` }}>
-            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
-              <div style={{ width:34, height:5, background:C.sand, borderRadius:50 }}/>
-              <button onClick={() => setShowAdvice(false)} style={{ width:30, height:30, borderRadius:"50%", border:`1.5px solid ${C.border}`, background:C.sandL, cursor:"pointer" }}>✕</button>
-            </div>
-            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.15rem", color:C.dark, marginBottom:8 }}>📖 Consejo del dia</div>
-            <div style={{ fontSize:"0.72rem", color:C.inkL, fontWeight:800, marginBottom:6 }}>{todayLesson?.tag || "Lección"}</div>
-            <div style={{ fontSize:"0.95rem", color:C.ink, fontWeight:800, lineHeight:1.45, marginBottom:8 }}>{todayLesson?.title || "Lección recomendada"}</div>
-            <div style={{ fontSize:"0.82rem", color:C.inkM, lineHeight:1.6 }}>{todayLesson?.intro || "Tómense 10 minutos para hablar con calma y curiosidad."}</div>
-          </div>
-        </div>
-      )}
 
       <div style={{ padding: "0 14px 20px" }}>
 
@@ -2940,29 +2994,6 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
               <Btn onClick={() => { setNameInput(user?.names || ""); setEditingName(true); }} variant="sand" style={{ fontSize: "0.8rem", padding: "7px 14px" }}>
                 Cambiar
               </Btn>
-            </div>
-          )}
-        </div>
-
-        <div style={{ background:C.white, borderRadius:16, padding:14, border:`1.5px solid ${C.border}`, marginBottom:12, boxShadow:`0 2px 0 ${C.border}` }}>
-          <Btn onClick={() => setShowStreakTools(v => !v)} variant="sand" style={{ width:"100%", fontSize:"0.82rem" }}>
-            {showStreakTools ? "Ocultar analíticas y preguntas" : "Mostrar analíticas y preguntas de racha"}
-          </Btn>
-          {showStreakTools && (
-            <div style={{ marginTop:10, background:C.sandL, border:`1.5px solid ${C.border}`, borderRadius:12, padding:12 }}>
-              <div style={{ fontSize:"0.72rem", fontWeight:800, color:C.inkL, marginBottom:8, letterSpacing:"0.6px" }}>ANALÍTICAS RÁPIDAS</div>
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginBottom:10 }}>
-                {[["🌿", bamboo, "Bambú"], ["💌", myMsgs, "Mensajes"], ["🔥", streakDays, "Racha"]].map(([i,v,l]) => (
-                  <div key={l} style={{ background:C.white, borderRadius:10, border:`1px solid ${C.border}`, textAlign:"center", padding:"8px 6px" }}>
-                    <div style={{ fontSize:"0.95rem" }}>{i}</div>
-                    <div style={{ fontFamily:"'Fredoka One',cursive", color:C.dark, fontSize:"1rem" }}>{v}</div>
-                    <div style={{ fontSize:"0.64rem", color:C.inkL, fontWeight:700 }}>{l}</div>
-                  </div>
-                ))}
-              </div>
-              <div style={{ fontSize:"0.72rem", fontWeight:800, color:C.inkL, marginBottom:6, letterSpacing:"0.6px" }}>PREGUNTAS SOBRE LA RACHA</div>
-              <div style={{ fontSize:"0.8rem", color:C.inkM, lineHeight:1.55 }}>• ¿Qué hábito pequeño podemos mantener diario para no romperla?</div>
-              <div style={{ fontSize:"0.8rem", color:C.inkM, lineHeight:1.55 }}>• ¿Cuál fue el día más difícil de la racha y cómo lo superamos juntos?</div>
             </div>
           )}
         </div>
