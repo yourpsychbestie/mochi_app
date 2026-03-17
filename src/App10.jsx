@@ -3185,14 +3185,8 @@ function RelTest({ user, onDone }) {
         <div style={{ fontSize:"0.9rem", color:C.inkM, textAlign:"center", lineHeight:1.6, marginBottom:24, maxWidth:300 }}>
           Esperando a que <strong>{otherName}</strong> complete su parte...
         </div>
-        <div style={{ background:C.white, borderRadius:18, padding:18, border:`1.5px solid ${C.border}`, width:"100%", maxWidth:340, textAlign:"center" }}>
-          <div style={{ fontSize:"0.72rem", fontWeight:800, color:C.inkL, letterSpacing:"0.6px", marginBottom:10 }}>COMPARTE ESTE CÓDIGO</div>
-          <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"2rem", letterSpacing:8, color:C.dark, marginBottom:10 }}>{user?.code}</div>
-          <Btn onClick={() => { 
-              const c = (user?.code || "").toUpperCase();
-              if(navigator.clipboard) { navigator.clipboard.writeText(c).then(()=>alert("Código copiado: "+c)).catch(()=>alert("Tu código: "+c)); }
-              else { alert("Tu código: "+c); }
-            }} variant="sand" style={{ width:"100%" }}>Copiar código 📋</Btn>
+        <div style={{ fontSize:"0.75rem", color:C.inkL, textAlign:"center" }}>
+          Puedes ver tu código en la sección "Nosotros" para compartirlo si es necesario.
         </div>
         <div style={{ fontSize:"0.75rem", color:C.inkL, marginTop:20, textAlign:"center" }}>
           La pantalla se actualizará automáticamente cuando {otherName} termine ✨
@@ -3767,9 +3761,14 @@ export default function App() {
   };
 
   const finishTest = (scores) => {
-    setTestScores(scores);
-    save(null, { bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit, testScores:scores, lessonsDone, gratitud, momentos });
-    setScreen("main");
+    try {
+      setTestScores(scores);
+      save(null, { testScores: scores });
+      setScreen("main");
+    } catch (e) {
+      console.error("finishTest error:", e);
+      setScreen("main");
+    }
   };
 
   const completeEx = async (ex, pts) => {
