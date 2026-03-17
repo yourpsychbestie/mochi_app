@@ -1707,7 +1707,7 @@ function Login({ onLogin }) {
       let userData = await fbGetUser(cred.user.uid);
       // If no Firestore data found, still let them in with basic info
       if (!userData) {
-        userData = { email, names: email.split("@")[0] + "&", coupleCode: "", isOwner: true };
+        userData = { email, names: email.split("@")[0] + "&", code: "", isOwner: true };
       }
       onLogin({ uid: cred.user.uid, email, ...userData, isGuest: false }, false);
     } catch(e) {
@@ -2497,6 +2497,7 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
   });
 
   const totalEx = Object.values(exDone).reduce((a, b) => a + b, 0);
+  const coupleCode = String(user?.code || user?.coupleCode || "").toUpperCase();
   const myEmail = user?.email || "guest";
   const myMsgs = messages.filter(m => m.senderEmail === myEmail).length;
   const inboxMsgs = messages.filter(m => m.senderEmail !== myEmail).length;
@@ -2595,6 +2596,12 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
         </div>
         <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.75rem", color: C.cream2 }}>{user?.names || "Nosotros"}</div>
         <div style={{ color: `${C.cream}88`, fontSize: "0.85rem", fontWeight: 700, marginTop: 3 }}>{user?.since || ""}</div>
+        {!user?.isGuest && coupleCode && (
+          <div style={{ marginTop: 8, display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 10, padding: "6px 12px" }}>
+            <span style={{ fontSize: "0.68rem", color: `${C.cream}CC`, fontWeight: 800, letterSpacing: "0.5px" }}>TU CÓDIGO</span>
+            <span style={{ fontFamily: "'Fredoka One',cursive", color: C.cream2, fontSize: "0.95rem", letterSpacing: 2 }}>{coupleCode}</span>
+          </div>
+        )}
         {coupleInfo.anniversary && <div style={{ color: C.gold, fontSize: "0.82rem", fontWeight: 700, marginTop: 4 }}>💑 {coupleInfo.anniversary}</div>}
       </div>
 
@@ -2738,9 +2745,9 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
             </div>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.4rem", letterSpacing: 6, color: C.dark, background: C.cream, borderRadius: 10, padding: "8px 14px", flex: 1, textAlign: "center", border: `1.5px solid ${C.border}` }}>{user?.code || "----"}</div>
+            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.4rem", letterSpacing: 6, color: C.dark, background: C.cream, borderRadius: 10, padding: "8px 14px", flex: 1, textAlign: "center", border: `1.5px solid ${C.border}` }}>{coupleCode || "----"}</div>
             <Btn onClick={() => { 
-              const c = (user?.code || "").toUpperCase();
+              const c = coupleCode;
               if(navigator.clipboard) { navigator.clipboard.writeText(c).then(()=>alert("Código copiado: "+c)).catch(()=>alert("Tu código: "+c)); }
               else { alert("Tu código: "+c); }
             }} variant="sand" style={{ padding: "10px 14px", fontSize: "0.8rem" }}>Copiar</Btn>
@@ -3378,13 +3385,16 @@ export default function App() {
   };
 
   const afterLogin = async (u, isNew) => {
-    setUser(u);
-    ls.set("mochi_last", u.email || "guest");
+    const normalizedUser = { ...u, code: u?.code || u?.coupleCode || "" };
+    setUser(normalizedUser);
+    ls.set("mochi_last", normalizedUser.email || "guest");
+    let loadedState = null;
     if (!isNew && u.uid) {
       // Try Firebase first, fallback to localStorage
       let s = null;
       try { s = await fbGetProgress(u.uid); } catch(e) {}
       if (!s) s = ls.get(saveKey(u));
+      loadedState = s;
       if (s) {
         s = applyDecay(s);
         if (s.bamboo != null) setBamboo(s.bamboo);
@@ -3403,15 +3413,16 @@ export default function App() {
       }
     }
     // Listen to real-time messages if couple code exists
-    if (u.code && !u.isGuest) {
-      const unsub = fbListenMessages(u.code, msgs => setMessages(msgs));
+    if (normalizedUser.code && !normalizedUser.isGuest) {
+      const unsub = fbListenMessages(normalizedUser.code, msgs => setMessages(msgs));
       window._mochiMsgUnsub = unsub;
     } else {
-      const sharedMsgs = u.code ? (ls.get("mochi_msgs_" + u.code) || []) : [];
+      const sharedMsgs = normalizedUser.code ? (ls.get("mochi_msgs_" + normalizedUser.code) || []) : [];
       setMessages(sharedMsgs);
     }
     setLastVisit(new Date().toISOString());
-    setScreen(isNew ? "onboarding" : "main");
+    const hasInitialTest = !!loadedState?.testScores;
+    setScreen(isNew ? "onboarding" : (hasInitialTest ? "main" : "reltest"));
   };
 
   // Keep messages in sync whenever user/code changes
