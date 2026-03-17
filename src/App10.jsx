@@ -1802,7 +1802,11 @@ function Login({ onLogin }) {
   };
 
   const LBL = { fontSize: "0.72rem", fontWeight: 800, color: C.inkM, marginBottom: 5, display: "block", letterSpacing: "0.6px", textTransform: "uppercase" };
-  const TABS = [{ id: "login", label: "Entrar" }, { id: "register", label: "Crear" }, { id: "pair", label: "Unirse" }];
+  const TABS = [
+    { id: "login", label: "Ya tengo cuenta", hint: "Entrar con correo y contraseña" },
+    { id: "register", label: "Crear cuenta", hint: "Soy la primera persona" },
+    { id: "pair", label: "Vincular cuenta", hint: "Conectar con mi pareja" }
+  ];
 
   return (
     <div style={{ minHeight: "100vh", background: C.sandL, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "28px 20px", fontFamily: "'Nunito',sans-serif" }}>
@@ -1814,8 +1818,9 @@ function Login({ onLogin }) {
       <div style={{ background: C.white, borderRadius: 24, padding: "22px 20px", width: "100%", maxWidth: 380, boxShadow: `0 4px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
         <div style={{ display: "flex", background: C.sand, borderRadius: 12, padding: 3, marginBottom: 18, gap: 3 }}>
           {TABS.map(t => (
-            <div key={t.id} onClick={() => { setTab(t.id); setErr(""); }} style={{ flex: 1, padding: "8px 0", textAlign: "center", borderRadius: 9, fontFamily: "'Fredoka One',cursive", fontSize: "0.9rem", cursor: "pointer", background: tab === t.id ? C.white : "transparent", color: tab === t.id ? C.dark : C.inkL, boxShadow: tab === t.id ? `0 2px 0 ${C.border}` : "none", border: tab === t.id ? `1.5px solid ${C.border}` : "1.5px solid transparent", transition: "all 0.18s" }}>
-              {t.label}
+            <div key={t.id} onClick={() => { setTab(t.id); setErr(""); }} style={{ flex: 1, padding: "8px 6px", textAlign: "center", borderRadius: 9, cursor: "pointer", background: tab === t.id ? C.white : "transparent", color: tab === t.id ? C.dark : C.inkL, boxShadow: tab === t.id ? `0 2px 0 ${C.border}` : "none", border: tab === t.id ? `1.5px solid ${C.border}` : "1.5px solid transparent", transition: "all 0.18s" }}>
+              <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.8rem", lineHeight: 1.15 }}>{t.label}</div>
+              <div style={{ fontSize: "0.62rem", marginTop: 3, opacity: 0.85, fontWeight: 800, lineHeight: 1.2 }}>{t.hint}</div>
             </div>
           ))}
         </div>
@@ -3468,7 +3473,7 @@ export default function App() {
       setMessages(sharedMsgs);
     }
     setLastVisit(new Date().toISOString());
-    const hasInitialTest = !!loadedState?.testScores;
+    const hasInitialTest = Object.keys(loadedState?.testScores || {}).length > 0;
     setScreen(isNew ? "onboarding" : (hasInitialTest ? "main" : "reltest"));
   };
 
