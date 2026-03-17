@@ -159,9 +159,9 @@ const EXERCISES = [
     afterPrompts:[{role:0,ph:"Después de respirar juntos, siento…"},{role:1,ph:"Lo que noté al sincronizarme fue…"}]},
   {id:"carta",emoji:"✉️",title:"Carta a mi Herida",tags:"Narrativa · TCC",bamboo:60,time:"30 min",
     desc:"Identificar las creencias de infancia que gobiernan cómo amamos. Cada uno escribe individualmente y luego comparte lo que quiera.",
-    instructions:["Cada uno escribe su carta por separado (tómense 10-15 min)","Compartan lo que se sientan cómodos compartiendo aquí","El otro solo lee y responde con presencia, sin consejo","No hay respuesta correcta — solo estar presente","Terminen con un mensaje de cierre cálido"],
+    instructions:["Escriban su carta directamente en el campo de Mochi","Guarden y compartan cuando se sientan listos","Lean la carta del otro con presencia, sin consejo","Validen una emocion que aparezca en lo escrito","Cierren con un mensaje de cuidado"],
     isEscritura:true,
-    instruccion:"Escribe una carta a tu herida de infancia. Comienza: 'Querida [soledad / miedo al abandono…], sé que estás ahí porque...'",
+    instruccion:"Escribe aqui tu carta a una herida de infancia. Puedes empezar con: 'Querida [soledad / miedo al abandono], se que estas ahi porque...'",
     prompts:["¿Cómo y cuándo apareciste en mi vida?","¿Qué creencias sobre el amor me enseñaste?","¿Cómo apareces en mi relación hoy?","¿Qué quiero decirte desde mi yo adulto?"],
     afterPrompts:[{role:0,ph:"Compartir esto me hizo sentir…"},{role:1,ph:"Después de escucharte, entiendo mejor que…"}]},
   {id:"suenos",emoji:"🌙",title:"Mapa de Sueños",tags:"Narrativa · Positiva",bamboo:35,time:"15 min",
@@ -215,6 +215,105 @@ const EXERCISES = [
     beforeTimer:["Apaguen o silencien los teléfonos.","Siéntense cómodos, cerca.","No hay tema — solo estén presentes.","Hablen de lo que surja naturalmente.","Presionen INICIAR."],
     afterPrompts:[{role:0,ph:"Lo que noté en ti hoy fue…"},{role:1,ph:"Estar presente contigo me hizo sentir…"}]},
 ];
+
+const DAILY_TIPS = [
+  {text:"Escucha para entender, no para responder.",context:"Cuando tu pareja habla, la mayoría de nosotros ya estamos formando nuestra respuesta. Prueba escuchar el 100% antes de pensar en qué decir. Esta diferencia cambia completamente la calidad de la conversación."},
+  {text:"Di 'gracias' por algo específico hoy.",context:"Las parejas satisfechas expresan gratitud de forma regular y concreta. No es solo decir 'eres bueno/a' — es decir qué hiciste, cuándo, y cómo me hizo sentir. La especificidad convierte un cumplido en un regalo."},
+  {text:"Tóquense sin segundo interés.",context:"El contacto físico no-sexual — un abrazo largo, un beso en la frente, tomar la mano — reduce el cortisol y aumenta la oxitocina. Cuando el toque siempre lleva a algo más, quien es más reticente cierra esa puerta. El toque por el toque crea seguridad."},
+  {text:"Aprende a pedir, no a quejarte.",context:"Quejarse dice qué está mal. Pedir dice qué necesitas. Son muy distintos: 'Nunca estás presente' vs. 'Necesito 20 minutos de atención total esta noche'. Las parejas que piden claramente tienen conflictos que se resuelven."},
+  {text:"El 80% de los conflictos de pareja son perpetuos.",context:"El Dr. Gottman descubrió que la mayoría de los temas de pareja no tienen solución: son diferencias de personalidad, valores o estilos. El objetivo no es resolverlos sino manejarlos con humor y respeto. Saber esto quita una presión enorme."},
+  {text:"Celebra las victorias de tu pareja con entusiasmo.",context:"Cómo reaccionas a las buenas noticias importa tanto como cómo reaccionas a las malas. Responder con genuino interés ('¡Eso es increíble! ¡Cuéntame cómo fue!') construye confianza más que estar presente solo en los días difíciles."},
+  {text:"Repara rápido cuando te equivocas.",context:"Todos hacemos daño sin querer. La diferencia está en qué tan rápido lo reparamos. Un 'oye, me salí de línea — lo siento' dicho pronto pesa más que mil excusas días después. La reparación es la habilidad más importante del amor."},
+  {text:"Nombra lo que sientes antes de reaccionar.",context:"Antes de estallar, para un segundo y nómbrate: '¿Qué siento ahora mismo?' La emoción nombrada pierde gran parte de su fuerza. No se trata de reprimirla — se trata de no dejar que ella te maneje a ti."},
+  {text:"Conócete en los momentos de calma.",context:"Las conversaciones importantes no deberían empezar cuando ya están activados. Cuando el sistema nervioso está en alerta, el pensamiento creativo se apaga. Aprende cómo te activás, qué te calma, y compártelo con tu pareja en días tranquilos."},
+  {text:"Un ritual pequeño sostenido vale más que un gesto grande.",context:"El beso de buenos días, el mensaje de 'llegué', el 'cuéntame de tu día' — estos micro-rituales crean la trama de seguridad de una relación. Son invisibles cuando están, y ensordecedores cuando faltan."},
+  {text:"Ve el intento detrás de la acción.",context:"Tu pareja intenta amarte desde sus posibilidades actuales. Cuando algo no llega bien, antes de señalar el error, busca el intento detrás del gesto. 'Qué quería lograr con esto?' cambia la respuesta desde la ternura."},
+  {text:"Los sueños de tu pareja merecen respeto.",context:"Cuando atacamos los sueños del otro — 'eso es poco realista', '¿y cómo lo vas a pagar?' — creamos una herida profunda. Incluso si no compartes el sueño, puedes honrar que él o ella lo tenga."},
+  {text:"Practica el 'y' antes del 'pero'.",context:"Cuando usamos 'pero' después de escuchar a alguien, borramos todo lo que dijimos antes. Prueba: 'Entiendo que estás agotado/a, y también necesito...' El 'y' abre espacio donde el 'pero' cierra puertas."},
+  {text:"Mírense a los ojos 30 segundos hoy.",context:"Investigaciones muestran que el contacto visual sostenido activa las mismas vías del cerebro que el amor romántico. No hace falta decir nada — solo mirar. Inténtalo esta noche sin reírse los primeros 10 segundos."},
+  {text:"Respeta los límites de energía de tu pareja.",context:"No todos cargamos la misma batería emocional. Cuando tu pareja dice 'hoy no tengo más', no es rechazo — es información. Aprender a respetar ese límite y preguntar cuándo puede ser es un acto de amor maduro."},
+  {text:"Deja que tu pareja influya en ti.",context:"Las parejas donde ambos se dejan influir mutuamente son más felices. No se trata de perder tu identidad — se trata de que las perspectivas del otro tengan peso en tus decisiones. La rigidez muchas veces disfraza el miedo."},
+  {text:"Hagan algo nuevo juntos cada mes.",context:"La novedad reactiva la dopamina del enamoramiento. No necesita ser costoso ni lejos — un restaurante nuevo, una ruta diferente, aprender algo que ninguno sabe hacer. La sorpresa compartida une."},
+  {text:"Cuida tu temperatura emocional.",context:"Cuando tu frecuencia cardíaca sube considerablemente, el pensamiento racional se bloquea. Aprende tus señales de activación — mandíbula, hombros, tono de voz — y pide un descanso antes de continuar. No es huir, es prepararte para conectar."},
+  {text:"Pregunta antes de asumir.",context:"La mayoría de los malentendidos empiezan con una historia que nos contamos sin verificar. 'Pareció enojada' se convierte en 'está enojada conmigo' en segundos. Un simple '¿cómo estás?' antes de interpretar salva horas de distancia."},
+  {text:"Valida sin estar de acuerdo.",context:"Validar no significa que el otro tiene razón — significa que su experiencia tiene sentido desde donde está. 'Entiendo por qué te sentiste así' puede decirse sin ceder tu punto de vista. Y esas pocas palabras pueden desarmar una pelea entera."},
+  {text:"Acepta las reparaciones que te ofrecen.",context:"Cuando tu pareja intenta hacer las paces — un chiste, un abrazo, un 'oye, perdón' — recibirlo es un acto de generosidad. No siempre hay que procesar todo antes de aceptar el gesto. El perdón puede empezar con abrirle la puerta al otro."},
+  {text:"Habla de lo que te gusta, no solo de lo que no te gusta.",context:"Tenemos una tendencia natural a señalar problemas. Pero las parejas satisfechas tienen al menos 5 interacciones positivas por cada negativa. Dí hoy una cosa específica que te gusta de cómo tu pareja te ama."},
+  {text:"Cada uno necesita espacio para ser individuo.",context:"La paradoja del amor es que, para estar bien juntos, necesitan estar bien por separado. Tener tiempo propio, amigos y proyectos individuales no amenaza la relación — la enriquece. El miedo al espacio es el que la asfixia."},
+  {text:"Aprende cómo pide perdón tu pareja.",context:"Hay diferentes formas de pedir perdón: expresar arrepentimiento, aceptar responsabilidad, hacer reparación o solo pedir que te perdonen. Tu pareja puede necesitar escuchar una forma diferente a la que tú usas. Descúbranlo juntos."},
+  {text:"Presta atención a los intentos de conexión del otro.",context:"Según Gottman, la conexión se construye respondiendo a los 'intentos' del otro: comentarios, chistes, observaciones. El 87% de las parejas satisfechas responden a estos gestos. Las que se distancian los ignoran."},
+  {text:"La crítica es diferente de la queja.",context:"Una queja habla de una acción específica: 'Dejaste los platos sin lavar'. Una crítica ataca la personalidad: 'Eres irresponsable'. Si tu queja tiene las palabras 'siempre', 'nunca' o 'eres', ya se convirtió en crítica."},
+  {text:"Comparte algo que te asuste hoy.",context:"La vulnerabilidad crea intimidad más rápido que cualquier otra cosa. Compartir un miedo, una inseguridad o una vergüenza no te hace débil — te hace humano/a. Y al hacerlo, le das permiso a tu pareja para mostrarse también."},
+  {text:"Aprende a recibir amor en el idioma de quien lo da.",context:"Es fácil recibir amor cuando llega en tu idioma. El crecimiento está en apreciarlo cuando llega en el de tu pareja. Si ella o él hace actos de servicio y tú necesitas palabras, practica notar el acto como lo que es: un 'te amo' en otro idioma."},
+  {text:"El sarcasmo corroe la confianza lentamente.",context:"Gottman lo llama 'desprecio' y es el predictor más fuerte del divorcio. Los ojos en blanco, los comentarios que minimizan — aunque se digan 'en broma' — acumulan un daño lento y real. La alternativa es decir lo que sientes sin degradar al otro."},
+  {text:"Hablen del futuro con regularidad.",context:"Cada ciertos meses, háganse estas preguntas: ¿Qué queremos este año? ¿Qué sueño podemos perseguir juntos? Las parejas que co-crean su futuro se sienten más unidas. Los proyectos compartidos crean historia."},
+  {text:"Cuando no sepas qué decir, di 'estoy aquí'.",context:"A veces no hay palabras para el dolor del otro. Y no hace falta que haya. 'Estoy aquí' es una de las cosas más poderosas que puedes decir. La presencia sin palabras es una forma de amor que no necesita soluciones."},
+  {text:"La rabia es siempre una emoción secundaria.",context:"Detrás de cada momento de rabia hay una emoción primaria: miedo, dolor, vergüenza, decepción. Cuando alguien explota, la pregunta real es '¿qué le duele?'. Aprende a reconocer eso en ti y a buscarlo en tu pareja antes de responder a la rabia."},
+  {text:"La seguridad se construye con consistencia.",context:"Las promesas grandes son menos importantes que los actos pequeños sostenidos. Decir lo que vas a hacer, hacer lo que dijiste, en los pequeños momentos del día — eso construye confianza. No hace falta ser perfecto/a, hace falta ser confiable."},
+  {text:"Pregunta cómo fue el día con curiosidad real.",context:"No como formalidad — como sincero interés. '¿Qué fue lo mejor que te pasó hoy?' abre más que '¿Cómo estás?'. La curiosidad activa dirigida al otro se siente muy diferente a la pregunta automática."},
+  {text:"Celebren juntos, no solo se apoyen en las crisis.",context:"Es fácil estar presente en las dificultades. Lo que separa a las parejas que duran es que también se celebran en los logros. Responder con entusiasmo a las buenas noticias del otro es altamente predictivo de satisfacción de pareja."},
+  {text:"Hablen de cómo manejan los conflictos.",context:"¿Necesitas espacio para procesar antes de hablar? ¿O necesitas hablar de inmediato para que no se acumule? Estas diferencias crean muchos meta-conflictos. Hablar de eso cuando no están en uno cambia todo."},
+  {text:"No conviertas el silencio en castigo.",context:"El silencio punitivo — dejar de hablar para que el otro sufra — es una de las formas más dañinas de comunicar enojo. Si necesitas silencio para procesar, es válido, pero decirlo transforma el silencio en cuidado."},
+  {text:"Apoyen los proyectos individuales del otro.",context:"Celebrar el crecimiento de tu pareja, incluso cuando ese crecimiento te genera algo de inseguridad, es amor en su forma más madura. Las personas que se sienten apoyadas en sus metas individuales reportan mayor satisfacción en la relación."},
+  {text:"La vergüenza y la culpa son emociones diferentes.",context:"Culpa: 'Hice algo malo.' Vergüenza: 'Soy algo malo.' La culpa puede llevar a la reparación. La vergüenza paraliza o ataca. Cuando tu pareja se equivoca, apunta al comportamiento, no a la persona."},
+  {text:"Hagan un check-in de pareja cada semana.",context:"Quince minutos semanales donde ambos preguntan: '¿Hay algo que te dejé pendiente esta semana?', '¿Hay algo que quieras que hagamos más?'. Este ritual previene que los pequeños resentimientos se conviertan en grandes distancias."},
+  {text:"Pide lo que necesitas cuando estás bien.",context:"Las necesidades pedidas en calma tienen más probabilidad de ser escuchadas. 'Esta semana necesitaría que...' dicho en un momento de conexión llega diferente que la misma frase en medio de una pelea. El timing en el amor importa."},
+  {text:"La intimidad emocional prepara la intimidad física.",context:"La conexión emocional pre-dispone el cuerpo para la intimidad física. Las parejas que se sienten emocionalmente aisladas reportan menor satisfacción sexual. La intimidad no empieza en el dormitorio — empieza a las 6 pm cuando uno pregunta '¿cómo te fue?'."},
+  {text:"Habla bien de tu pareja cuando no está.",context:"Las palabras que usamos para describir a nuestra pareja a otros revelan y refuerzan cómo la vemos. Hablar bien de ella o él cuando no está cultiva un respeto que después se nota en el trato del día a día."},
+  {text:"Aprendan una señal para pausar los conflictos.",context:"Pedir un descanso de 20 minutos cuando la discusión escala no es rendirse — es madurez emocional. El sistema nervioso necesita ese tiempo para calmarse. Pongan una palabra clave que ambos respeten para marcar la pausa."},
+  {text:"Las expectativas no dichas se convierten en resentimientos.",context:"No podemos enojarnos con alguien por no cumplir una expectativa que nunca le dijimos. Si esperabas algo y no llegó, la pregunta honesta es: ¿Lo pedí claramente? No asumir que 'debería saber' salva muchos malentendidos."},
+  {text:"La historia de su relación importa.",context:"Las parejas que recuerdan bien su historia — cómo se conocieron, los momentos difíciles que superaron — tienen más recursos emocionales para los conflictos presentes. Recuerden su historia juntos: es el mapa de lo que son."},
+  {text:"El amor maduro es más tranquilo, no menos real.",context:"En las primeras etapas, el amor se siente intensamente. En relaciones más maduras, es más tranquilo pero no menos profundo. Una relación estable con cariño consistente es un logro — no una señal de que 'ya se apagó la llama'."},
+  {text:"Pregunta qué necesita el otro, no qué necesitarías tú.",context:"A veces consolamos desde lo que a nosotros nos funcionaría, no desde lo que el otro necesita. '¿Qué te ayuda más cuando estás así?' es una de las preguntas más útiles de una relación, y las respuestas pueden sorprenderte."},
+  {text:"El amor es un verbo, no un estado.",context:"Decir 'te amo' es importante, pero el amor se sustenta en las acciones diarias: preguntar, recordar, aparecer, insistir, reparar. Las palabras abren el camino, pero los actos son los que lo pavimentan. El amor que solo se declara se desgasta — el que se practica crece."},
+];
+
+const EXAMPLES_BY_EXERCISE = {
+  validacion: {
+    no: ["Ya vas a empezar con lo mismo, exageras.", "Eso no es para tanto, deberias calmarte."],
+    si: ["Tiene sentido que te sintieras asi con lo que paso.", "Quiero entenderte bien, cuentame mas de como lo viviste."],
+  },
+  ojos: {
+    no: ["Miremos rapido para terminar de una vez.", "Aprovecho para revisar notificaciones mientras tanto."],
+    si: ["Me quedo presente contigo estos minutos, sin prisa.", "Si me incomodo, respiro y vuelvo a mirarte con ternura."],
+  },
+  espejo: {
+    no: ["Lo que quieres decir es que yo tengo la culpa.", "Ya entendi, pero lo mio es peor."],
+    si: ["Lo que te escuche fue..., dime si lo capte bien.", "Tiene sentido que eso te afectara de esa forma."],
+  },
+  apreciacion: {
+    no: ["Bueno, gracias supongo.", "Si, pero tambien deberias mejorar en..."],
+    si: ["Gracias, me hizo sentir querido/a que notaras eso.", "Aprecio cuando ayer me esperaste para cenar juntos."],
+  },
+  respiracion: {
+    no: ["No sirve, mejor sigamos peleando.", "Hazlo tu, yo no tengo tiempo para esto."],
+    si: ["Voy a seguir el ritmo contigo para calmarnos.", "Respiremos juntos y despues hablamos con mas calma."],
+  },
+  carta: {
+    no: ["No voy a escribir nada, esto es una tonteria.", "Te mando dos lineas para salir del paso."],
+    si: ["Quiero escribir lo que me cuesta mostrar para abrirme contigo.", "Te comparto esto porque confio en que me leeras con cuidado."],
+  },
+  suenos: {
+    no: ["Eso es imposible, mejor ni lo pienses.", "Tu sueno no tiene sentido para nuestra vida."],
+    si: ["Me gusta escuchar eso que te ilusiona, cuentame mas.", "Podemos pensar un primer paso pequeno para acercarnos."],
+  },
+  perdida: {
+    no: ["Ya superalo, eso fue hace tiempo.", "Perdoname y listo, no quiero hablar mas."],
+    si: ["Reconozco que eso te dolio y asumo mi parte.", "Quiero reparar esto contigo, dime que necesitas para sanar."],
+  },
+  amor_idiomas: {
+    no: ["Tu idioma es raro, deberias cambiar.", "Si no te gusta como amo, es tu problema."],
+    si: ["Quiero aprender a hablar tu idioma del amor.", "Dime un gesto concreto que te haga sentir amado/a."],
+  },
+  conflicto: {
+    no: ["Tu siempre arruinas todo.", "Lo importante es demostrar que yo tenia razon."],
+    si: ["Cuando paso eso, yo senti miedo y frustracion.", "Quiero entender que necesitabas tu en ese momento."],
+  },
+  presencia: {
+    no: ["Te escucho, pero sigo contestando mensajes.", "Hablemos luego, ahora no quiero estar aqui."],
+    si: ["Te regalo estos minutos con atencion completa.", "Estoy aqui contigo, sin pantallas ni distracciones."],
+  },
+};
 
 const CONOCE_CATS = {
   infancia:{emoji:"🧸",label:"Infancia",bg:"#f5edda",preguntas:["¿Cuál es tu recuerdo más feliz de la infancia?","¿Cómo era tu relación con tu mamá cuando eras pequeño/a?","¿Cómo era tu relación con tu papá cuando eras pequeño/a?","¿Qué aprendiste sobre el amor en tu familia de origen?","¿Cuál fue el momento más difícil de tu infancia?","¿Qué cosas de tu infancia te gustaría haber tenido?"]},
@@ -2198,7 +2297,7 @@ function TimerEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B" }) {
       <div style={{ background: C.sandL, borderRadius: 14, padding: 14, marginBottom: 14, border: `1.5px solid ${C.border}` }}>
         {ex.beforeTimer.map((s, i) => <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: "0.88rem", color: C.ink, marginBottom: 9 }}>
           <div style={{ width: 24, height: 24, background: C.dark, color: C.cream2, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "0.72rem", flexShrink: 0 }}>{i + 1}</div>
-          <div style={{ paddingTop: 2 }}>{s}</div>
+          <div style={{ fontFamily: "'Nunito',sans-serif", fontSize: "0.95rem", color: C.dark }}>{s}</div>
         </div>)}
       </div>
       <Btn onClick={start} variant="olive" style={{ width: "100%", fontSize: "1.1rem" }}>▶ Iniciar</Btn>
@@ -2206,17 +2305,76 @@ function TimerEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B" }) {
   );
 
   if (!done) return (
-    <div style={{ textAlign: "center", padding: "20px 0" }}>
-      <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "4.8rem", color: C.dark, letterSpacing: 4 }}>{Math.floor(secs / 60)}:{String(secs % 60).padStart(2, "0")}</div>
-      <div style={{ fontSize: "0.85rem", color: C.inkM, fontWeight: 700, marginTop: 8 }}>{ex.timerLabel}</div>
+    <div style={{ textAlign: "center", padding: "26px 0" }}>
+      <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "2.3rem", color: C.dark }}>{secs}s</div>
+      <div style={{ color: C.inkM, marginTop: 8 }}>Mirada suave, respiracion calma, sin hablar.</div>
     </div>
   );
 
   return (
     <div>
-      <div style={{ background: C.cream, borderRadius: 12, padding: 12, textAlign: "center", fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark, marginBottom: 14, border: `1.5px solid ${C.border}` }}>¡{Math.floor(ex.timer / 60)} minutos completados! 🎉</div>
-      {ex.afterPrompts.map((p, i) => <div key={i} style={{ marginBottom: 10 }}><PBadge who={i === 0 ? "A" : "B"} name={i === 0 ? nameA : nameB} /><TA value={vals[i]} onChange={v => { const n = [...vals]; n[i] = v; setVals(n); }} placeholder={p.ph} /></div>)}
-      <Btn onClick={() => { if (!vals.some(v => v.length < 2)) onDone(); }} style={{ width: "100%" }}>Finalizar ✓</Btn>
+      <div style={{ display: "grid", gap: 10, marginBottom: 12 }}>
+        <textarea rows={4} placeholder={`${nameA}: que notaste en ti y en tu pareja?`} value={vals[0]} onChange={e => setVals(v => [e.target.value, v[1]])} style={inputStyle} />
+        <textarea rows={4} placeholder={`${nameB}: que notaste en ti y en tu pareja?`} value={vals[1]} onChange={e => setVals(v => [v[0], e.target.value])} style={inputStyle} />
+      </div>
+      <Btn onClick={() => onDone(vals)} disabled={!vals[0] || !vals[1]} variant="olive" style={{ width: "100%" }}>Finalizar</Btn>
+    </div>
+  );
+}
+
+function WritingEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) {
+  const isOwner = user?.isOwner !== false;
+  const myRole = isOwner ? 0 : 1;
+  const isGuest = user?.isGuest || !user?.code;
+  const [session, setSession] = useState(null);
+  const [val, setVal] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (isGuest) {
+      setSession({ messages: [] });
+      return;
+    }
+    const unsub = fbListenExSession(user.code, ex.id, data => {
+      if (data) setSession(data);
+      else setSession({ messages: [] });
+    });
+    return () => unsub();
+  }, [user?.code, ex.id, isGuest]);
+
+  const messages = Array.isArray(session?.messages) ? session.messages : [];
+  const mine = messages.find(m => m.role === myRole);
+  const partner = messages.find(m => m.role !== myRole);
+
+  const submit = async () => {
+    const clean = (val || "").trim();
+    if (!clean || saving) return;
+    setSaving(true);
+    const next = [
+      ...messages.filter(m => m.role !== myRole),
+      { role: myRole, text: clean, updatedAt: new Date().toISOString() },
+    ];
+    if (isGuest) {
+      setSession({ messages: next });
+    } else {
+      await fbSendExMessage(user.code, ex.id, { messages: next, step: next.length, starterRole: 0 }).catch(() => {});
+      setSession(s => ({ ...(s || {}), messages: next }));
+    }
+    setSaving(false);
+    if (next.length >= 2) onDone();
+  };
+
+  return (
+    <div style={{ background: C.sandL, borderRadius: 14, padding: 14, border: `1.5px solid ${C.border}` }}>
+      <div style={{ fontSize: "0.82rem", color: C.inkM, lineHeight: 1.55, marginBottom: 8 }}>{ex.instruccion}</div>
+      <TA value={val || mine?.text || ""} onChange={setVal} placeholder="Escribe aqui dentro de Mochi y compartelo con tu pareja..." rows={8} style={{ marginBottom: 8 }} />
+      <Btn onClick={submit} style={{ width: "100%" }} disabled={saving}>{saving ? "Guardando..." : "Guardar y compartir"}</Btn>
+      {partner && (
+        <div style={{ marginTop: 10, background: C.white, borderRadius: 10, padding: 10, border: `1px solid ${C.border}` }}>
+          <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.inkL, marginBottom: 4 }}>{myRole === 0 ? nameB : nameA} compartio:</div>
+          <div style={{ fontSize: "0.82rem", color: C.inkM, lineHeight: 1.5 }}>{partner.text}</div>
+        </div>
+      )}
     </div>
   );
 }
@@ -2227,6 +2385,7 @@ function ExModal({ ex, onClose, onComplete, nameA, nameB, user }) {
   const [pts, setPts] = useState(0);
   const [showInstructions, setShowInstructions] = useState(false);
   const [showExamples, setShowExamples] = useState(false);
+  const examples = ex?.examples || EXAMPLES_BY_EXERCISE[ex?.id] || { no: [], si: [] };
 
   const finish = (p = ex.bamboo) => { setDone(true); setPts(p); onComplete(ex, p); };
 
@@ -2288,17 +2447,24 @@ function ExModal({ ex, onClose, onComplete, nameA, nameB, user }) {
         {showExamples && (
           <div style={{ marginTop: 10 }}>
             <div style={{ fontSize: "0.7rem", fontWeight: 800, color: "#a04040", marginBottom: 6 }}>❌ Cómo NO</div>
-            <div style={{ background: "#ffeaea", borderRadius: 10, padding: "8px 10px", marginBottom: 6, fontSize: "0.82rem", color: C.inkM }}>"Ya vas a empezar con lo mismo, exageras."</div>
-            <div style={{ background: "#ffeaea", borderRadius: 10, padding: "8px 10px", marginBottom: 10, fontSize: "0.82rem", color: C.inkM }}>"Eso no es para tanto, deberías calmarte."</div>
+            {(examples.no || []).map((txt, i) => (
+              <div key={`no-${i}`} style={{ background: "#ffeaea", borderRadius: 10, padding: "8px 10px", marginBottom: i === (examples.no || []).length - 1 ? 10 : 6, fontSize: "0.82rem", color: C.inkM }}>
+                "{txt}"
+              </div>
+            ))}
             <div style={{ fontSize: "0.7rem", fontWeight: 800, color: C.olive, marginBottom: 6 }}>✅ Cómo SÍ</div>
-            <div style={{ background: "#eaf7e8", borderRadius: 10, padding: "8px 10px", marginBottom: 6, fontSize: "0.82rem", color: C.inkM }}>"Tiene sentido que te sintieras así con lo que pasó."</div>
-            <div style={{ background: "#eaf7e8", borderRadius: 10, padding: "8px 10px", fontSize: "0.82rem", color: C.inkM }}>"Quiero entenderte bien, cuéntame más de cómo lo viviste."</div>
+            {(examples.si || []).map((txt, i) => (
+              <div key={`si-${i}`} style={{ background: "#eaf7e8", borderRadius: 10, padding: "8px 10px", marginBottom: i === (examples.si || []).length - 1 ? 0 : 6, fontSize: "0.82rem", color: C.inkM }}>
+                "{txt}"
+              </div>
+            ))}
           </div>
         )}
       </div>
 
       {ex.phases && <ChatEx ex={ex} onDone={finish} nameA={nameA} nameB={nameB} user={user} />}
       {ex.timer && <TimerEx ex={ex} onDone={finish} nameA={nameA} nameB={nameB} />}
+      {ex.isEscritura && <WritingEx ex={ex} onDone={finish} nameA={nameA} nameB={nameB} user={user} />}
     </div>
   );
 }
@@ -2443,7 +2609,6 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
               <div style={{ width:34, height:5, background:C.sand, borderRadius:50 }}/>
               <div onClick={()=>setOpenId(null)} style={{ width:30, height:30, borderRadius:"50%", background:C.sand, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", fontSize:"1rem", color:C.inkM, fontWeight:800 }}>✕</div>
             </div>
-            <button onClick={() => setOpenId(null)} style={{ position: "absolute", right: 16, top: 14, background: C.sandL, border: `1.5px solid ${C.border}`, borderRadius: 9, width: 30, height: 30, fontSize: "0.85rem", cursor: "pointer", color: C.inkM }}>✕</button>
             <ExModal ex={ex} onClose={() => setOpenId(null)} onComplete={(exercise, pts) => { onComplete(exercise, pts); }} user={user} nameA={nameA} nameB={nameB} />
           </div>
         </div>
@@ -2572,15 +2737,67 @@ function Burbuja({ burbuja, onSave, user }) {
   const nameA = parsedNames.a;
   const nameB = parsedNames.b;
   const [open, setOpen] = useState({});
-  const [tmp, setTmp] = useState({});
+  const [draft, setDraft] = useState({});
+  const [counterDraft, setCounterDraft] = useState({});
+  const [showCounter, setShowCounter] = useState({});
   const [burTab, setBurTab] = useState("negociacion");
+  const myRole = user?.isOwner !== false ? "a" : "b";
+  const otherRole = myRole === "a" ? "b" : "a";
 
-  const get = (id, f) => tmp[id]?.[f] ?? burbuja[id]?.[f] ?? "";
-  const set_ = (id, f, v) => setTmp(p => ({ ...p, [id]: { ...p[id], [f]: v } }));
-  const save = (id) => { const a = get(id, "a"), b = get(id, "b"), c = get(id, "c"); if (!a && !b) return; onSave(id, { a, b, c }); };
+  const roleLabel = (role) => role === "a" ? nameA : nameB;
   const total = BURBUJA_SECTIONS.reduce((s, sec) => s + sec.items.length, 0);
   const allItems = BURBUJA_SECTIONS.flatMap(sec => sec.items.map(item => ({ ...item, section: sec.title, icon: sec.icon })));
-  const savedItems = allItems.filter(item => !!burbuja[item.id]);
+  const savedItems = allItems.filter(item => {
+    const r = burbuja[item.id];
+    if (!r) return false;
+    if (r.status === "approved") return true;
+    return !r.status && (r.c || r.a || r.b);
+  });
+
+  const sendProposal = (itemId, text, asCounter = false) => {
+    const clean = (text || "").trim();
+    if (!clean) return;
+    const prev = burbuja[itemId] || {};
+    const history = [...(prev.history || []), {
+      from: myRole,
+      action: asCounter ? "negotiate" : "propose",
+      text: clean,
+      at: new Date().toISOString(),
+    }];
+    onSave(itemId, {
+      proposalText: clean,
+      proposedBy: myRole,
+      pendingFor: otherRole,
+      approvedBy: { [myRole]: true, [otherRole]: false },
+      status: "pending",
+      history,
+      c: "",
+    });
+    setDraft(p => ({ ...p, [itemId]: "" }));
+    setCounterDraft(p => ({ ...p, [itemId]: "" }));
+    setShowCounter(p => ({ ...p, [itemId]: false }));
+  };
+
+  const approveProposal = (itemId) => {
+    const prev = burbuja[itemId];
+    if (!prev?.proposalText) return;
+    const approvedBy = { ...(prev.approvedBy || {}), [myRole]: true };
+    const bothApproved = !!(approvedBy.a && approvedBy.b);
+    const history = [...(prev.history || []), {
+      from: myRole,
+      action: "approve",
+      text: prev.proposalText,
+      at: new Date().toISOString(),
+    }];
+    onSave(itemId, {
+      ...prev,
+      approvedBy,
+      pendingFor: bothApproved ? null : otherRole,
+      status: bothApproved ? "approved" : "pending",
+      c: bothApproved ? prev.proposalText : "",
+      history,
+    });
+  };
 
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
@@ -2618,19 +2835,58 @@ function Burbuja({ burbuja, onSave, user }) {
           </div>
           {open[sec.id] && <div style={{ padding: "0 16px 16px" }}>
             {sec.items.map(item => {
-              const sv = !!burbuja[item.id];
-              return <div key={item.id} style={{ background: sv ? C.cream : C.sandL, borderRadius: 13, padding: 13, marginBottom: 9, borderLeft: `3px solid ${sv ? C.olive : C.border}` }}>
+              const rec = burbuja[item.id] || null;
+              const isLegacy = !!(rec && !rec.status && (rec.a || rec.b || rec.c));
+              const approved = !!(rec && (rec.status === "approved" || isLegacy));
+              const pendingForMe = rec?.pendingFor === myRole;
+              const waitingOther = rec?.pendingFor === otherRole;
+              const mainText = approved ? (rec?.c || rec?.a || rec?.b || rec?.proposalText || "") : (rec?.proposalText || "");
+              return <div key={item.id} style={{ background: approved ? C.cream : C.sandL, borderRadius: 13, padding: 13, marginBottom: 9, borderLeft: `3px solid ${approved ? C.olive : C.border}` }}>
                 <div style={{ fontSize: "0.88rem", fontWeight: 700, color: C.ink, marginBottom: 10 }}>{item.q}</div>
                 {item.note && <div style={{ background: C.white, borderRadius: 9, padding: "9px 11px", marginBottom: 10, fontSize: "0.78rem", color: C.inkM, lineHeight: 1.6, border: `1px solid ${C.border}` }}>{item.note}</div>}
-                {[["A", "a", item.phA, nameA], ["B", "b", item.phB, nameB]].map(([w, f, ph, nm]) => <div key={w} style={{ marginBottom: 8 }}><PBadge who={w} name={nm} /><TA value={get(item.id, f)} onChange={v => set_(item.id, f, v)} placeholder={ph} rows={2} /></div>)}
-                {sv && <div style={{ background: C.white, borderRadius: 10, padding: 10, marginBottom: 8, border: `1.5px solid ${C.olive}` }}>
+                {approved && <div style={{ background: C.white, borderRadius: 10, padding: 10, marginBottom: 8, border: `1.5px solid ${C.olive}` }}>
                   <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.olive, marginBottom: 3, letterSpacing: "0.4px" }}>✓ NUESTRO ACUERDO</div>
-                  <div style={{ fontSize: "0.85rem", fontWeight: 700, color: C.ink }}>{burbuja[item.id].c || burbuja[item.id].a}</div>
+                  <div style={{ fontSize: "0.85rem", fontWeight: 700, color: C.ink }}>{mainText}</div>
                 </div>}
-                <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}>
-                  <TA value={get(item.id, "c")} onChange={v => set_(item.id, "c", v)} placeholder="Acuerdo compartido (opcional)... +10 bambú 🌿" rows={1} style={{ flex: 1, margin: 0 }} />
-                  <Btn onClick={() => save(item.id)} variant="olive" style={{ padding: "10px 14px", fontSize: "0.85rem", whiteSpace: "nowrap" }}>Guardar</Btn>
-                </div>
+
+                {!rec && (
+                  <>
+                    <TA value={draft[item.id] || ""} onChange={v => setDraft(p => ({ ...p, [item.id]: v }))} placeholder="Escribe tu propuesta de acuerdo..." rows={2} style={{ marginBottom: 8 }} />
+                    <Btn onClick={() => sendProposal(item.id, draft[item.id] || "")} style={{ width:"100%", fontSize:"0.84rem" }}>Enviar propuesta</Btn>
+                  </>
+                )}
+
+                {rec && !approved && (
+                  <>
+                    <div style={{ background:C.white, borderRadius:10, border:`1px solid ${C.border}`, padding:"8px 10px", marginBottom:8 }}>
+                      <div style={{ fontSize:"0.66rem", fontWeight:800, color:C.inkL, marginBottom:4 }}>
+                        Propuesta de {roleLabel(rec.proposedBy || otherRole)}
+                      </div>
+                      <div style={{ fontSize:"0.82rem", color:C.inkM, lineHeight:1.5 }}>{mainText}</div>
+                    </div>
+
+                    {waitingOther && (
+                      <div style={{ background:C.cream, border:`1px solid ${C.border}`, borderRadius:10, padding:"8px 10px", fontSize:"0.76rem", fontWeight:700, color:C.inkL, marginBottom:8 }}>
+                        Tu pareja aún no ha respondido.
+                      </div>
+                    )}
+
+                    {pendingForMe && (
+                      <>
+                        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:8 }}>
+                          <Btn onClick={() => approveProposal(item.id)} variant="olive" style={{ fontSize:"0.8rem", padding:"10px 8px" }}>✅ Aprobar</Btn>
+                          <Btn onClick={() => setShowCounter(p => ({ ...p, [item.id]: !p[item.id] }))} variant="sand" style={{ fontSize:"0.8rem", padding:"10px 8px" }}>✏️ Negociar</Btn>
+                        </div>
+                        {showCounter[item.id] && (
+                          <>
+                            <TA value={counterDraft[item.id] || ""} onChange={v => setCounterDraft(p => ({ ...p, [item.id]: v }))} placeholder="Escribe tu contrapropuesta..." rows={2} style={{ marginBottom:8 }} />
+                            <Btn onClick={() => sendProposal(item.id, counterDraft[item.id] || "", true)} style={{ width:"100%", fontSize:"0.82rem" }}>Enviar contrapropuesta</Btn>
+                          </>
+                        )}
+                      </>
+                    )}
+                  </>
+                )}
               </div>;
             })}
           </div>}
@@ -2648,7 +2904,7 @@ function Burbuja({ burbuja, onSave, user }) {
               <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.inkL, marginBottom: 6 }}>{item.icon} {item.section}</div>
               <div style={{ fontSize: "0.82rem", fontWeight: 800, color: C.ink, marginBottom: 7 }}>{item.q}</div>
               <div style={{ background: C.cream, borderRadius: 10, padding: "9px 11px", fontSize: "0.84rem", fontWeight: 700, color: C.dark }}>
-                {burbuja[item.id]?.c || burbuja[item.id]?.a || "Sin texto"}
+                {burbuja[item.id]?.c || burbuja[item.id]?.proposalText || burbuja[item.id]?.a || "Sin texto"}
               </div>
             </div>
           ))
@@ -2660,13 +2916,13 @@ function Burbuja({ burbuja, onSave, user }) {
 }
 
 // PROFILE — Enhanced with more info fields
-function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento, conoce, onOpenConocete, onSendMessage }) {
+function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento, conoce, onOpenConocete, onSendMessage, onAddBamboo }) {
   const [editMode, setEditMode] = useState(false);
   const [editingName, setEditingName] = useState(false);
-  const [streakRecord, setStreakRecord] = useState(0);
   const [loveText, setLoveText] = useState("");
   const [loveQuick, setLoveQuick] = useState(null);
   const [sendingLove, setSendingLove] = useState(false);
+  const [showTipModal, setShowTipModal] = useState(false);
   const [nameInput, setNameInput] = useState(user?.names || "");
   const [form, setForm] = useState({
     anniversary: coupleInfo.anniversary || "",
@@ -2690,16 +2946,14 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
   const inboxMsgs = messages.filter(m => m.senderEmail !== myEmail).length;
   const todayStr = new Date().toDateString();
   const todayLoveMsg = messages.find(m => m.senderEmail !== myEmail && new Date(m.time).toDateString() === todayStr);
-  const shortTips = [
-    "Escucha 2 minutos sin interrumpir.",
-    "Hoy valida una emoción de tu pareja.",
-    "Un abrazo largo vale más que un consejo.",
-    "Antes de responder, respira y pregunta.",
-    "Agradezcan una cosa pequeña del día.",
-    "Hablen con curiosidad, no con prisa.",
-    "Pregúntale: ¿Qué necesitas de mí hoy?",
-  ];
-  const todayTip = shortTips[new Date().getDate() % shortTips.length];
+  const tipDateKey = new Date().toISOString().slice(0, 10);
+  const tipRewardKey = `mochi_tip_reward_${user?.uid || user?.email || "guest"}_${tipDateKey}`;
+  const [tipRewarded, setTipRewarded] = useState(!!ls.get(tipRewardKey));
+  const todayTip = DAILY_TIPS[new Date().getDate() % DAILY_TIPS.length];
+  const loveHistory = [...(messages || [])]
+    .filter(m => (m?.text || "").trim())
+    .sort((a, b) => new Date(b.time || 0).getTime() - new Date(a.time || 0).getTime());
+  const visibleLoveHistory = loveHistory.slice(0, 12);
   const activityDateKeys = [
     ...(gratitud || []).map(x => x?.createdAt?.toDate ? x.createdAt.toDate() : new Date(x?.date || Date.now())),
     ...(momentos || []).map(x => x?.createdAt?.toDate ? x.createdAt.toDate() : new Date(x?.date || Date.now())),
@@ -2731,14 +2985,6 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
     }
     return yStreak;
   })();
-  useEffect(() => {
-    const key = `mochi_streak_record_${user?.uid || user?.email || "guest"}`;
-    const prev = Number(ls.get(key) || 0);
-    const next = Math.max(prev, streakDays);
-    setStreakRecord(next);
-    if (next !== prev) ls.set(key, next);
-  }, [streakDays, user?.uid, user?.email]);
-
   const [connected, setConnected] = useState(false);
   useEffect(() => {
     if (user?.code && !user?.isGuest) {
@@ -2781,6 +3027,18 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
 
   const save = () => { onSaveCoupleInfo(form); setEditMode(false); };
 
+  useEffect(() => {
+    setTipRewarded(!!ls.get(tipRewardKey));
+  }, [tipRewardKey]);
+
+  const openTip = () => {
+    setShowTipModal(true);
+    if (tipRewarded) return;
+    ls.set(tipRewardKey, true);
+    setTipRewarded(true);
+    onAddBamboo?.(15, "+15 bambu por leer su consejo del dia 🌿");
+  };
+
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
       <div style={{ background: C.dark, padding: "38px 20px 28px", textAlign: "center" }}>
@@ -2796,15 +3054,6 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
           </div>
         )}
         {coupleInfo.anniversary && <div style={{ color: C.gold, fontSize: "0.82rem", fontWeight: 700, marginTop: 4 }}>💑 {coupleInfo.anniversary}</div>}
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, padding: "10px 14px" }}>
-        {[["Ejercicios", totalEx], ["Bambú 🌿", bamboo], ["Mensajes", myMsgs]].map(([l, v]) => (
-          <div key={l} style={{ background: C.white, borderRadius: 16, padding: "14px 10px", textAlign: "center", boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.7rem", color: C.dark }}>{v}</div>
-            <div style={{ fontSize: "0.7rem", color: C.inkL, fontWeight: 700 }}>{l}</div>
-          </div>
-        ))}
       </div>
 
       <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:16, padding:12, border:`1.5px solid ${C.border}`, boxShadow:`0 2px 0 ${C.border}` }}>
@@ -2835,6 +3084,27 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
             Aún no hay mensaje de hoy. Recibidos: {inboxMsgs}
           </div>
         )}
+
+        <div style={{ marginTop: 10, background: C.sandL, borderRadius: 12, border: `1.5px solid ${C.border}`, padding: 10 }}>
+          <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.inkL, letterSpacing: "0.5px", marginBottom: 8 }}>HISTORIAL DE MENSAJES</div>
+          {visibleLoveHistory.length === 0 ? (
+            <div style={{ fontSize: "0.78rem", color: C.inkL, fontWeight: 700 }}>Todavía no tienen mensajes guardados.</div>
+          ) : visibleLoveHistory.map((m) => (
+            <div key={m.id || `${m.senderEmail}-${m.time}`} style={{ background: C.white, borderRadius: 10, border: `1px solid ${C.border}`, padding: "8px 10px", marginBottom: 6 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 4 }}>
+                <div style={{ fontSize: "0.68rem", fontWeight: 800, color: m.senderEmail === myEmail ? C.olive : C.dark }}>
+                  {m.senderEmail === myEmail ? "Tú" : (m.sender || "Tu pareja")}
+                </div>
+                <div style={{ fontSize: "0.64rem", color: C.inkL, fontWeight: 700 }}>
+                  {new Date(m.time || Date.now()).toLocaleDateString("es", { day: "2-digit", month: "short" })}
+                </div>
+              </div>
+              <div style={{ fontSize: "0.78rem", color: C.inkM, lineHeight: 1.4 }}>
+                "{m.text}"
+              </div>
+            </div>
+          ))}
+        </div>
 
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:6, marginTop:10 }}>
           {LOVE_PROMPTS.slice(0, 4).map((p, i) => (
@@ -2893,7 +3163,12 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
       {/* 3. Consejo del día */}
       <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:16, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
         <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:10 }}>📖 Consejo del dia</div>
-        <div style={{ background:C.cream, border:`1.5px solid ${C.border}`, borderRadius:12, padding:"10px 12px", fontSize:"0.84rem", color:C.ink, fontWeight:700, lineHeight:1.45 }}>{todayTip}</div>
+        <Btn onClick={openTip} variant="sand" style={{ width:"100%", fontSize:"0.86rem" }}>
+          {tipRewarded ? "Ver consejo del dia" : "Ver consejo del dia +15 bambu 🌿"}
+        </Btn>
+        <div style={{ fontSize:"0.72rem", color:C.inkL, fontWeight:700, marginTop:8 }}>
+          {tipRewarded ? "Recompensa de hoy reclamada." : "Recompensa disponible hoy al abrir el consejo."}
+        </div>
       </div>
 
       {/* 4. Gratitud y momentos */}
@@ -2903,13 +3178,6 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
           onAddGratitud={onAddGratitud} onAddMomento={onAddMomento}
           user={user}
         />
-      </div>
-
-      {/* 5. Racha */}
-      <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:16, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
-        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:8 }}>🔥 Racha</div>
-        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.4rem", color:C.olive }}>{streakDays} días seguidos</div>
-        <div style={{ fontSize:"0.78rem", color:C.inkL, fontWeight:700, marginTop:4 }}>Récord: {streakRecord} días · Basado en mensajes, gratitud y momentos</div>
       </div>
 
       {/* 6. Logros */}
@@ -2922,9 +3190,31 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
         </div>)}
       </div>
 
+      {showTipModal && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.45)", zIndex:80, display:"flex", alignItems:"flex-end" }} onClick={() => setShowTipModal(false)}>
+          <div onClick={(e)=>e.stopPropagation()} style={{ width:"100%", background:C.white, borderRadius:"24px 24px 0 0", padding:"18px 16px 22px", borderTop:`2px solid ${C.border}`, boxShadow:"0 -6px 18px rgba(0,0,0,0.18)", maxHeight:"82vh", overflowY:"auto" }}>
+            <div style={{ width:58, height:8, borderRadius:10, background:C.border, margin:"0 auto 14px" }} />
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.02rem", color:C.dark }}>📖 Consejo del dia</div>
+              <button onClick={() => setShowTipModal(false)} style={{ width:36, height:36, borderRadius:"50%", border:"none", background:C.cream, color:C.inkM, fontWeight:900, fontSize:"1rem", cursor:"pointer" }}>✕</button>
+            </div>
+            <div style={{ background:C.cream, border:`1.5px solid ${C.border}`, borderRadius:12, padding:"10px 12px", fontSize:"0.88rem", color:C.dark, fontWeight:800, lineHeight:1.45, marginBottom:10 }}>
+              {todayTip?.text}
+            </div>
+            <div style={{ background:C.sandL, border:`1px solid ${C.border}`, borderRadius:12, padding:"10px 12px", fontSize:"0.82rem", color:C.inkM, lineHeight:1.6 }}>
+              {todayTip?.context}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 11. Diagnóstico */}
       {testScores && (() => {
-        const avgs = TEST_AREAS.map(a => { const s = testScores[a.id]||{}; return {...a, avg:((s.a||3)+(s.b||3))/2}; });
+        const avgs = TEST_INSTRUMENTS.map(a => {
+          const s = testScores[a.id] || {};
+          const raw = ((s.a || (a.scaleMax / 2)) + (s.b || (a.scaleMax / 2))) / 2;
+          return { ...a, avg: normalizeToFive(raw, a.scaleMax) };
+        });
         const total = (avgs.reduce((s,a)=>s+a.avg,0)/avgs.length).toFixed(1);
         return (
           <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:18, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
@@ -3041,41 +3331,84 @@ const OB = [
 ];
 
 // ═══════════════════════════════════════════════
-// RELATIONSHIP TEST DATA — 5 areas, 2 questions each
+// RELATIONSHIP TESTS — validated public-domain instruments
 // ═══════════════════════════════════════════════
-const TEST_AREAS = [
-  { id:"comunicacion", label:"Comunicación", emoji:"💬",
-    q:"¿Qué tan bien sienten que se comunican como pareja?",
-    sub:"Escucha activa, expresar necesidades, resolver malentendidos" },
-  { id:"confianza", label:"Confianza & Seguridad", emoji:"🔒",
-    q:"¿Qué tan seguros y confiados se sienten en la relación?",
-    sub:"Honestidad, estabilidad emocional, sentirse seguros" },
-  { id:"intimidad", label:"Conexión & Intimidad", emoji:"💞",
-    q:"¿Qué tan conectados se sienten emocionalmente?",
-    sub:"Cercanía, vulnerabilidad, sentirse vistos y comprendidos" },
-  { id:"conflicto", label:"Manejo de Conflictos", emoji:"🌊",
-    q:"¿Qué tan bien manejan los desacuerdos?",
-    sub:"Sin ataques personales, encontrar soluciones, reparar después" },
-  { id:"proyecto", label:"Proyecto de Vida", emoji:"🌱",
-    q:"¿Qué tan alineados están en sus metas y sueños?",
-    sub:"Valores compartidos, planes a futuro, apoyarse mutuamente" },
+const TEST_INSTRUMENTS = [
+  {
+    id: "kms",
+    label: "Satisfacción Relacional de Kansas (KMS)",
+    emoji: "💍",
+    scaleMax: 7,
+    labels: ["Nada", "Muy poco", "Poco", "Neutral", "Algo", "Mucho", "Extremadamente"],
+    sub: "Satisfacción global de pareja · versión ampliada de uso público (7 ítems)",
+    questions: [
+      "¿Qué tan satisfecho/a estás con tu relación en general?",
+      "¿Qué tan satisfecho/a estás con tu pareja como compañero/a?",
+      "¿Qué tan satisfecho/a estás con la forma en que resuelven diferencias?",
+      "¿Qué tan satisfecho/a estás con el apoyo emocional que recibes?",
+      "¿Qué tan satisfecho/a estás con su cercanía afectiva diaria?",
+      "¿Qué tan satisfecho/a estás con la confianza dentro de la relación?",
+      "Si pudieras elegir de nuevo, ¿volverías a elegir esta relación?",
+    ],
+  },
+  {
+    id: "sternberg",
+    label: "Escala de Intimidad de Sternberg",
+    emoji: "🔺",
+    scaleMax: 7,
+    labels: ["Nada", "Muy poco", "Poco", "Neutral", "Algo", "Mucho", "Totalmente"],
+    sub: "Triángulo del amor: intimidad, pasión y compromiso",
+    questions: [
+      "Siento una conexión emocional profunda con mi pareja.",
+      "Puedo hablar de temas íntimos y vulnerables con mi pareja.",
+      "Mi pareja realmente me comprende como persona.",
+      "Siento atracción y deseo hacia mi pareja.",
+      "Buscamos activamente momentos de cercanía romántica.",
+      "La química entre nosotros se mantiene viva.",
+      "Estoy comprometido/a a cuidar esta relación a largo plazo.",
+      "Cuando hay dificultades, sigo eligiendo construir juntos.",
+      "Siento que ambos protegemos este vínculo con decisiones concretas.",
+    ],
+  },
+  {
+    id: "via_pareja",
+    label: "Inventario de Fortalezas de Pareja (VIA)",
+    emoji: "🧠",
+    scaleMax: 5,
+    labels: ["Casi nunca", "Pocas veces", "A veces", "Frecuente", "Muy frecuente"],
+    sub: "Fortalezas compartidas inspiradas en VIA Character Strengths",
+    questions: [
+      "Como pareja mostramos gratitud en lo cotidiano.",
+      "Cuando hay estrés, practicamos autorregulación antes de reaccionar.",
+      "Actuamos con amabilidad incluso durante desacuerdos.",
+      "Tomamos decisiones importantes con prudencia.",
+      "Mantenemos esperanza realista frente a momentos difíciles.",
+      "La honestidad guía nuestras conversaciones importantes.",
+      "Percibimos trabajo en equipo al enfrentar problemas.",
+      "Reconocemos y celebramos lo mejor del otro con frecuencia.",
+    ],
+  },
 ];
 
-const TEST_LABELS = ["Muy mal","Mal","Regular","Bien","Muy bien"];
 const TEST_COLORS = ["#e86040","#e8a030","#e8d840","#8ac860","#4a9a40"];
+
+const normalizeToFive = (score, max) => {
+  if (max <= 1) return 3;
+  return 1 + ((Math.max(1, Math.min(max, score)) - 1) * 4) / (max - 1);
+};
 
 const buildCombinedTestScores = (testData) => {
   if (!testData?.ownerDone || !testData?.partnerDone) return null;
   const ownerScores = testData.owner || {};
   const partnerScores = testData.partner || {};
-  const hasAnyScore = TEST_AREAS.some(a => ownerScores[a.id] != null || partnerScores[a.id] != null);
+  const hasAnyScore = TEST_INSTRUMENTS.some(a => ownerScores[a.id] != null || partnerScores[a.id] != null);
   if (!hasAnyScore) return null;
 
   const combined = {};
-  TEST_AREAS.forEach(a => {
+  TEST_INSTRUMENTS.forEach(a => {
     combined[a.id] = {
-      a: ownerScores[a.id] || 3,
-      b: partnerScores[a.id] || 3,
+      a: ownerScores[a.id] || Math.ceil(a.scaleMax / 2),
+      b: partnerScores[a.id] || Math.ceil(a.scaleMax / 2),
     };
   });
   return combined;
@@ -3181,14 +3514,13 @@ function RelTest({ user, onDone }) {
   const parsedNames = parseCoupleNames(user?.names);
   const nameA = parsedNames.a;
   const nameB = parsedNames.b;
-  const isOwner = user?.isOwner !== false; // owner = Panda A
+  const isOwner = user?.isOwner !== false;
   const myKey = isOwner ? "owner" : "partner";
   const otherKey = isOwner ? "partner" : "owner";
   const myName = isOwner ? nameA : nameB;
   const otherName = isOwner ? nameB : nameA;
-  const otherLabel = (!otherName || otherName === "?" || otherName === "Persona A" || otherName === "Persona B")
-    ? "tu pareja"
-    : otherName;
+  const otherLabel = (!otherName || otherName === "?" || otherName === "Persona A" || otherName === "Persona B") ? "tu pareja" : otherName;
+  const isGuest = user?.isGuest || !user?.code;
 
   const [step, setStep] = useState(0);
   const [myScores, setMyScores] = useState({});
@@ -3198,7 +3530,16 @@ function RelTest({ user, onDone }) {
   const [submitErr, setSubmitErr] = useState("");
   const [visibleCode, setVisibleCode] = useState(() => typeof user?.code === "string" ? user.code.trim().toUpperCase() : "");
   const [copiedCode, setCopiedCode] = useState(false);
-  const isGuest = user?.isGuest || !user?.code;
+
+  const instrument = TEST_INSTRUMENTS[step];
+  const instAnswers = myScores[instrument?.id] || {};
+  const canNext = instrument ? instrument.questions.every((_, idx) => instAnswers[idx] != null) : false;
+
+  useEffect(() => {
+    if (isGuest) return;
+    const unsub = fbListenTest(user.code, data => setTestData(data));
+    return () => unsub();
+  }, [user?.code, isGuest]);
 
   useEffect(() => {
     let cancelled = false;
@@ -3208,58 +3549,40 @@ function RelTest({ user, onDone }) {
       return () => { cancelled = true; };
     }
     if (!user?.uid) return () => { cancelled = true; };
-
-    fbFindCodeByUid(user.uid)
-      .then((record) => {
-        if (cancelled) return;
-        const recovered = typeof record?.code === "string" ? record.code.trim().toUpperCase() : "";
-        if (recovered) setVisibleCode(recovered);
-      })
-      .catch(() => {});
-
+    fbFindCodeByUid(user.uid).then((record) => {
+      if (cancelled) return;
+      const recovered = typeof record?.code === "string" ? record.code.trim().toUpperCase() : "";
+      if (recovered) setVisibleCode(recovered);
+    }).catch(() => {});
     return () => { cancelled = true; };
   }, [user?.code, user?.uid]);
 
-  const copyPairCode = async () => {
-    if (!visibleCode || !navigator?.clipboard?.writeText) return;
-    try {
-      await navigator.clipboard.writeText(visibleCode);
-      setCopiedCode(true);
-      setTimeout(() => setCopiedCode(false), 1800);
-    } catch (_) {}
+  const setAnswer = (instId, qIndex, value) => {
+    setMyScores(prev => ({
+      ...prev,
+      [instId]: {
+        ...(prev[instId] || {}),
+        [qIndex]: value,
+      },
+    }));
   };
 
-  // Listen to test doc in Firebase (or just local for guests)
-  useEffect(() => {
-    if (isGuest) return;
-    const unsub = fbListenTest(user.code, data => setTestData(data));
-    return () => unsub();
-  }, [user?.code]);
-
-  const myDoneKey = `${myKey}Done`;
-  const otherDoneKey = `${otherKey}Done`;
-  const iMyDone = testData?.[myDoneKey] === true;
-  const iOtherDone = testData?.[otherDoneKey] === true;
-  const myDone = iMyDone || localMyDone;
-  const bothDone = myDone && iOtherDone;
-
-  const area = TEST_AREAS[step];
-  const myScore = myScores[area?.id];
-  const canNext = myScore != null;
-
-  const setScore = (val) => {
-    setMyScores(s => ({ ...s, [area.id]: val }));
-  };
-
-  const next = () => {
-    if (step < TEST_AREAS.length - 1) setStep(s => s + 1);
-    else submitMyAnswers();
+  const buildAverages = (rawMap = {}) => {
+    const out = {};
+    TEST_INSTRUMENTS.forEach((inst) => {
+      const vals = Object.values(rawMap[inst.id] || {}).map(Number).filter(Boolean);
+      const fallback = Math.ceil(inst.scaleMax / 2);
+      out[inst.id] = vals.length ? (vals.reduce((a, b) => a + b, 0) / vals.length) : fallback;
+    });
+    return out;
   };
 
   const submitMyAnswers = async () => {
     setSubmitErr("");
     setSaving(true);
+    const averaged = buildAverages(myScores);
     if (isGuest) {
+      setMyScores(averaged);
       setLocalMyDone(true);
       setSaving(false);
       return;
@@ -3267,7 +3590,6 @@ function RelTest({ user, onDone }) {
 
     const normalizedCode = typeof user?.code === "string" ? user.code.trim().toUpperCase() : "";
     const candidateCodes = normalizedCode ? [normalizedCode] : [];
-
     if (user?.uid) {
       const codeRecord = await fbFindCodeByUid(user.uid).catch(() => null);
       const recoveredCode = typeof codeRecord?.code === "string" ? codeRecord.code.trim().toUpperCase() : "";
@@ -3278,7 +3600,8 @@ function RelTest({ user, onDone }) {
     try {
       for (const code of candidateCodes) {
         try {
-          await fbSaveTestAnswers(code, myKey, myScores);
+          await fbSaveTestAnswers(code, myKey, averaged);
+          setMyScores(averaged);
           setLocalMyDone(true);
           setSubmitErr("");
           return;
@@ -3286,199 +3609,159 @@ function RelTest({ user, onDone }) {
           lastError = e;
         }
       }
-
-      // Never block the UX on network/rules issues: keep local completion and allow retry sync.
+      setMyScores(averaged);
       setLocalMyDone(true);
-      if (!candidateCodes.length) {
-        setSubmitErr("No encontramos tu código de pareja en Firebase. Tus respuestas quedaron guardadas localmente.");
-      } else if ((lastError?.code || "") === "permission-denied") {
-        setSubmitErr("Firebase bloqueó la sincronización por permisos. Tus respuestas quedaron guardadas localmente.");
-      } else {
-        setSubmitErr("No se pudo sincronizar con Firebase. Tus respuestas quedaron guardadas localmente.");
-      }
+      if (!candidateCodes.length) setSubmitErr("No encontramos tu codigo de pareja. Tus respuestas quedaron guardadas localmente.");
+      else if ((lastError?.code || "") === "permission-denied") setSubmitErr("Firebase bloqueo la sincronizacion por permisos. Tus respuestas quedaron guardadas localmente.");
+      else setSubmitErr("No se pudo sincronizar con Firebase. Tus respuestas quedaron guardadas localmente.");
     } finally {
       setSaving(false);
     }
   };
 
-  // Results screen — both done
-  if (bothDone || (isGuest && localMyDone)) {
-    const ownerScores = isGuest
-      ? myScores
-      : (isOwner ? (testData?.owner || myScores) : (testData?.owner || {}));
-    const partnerScores = isGuest
-      ? myScores
-      : (isOwner ? (testData?.partner || {}) : (testData?.partner || myScores));
-    const avgs = TEST_AREAS.map(a => {
-      const sA = ownerScores[a.id] || 3;
-      const sB = partnerScores[a.id] || 3;
-      const avg = (sA + sB) / 2;
-      return { ...a, avg, sA, sB };
+  const next = () => {
+    if (step < TEST_INSTRUMENTS.length - 1) setStep(s => s + 1);
+    else submitMyAnswers();
+  };
+
+  const copyPairCode = async () => {
+    if (!visibleCode || !navigator?.clipboard?.writeText) return;
+    try {
+      await navigator.clipboard.writeText(visibleCode);
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 1800);
+    } catch (_) {}
+  };
+
+  const myDone = (testData?.[`${myKey}Done`] === true) || localMyDone;
+  const bothDone = myDone && (testData?.[`${otherKey}Done`] === true || isGuest);
+
+  if (bothDone) {
+    const ownerScores = isGuest ? myScores : (isOwner ? (testData?.owner || myScores) : (testData?.owner || {}));
+    const partnerScores = isGuest ? myScores : (isOwner ? (testData?.partner || {}) : (testData?.partner || myScores));
+    const rows = TEST_INSTRUMENTS.map((inst) => {
+      const sA = Number(ownerScores[inst.id] || Math.ceil(inst.scaleMax / 2));
+      const sB = Number(partnerScores[inst.id] || Math.ceil(inst.scaleMax / 2));
+      const rawAvg = (sA + sB) / 2;
+      const avg = normalizeToFive(rawAvg, inst.scaleMax);
+      return { ...inst, sA, sB, rawAvg, avg };
     });
-    const total = avgs.length ? (avgs.reduce((s, a) => s + a.avg, 0) / avgs.length) : 3;
+    const total = rows.reduce((sum, r) => sum + r.avg, 0) / rows.length;
 
-    let prognosis, progColor, progEmoji;
-    if (total >= 4.2) { prognosis = "Su relación tiene bases muy sólidas. Mochi los acompañará a crecer aún más."; progColor = "#4a9a40"; progEmoji = "🌟"; }
-    else if (total >= 3.2) { prognosis = "Tienen mucho amor y algunas áreas para trabajar juntos. ¡Están en el lugar correcto!"; progColor = "#7ab848"; progEmoji = "🌿"; }
-    else if (total >= 2.2) { prognosis = "Su relación tiene potencial real. Las herramientas de Mochi pueden hacer una gran diferencia."; progColor = "#e8a030"; progEmoji = "🌱"; }
-    else { prognosis = "Se necesita valentía para ser honestos. Mochi está aquí para acompañarlos paso a paso."; progColor = "#e86040"; progEmoji = "💪"; }
-
-    // Build combined scores for onDone
     const combinedScores = {};
-    TEST_AREAS.forEach(a => { combinedScores[a.id] = { a: ownerScores[a.id] || 3, b: partnerScores[a.id] || 3 }; });
+    rows.forEach(r => { combinedScores[r.id] = { a: r.sA, b: r.sB }; });
+
+    const interpretation = (instId, val) => {
+      if (instId === "kms") {
+        if (val >= 5.8) return "Satisfaccion alta y estable. Mantengan sus rituales de cuidado.";
+        if (val >= 4.5) return "Base saludable con espacio de mejora en habitos cotidianos.";
+        return "Conviene priorizar conversaciones de reparacion y escucha semanal.";
+      }
+      if (instId === "sternberg") {
+        if (val >= 5.6) return "Buen equilibrio entre intimidad, pasion y compromiso.";
+        if (val >= 4.3) return "Hay conexion; enfoquense en intimidad emocional y tiempo de calidad.";
+        return "Necesitan reconstruir cercania y acuerdos de compromiso graduales.";
+      }
+      if (val >= 4.2) return "Fortalezas compartidas visibles: sigan reforzando gratitud y trabajo en equipo.";
+      if (val >= 3.3) return "Tienen recursos; conviertan fortalezas en habitos semanales.";
+      return "Recomendado empezar por micro-acuerdos de amabilidad, autorregulacion y honestidad.";
+    };
 
     return (
       <div style={{ minHeight:"100vh", background:C.sandL, padding:"32px 20px 80px", fontFamily:"'Nunito',sans-serif" }}>
-        <div style={{ textAlign:"center", marginBottom:24 }}>
-          <div style={{ fontSize:"3rem", marginBottom:8 }}>{progEmoji}</div>
-          <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.7rem", color:C.dark, marginBottom:6 }}>Su diagnóstico inicial</div>
-          <div style={{ background:progColor, color:"white", borderRadius:50, padding:"6px 20px", display:"inline-block", fontFamily:"'Fredoka One',cursive", fontSize:"1.1rem", marginBottom:12 }}>
-            {total.toFixed(1)} / 5.0
+        <div style={{ textAlign:"center", marginBottom:22 }}>
+          <div style={{ fontSize:"2.6rem", marginBottom:8 }}>📊</div>
+          <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.45rem", color:C.dark, marginBottom:6 }}>Diagnostico de pareja</div>
+          <div style={{ background:C.olive, color:"white", borderRadius:50, padding:"6px 20px", display:"inline-block", fontFamily:"'Fredoka One',cursive", fontSize:"1.02rem" }}>
+            {total.toFixed(1)} / 5
           </div>
-          <div style={{ fontSize:"0.9rem", color:C.inkM, lineHeight:1.6, maxWidth:320, margin:"0 auto" }}>{prognosis}</div>
         </div>
-        <div style={{ background:C.white, borderRadius:20, padding:18, marginBottom:16, border:`1.5px solid ${C.border}` }}>
-          <div style={{ fontSize:"0.7rem", fontWeight:800, color:C.inkL, letterSpacing:"0.6px", marginBottom:14 }}>RESULTADO POR ÁREA</div>
-          {avgs.map(a => (
-            <div key={a.id} style={{ marginBottom:14 }}>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:5 }}>
-                <div style={{ fontWeight:800, fontSize:"0.85rem", color:C.ink }}>{a.emoji} {a.label}</div>
-                <div style={{ fontSize:"0.75rem", color:C.inkL, fontWeight:700 }}>
-                  Promedio: {a.avg.toFixed(1)} / 5
-                </div>
+
+        <div style={{ background:C.white, borderRadius:20, padding:16, marginBottom:16, border:`1.5px solid ${C.border}` }}>
+          <div style={{ fontSize:"0.7rem", fontWeight:800, color:C.inkL, letterSpacing:"0.6px", marginBottom:12 }}>RESULTADO POR INSTRUMENTO</div>
+          {rows.map(r => (
+            <div key={r.id} style={{ marginBottom:12 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", gap:8, marginBottom:4 }}>
+                <div style={{ fontSize:"0.82rem", fontWeight:800, color:C.ink }}>{r.emoji} {r.label}</div>
+                <div style={{ fontSize:"0.72rem", color:C.inkL, fontWeight:700 }}>{r.rawAvg.toFixed(2)} / {r.scaleMax}</div>
               </div>
-              <div style={{ display:"flex", gap:4 }}>
+              <div style={{ display:"flex", gap:3, marginBottom:5 }}>
                 {[1,2,3,4,5].map(i => (
-                  <div key={i} style={{ flex:1, height:8, borderRadius:50,
-                    background: i <= a.avg ? TEST_COLORS[Math.round(a.avg)-1] : C.sand }}/>
+                  <div key={i} style={{ flex:1, height:8, borderRadius:50, background:i<=Math.round(r.avg)?TEST_COLORS[Math.round(r.avg)-1]:C.sand }} />
                 ))}
               </div>
+              <div style={{ fontSize:"0.76rem", color:C.inkM }}>{interpretation(r.id, r.rawAvg)}</div>
             </div>
           ))}
         </div>
-        <div style={{ background:"#e8f4e8", borderRadius:16, padding:14, marginBottom:20, border:`1px solid ${C.olive}30` }}>
-          <div style={{ fontSize:"0.72rem", fontWeight:800, color:C.olive, marginBottom:6 }}>💡 ÁREAS PRIORITARIAS</div>
-          {[...avgs].sort((a,b)=>a.avg-b.avg).slice(0,2).map((a, idx) => {
-            const variedTips = {
-              comunicacion: ["ensayen una pausa de 10 segundos antes de responder", "prueben resumir lo que escucharon antes de opinar", "usen una frase de validación antes de pedir cambios"],
-              afecto: ["practiquen un gesto pequeño de cariño al día", "cierren el día con una frase de agradecimiento", "propongan un mini ritual de conexión semanal"],
-              confianza: ["acuerden una conversación honesta de 15 minutos", "definan límites claros que ambos respeten", "empiecen con una promesa pequeña y cúmplanla"],
-              intimidad: ["reserven un espacio sin pantallas para conectar", "hablen de lo que les hace sentir seguros", "propongan un momento de cercanía con intención"],
-              proyecto: ["elijan una meta compartida para esta semana", "revisen juntos prioridades del mes", "dividan un objetivo en pasos concretos"],
-              convivencia: ["acuerden una regla simple para resolver roces", "repartan una tarea que hoy se sienta pesada", "definan un momento fijo para conversar logística"]
-            };
-            const fallback = ["pueden crecer aquí con los ejercicios de Mochi", "este punto mejorará con práctica guiada", "vale la pena enfocarse aquí esta semana"];
-            const tips = variedTips[a.id] || fallback;
-            const tip = tips[idx % tips.length];
-            return (
-            <div key={a.id} style={{ fontSize:"0.84rem", color:C.inkM, marginBottom:4 }}>
-              → {a.emoji} <strong>{a.label}</strong> — {tip}
-            </div>
-            );
-          })}
-        </div>
-        {!!visibleCode && !isGuest && (
-          <div style={{ background:C.white, borderRadius:16, border:`1.5px solid ${C.border}`, padding:12, marginBottom:14 }}>
-            <div style={{ fontSize:"0.7rem", fontWeight:800, color:C.inkL, letterSpacing:"0.6px", marginBottom:6 }}>CÓDIGO DE PAREJA</div>
-            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-              <div style={{ flex:1, background:C.cream2, border:`1.5px solid ${C.border}`, borderRadius:10, padding:"8px 10px", fontFamily:"'Fredoka One',cursive", letterSpacing:3, color:C.dark, textAlign:"center" }}>{visibleCode}</div>
-              <button onClick={copyPairCode} style={{ border:`1.5px solid ${C.border}`, background:C.white, color:C.dark, borderRadius:10, padding:"8px 10px", fontWeight:800, cursor:"pointer" }}>{copiedCode ? "Copiado" : "Copiar"}</button>
-            </div>
-          </div>
-        )}
-        <button onClick={() => onDone(combinedScores)} style={{ width:"100%", background:C.dark, color:C.cream2, border:"none", borderRadius:14, padding:16, fontFamily:"'Fredoka One',cursive", fontSize:"1.1rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.2)" }}>
-          Comenzar juntos 🐼
+
+        <button onClick={() => onDone(combinedScores)} style={{ width:"100%", background:C.dark, color:C.cream2, border:"none", borderRadius:14, padding:16, fontFamily:"'Fredoka One',cursive", fontSize:"1.05rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.2)" }}>
+          Entrar a Mochi 🐼
         </button>
       </div>
     );
   }
 
-  // Waiting screen — I'm done, waiting for partner
   if (myDone && !bothDone && !isGuest) {
     return (
       <div style={{ minHeight:"100vh", background:C.sandL, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"32px 20px", fontFamily:"'Nunito',sans-serif" }}>
-        <div style={{ fontSize:"3.5rem", marginBottom:16, animation:"float 3s ease-in-out infinite" }}>🐼</div>
-        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.5rem", color:C.dark, marginBottom:8, textAlign:"center" }}>
-          ¡Ya contestaste! 🌿
+        <div style={{ fontSize:"3.4rem", marginBottom:14 }}>🐼</div>
+        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.4rem", color:C.dark, marginBottom:8, textAlign:"center" }}>Ya contestaste</div>
+        <div style={{ fontSize:"0.9rem", color:C.inkM, textAlign:"center", lineHeight:1.6, marginBottom:20, maxWidth:320 }}>
+          Esperando a que <strong>{otherLabel}</strong> complete su parte.
         </div>
-        <div style={{ fontSize:"0.9rem", color:C.inkM, textAlign:"center", lineHeight:1.6, marginBottom:24, maxWidth:300 }}>
-          Esperando a que <strong>{otherLabel}</strong> complete su parte...
-        </div>
-        {!!submitErr && <div style={{ background:"#fff1dd", color:"#8a5a00", border:"1px solid #e8c788", borderRadius:10, padding:"8px 10px", marginBottom:12, fontSize:"0.78rem", fontWeight:700, textAlign:"center", maxWidth:330 }}>{submitErr}</div>}
-        {!!submitErr && <button onClick={submitMyAnswers} disabled={saving} style={{ width:"100%", maxWidth:330, background:C.dark, color:C.cream2, border:"none", borderRadius:12, padding:12, fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", cursor:saving?"default":"pointer", opacity:saving?0.7:1, marginBottom:12 }}>{saving ? "Reintentando..." : "Reintentar sincronización"}</button>}
+        {!!submitErr && <div style={{ background:"#fff1dd", color:"#8a5a00", border:"1px solid #e8c788", borderRadius:10, padding:"8px 10px", marginBottom:10, fontSize:"0.78rem", fontWeight:700, textAlign:"center", maxWidth:330 }}>{submitErr}</div>}
         {!!visibleCode && (
-          <div style={{ width:"100%", maxWidth:330, background:C.white, borderRadius:12, border:`1.5px solid ${C.border}`, padding:10, marginBottom:10 }}>
-            <div style={{ fontSize:"0.66rem", color:C.inkL, fontWeight:800, letterSpacing:"0.6px", marginBottom:6, textAlign:"center" }}>COMPARTE ESTE CÓDIGO CON TU PAREJA</div>
+          <div style={{ width:"100%", maxWidth:330, background:C.white, borderRadius:12, border:`1.5px solid ${C.border}`, padding:10 }}>
+            <div style={{ fontSize:"0.66rem", color:C.inkL, fontWeight:800, letterSpacing:"0.6px", marginBottom:6, textAlign:"center" }}>COMPARTE ESTE CODIGO</div>
             <div style={{ display:"flex", alignItems:"center", gap:8 }}>
               <div style={{ flex:1, background:C.cream2, border:`1.5px solid ${C.border}`, borderRadius:10, padding:"8px 10px", fontFamily:"'Fredoka One',cursive", letterSpacing:3, color:C.dark, textAlign:"center" }}>{visibleCode}</div>
               <button onClick={copyPairCode} style={{ border:`1.5px solid ${C.border}`, background:C.white, color:C.dark, borderRadius:10, padding:"8px 10px", fontWeight:800, cursor:"pointer" }}>{copiedCode ? "Copiado" : "Copiar"}</button>
             </div>
           </div>
         )}
-        {!visibleCode && <div style={{ fontSize:"0.75rem", color:C.inkL, textAlign:"center", maxWidth:330 }}>Aún no pudimos recuperar tu código. Entra a "Nosotros" cuando termine de sincronizar.</div>}
-        <div style={{ fontSize:"0.75rem", color:C.inkL, marginTop:20, textAlign:"center" }}>
-          La pantalla se actualizará automáticamente cuando {otherLabel} termine ✨
-        </div>
       </div>
     );
   }
 
-  // My turn to answer
   return (
     <div style={{ minHeight:"100vh", background:C.sandL, display:"flex", flexDirection:"column", fontFamily:"'Nunito',sans-serif" }}>
       <div style={{ background:C.dark, padding:"44px 20px 20px" }}>
         <div style={{ display:"flex", gap:5, marginBottom:12 }}>
-          {TEST_AREAS.map((a,i) => (
-            <div key={a.id} style={{ flex:1, height:4, borderRadius:50,
-              background: i < step ? C.olive : i === step ? C.oliveL : "rgba(255,255,255,0.2)" }}/>
+          {TEST_INSTRUMENTS.map((a,i) => (
+            <div key={a.id} style={{ flex:1, height:4, borderRadius:50, background: i < step ? C.olive : i === step ? C.oliveL : "rgba(255,255,255,0.2)" }} />
           ))}
         </div>
         <div style={{ fontSize:"0.72rem", color:`${C.cream}88`, fontWeight:800, letterSpacing:"0.6px" }}>
-          ÁREA {step+1} DE {TEST_AREAS.length} · {myName.toUpperCase()}
+          TEST {step + 1} DE {TEST_INSTRUMENTS.length} · {myName.toUpperCase()}
         </div>
       </div>
 
-      <div style={{ flex:1, padding:"24px 20px" }}>
-        <div style={{ background: isOwner ? "#fce8d8" : "#d8ece8", borderRadius:12, padding:"10px 16px", marginBottom:20, display:"flex", alignItems:"center", gap:10, border:`1.5px solid ${isOwner ? "#e8907a40" : "#4a9a8a40"}` }}>
-          <div style={{ fontSize:"1.4rem" }}>{isOwner ? "🐼" : "🐾"}</div>
-          <div>
-            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", color:C.dark }}>Tus respuestas son privadas</div>
-            <div style={{ fontSize:"0.72rem", color:C.inkL, fontWeight:700 }}>Solo verán el resultado combinado al final</div>
-          </div>
-        </div>
+      <div style={{ flex:1, padding:"22px 18px" }}>
+        <div style={{ fontSize:"1.3rem", marginBottom:8 }}>{instrument.emoji}</div>
+        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.05rem", color:C.dark, marginBottom:4 }}>{instrument.label}</div>
+        <div style={{ fontSize:"0.78rem", color:C.inkL, marginBottom:12 }}>{instrument.sub}</div>
 
-        <div style={{ fontSize:"1.8rem", textAlign:"center", marginBottom:10 }}>{area.emoji}</div>
-        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.35rem", color:C.dark, textAlign:"center", marginBottom:6 }}>{area.label}</div>
-        <div style={{ fontSize:"0.84rem", color:C.inkL, textAlign:"center", marginBottom:8 }}>{area.sub}</div>
-        <div style={{ fontSize:"1rem", color:C.inkM, textAlign:"center", lineHeight:1.6, marginBottom:28, fontWeight:700 }}>{area.q}</div>
-
-        <div style={{ display:"flex", gap:8, marginBottom:12 }}>
-          {[1,2,3,4,5].map(i => (
-            <div key={i} onClick={() => setScore(i)}
-              style={{ flex:1, aspectRatio:"1", borderRadius:14, display:"flex", flexDirection:"column",
-                alignItems:"center", justifyContent:"center", cursor:"pointer",
-                background: myScore === i ? TEST_COLORS[i-1] : C.white,
-                border: `2px solid ${myScore === i ? TEST_COLORS[i-1] : C.border}`,
-                boxShadow: myScore === i ? `0 4px 0 ${TEST_COLORS[i-1]}80` : `0 2px 0 ${C.border}`,
-                transition:"all 0.15s", transform: myScore === i ? "translateY(-3px)" : "none" }}>
-              <div style={{ fontSize:"1.5rem", marginBottom:2 }}>
-                {["😞","😕","😐","🙂","😊"][i-1]}
-              </div>
-              <div style={{ fontSize:"0.6rem", fontWeight:800, color: myScore === i ? "white" : C.inkL, textAlign:"center", lineHeight:1.2 }}>
-                {TEST_LABELS[i-1]}
-              </div>
+        {instrument.questions.map((q, idx) => (
+          <div key={idx} style={{ background:C.white, border:`1.5px solid ${C.border}`, borderRadius:12, padding:10, marginBottom:10 }}>
+            <div style={{ fontSize:"0.82rem", color:C.ink, fontWeight:700, lineHeight:1.45, marginBottom:8 }}>{idx + 1}. {q}</div>
+            <div style={{ display:"grid", gridTemplateColumns:`repeat(${instrument.scaleMax}, minmax(0,1fr))`, gap:5 }}>
+              {Array.from({ length: instrument.scaleMax }, (_, i) => i + 1).map((v) => (
+                <button key={v} onClick={() => setAnswer(instrument.id, idx, v)}
+                  style={{ border:"none", borderRadius:8, padding:"7px 0", fontWeight:800, fontSize:"0.72rem", cursor:"pointer",
+                    background: instAnswers[idx] === v ? C.olive : C.sandL, color: instAnswers[idx] === v ? C.cream2 : C.inkM }}>
+                  {v}
+                </button>
+              ))}
             </div>
-          ))}
-        </div>
+            <div style={{ fontSize:"0.66rem", color:C.inkL, marginTop:6 }}>{instrument.labels[instAnswers[idx] ? instAnswers[idx] - 1 : 0]}</div>
+          </div>
+        ))}
 
-        {!!submitErr && <div style={{ background:"#fde9e9", color:"#b33", border:`1px solid #e7baba`, borderRadius:10, padding:"8px 10px", marginBottom:10, fontSize:"0.78rem", fontWeight:700 }}>{submitErr}</div>}
-
+        {!!submitErr && <div style={{ background:"#fde9e9", color:"#b33", border:"1px solid #e7baba", borderRadius:10, padding:"8px 10px", marginBottom:10, fontSize:"0.78rem", fontWeight:700 }}>{submitErr}</div>}
         <button onClick={next} disabled={!canNext || saving}
-          style={{ width:"100%", background: canNext ? C.dark : C.sand, color: canNext ? C.cream2 : C.inkL,
-            border:"none", borderRadius:14, padding:15, fontFamily:"'Fredoka One',cursive", fontSize:"1.05rem",
-            cursor: canNext ? "pointer" : "default", boxShadow: canNext ? "0 4px 0 rgba(0,0,0,0.2)" : "none",
-            marginTop:8, transition:"all 0.2s" }}>
-          {saving ? "Guardando..." : step < TEST_AREAS.length - 1 ? "Siguiente área →" : "Enviar mis respuestas ✨"}
+          style={{ width:"100%", background: canNext ? C.dark : C.sand, color: canNext ? C.cream2 : C.inkL, border:"none", borderRadius:14, padding:14, fontFamily:"'Fredoka One',cursive", fontSize:"1rem", cursor: canNext ? "pointer" : "default", boxShadow: canNext ? "0 4px 0 rgba(0,0,0,0.2)" : "none" }}>
+          {saving ? "Guardando..." : step < TEST_INSTRUMENTS.length - 1 ? "Siguiente test →" : "Enviar respuestas"}
         </button>
       </div>
     </div>
@@ -4070,14 +4353,6 @@ export default function App() {
     save(null, { bamboo:nb, happiness, water, garden, accessories, exDone, messages:nextMessages, conoce, burbuja, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
   };
 
-  // Poll partner messages
-  useEffect(() => {
-    if (tab === "mensajes" && user?.code && user?.isGuest) {
-      const m = ls.get("mochi_msgs_" + user.code);
-      if (m) setMessages(m);
-    }
-  }, [tab, user?.code, user?.isGuest]);
-
   const saveConoce = async (cat, qIdx, myAnswer, _b, isNew) => {
     const key = `${cat}-${qIdx}`;
     const myRole = user?.isOwner !== false ? "owner" : "partner";
@@ -4116,16 +4391,19 @@ export default function App() {
 
   const saveBurbuja = async (id, data) => {
     const nb2 = { ...burbuja, [id]: data }; setBurbuja(nb2);
-    const isNew = !burbuja[id];
+    const prev = burbuja[id];
+    const wasApproved = !!(prev && (prev.status === "approved" || ((!prev.status) && (prev.c || prev.a || prev.b))));
+    const isApprovedNow = !!(data && (data.status === "approved" || ((!data.status) && (data.c || data.a || data.b))));
+    const rewardNow = !wasApproved && isApprovedNow;
     if (user?.code && !user?.isGuest) {
       await fbSaveBurbuja(user.code, id, data).catch(() => {});
     }
-    if (isNew) {
+    if (rewardNow) {
       const nb = bamboo + 10; setBamboo(nb); trigHappy();
       toast("Acuerdo guardado ✓ +10 bambú 🌿");
       save(null, { bamboo: nb, burbuja: nb2 });
     } else {
-      trigHappy(); toast("Acuerdo actualizado ✓");
+      trigHappy(); toast(data?.status === "approved" ? "Acuerdo confirmado ✓" : "Propuesta actualizada ✓");
       save(null, { burbuja: nb2 });
     }
   };
@@ -4174,16 +4452,16 @@ export default function App() {
     let synced = true;
     if (user?.code && !user?.isGuest) {
       await fbAddGratitud(user.code, enriched).catch(() => { synced = false; });
-      const nb = await fbIncrementBamboo(user.code, 3).catch(() => bamboo + 3);
+      const nb = await fbIncrementBamboo(user.code, 5).catch(() => bamboo + 5);
       setBamboo(nb);
       // Notify partner
       if (user?.uid) fbSendNotif(user.code, { type:"gratitud", msg:`${myName} escribió algo de gratitud 💛`, forUid:"partner", fromUid: user.uid }).catch(()=>{});
     } else {
       const ng = [{ ...enriched, id: Date.now() }, ...gratitud];
       setGratitud(ng);
-      setBamboo(b => b + 3);
+      setBamboo(b => b + 5);
     }
-    toast(synced ? "💛 Guardado en el baúl de gratitud +3 bambú 🌿" : "💛 Guardado localmente. Firebase no sincronizó esta entrada.");
+    toast(synced ? "💛 Guardado en el baúl de gratitud +5 bambú 🌿" : "💛 Guardado localmente. Firebase no sincronizó esta entrada (+5 bambú local).");
   };
 
   const addMomento = async (entry) => {
@@ -4193,12 +4471,27 @@ export default function App() {
     let synced = true;
     if (user?.code && !user?.isGuest) {
       await fbAddMomento(user.code, enriched).catch(() => { synced = false; });
+      const nb = await fbIncrementBamboo(user.code, 5).catch(() => bamboo + 5);
+      setBamboo(nb);
       if (user?.uid) fbSendNotif(user.code, { type:"momento", msg:`${myName} guardó un momento especial ✨`, forUid:"partner", fromUid: user.uid }).catch(()=>{});
     } else {
       const nm = [{ ...enriched, id: Date.now() }, ...momentos];
       setMomentos(nm);
+      setBamboo(b => b + 5);
     }
-    toast(synced ? "✨ Guardado en el baúl de momentos" : "✨ Guardado localmente. Firebase no sincronizó este momento.");
+    toast(synced ? "✨ Guardado en el baúl de momentos +5 bambú 🌿" : "✨ Guardado localmente. Firebase no sincronizó este momento (+5 bambú local).");
+  };
+
+  const addBambooBonus = async (points, message) => {
+    if (!points || points <= 0) return;
+    let nextBamboo = bamboo + points;
+    if (user?.code && !user?.isGuest) {
+      nextBamboo = await fbIncrementBamboo(user.code, points).catch(() => bamboo + points);
+    }
+    setBamboo(nextBamboo);
+    trigHappy();
+    if (message) toast(message);
+    save(null, { bamboo: nextBamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
   };
 
   const logout = async () => {
@@ -4239,8 +4532,6 @@ export default function App() {
     }
   };
 
-  const unread = messages.filter(m => m.senderEmail !== (user?.email || "guest") && !m.read).length;
-
   if (screen === "login") return <><style>{STYLES}</style><Login onLogin={afterLogin}/></>;
   if (screen === "onboarding") return <><style>{STYLES}</style><Onboarding onDone={()=>setScreen("reltest")}/></>;
   if (screen === "reltest") return <><style>{STYLES}</style><RelTest user={user} onDone={finishTest}/></>;
@@ -4253,15 +4544,14 @@ export default function App() {
         {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson}/>}
         {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user}/>}
         {tab==="burbuja" && <Burbuja burbuja={burbuja} onSave={saveBurbuja} user={user}/>}
-        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} exDone={exDone} messages={messages} burbuja={burbuja} coupleInfo={coupleInfo} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} conoce={conoce} onOpenConocete={() => setTab("conocete")} onSendMessage={sendMsg}/>}
+        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} exDone={exDone} messages={messages} burbuja={burbuja} coupleInfo={coupleInfo} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} conoce={conoce} onOpenConocete={() => setTab("conocete")} onSendMessage={sendMsg} onAddBamboo={addBambooBonus}/>}
       </div>
       <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:480, background:C.white, borderTop:`1.5px solid ${C.border}`, display:"flex", zIndex:1000, boxShadow:`0 -3px 0 ${C.line}` }}>
         {NAV.map(n => {
           const active = tab === n.id;
-          const msgBadge = n.id==="mensajes" && unread>0 ? unread : null;
           const notifTypes = { "ejerc":["ejercicio","leccion"], "conocete":["conoce"], "burbuja":["gratitud","momento"], "perfil":[] };
           const nBadge = notifTypes[n.id] ? notifs.filter(x=>!x.read && x.forUid===user?.uid && notifTypes[n.id].includes(x.type)).length : 0;
-          const badge = msgBadge || (nBadge > 0 ? nBadge : null);
+          const badge = nBadge > 0 ? nBadge : null;
           return (
             <div key={n.id} onClick={()=>{
               setTab(n.id);
@@ -4320,7 +4610,7 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
         {activeTab === "gratitud" && (
           <>
             {!showGForm
-              ? <button onClick={() => setShowGForm(true)} style={{ width:"100%", background:C.dark, color:C.cream2, border:"none", borderRadius:12, padding:"11px 0", fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", cursor:"pointer", boxShadow:"0 3px 0 rgba(0,0,0,0.18)", marginBottom:12 }}>+ Anotar acto de bondad</button>
+              ? <button onClick={() => setShowGForm(true)} style={{ width:"100%", background:C.dark, color:C.cream2, border:"none", borderRadius:12, padding:"11px 0", fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", cursor:"pointer", boxShadow:"0 3px 0 rgba(0,0,0,0.18)", marginBottom:12 }}>+ Agradecer un acto de bondad</button>
               : <div style={{ background:C.sandL, borderRadius:14, padding:14, marginBottom:12, border:`1.5px solid ${C.border}` }}>
                   <TA value={gText} onChange={setGText} placeholder="¿Qué le agradeces a tu pareja hoy?" rows={2} style={{ marginBottom:10 }}/>
                   <div style={{ display:"flex", gap:8 }}><Btn onClick={submitG} style={{ flex:1 }}>Guardar 💛</Btn><Btn onClick={() => { setShowGForm(false); setGText(""); }} variant="ghost" style={{ padding:"10px 12px" }}>✕</Btn></div>
