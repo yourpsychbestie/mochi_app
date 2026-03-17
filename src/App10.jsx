@@ -3458,6 +3458,11 @@ export default function App() {
   const [momentos, setMomentos] = useState([]);
   const happyTimer = useRef(null);
   const messageUnsubRef = useRef(null);
+  const screenRef = useRef("login");
+
+  useEffect(() => {
+    screenRef.current = screen;
+  }, [screen]);
 
   const saveKey = u => u?.email ? "mochi_prog_" + u.email : null;
   const toast = msg => { setToastMsg(msg); setTimeout(() => setToastMsg(null), 3000); };
@@ -3562,7 +3567,9 @@ export default function App() {
     if (isNew) {
       setScreen("reltest");
     } else if (fromAuthRestore) {
-      setScreen(hasInitialTest ? "main" : "login");
+      const activeScreen = screenRef.current;
+      const preserveActiveFlow = activeScreen === "reltest" || activeScreen === "main";
+      setScreen(preserveActiveFlow ? activeScreen : (hasInitialTest ? "main" : "login"));
     } else {
       setScreen(hasInitialTest ? "main" : "reltest");
     }
