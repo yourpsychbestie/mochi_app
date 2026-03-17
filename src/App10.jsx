@@ -3098,13 +3098,38 @@ function RelTest({ user, onDone }) {
       setSaving(false);
       return;
     }
+
+    const normalizedCode = typeof user?.code === "string" ? user.code.trim().toUpperCase() : "";
+    const candidateCodes = normalizedCode ? [normalizedCode] : [];
+
+    if (user?.uid) {
+      const codeRecord = await fbFindCodeByUid(user.uid).catch(() => null);
+      const recoveredCode = typeof codeRecord?.code === "string" ? codeRecord.code.trim().toUpperCase() : "";
+      if (recoveredCode && !candidateCodes.includes(recoveredCode)) candidateCodes.push(recoveredCode);
+    }
+
+    let lastError = null;
     try {
-      await fbSaveTestAnswers(user.code, myKey, myScores);
-      setLocalMyDone(true);
-    } catch (e) {
+      for (const code of candidateCodes) {
+        try {
+          await fbSaveTestAnswers(code, myKey, myScores);
+          setLocalMyDone(true);
+          setSubmitErr("");
+          return;
+        } catch (e) {
+          lastError = e;
+        }
+      }
+
       // Never block the UX on network/rules issues: keep local completion and allow retry sync.
       setLocalMyDone(true);
-      setSubmitErr("No se pudo sincronizar con Firebase. Tus respuestas quedaron guardadas localmente.");
+      if (!candidateCodes.length) {
+        setSubmitErr("No encontramos tu código de pareja en Firebase. Tus respuestas quedaron guardadas localmente.");
+      } else if ((lastError?.code || "") === "permission-denied") {
+        setSubmitErr("Firebase bloqueó la sincronización por permisos. Tus respuestas quedaron guardadas localmente.");
+      } else {
+        setSubmitErr("No se pudo sincronizar con Firebase. Tus respuestas quedaron guardadas localmente.");
+      }
     } finally {
       setSaving(false);
     }
