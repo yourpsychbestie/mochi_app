@@ -3542,7 +3542,7 @@ export default function App() {
     }
     setLastVisit(new Date().toISOString());
     const hasInitialTest = Object.keys(syncedTestScores || loadedState?.testScores || {}).length > 0;
-    setScreen(isNew ? "onboarding" : (hasInitialTest ? "main" : "reltest"));
+    setScreen(isNew ? "reltest" : (hasInitialTest ? "main" : "reltest"));
   };
 
   // Keep messages in sync whenever user/code changes
