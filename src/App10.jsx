@@ -3102,7 +3102,9 @@ function RelTest({ user, onDone }) {
       await fbSaveTestAnswers(user.code, myKey, myScores);
       setLocalMyDone(true);
     } catch (e) {
-      setSubmitErr("No se pudo enviar la ultima respuesta. Revisa internet e intenta de nuevo.");
+      // Never block the UX on network/rules issues: keep local completion and allow retry sync.
+      setLocalMyDone(true);
+      setSubmitErr("No se pudo sincronizar con Firebase. Tus respuestas quedaron guardadas localmente.");
     } finally {
       setSaving(false);
     }
@@ -3202,6 +3204,8 @@ function RelTest({ user, onDone }) {
         <div style={{ fontSize:"0.9rem", color:C.inkM, textAlign:"center", lineHeight:1.6, marginBottom:24, maxWidth:300 }}>
           Esperando a que <strong>{otherName}</strong> complete su parte...
         </div>
+        {!!submitErr && <div style={{ background:"#fff1dd", color:"#8a5a00", border:"1px solid #e8c788", borderRadius:10, padding:"8px 10px", marginBottom:12, fontSize:"0.78rem", fontWeight:700, textAlign:"center", maxWidth:330 }}>{submitErr}</div>}
+        {!!submitErr && <button onClick={submitMyAnswers} disabled={saving} style={{ width:"100%", maxWidth:330, background:C.dark, color:C.cream2, border:"none", borderRadius:12, padding:12, fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", cursor:saving?"default":"pointer", opacity:saving?0.7:1, marginBottom:12 }}>{saving ? "Reintentando..." : "Reintentar sincronización"}</button>}
         <div style={{ fontSize:"0.75rem", color:C.inkL, textAlign:"center" }}>
           Puedes ver tu código en la sección "Nosotros" para compartirlo si es necesario.
         </div>
