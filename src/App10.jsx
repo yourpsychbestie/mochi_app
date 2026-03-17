@@ -31,6 +31,20 @@ const ls = {
   set:(k,v)=>{ try{localStorage.setItem(k,JSON.stringify(v));}catch{} },
 };
 
+const parseCoupleNames = (names) => {
+  const raw = typeof names === "string" ? names : "";
+  const parts = raw.split("&").map(p => p.trim()).filter(Boolean);
+  return {
+    a: parts[0] || "Persona A",
+    b: parts[1] || "Persona B",
+  };
+};
+
+const getUserDisplayName = (user, fallback = "Yo") => {
+  const names = parseCoupleNames(user?.names);
+  return user?.isOwner === false ? (names.b || fallback) : (names.a || fallback);
+};
+
 // ═══════════════════════════════════════════════
 // GARDEN ITEMS — multiple quantities, koi/lotus aesthetic
 // ═══════════════════════════════════════════════
@@ -2145,8 +2159,9 @@ function ExModal({ ex, onClose, onComplete, nameA, nameB, user }) {
 }
 
 function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson }) {
-  const nameA = user?.names ? user.names.split("&")[0].trim() : "Persona A";
-  const nameB = user?.names ? user.names.split("&")[1]?.trim() || "Persona B" : "Persona B";
+  const parsedNames = parseCoupleNames(user?.names);
+  const nameA = parsedNames.a;
+  const nameB = parsedNames.b;
   const [openId, setOpenId] = useState(null);
   const [openLesson, setOpenLesson] = useState(null);
   const [ejTab, setEjTab] = useState("ejerc");
@@ -2303,8 +2318,9 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
 
 // CONOCETE
 function Conocete({ conoce, onSave, user }) {
-  const nameA = user?.names ? user.names.split("&")[0].trim() : "Persona A";
-  const nameB = user?.names ? user.names.split("&")[1]?.trim() || "Persona B" : "Persona B";
+  const parsedNames = parseCoupleNames(user?.names);
+  const nameA = parsedNames.a;
+  const nameB = parsedNames.b;
   const myRole = user?.isOwner !== false ? "owner" : "partner";
   const [cat, setCat] = useState(null);
   const [qIdx, setQIdx] = useState(null);
@@ -2389,8 +2405,9 @@ function Conocete({ conoce, onSave, user }) {
 
 // BURBUJA
 function Burbuja({ burbuja, onSave, user }) {
-  const nameA = user?.names ? user.names.split("&")[0].trim() : "Persona A";
-  const nameB = user?.names ? user.names.split("&")[1]?.trim() || "Persona B" : "Persona B";
+  const parsedNames = parseCoupleNames(user?.names);
+  const nameA = parsedNames.a;
+  const nameB = parsedNames.b;
   const [open, setOpen] = useState({});
   const [tmp, setTmp] = useState({});
   const [burTab, setBurTab] = useState("negociacion");
@@ -2977,8 +2994,9 @@ const DAILY_LESSONS = [
 // RELATIONSHIP TEST SCREEN
 // ═══════════════════════════════════════════════
 function RelTest({ user, onDone }) {
-  const nameA = user?.names ? user.names.split("&")[0].trim() : "Persona A";
-  const nameB = user?.names ? user.names.split("&")[1]?.trim() || "Persona B" : "Persona B";
+  const parsedNames = parseCoupleNames(user?.names);
+  const nameA = parsedNames.a;
+  const nameB = parsedNames.b;
   const isOwner = user?.isOwner !== false; // owner = Panda A
   const myKey = isOwner ? "owner" : "partner";
   const otherKey = isOwner ? "partner" : "owner";
@@ -3566,8 +3584,9 @@ export default function App() {
 
   const petMochi = () => {
     trigHappy();
-    const nameA = user?.names ? user.names.split("&")[0].trim() : "Panda A";
-    const nameB = user?.names ? user.names.split("&")[1]?.trim() || "Panda B" : "Panda B";
+    const parsedNames = parseCoupleNames(user?.names);
+    const nameA = parsedNames.a || "Panda A";
+    const nameB = parsedNames.b || "Panda B";
     const myEmail = user?.email || "guest";
     const pandaAMsgs = [...messages].filter(m => user?.isOwner !== false ? m.senderEmail === myEmail : m.senderEmail !== myEmail);
     const pandaBMsgs = [...messages].filter(m => user?.isOwner !== false ? m.senderEmail !== myEmail : m.senderEmail === myEmail);
@@ -3584,7 +3603,7 @@ export default function App() {
 
   const completeLesson = async (lessonId) => {
     const myKey = user?.isOwner !== false ? "owner" : "partner";
-    const myName = user?.names ? user.names.split("&")[user?.isOwner !== false ? 0 : 1].trim() : "Yo";
+    const myName = getUserDisplayName(user, "Yo");
     if (lessonsDone[lessonId]?.[myKey]) return; // already done by me
     if (user?.code && !user?.isGuest) {
       await fbSaveLessonRead(user.code, lessonId, myKey).catch(() => {});
@@ -3612,7 +3631,7 @@ export default function App() {
     const total = pts + bonus;
     const nh = Math.min(100, happiness + 8);
     setHappiness(nh); setExDone(nd); trigHappy();
-    const myName = user?.names ? user.names.split("&")[user?.isOwner !== false ? 0 : 1].trim() : "Yo";
+    const myName = getUserDisplayName(user, "Yo");
     let nextBamboo = bamboo + total;
     if (user?.code && !user?.isGuest) {
       nextBamboo = await fbIncrementBamboo(user.code, total).catch(() => bamboo + total);
@@ -3660,7 +3679,7 @@ export default function App() {
   const saveConoce = async (cat, qIdx, myAnswer, _b, isNew) => {
     const key = `${cat}-${qIdx}`;
     const myRole = user?.isOwner !== false ? "owner" : "partner";
-    const myName = user?.names ? user.names.split("&")[user?.isOwner !== false ? 0 : 1].trim() : "Yo";
+    const myName = getUserDisplayName(user, "Yo");
     const optimistic = {
       ...(conoce[key] || {}),
       [myRole]: myAnswer,
@@ -3726,7 +3745,7 @@ export default function App() {
   };
 
   const addGratitud = async (entry) => {
-    const myName = user?.names ? user.names.split("&")[user?.isOwner !== false ? 0 : 1].trim() : "Yo";
+    const myName = getUserDisplayName(user, "Yo");
     const enriched = { ...entry, authorName: myName, authorUid: user?.uid, date: new Date().toLocaleDateString("es", {day:"numeric",month:"short"}) };
     trigHappy();
     if (user?.code && !user?.isGuest) {
@@ -3744,7 +3763,7 @@ export default function App() {
   };
 
   const addMomento = async (entry) => {
-    const myName = user?.names ? user.names.split("&")[user?.isOwner !== false ? 0 : 1].trim() : "Yo";
+    const myName = getUserDisplayName(user, "Yo");
     const enriched = { ...entry, authorName: myName, authorUid: user?.uid, date: new Date().toLocaleDateString("es", {day:"numeric",month:"short",year:"numeric"}) };
     trigHappy();
     if (user?.code && !user?.isGuest) {
@@ -3826,8 +3845,9 @@ export default function App() {
 // BAUL SECTION — embedded in Perfil
 // ═══════════════════════════════════════════════
 function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) {
-  const nameA = user?.names ? user.names.split("&")[0].trim() : "Panda A";
-  const nameB = user?.names ? user.names.split("&")[1]?.trim() || "Panda B" : "Panda B";
+  const parsedNames = parseCoupleNames(user?.names);
+  const nameA = parsedNames.a || "Panda A";
+  const nameB = parsedNames.b || "Panda B";
   const [activeTab, setActiveTab] = useState("gratitud");
   const [showGForm, setShowGForm] = useState(false);
   const [showMForm, setShowMForm] = useState(false);
@@ -3911,8 +3931,9 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
 // BAÚL — Gratitud + Momentos
 // ═══════════════════════════════════════════════
 function Baul({ user, gratitud, momentos, onAddGratitud, onAddMomento }) {
-  const nameA = user?.names ? user.names.split("&")[0].trim() : "Panda A";
-  const nameB = user?.names ? user.names.split("&")[1]?.trim() || "Panda B" : "Panda B";
+  const parsedNames = parseCoupleNames(user?.names);
+  const nameA = parsedNames.a || "Panda A";
+  const nameB = parsedNames.b || "Panda B";
   const [activeTab, setActiveTab] = useState("gratitud");
   const [showForm, setShowForm] = useState(false);
   const [text, setText] = useState("");
