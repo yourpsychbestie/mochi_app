@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import {
   fbRegister, fbLogin, fbLogout, fbOnAuthChange,
   fbSaveUser, fbGetUser,
-  fbSaveCode, fbGetCode, fbFindCodeByUid, fbClaimPartnerCode,
+  fbCreateCodeOwner, fbGetCode, fbFindCodeByUid, fbClaimPartnerCode,
   fbSaveProgress, fbGetProgress,
   fbGetTest,
   fbSendMessage, fbListenMessages,
@@ -1710,12 +1710,14 @@ function Mensajes({ user, messages, onSend }) {
 
 
 function Login({ onLogin }) {
+  const makePairCode = () => "MO" + Math.random().toString(36).slice(2, 6).toUpperCase();
+
   const [tab, setTab] = useState("login");
   const [email, setEmail] = useState(""); const [pass, setPass] = useState("");
   const [nameA, setNameA] = useState(""); const [nameB, setNameB] = useState(""); const [durN, setDurN] = useState(""); const [durU, setDurU] = useState("meses");
   const [pCode, setPCode] = useState(""); const [pEmail, setPEmail] = useState(""); const [pPass, setPPass] = useState("");
   const [err, setErr] = useState("");
-  const [code] = useState("MO" + Math.random().toString(36).slice(2, 6).toUpperCase());
+  const [code] = useState(makePairCode());
 
   const [loading, setLoading] = useState(false);
 
@@ -1738,6 +1740,10 @@ function Login({ onLogin }) {
         setErr("No existe una cuenta con ese correo");
       } else if (code === "auth/too-many-requests") {
         setErr("Demasiados intentos, espera unos minutos");
+      } else if (code === "auth/invalid-email") {
+        setErr("Correo inválido");
+      } else if (code === "auth/network-request-failed") {
+        setErr("Sin conexión o red bloqueada. Intenta de nuevo.");
       } else {
         setErr("Error al entrar: " + (e.message || e.code || "desconocido"));
       }
@@ -1749,15 +1755,45 @@ function Login({ onLogin }) {
     const names = nameA.trim() + " & ?";
     if (!nameA || !email || pass.length < 6) { setErr("Completa tu nombre, correo y contraseña (mín. 6 caracteres)"); return; }
     setLoading(true); setErr("");
+    let createdAuthUser = false;
     try {
       const since = durN ? `Juntos ${durN} ${durU}` : "Juntos desde hoy";
       const cred = await fbRegister(email, pass);
+      createdAuthUser = true;
       const uid = cred.user.uid;
-      await fbSaveUser(uid, { email, names, code, since, isOwner: true });
-      await fbSaveCode(code, { ownerEmail: email, ownerUid: uid, names, since });
-      onLogin({ uid, email, names, code, since, isOwner: true, isGuest: false }, true);
+      let ownerCode = code;
+      let created = false;
+      let attempts = 0;
+      while (!created && attempts < 6) {
+        attempts += 1;
+        try {
+          await fbCreateCodeOwner(ownerCode, { ownerEmail: email, ownerUid: uid, names, since });
+          created = true;
+        } catch (createErr) {
+          if (createErr?.message === "CODE_TAKEN") {
+            ownerCode = makePairCode();
+            continue;
+          }
+          throw createErr;
+        }
+      }
+      if (!created) {
+        throw new Error("CODE_GENERATION_FAILED");
+      }
+      await fbSaveUser(uid, { email, names, code: ownerCode, since, isOwner: true });
+      onLogin({ uid, email, names, code: ownerCode, since, isOwner: true, isGuest: false }, true);
     } catch(e) {
-      setErr(e.code === "auth/email-already-in-use" ? "Este correo ya tiene cuenta" : "Error al crear cuenta");
+      if (e.code === "auth/email-already-in-use") {
+        setErr("Este correo ya tiene cuenta");
+      } else if (e.code === "auth/weak-password") {
+        setErr("La contraseña debe tener al menos 6 caracteres");
+      } else if (e.code === "permission-denied" || e.message?.includes("permission") || e.message?.includes("Missing")) {
+        if (createdAuthUser) await fbDeleteCurrentUser().catch(() => {});
+        setErr("Firebase bloqueó la creación del código. Revisa Firestore Rules para la colección codes.");
+      } else {
+        if (createdAuthUser) await fbDeleteCurrentUser().catch(() => {});
+        setErr("Error al crear cuenta");
+      }
     }
     setLoading(false);
   };
@@ -1765,6 +1801,7 @@ function Login({ onLogin }) {
   const doJoin = async () => {
     if (!nameB || !pCode || !pEmail || pPass.length < 6) { setErr("Completa tu nombre, código, correo y contraseña"); return; }
     setLoading(true); setErr("");
+    let justCreated = false;
     try {
       const cleanCode = pCode.trim().toUpperCase();
       if (!/^MO[A-Z0-9]{4}$/.test(cleanCode)) {
@@ -1775,6 +1812,7 @@ function Login({ onLogin }) {
       const codeData = await fbGetCode(cleanCode);
       if (!codeData) { setErr("Código no encontrado — revisa que esté bien escrito"); setLoading(false); return; }
       const cred = await fbRegister(pEmail, pPass);
+      justCreated = true;
       const uid = cred.user.uid;
       const claimed = await fbClaimPartnerCode(cleanCode, {
         partnerEmail: pEmail,
@@ -1816,13 +1854,26 @@ function Login({ onLogin }) {
           setErr("Este correo ya tiene cuenta — verifica tu contraseña");
           setLoading(false); return;
         }
+      } else if (e.code === "auth/invalid-email") {
+        if (justCreated) await fbDeleteCurrentUser().catch(() => {});
+        setErr("Correo inválido");
+      } else if (e.code === "auth/weak-password") {
+        if (justCreated) await fbDeleteCurrentUser().catch(() => {});
+        setErr("La contraseña debe tener al menos 6 caracteres");
       } else if (e.message === "CODE_ALREADY_LINKED") {
+        if (justCreated) await fbDeleteCurrentUser().catch(() => {});
         setErr("Ese código ya está vinculado a otra cuenta");
       } else if (e.message === "CODE_NOT_FOUND") {
+        if (justCreated) await fbDeleteCurrentUser().catch(() => {});
         setErr("Código no encontrado — revisa que esté bien escrito");
+      } else if (e.code === "auth/network-request-failed") {
+        if (justCreated) await fbDeleteCurrentUser().catch(() => {});
+        setErr("Sin conexión o red bloqueada. Intenta de nuevo.");
       } else if (e.code === "permission-denied" || e.message?.includes("permission") || e.message?.includes("Missing")) {
+        if (justCreated) await fbDeleteCurrentUser().catch(() => {});
         setErr("Firebase bloqueó el acceso al código de pareja. Revisa Firestore Rules para la colección codes.");
       } else {
+        if (justCreated) await fbDeleteCurrentUser().catch(() => {});
         setErr("Error al unirse: " + (e.message || e.code || "desconocido"));
       }
     }
@@ -1901,7 +1952,7 @@ function Login({ onLogin }) {
           {[["Tu correo", pEmail, setPEmail, "tu@correo.com", "email"], ["Contraseña", pPass, setPPass, "Mínimo 6 caracteres", "password"]].map(([l, v, fn, ph, t]) => (
             <div key={l}><label style={LBL}>{l}</label><Inp value={v} onChange={fn} placeholder={ph} type={t} style={{ marginBottom: 10 }} /></div>
           ))}
-          <Btn onClick={doJoin} style={{ width: "100%", marginTop: 4 }}>Unirme al jardín 🌿</Btn>
+          <Btn onClick={doJoin} style={{ width: "100%", marginTop: 4 }} disabled={loading}>{loading ? "Uniendo..." : "Unirme al jardín 🌿"}</Btn>
         </>}
       </div>
     </div>
