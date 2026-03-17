@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import {
   fbRegister, fbLogin, fbLogout, fbOnAuthChange,
   fbSaveUser, fbGetUser,
-  fbCreateCodeOwner, fbGetCode, fbFindCodeByUid, fbClaimPartnerCode,
+  fbCreateCodeOwner, fbGetCode, fbSaveCode, fbFindCodeByUid, fbClaimPartnerCode,
   fbSaveProgress, fbGetProgress,
   fbGetTest,
   fbSendMessage, fbListenMessages,
@@ -35,6 +35,10 @@ const ls = {
   set:(k,v)=>{ try{localStorage.setItem(k,JSON.stringify(v));}catch{} },
   remove:(k)=>{ try{localStorage.removeItem(k);}catch{} },
 };
+
+// Prevents duplicate afterLogin calls from fbOnAuthChange while a local auth flow
+// (login/register/join) is already finalizing state.
+let _pendingLocalAuth = false;
 
 const parseCoupleNames = (names) => {
   const raw = typeof names === "string" ? names : "";
@@ -1711,6 +1715,7 @@ function Mensajes({ user, messages, onSend }) {
 
 function Login({ onLogin }) {
   const makePairCode = () => "MO" + Math.random().toString(36).slice(2, 6).toUpperCase();
+  const normalizeEmail = (value) => String(value || "").trim().toLowerCase();
 
   const [tab, setTab] = useState("login");
   const [email, setEmail] = useState(""); const [pass, setPass] = useState("");
@@ -1722,16 +1727,18 @@ function Login({ onLogin }) {
   const [loading, setLoading] = useState(false);
 
   const doLogin = async () => {
-    if (!email || !pass) { setErr("Completa correo y contraseña"); return; }
+    const cleanEmail = normalizeEmail(email);
+    if (!cleanEmail || !pass) { setErr("Completa correo y contraseña"); return; }
+    _pendingLocalAuth = true;
     setLoading(true); setErr("");
     try {
-      const cred = await fbLogin(email, pass);
+      const cred = await fbLogin(cleanEmail, pass);
       let userData = await fbGetUser(cred.user.uid);
       // If no Firestore data found, still let them in with basic info
       if (!userData) {
-        userData = { email, names: email.split("@")[0] + "&", code: "", isOwner: true };
+        userData = { email: cleanEmail, names: cleanEmail.split("@")[0] + "&", code: "", isOwner: true };
       }
-      onLogin({ uid: cred.user.uid, email, ...userData, isGuest: false }, false);
+      onLogin({ uid: cred.user.uid, email: cleanEmail, ...userData, isGuest: false }, false);
     } catch(e) {
       const code = e.code || "";
       if (code === "auth/invalid-credential" || code === "auth/wrong-password") {
@@ -1747,18 +1754,22 @@ function Login({ onLogin }) {
       } else {
         setErr("Error al entrar: " + (e.message || e.code || "desconocido"));
       }
+    } finally {
+      _pendingLocalAuth = false;
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const doReg = async () => {
     const names = nameA.trim() + " & ?";
-    if (!nameA || !email || pass.length < 6) { setErr("Completa tu nombre, correo y contraseña (mín. 6 caracteres)"); return; }
+    const cleanEmail = normalizeEmail(email);
+    if (!nameA || !cleanEmail || pass.length < 6) { setErr("Completa tu nombre, correo y contraseña (mín. 6 caracteres)"); return; }
+    _pendingLocalAuth = true;
     setLoading(true); setErr("");
     let createdAuthUser = false;
     try {
       const since = durN ? `Juntos ${durN} ${durU}` : "Juntos desde hoy";
-      const cred = await fbRegister(email, pass);
+      const cred = await fbRegister(cleanEmail, pass);
       createdAuthUser = true;
       const uid = cred.user.uid;
       let ownerCode = code;
@@ -1767,7 +1778,7 @@ function Login({ onLogin }) {
       while (!created && attempts < 6) {
         attempts += 1;
         try {
-          await fbCreateCodeOwner(ownerCode, { ownerEmail: email, ownerUid: uid, names, since });
+          await fbCreateCodeOwner(ownerCode, { ownerEmail: cleanEmail, ownerUid: uid, names, since });
           created = true;
         } catch (createErr) {
           if (createErr?.message === "CODE_TAKEN") {
@@ -1780,8 +1791,8 @@ function Login({ onLogin }) {
       if (!created) {
         throw new Error("CODE_GENERATION_FAILED");
       }
-      await fbSaveUser(uid, { email, names, code: ownerCode, since, isOwner: true });
-      onLogin({ uid, email, names, code: ownerCode, since, isOwner: true, isGuest: false }, true);
+      await fbSaveUser(uid, { email: cleanEmail, names, code: ownerCode, since, isOwner: true });
+      onLogin({ uid, email: cleanEmail, names, code: ownerCode, since, isOwner: true, isGuest: false }, true);
     } catch(e) {
       if (e.code === "auth/email-already-in-use") {
         setErr("Este correo ya tiene cuenta");
@@ -1794,65 +1805,62 @@ function Login({ onLogin }) {
         if (createdAuthUser) await fbDeleteCurrentUser().catch(() => {});
         setErr("Error al crear cuenta");
       }
+    } finally {
+      _pendingLocalAuth = false;
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const doJoin = async () => {
-    if (!nameB || !pCode || !pEmail || pPass.length < 6) { setErr("Completa tu nombre, código, correo y contraseña"); return; }
+    const cleanPartnerEmail = normalizeEmail(pEmail);
+    if (!nameB || !pCode || !cleanPartnerEmail || pPass.length < 6) { setErr("Completa tu nombre, código, correo y contraseña"); return; }
+    _pendingLocalAuth = true;
     setLoading(true); setErr("");
     let justCreated = false;
     try {
       const cleanCode = pCode.trim().toUpperCase();
       if (!/^MO[A-Z0-9]{4}$/.test(cleanCode)) {
         setErr("Código inválido — usa el formato MO1234");
-        setLoading(false);
         return;
       }
       const codeData = await fbGetCode(cleanCode);
-      if (!codeData) { setErr("Código no encontrado — revisa que esté bien escrito"); setLoading(false); return; }
-      const cred = await fbRegister(pEmail, pPass);
+      if (!codeData) { setErr("Código no encontrado — revisa que esté bien escrito"); return; }
+      const cred = await fbRegister(cleanPartnerEmail, pPass);
       justCreated = true;
       const uid = cred.user.uid;
       const claimed = await fbClaimPartnerCode(cleanCode, {
-        partnerEmail: pEmail,
+        partnerEmail: cleanPartnerEmail,
         partnerUid: uid,
         partnerName: nameB.trim() || "?",
       });
       const names = claimed?.names || codeData.names || "Nosotros";
       const since = claimed?.since || codeData.since || "Juntos desde hoy";
-      await fbSaveUser(uid, { email: pEmail, names, code: cleanCode, since, isOwner: false });
-      onLogin({ uid, email: pEmail, names, code: cleanCode, since, isOwner: false, isGuest: false }, true);
+      await fbSaveUser(uid, { email: cleanPartnerEmail, names, code: cleanCode, since, isOwner: false });
+      onLogin({ uid, email: cleanPartnerEmail, names, code: cleanCode, since, isOwner: false, isGuest: false }, true);
     } catch(e) {
       if (e.code === "auth/email-already-in-use") {
         // Account exists — try logging them in instead
         try {
-          const cred2 = await fbLogin(pEmail, pPass);
+          const cred2 = await fbLogin(cleanPartnerEmail, pPass);
           const uid2 = cred2.user.uid;
           const cleanCode2 = pCode.trim().toUpperCase();
           if (!/^MO[A-Z0-9]{4}$/.test(cleanCode2)) {
             setErr("Código inválido — usa el formato MO1234");
-            setLoading(false);
             return;
           }
           const claimed2 = await fbClaimPartnerCode(cleanCode2, {
-            partnerEmail: pEmail,
+            partnerEmail: cleanPartnerEmail,
             partnerUid: uid2,
             partnerName: nameB.trim() || "?",
-          }).catch(() => null);
-          if (!claimed2) {
-            setErr("No se pudo vincular la cuenta con ese código");
-            setLoading(false);
-            return;
-          }
+          });
           const names2 = claimed2.names || "Nosotros";
           const since2 = claimed2.since || "Juntos";
-          await fbSaveUser(uid2, { email: pEmail, names: names2, code: cleanCode2, since: since2, isOwner: false }).catch(()=>{});
-          onLogin({ uid: uid2, email: pEmail, names: names2, code: cleanCode2, since: since2, isOwner: false, isGuest: false }, false);
-          setLoading(false); return;
+          await fbSaveUser(uid2, { email: cleanPartnerEmail, names: names2, code: cleanCode2, since: since2, isOwner: false }).catch(()=>{});
+          onLogin({ uid: uid2, email: cleanPartnerEmail, names: names2, code: cleanCode2, since: since2, isOwner: false, isGuest: false }, false);
+          return;
         } catch(e2) {
           setErr("Este correo ya tiene cuenta — verifica tu contraseña");
-          setLoading(false); return;
+          return;
         }
       } else if (e.code === "auth/invalid-email") {
         if (justCreated) await fbDeleteCurrentUser().catch(() => {});
@@ -1876,8 +1884,10 @@ function Login({ onLogin }) {
         if (justCreated) await fbDeleteCurrentUser().catch(() => {});
         setErr("Error al unirse: " + (e.message || e.code || "desconocido"));
       }
+    } finally {
+      _pendingLocalAuth = false;
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const LBL = { fontSize: "0.72rem", fontWeight: 800, color: C.inkM, marginBottom: 5, display: "block", letterSpacing: "0.6px", textTransform: "uppercase" };
@@ -3105,6 +3115,9 @@ function RelTest({ user, onDone }) {
   const otherKey = isOwner ? "partner" : "owner";
   const myName = isOwner ? nameA : nameB;
   const otherName = isOwner ? nameB : nameA;
+  const otherLabel = (!otherName || otherName === "?" || otherName === "Persona A" || otherName === "Persona B")
+    ? "tu pareja"
+    : otherName;
 
   const [step, setStep] = useState(0);
   const [myScores, setMyScores] = useState({});
@@ -3112,7 +3125,38 @@ function RelTest({ user, onDone }) {
   const [saving, setSaving] = useState(false);
   const [localMyDone, setLocalMyDone] = useState(false);
   const [submitErr, setSubmitErr] = useState("");
+  const [visibleCode, setVisibleCode] = useState(() => typeof user?.code === "string" ? user.code.trim().toUpperCase() : "");
+  const [copiedCode, setCopiedCode] = useState(false);
   const isGuest = user?.isGuest || !user?.code;
+
+  useEffect(() => {
+    let cancelled = false;
+    const directCode = typeof user?.code === "string" ? user.code.trim().toUpperCase() : "";
+    if (directCode) {
+      setVisibleCode(directCode);
+      return () => { cancelled = true; };
+    }
+    if (!user?.uid) return () => { cancelled = true; };
+
+    fbFindCodeByUid(user.uid)
+      .then((record) => {
+        if (cancelled) return;
+        const recovered = typeof record?.code === "string" ? record.code.trim().toUpperCase() : "";
+        if (recovered) setVisibleCode(recovered);
+      })
+      .catch(() => {});
+
+    return () => { cancelled = true; };
+  }, [user?.code, user?.uid]);
+
+  const copyPairCode = async () => {
+    if (!visibleCode || !navigator?.clipboard?.writeText) return;
+    try {
+      await navigator.clipboard.writeText(visibleCode);
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 1800);
+    } catch (_) {}
+  };
 
   // Listen to test doc in Firebase (or just local for guests)
   useEffect(() => {
@@ -3262,6 +3306,15 @@ function RelTest({ user, onDone }) {
             );
           })}
         </div>
+        {!!visibleCode && !isGuest && (
+          <div style={{ background:C.white, borderRadius:16, border:`1.5px solid ${C.border}`, padding:12, marginBottom:14 }}>
+            <div style={{ fontSize:"0.7rem", fontWeight:800, color:C.inkL, letterSpacing:"0.6px", marginBottom:6 }}>CÓDIGO DE PAREJA</div>
+            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+              <div style={{ flex:1, background:C.cream2, border:`1.5px solid ${C.border}`, borderRadius:10, padding:"8px 10px", fontFamily:"'Fredoka One',cursive", letterSpacing:3, color:C.dark, textAlign:"center" }}>{visibleCode}</div>
+              <button onClick={copyPairCode} style={{ border:`1.5px solid ${C.border}`, background:C.white, color:C.dark, borderRadius:10, padding:"8px 10px", fontWeight:800, cursor:"pointer" }}>{copiedCode ? "Copiado" : "Copiar"}</button>
+            </div>
+          </div>
+        )}
         <button onClick={() => onDone(combinedScores)} style={{ width:"100%", background:C.dark, color:C.cream2, border:"none", borderRadius:14, padding:16, fontFamily:"'Fredoka One',cursive", fontSize:"1.1rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.2)" }}>
           Comenzar juntos 🐼
         </button>
@@ -3278,15 +3331,22 @@ function RelTest({ user, onDone }) {
           ¡Ya contestaste! 🌿
         </div>
         <div style={{ fontSize:"0.9rem", color:C.inkM, textAlign:"center", lineHeight:1.6, marginBottom:24, maxWidth:300 }}>
-          Esperando a que <strong>{otherName}</strong> complete su parte...
+          Esperando a que <strong>{otherLabel}</strong> complete su parte...
         </div>
         {!!submitErr && <div style={{ background:"#fff1dd", color:"#8a5a00", border:"1px solid #e8c788", borderRadius:10, padding:"8px 10px", marginBottom:12, fontSize:"0.78rem", fontWeight:700, textAlign:"center", maxWidth:330 }}>{submitErr}</div>}
         {!!submitErr && <button onClick={submitMyAnswers} disabled={saving} style={{ width:"100%", maxWidth:330, background:C.dark, color:C.cream2, border:"none", borderRadius:12, padding:12, fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", cursor:saving?"default":"pointer", opacity:saving?0.7:1, marginBottom:12 }}>{saving ? "Reintentando..." : "Reintentar sincronización"}</button>}
-        <div style={{ fontSize:"0.75rem", color:C.inkL, textAlign:"center" }}>
-          Puedes ver tu código en la sección "Nosotros" para compartirlo si es necesario.
-        </div>
+        {!!visibleCode && (
+          <div style={{ width:"100%", maxWidth:330, background:C.white, borderRadius:12, border:`1.5px solid ${C.border}`, padding:10, marginBottom:10 }}>
+            <div style={{ fontSize:"0.66rem", color:C.inkL, fontWeight:800, letterSpacing:"0.6px", marginBottom:6, textAlign:"center" }}>COMPARTE ESTE CÓDIGO CON TU PAREJA</div>
+            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+              <div style={{ flex:1, background:C.cream2, border:`1.5px solid ${C.border}`, borderRadius:10, padding:"8px 10px", fontFamily:"'Fredoka One',cursive", letterSpacing:3, color:C.dark, textAlign:"center" }}>{visibleCode}</div>
+              <button onClick={copyPairCode} style={{ border:`1.5px solid ${C.border}`, background:C.white, color:C.dark, borderRadius:10, padding:"8px 10px", fontWeight:800, cursor:"pointer" }}>{copiedCode ? "Copiado" : "Copiar"}</button>
+            </div>
+          </div>
+        )}
+        {!visibleCode && <div style={{ fontSize:"0.75rem", color:C.inkL, textAlign:"center", maxWidth:330 }}>Aún no pudimos recuperar tu código. Entra a "Nosotros" cuando termine de sincronizar.</div>}
         <div style={{ fontSize:"0.75rem", color:C.inkL, marginTop:20, textAlign:"center" }}>
-          La pantalla se actualizará automáticamente cuando {otherName} termine ✨
+          La pantalla se actualizará automáticamente cuando {otherLabel} termine ✨
         </div>
       </div>
     );
@@ -3601,6 +3661,18 @@ export default function App() {
     }
 
     setUser(normalizedUser);
+    if (normalizedUser?.email) {
+      const usersMap = ls.get("mochi_users") || {};
+      usersMap[normalizedUser.email] = {
+        uid: normalizedUser.uid,
+        email: normalizedUser.email,
+        names: normalizedUser.names,
+        code: normalizedUser.code,
+        since: normalizedUser.since,
+        isOwner: normalizedUser.isOwner,
+      };
+      ls.set("mochi_users", usersMap);
+    }
     ls.set("mochi_last", normalizedUser.email || "guest");
     let loadedState = null;
     let syncedTestScores = null;
@@ -3722,6 +3794,7 @@ export default function App() {
   useEffect(() => {
     // Use Firebase Auth state to keep session alive
     const unsub = fbOnAuthChange(async (firebaseUser) => {
+      if (_pendingLocalAuth) return;
       if (firebaseUser) {
         try {
           let userData = await fbGetUser(firebaseUser.uid);
@@ -3999,8 +4072,26 @@ export default function App() {
     if (!newNames.trim()) return;
     const formatted = newNames.trim();
     setUser(u => ({ ...u, names: formatted }));
+
+    if (user?.email) {
+      const usersMap = ls.get("mochi_users") || {};
+      usersMap[user.email] = {
+        ...(usersMap[user.email] || {}),
+        uid: user.uid,
+        email: user.email,
+        names: formatted,
+        code: user.code,
+        since: user.since,
+        isOwner: user.isOwner,
+      };
+      ls.set("mochi_users", usersMap);
+    }
+
     if (user?.uid && !user?.isGuest) {
       await fbSaveUser(user.uid, { names: formatted }).catch(() => {});
+      if (user?.code) {
+        await fbSaveCode(user.code, { names: formatted }).catch(() => {});
+      }
     }
     toast("✏️ Nombre actualizado");
   };
@@ -4009,8 +4100,9 @@ export default function App() {
     const myName = getUserDisplayName(user, "Yo");
     const enriched = { ...entry, authorName: myName, authorUid: user?.uid, date: new Date().toLocaleDateString("es", {day:"numeric",month:"short"}) };
     trigHappy();
+    let synced = true;
     if (user?.code && !user?.isGuest) {
-      await fbAddGratitud(user.code, enriched).catch(() => {});
+      await fbAddGratitud(user.code, enriched).catch(() => { synced = false; });
       const nb = await fbIncrementBamboo(user.code, 3).catch(() => bamboo + 3);
       setBamboo(nb);
       // Notify partner
@@ -4020,21 +4112,22 @@ export default function App() {
       setGratitud(ng);
       setBamboo(b => b + 3);
     }
-    toast("💛 Guardado en el baúl de gratitud +3 bambú 🌿");
+    toast(synced ? "💛 Guardado en el baúl de gratitud +3 bambú 🌿" : "💛 Guardado localmente. Firebase no sincronizó esta entrada.");
   };
 
   const addMomento = async (entry) => {
     const myName = getUserDisplayName(user, "Yo");
     const enriched = { ...entry, authorName: myName, authorUid: user?.uid, date: new Date().toLocaleDateString("es", {day:"numeric",month:"short",year:"numeric"}) };
     trigHappy();
+    let synced = true;
     if (user?.code && !user?.isGuest) {
-      await fbAddMomento(user.code, enriched).catch(() => {});
+      await fbAddMomento(user.code, enriched).catch(() => { synced = false; });
       if (user?.uid) fbSendNotif(user.code, { type:"momento", msg:`${myName} guardó un momento especial ✨`, forUid:"partner", fromUid: user.uid }).catch(()=>{});
     } else {
       const nm = [{ ...enriched, id: Date.now() }, ...momentos];
       setMomentos(nm);
     }
-    toast("✨ Guardado en el baúl de momentos");
+    toast(synced ? "✨ Guardado en el baúl de momentos" : "✨ Guardado localmente. Firebase no sincronizó este momento.");
   };
 
   const logout = async () => {

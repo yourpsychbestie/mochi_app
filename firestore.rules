@@ -6,26 +6,50 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function codeDoc(code) {
-      return get(/databases/$(database)/documents/codes/$(code));
+    function codeExists(code) {
+      return exists(/databases/$(database)/documents/codes/$(code));
+    }
+
+    function codeData(code) {
+      return get(/databases/$(database)/documents/codes/$(code)).data;
+    }
+
+    function userExists() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function userData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function userCodeMatches(code) {
+      return isSignedIn()
+        && userExists()
+        && userData().code is string
+        && userData().code == code;
     }
 
     function isCodeParticipant(code) {
       return isSignedIn()
         && code is string
-        && codeDoc(code).exists()
         && (
-          codeDoc(code).data.ownerUid == request.auth.uid
-          || codeDoc(code).data.partnerUid == request.auth.uid
-          // Legacy fallback: older code docs may not have ownerUid/partnerUid yet.
-          || (
-            request.auth.token.email != null
-            && codeDoc(code).data.ownerEmail == request.auth.token.email
+          (
+            codeExists(code)
+            && (
+              codeData(code).ownerUid == request.auth.uid
+              || codeData(code).partnerUid == request.auth.uid
+              // Legacy fallback: older code docs may not have ownerUid/partnerUid yet.
+              || (
+                request.auth.token.email != null
+                && codeData(code).ownerEmail == request.auth.token.email
+              )
+              || (
+                request.auth.token.email != null
+                && codeData(code).partnerEmail == request.auth.token.email
+              )
+            )
           )
-          || (
-            request.auth.token.email != null
-            && codeDoc(code).data.partnerEmail == request.auth.token.email
-          )
+          || userCodeMatches(code)
         );
     }
 
