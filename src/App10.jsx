@@ -1716,6 +1716,39 @@ function Mensajes({ user, messages, onSend }) {
 function Login({ onLogin }) {
   const makePairCode = () => "MO" + Math.random().toString(36).slice(2, 6).toUpperCase();
   const normalizeEmail = (value) => String(value || "").trim().toLowerCase();
+  const buildCodeCandidates = (rawCode) => {
+    const base = String(rawCode || "").trim().toUpperCase();
+    const suffix = base.startsWith("MO") ? base.slice(2) : base;
+    const charMap = {
+      "0": ["0", "O"],
+      "O": ["O", "0"],
+      "1": ["1", "I", "L"],
+      "I": ["I", "1", "L"],
+      "L": ["L", "1", "I"],
+    };
+
+    let combos = [""];
+    for (const ch of suffix) {
+      const nextChars = charMap[ch] || [ch];
+      const next = [];
+      for (const partial of combos) {
+        for (const c of nextChars) next.push(partial + c);
+      }
+      combos = next.slice(0, 120);
+    }
+
+    const ordered = [`MO${suffix}`, ...combos.map((s) => `MO${s}`)];
+    return [...new Set(ordered)].filter((c) => /^MO[A-Z0-9]{4}$/.test(c));
+  };
+
+  const resolveExistingCode = async (inputCode) => {
+    const candidates = buildCodeCandidates(inputCode);
+    for (const c of candidates) {
+      const data = await fbGetCode(c).catch(() => null);
+      if (data) return { code: c, data };
+    }
+    return { code: String(inputCode || "").trim().toUpperCase(), data: null };
+  };
 
   const [tab, setTab] = useState("login");
   const [email, setEmail] = useState(""); const [pass, setPass] = useState("");
@@ -1823,20 +1856,22 @@ function Login({ onLogin }) {
         setErr("Código inválido — usa el formato MO1234");
         return;
       }
-      const codeData = await fbGetCode(cleanCode);
+      const resolved = await resolveExistingCode(cleanCode);
+      const resolvedCode = resolved.code;
+      const codeData = resolved.data;
       if (!codeData) { setErr("Código no encontrado — revisa que esté bien escrito"); return; }
       const cred = await fbRegister(cleanPartnerEmail, pPass);
       justCreated = true;
       const uid = cred.user.uid;
-      const claimed = await fbClaimPartnerCode(cleanCode, {
+      const claimed = await fbClaimPartnerCode(resolvedCode, {
         partnerEmail: cleanPartnerEmail,
         partnerUid: uid,
         partnerName: nameB.trim() || "?",
       });
       const names = claimed?.names || codeData.names || "Nosotros";
       const since = claimed?.since || codeData.since || "Juntos desde hoy";
-      await fbSaveUser(uid, { email: cleanPartnerEmail, names, code: cleanCode, since, isOwner: false });
-      onLogin({ uid, email: cleanPartnerEmail, names, code: cleanCode, since, isOwner: false, isGuest: false }, true);
+      await fbSaveUser(uid, { email: cleanPartnerEmail, names, code: resolvedCode, since, isOwner: false });
+      onLogin({ uid, email: cleanPartnerEmail, names, code: resolvedCode, since, isOwner: false, isGuest: false }, true);
     } catch(e) {
       if (e.code === "auth/email-already-in-use") {
         // Account exists — try logging them in instead
@@ -1848,15 +1883,20 @@ function Login({ onLogin }) {
             setErr("Código inválido — usa el formato MO1234");
             return;
           }
-          const claimed2 = await fbClaimPartnerCode(cleanCode2, {
+          const resolved2 = await resolveExistingCode(cleanCode2);
+          if (!resolved2.data) {
+            setErr("Código no encontrado — revisa que esté bien escrito");
+            return;
+          }
+          const claimed2 = await fbClaimPartnerCode(resolved2.code, {
             partnerEmail: cleanPartnerEmail,
             partnerUid: uid2,
             partnerName: nameB.trim() || "?",
           });
           const names2 = claimed2.names || "Nosotros";
           const since2 = claimed2.since || "Juntos";
-          await fbSaveUser(uid2, { email: cleanPartnerEmail, names: names2, code: cleanCode2, since: since2, isOwner: false }).catch(()=>{});
-          onLogin({ uid: uid2, email: cleanPartnerEmail, names: names2, code: cleanCode2, since: since2, isOwner: false, isGuest: false }, false);
+          await fbSaveUser(uid2, { email: cleanPartnerEmail, names: names2, code: resolved2.code, since: since2, isOwner: false }).catch(()=>{});
+          onLogin({ uid: uid2, email: cleanPartnerEmail, names: names2, code: resolved2.code, since: since2, isOwner: false, isGuest: false }, false);
           return;
         } catch(e2) {
           setErr("Este correo ya tiene cuenta — verifica tu contraseña");
