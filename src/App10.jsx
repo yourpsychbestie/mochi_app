@@ -2218,9 +2218,11 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
           <div style={{ fontSize:"0.8rem", color:"#4050a0", lineHeight:1.5 }}>💡 Herramientas reales de psicología de pareja.</div>
         </div>
         {(() => {
+          const lessonPool = DAILY_LESSONS.filter(Boolean);
           const dayOfYear = Math.floor((new Date()-new Date(new Date().getFullYear(),0,0))/86400000);
-          const todayId = DAILY_LESSONS[dayOfYear % DAILY_LESSONS.length].id;
-          return DAILY_LESSONS.map(lesson => {
+          const todayLesson = lessonPool[dayOfYear % lessonPool.length] || lessonPool[0];
+          const todayId = todayLesson?.id;
+          return lessonPool.map(lesson => {
             const doneData = lessonsDone?.[lesson.id] || {};
             const myKey = user?.isOwner !== false ? "owner" : "partner";
             const iDone = doneData[myKey] === true;
@@ -2269,7 +2271,7 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
               <div style={{ background:"#e8f4e8", borderRadius:14, padding:14, marginBottom:14, border:`1px solid ${C.olive}30` }}>
                 <div style={{ fontSize:"0.86rem", color:C.inkM, lineHeight:1.75, fontStyle:"italic" }}>"{openLesson.intro}"</div>
               </div>
-              {openLesson.sections.map((s,i) => (
+              {(openLesson.sections || []).map((s,i) => (
                 <div key={i} style={{ background:C.white, borderRadius:14, padding:14, marginBottom:9, border:`1.5px solid ${C.border}` }}>
                   <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", color:C.dark, marginBottom:5 }}>{s.icon} {s.title}</div>
                   <div style={{ fontSize:"0.85rem", color:C.inkM, lineHeight:1.7 }}>{s.body}</div>
@@ -2287,8 +2289,8 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
                 : <div style={{ textAlign:"center", background:C.cream, borderRadius:12, padding:12, border:`1.5px solid ${C.border}` }}>
                     <div style={{ fontFamily:"'Fredoka One',cursive", color:C.olive, marginBottom:6 }}>✓ Ya la completaste</div>
                     <div style={{ display:"flex", gap:10, justifyContent:"center" }}>
-                      <div style={{ fontSize:"0.75rem", fontWeight:800, color: lessonsDone?.[openLesson?.id]?.owner ? C.olive : C.sand }}>🐼 {nameA} {lessonsDone?.[openLesson?.id]?.owner ? "✓" : "pendiente"}</div>
-                      <div style={{ fontSize:"0.75rem", fontWeight:800, color: lessonsDone?.[openLesson?.id]?.partner ? C.teal : C.sand }}>🐾 {nameB} {lessonsDone?.[openLesson?.id]?.partner ? "✓" : "pendiente"}</div>
+                      <div style={{ fontSize:"0.75rem", fontWeight:800, color: lessonsDone?.[open?.id]?.owner ? C.olive : C.sand }}>🐼 {nameA} {lessonsDone?.[open?.id]?.owner ? "✓" : "pendiente"}</div>
+                      <div style={{ fontSize:"0.75rem", fontWeight:800, color: lessonsDone?.[open?.id]?.partner ? C.teal : C.sand }}>🐾 {nameB} {lessonsDone?.[open?.id]?.partner ? "✓" : "pendiente"}</div>
                     </div>
                   </div>}
             </div>
@@ -2526,7 +2528,8 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
   const inboxMsgs = messages.filter(m => m.senderEmail !== myEmail).length;
   const todayStr = new Date().toDateString();
   const todayLoveMsg = messages.find(m => m.senderEmail !== myEmail && new Date(m.time).toDateString() === todayStr);
-  const todayLesson = DAILY_LESSONS[new Date().getDate() % DAILY_LESSONS.length];
+  const lessonPool = DAILY_LESSONS.filter(Boolean);
+  const todayLesson = lessonPool[new Date().getDate() % lessonPool.length] || lessonPool[0];
   const activityDateKeys = [
     ...(gratitud || []).map(x => x?.createdAt?.toDate ? x.createdAt.toDate() : new Date(x?.date || Date.now())),
     ...(momentos || []).map(x => x?.createdAt?.toDate ? x.createdAt.toDate() : new Date(x?.date || Date.now())),
@@ -2977,7 +2980,7 @@ const DAILY_LESSONS = [
       { title:"Cómo depositar", icon:"💰", body:"Pequeños momentos: agradecer, notar algo bonito, reír juntos, un mensaje de buenos días, recordar algo que dijeron. No tiene que ser grandioso." },
       { title:"El interés genuino", icon:"🔍", body:"Gottman llama a esto 'mapas del amor' — conocer el mundo interno de tu pareja: sus miedos, sueños, el nombre de su jefa, lo que le da ansiedad esta semana." },
     ],
-    reflect:"¿Cómo está su banco emocional ahora? ¿Están depositando o retirando más?" },,
+    reflect:"¿Cómo está su banco emocional ahora? ¿Están depositando o retirando más?" },
   { id:"lesson8", emoji:"🌻", title:"La Regla de Oro: 5 actos al día",
   tag:"Gottman · Actos de bondad",
   intro:"John Gottman descubrió que las parejas más felices no son las que nunca pelean, sino las que tienen más interacciones positivas que negativas. La proporción mágica es 5:1.",
@@ -3214,11 +3217,14 @@ function LeccionDia({ lessonsDone, onComplete }) {
   const [open, setOpen] = useState(null);
   const [reading, setReading] = useState(false);
   const [section, setSection] = useState(0);
+  const nameA = "Persona A";
+  const nameB = "Persona B";
 
   // Pick today's lesson based on day of year
+  const lessonPool = DAILY_LESSONS.filter(Boolean);
   const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
-  const todayLesson = DAILY_LESSONS[dayOfYear % DAILY_LESSONS.length];
-  const todayDone = lessonsDone?.[todayLesson.id];
+  const todayLesson = lessonPool[dayOfYear % lessonPool.length] || lessonPool[0];
+  const todayDone = lessonsDone?.[todayLesson?.id];
 
   const openLesson = (lesson) => { setOpen(lesson); setReading(true); setSection(0); };
 
@@ -3238,7 +3244,7 @@ function LeccionDia({ lessonsDone, onComplete }) {
             <div style={{ fontSize:"0.88rem", color:C.inkM, lineHeight:1.75, fontStyle:"italic" }}>"{open.intro}"</div>
           </div>
 
-          {open.sections.map((s, i) => (
+          {(open.sections || []).map((s, i) => (
             <div key={i} style={{ background:C.white, borderRadius:16, padding:16, marginBottom:10, border:`1.5px solid ${C.border}` }}>
               <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:6 }}>
                 {s.icon} {s.title}
@@ -3262,8 +3268,8 @@ function LeccionDia({ lessonsDone, onComplete }) {
             <div style={{ textAlign:"center", background:C.cream, borderRadius:14, padding:14, border:`1.5px solid ${C.border}` }}>
               <div style={{ fontFamily:"'Fredoka One',cursive", color:C.olive, marginBottom:6 }}>✓ Ya la completaste</div>
                     <div style={{ display:"flex", gap:10, justifyContent:"center" }}>
-                      <div style={{ fontSize:"0.75rem", fontWeight:800, color: lessonsDone?.[openLesson?.id]?.owner ? C.olive : C.sand }}>🐼 {nameA} {lessonsDone?.[openLesson?.id]?.owner ? "✓" : "pendiente"}</div>
-                      <div style={{ fontSize:"0.75rem", fontWeight:800, color: lessonsDone?.[openLesson?.id]?.partner ? C.teal : C.sand }}>🐾 {nameB} {lessonsDone?.[openLesson?.id]?.partner ? "✓" : "pendiente"}</div>
+                      <div style={{ fontSize:"0.75rem", fontWeight:800, color: lessonsDone?.[openLesson.id]?.owner ? C.olive : C.sand }}>🐼 {nameA} {lessonsDone?.[openLesson.id]?.owner ? "✓" : "pendiente"}</div>
+                      <div style={{ fontSize:"0.75rem", fontWeight:800, color: lessonsDone?.[openLesson.id]?.partner ? C.teal : C.sand }}>🐾 {nameB} {lessonsDone?.[openLesson.id]?.partner ? "✓" : "pendiente"}</div>
                     </div>
             </div>
           )}
@@ -3301,7 +3307,7 @@ function LeccionDia({ lessonsDone, onComplete }) {
       {/* All lessons */}
       <div style={{ padding:"16px 14px 0" }}>
         <div style={{ fontSize:"0.7rem", fontWeight:800, color:C.inkL, letterSpacing:"0.6px", marginBottom:10 }}>📚 TODAS LAS LECCIONES</div>
-        {DAILY_LESSONS.map(lesson => {
+        {lessonPool.map(lesson => {
           const done = lessonsDone?.[lesson.id];
           const isToday = lesson.id === todayLesson.id;
           return (
