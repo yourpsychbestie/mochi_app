@@ -3059,6 +3059,8 @@ function RelTest({ user, onDone }) {
   const [myScores, setMyScores] = useState({});
   const [testData, setTestData] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [localMyDone, setLocalMyDone] = useState(false);
+  const [submitErr, setSubmitErr] = useState("");
   const isGuest = user?.isGuest || !user?.code;
 
   // Listen to test doc in Firebase (or just local for guests)
@@ -3072,7 +3074,8 @@ function RelTest({ user, onDone }) {
   const otherDoneKey = `${otherKey}Done`;
   const iMyDone = testData?.[myDoneKey] === true;
   const iOtherDone = testData?.[otherDoneKey] === true;
-  const bothDone = iMyDone && iOtherDone;
+  const myDone = iMyDone || localMyDone;
+  const bothDone = myDone && iOtherDone;
 
   const area = TEST_AREAS[step];
   const myScore = myScores[area?.id];
@@ -3088,17 +3091,31 @@ function RelTest({ user, onDone }) {
   };
 
   const submitMyAnswers = async () => {
+    setSubmitErr("");
     setSaving(true);
-    if (!isGuest) {
-      await fbSaveTestAnswers(user.code, myKey, myScores).catch(() => {});
+    if (isGuest) {
+      setLocalMyDone(true);
+      setSaving(false);
+      return;
     }
-    setSaving(false);
+    try {
+      await fbSaveTestAnswers(user.code, myKey, myScores);
+      setLocalMyDone(true);
+    } catch (e) {
+      setSubmitErr("No se pudo enviar la ultima respuesta. Revisa internet e intenta de nuevo.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Results screen — both done
-  if (bothDone || (isGuest && iMyDone)) {
-    const ownerScores = isGuest ? myScores : (testData?.owner || {});
-    const partnerScores = isGuest ? myScores : (testData?.partner || {});
+  if (bothDone || (isGuest && localMyDone)) {
+    const ownerScores = isGuest
+      ? myScores
+      : (isOwner ? (testData?.owner || myScores) : (testData?.owner || {}));
+    const partnerScores = isGuest
+      ? myScores
+      : (isOwner ? (testData?.partner || {}) : (testData?.partner || myScores));
     const avgs = TEST_AREAS.map(a => {
       const sA = ownerScores[a.id] || 3;
       const sB = partnerScores[a.id] || 3;
@@ -3175,7 +3192,7 @@ function RelTest({ user, onDone }) {
   }
 
   // Waiting screen — I'm done, waiting for partner
-  if (iMyDone && !bothDone && !isGuest) {
+  if (myDone && !bothDone && !isGuest) {
     return (
       <div style={{ minHeight:"100vh", background:C.sandL, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"32px 20px", fontFamily:"'Nunito',sans-serif" }}>
         <div style={{ fontSize:"3.5rem", marginBottom:16, animation:"float 3s ease-in-out infinite" }}>🐼</div>
@@ -3242,6 +3259,8 @@ function RelTest({ user, onDone }) {
             </div>
           ))}
         </div>
+
+        {!!submitErr && <div style={{ background:"#fde9e9", color:"#b33", border:`1px solid #e7baba`, borderRadius:10, padding:"8px 10px", marginBottom:10, fontSize:"0.78rem", fontWeight:700 }}>{submitErr}</div>}
 
         <button onClick={next} disabled={!canNext || saving}
           style={{ width:"100%", background: canNext ? C.dark : C.sand, color: canNext ? C.cream2 : C.inkL,
@@ -3473,7 +3492,7 @@ export default function App() {
     };
   };
 
-  const afterLogin = async (u, isNew) => {
+  const afterLogin = async (u, isNew, fromAuthRestore = false) => {
     let normalizedUser = { ...u, code: u?.code || u?.coupleCode || "" };
 
     if (normalizedUser?.uid && !normalizedUser?.isGuest) {
@@ -3536,7 +3555,13 @@ export default function App() {
     }
     setLastVisit(new Date().toISOString());
     const hasInitialTest = Object.keys(syncedTestScores || loadedState?.testScores || {}).length > 0;
-    setScreen(isNew ? "reltest" : (hasInitialTest ? "main" : "reltest"));
+    if (isNew) {
+      setScreen("reltest");
+    } else if (fromAuthRestore) {
+      setScreen(hasInitialTest ? "main" : "login");
+    } else {
+      setScreen(hasInitialTest ? "main" : "reltest");
+    }
   };
 
   // Keep messages in sync whenever user/code changes
@@ -3618,13 +3643,13 @@ export default function App() {
             const u = ls.get("mochi_users") || {};
             userData = u[firebaseUser.email] || { email: firebaseUser.email, names: firebaseUser.email.split("@")[0] + " & ?", isOwner: true };
           }
-          afterLogin({ uid: firebaseUser.uid, email: firebaseUser.email, ...userData, isGuest: false }, false);
+          afterLogin({ uid: firebaseUser.uid, email: firebaseUser.email, ...userData, isGuest: false }, false, true);
         } catch(e) {
           // Fallback to localStorage
           const last = ls.get("mochi_last");
           if (last && last !== "guest") {
             const u = ls.get("mochi_users") || {};
-            if (u[last]) afterLogin({ email: last, ...u[last], isGuest: false }, false);
+            if (u[last]) afterLogin({ email: last, ...u[last], isGuest: false }, false, true);
           }
         }
       }
