@@ -1149,6 +1149,7 @@ function GardenScene({ garden, waterLevel }) {
   const showDew = lvl === 4;
 
   const dry = lvl === 0;
+  const withering = w < 40;
   const waterCol = dry ? "#c8b870" : "#88c8c8";
 
   return (
