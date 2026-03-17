@@ -195,7 +195,11 @@ export const fbListenMessages = (coupleCode, cb) => {
   const q = query(collection(db, "messages"), where("coupleCode", "==", coupleCode));
   return onSnapshot(q, (snap) => {
     const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    msgs.sort((a, b) => new Date(b.time) - new Date(a.time));
+    msgs.sort((a, b) => {
+      const aTime = a?.time ? new Date(a.time).getTime() : 0;
+      const bTime = b?.time ? new Date(b.time).getTime() : 0;
+      return bTime - aTime;
+    });
     cb(msgs);
   }, (error) => {
     console.error("Messages listener error:", error);
@@ -206,6 +210,10 @@ export const fbListenMessages = (coupleCode, cb) => {
 // ─── RELATIONSHIP TEST ─────────────────────────────────
 export const fbSaveTestAnswers = (coupleCode, who, scores) =>
   setDoc(doc(db, "tests", coupleCode), { [who]: scores, [`${who}Done`]: true, updatedAt: serverTimestamp() }, { merge: true });
+export const fbGetTest = async (coupleCode) => {
+  const snap = await getDoc(doc(db, "tests", coupleCode));
+  return snap.exists() ? snap.data() : null;
+};
 export const fbListenTest = (coupleCode, cb) => {
   return onSnapshot(doc(db, "tests", coupleCode), snap => {
     cb(snap.exists() ? snap.data() : null);
@@ -228,6 +236,7 @@ export const fbListenExSession = (coupleCode, exId, cb) => {
 };
 export const fbSendExMessage = (coupleCode, exId, msgData) =>
   setDoc(doc(db, "exSessions", `${coupleCode}_${exId}`), {
+    coupleCode,
     messages: msgData.messages || [],
     step: msgData.step,
     starterRole: msgData.starterRole,
@@ -235,10 +244,11 @@ export const fbSendExMessage = (coupleCode, exId, msgData) =>
   }, { merge: true });
 export const fbStartExSession = (coupleCode, exId, totalSteps, starterRole) =>
   setDoc(doc(db, "exSessions", `${coupleCode}_${exId}`), {
+    coupleCode,
     messages: [], step: 0, totalSteps, done: false, starterRole, startedAt: serverTimestamp()
   });
 export const fbCompleteExSession = (coupleCode, exId) =>
-  setDoc(doc(db, "exSessions", `${coupleCode}_${exId}`), { done: true }, { merge: true });
+  setDoc(doc(db, "exSessions", `${coupleCode}_${exId}`), { coupleCode, done: true }, { merge: true });
 
 // ─── SHARED BAMBOO (couple bank) ──────────────────────
 export const fbListenBamboo = (coupleCode, cb) => {

@@ -2,13 +2,48 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function codeDoc(code) {
+      return get(/databases/$(database)/documents/codes/$(code));
+    }
+
+    function isCodeParticipant(code) {
+      return isSignedIn()
+        && code is string
+        && codeDoc(code).exists()
+        && (
+          codeDoc(code).data.ownerUid == request.auth.uid
+          || codeDoc(code).data.partnerUid == request.auth.uid
+        );
+    }
+
+    function canCreateCoupleScoped() {
+      return isSignedIn()
+        && request.resource.data.coupleCode is string
+        && isCodeParticipant(request.resource.data.coupleCode);
+    }
+
+    function canAccessStoredCoupleScoped() {
+      return isSignedIn()
+        && resource.data.coupleCode is string
+        && isCodeParticipant(resource.data.coupleCode);
+    }
+
     // ── codes ────────────────────────────────────────────────────────────
     // Allow public READ so unauthenticated users can look up a partner's
     // code before registering (join flow calls fbGetCode before fbRegister).
-    // Only authenticated users may write.
     match /codes/{code} {
       allow read:  if true;
-      allow write: if request.auth != null;
+      allow create: if isSignedIn() && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if isSignedIn() && (
+        resource.data.ownerUid == request.auth.uid
+        || resource.data.partnerUid == request.auth.uid
+        || request.resource.data.partnerUid == request.auth.uid
+      );
+      allow delete: if isSignedIn() && resource.data.ownerUid == request.auth.uid;
     }
 
     // ── users ────────────────────────────────────────────────────────────
@@ -24,11 +59,69 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == uid;
     }
 
-    // ── All other couple collections ──────────────────────────────────────
-    // (messages, gratitud, momentos, conoce, lessons, burbuja, notifs,
-    //  streakInteractions, bamboo, garden, tests, streaks, etc.)
+    match /bamboo/{coupleCode} {
+      allow read, write: if isCodeParticipant(coupleCode);
+    }
+
+    match /garden/{coupleCode} {
+      allow read, write: if isCodeParticipant(coupleCode);
+    }
+
+    match /tests/{coupleCode} {
+      allow read, write: if isCodeParticipant(coupleCode);
+    }
+
+    match /streaks/{coupleCode} {
+      allow read, write: if isCodeParticipant(coupleCode);
+    }
+
+    match /messages/{docId} {
+      allow create: if canCreateCoupleScoped();
+      allow read, update, delete: if canAccessStoredCoupleScoped();
+    }
+
+    match /gratitud/{docId} {
+      allow create: if canCreateCoupleScoped();
+      allow read, update, delete: if canAccessStoredCoupleScoped();
+    }
+
+    match /momentos/{docId} {
+      allow create: if canCreateCoupleScoped();
+      allow read, update, delete: if canAccessStoredCoupleScoped();
+    }
+
+    match /conoce/{docId} {
+      allow create: if canCreateCoupleScoped();
+      allow read, update, delete: if canAccessStoredCoupleScoped();
+    }
+
+    match /lessons/{docId} {
+      allow create: if canCreateCoupleScoped();
+      allow read, update, delete: if canAccessStoredCoupleScoped();
+    }
+
+    match /burbuja/{docId} {
+      allow create: if canCreateCoupleScoped();
+      allow read, update, delete: if canAccessStoredCoupleScoped();
+    }
+
+    match /notifs/{docId} {
+      allow create: if canCreateCoupleScoped();
+      allow read, update, delete: if canAccessStoredCoupleScoped();
+    }
+
+    match /streakInteractions/{docId} {
+      allow create: if canCreateCoupleScoped();
+      allow read, update, delete: if canAccessStoredCoupleScoped();
+    }
+
+    match /exSessions/{docId} {
+      allow create: if canCreateCoupleScoped();
+      allow read, update, delete: if canAccessStoredCoupleScoped();
+    }
+
     match /{document=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if false;
     }
   }
 }

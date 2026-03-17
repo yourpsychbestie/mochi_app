@@ -2,17 +2,21 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import {
   fbRegister, fbLogin, fbLogout, fbOnAuthChange,
   fbSaveUser, fbGetUser,
-  fbSaveCode, fbGetCode,
+  fbSaveCode, fbGetCode, fbFindCodeByUid, fbClaimPartnerCode,
   fbSaveProgress, fbGetProgress,
+  fbGetTest,
   fbSendMessage, fbListenMessages,
   fbSaveTestAnswers, fbListenTest, fbResetTest,
   fbListenExSession, fbSendExMessage, fbStartExSession, fbCompleteExSession,
   fbListenBamboo, fbIncrementBamboo, fbGetBamboo,
+  fbListenGardenState, fbSaveGardenState, fbPurchaseGardenUpdate,
   fbAddGratitud, fbListenGratitud,
   fbAddMomento, fbListenMomentos,
   fbSaveConoce, fbListenConoce,
+  fbSaveBurbuja, fbListenBurbuja,
   fbSaveLessonRead, fbListenLessons,
   fbSendNotif, fbListenNotifs, fbMarkNotifRead,
+  fbDeleteCurrentUser, fbCleanupBeforeAccountDelete,
 } from "./firebase";
 import Cuestionarios, { getQuizAdviceFromConoce } from "./Cuestionarios";
 
@@ -29,6 +33,7 @@ const C = {
 const ls = {
   get:(k)=>{ try{return JSON.parse(localStorage.getItem(k));}catch{return null;} },
   set:(k,v)=>{ try{localStorage.setItem(k,JSON.stringify(v));}catch{} },
+  remove:(k)=>{ try{localStorage.removeItem(k);}catch{} },
 };
 
 const parseCoupleNames = (names) => {
@@ -1762,19 +1767,23 @@ function Login({ onLogin }) {
     setLoading(true); setErr("");
     try {
       const cleanCode = pCode.trim().toUpperCase();
+      if (!/^MO[A-Z0-9]{4}$/.test(cleanCode)) {
+        setErr("Código inválido — usa el formato MO1234");
+        setLoading(false);
+        return;
+      }
       const codeData = await fbGetCode(cleanCode);
       if (!codeData) { setErr("Código no encontrado — revisa que esté bien escrito"); setLoading(false); return; }
       const cred = await fbRegister(pEmail, pPass);
       const uid = cred.user.uid;
-      const ownerName = (codeData.names || "?").split(" & ")[0].trim();
-      const partnerName = nameB.trim() || "?";
-      const names = ownerName + " & " + partnerName;
-      const since = codeData.since || "Juntos desde hoy";
-      // Update names in the code so owner also sees partner's name
-      await fbSaveCode(cleanCode, { names, partnerEmail: pEmail, partnerUid: uid });
+      const claimed = await fbClaimPartnerCode(cleanCode, {
+        partnerEmail: pEmail,
+        partnerUid: uid,
+        partnerName: nameB.trim() || "?",
+      });
+      const names = claimed?.names || codeData.names || "Nosotros";
+      const since = claimed?.since || codeData.since || "Juntos desde hoy";
       await fbSaveUser(uid, { email: pEmail, names, code: cleanCode, since, isOwner: false });
-      // Also update owner's user record with new names
-      if (codeData.ownerUid) await fbSaveUser(codeData.ownerUid, { names }).catch(()=>{});
       onLogin({ uid, email: pEmail, names, code: cleanCode, since, isOwner: false, isGuest: false }, true);
     } catch(e) {
       if (e.code === "auth/email-already-in-use") {
@@ -1783,15 +1792,34 @@ function Login({ onLogin }) {
           const cred2 = await fbLogin(pEmail, pPass);
           const uid2 = cred2.user.uid;
           const cleanCode2 = pCode.trim().toUpperCase();
-          const codeData2 = await fbGetCode(cleanCode2).catch(()=>null);
-          const names2 = codeData2?.names || "Nosotros";
-          await fbSaveUser(uid2, { email: pEmail, names: names2, code: cleanCode2, isOwner: false }).catch(()=>{});
-          onLogin({ uid: uid2, email: pEmail, names: names2, code: cleanCode2, since: codeData2?.since || "Juntos", isOwner: false, isGuest: false }, false);
+          if (!/^MO[A-Z0-9]{4}$/.test(cleanCode2)) {
+            setErr("Código inválido — usa el formato MO1234");
+            setLoading(false);
+            return;
+          }
+          const claimed2 = await fbClaimPartnerCode(cleanCode2, {
+            partnerEmail: pEmail,
+            partnerUid: uid2,
+            partnerName: nameB.trim() || "?",
+          }).catch(() => null);
+          if (!claimed2) {
+            setErr("No se pudo vincular la cuenta con ese código");
+            setLoading(false);
+            return;
+          }
+          const names2 = claimed2.names || "Nosotros";
+          const since2 = claimed2.since || "Juntos";
+          await fbSaveUser(uid2, { email: pEmail, names: names2, code: cleanCode2, since: since2, isOwner: false }).catch(()=>{});
+          onLogin({ uid: uid2, email: pEmail, names: names2, code: cleanCode2, since: since2, isOwner: false, isGuest: false }, false);
           setLoading(false); return;
         } catch(e2) {
           setErr("Este correo ya tiene cuenta — verifica tu contraseña");
           setLoading(false); return;
         }
+      } else if (e.message === "CODE_ALREADY_LINKED") {
+        setErr("Ese código ya está vinculado a otra cuenta");
+      } else if (e.message === "CODE_NOT_FOUND") {
+        setErr("Código no encontrado — revisa que esté bien escrito");
       } else if (e.code === "permission-denied" || e.message?.includes("permission") || e.message?.includes("Missing")) {
         setErr("Firebase bloqueó el acceso al código de pareja. Revisa Firestore Rules para la colección codes.");
       } else {
@@ -1803,9 +1831,9 @@ function Login({ onLogin }) {
 
   const LBL = { fontSize: "0.72rem", fontWeight: 800, color: C.inkM, marginBottom: 5, display: "block", letterSpacing: "0.6px", textTransform: "uppercase" };
   const TABS = [
-    { id: "login", label: "Ya tengo cuenta", hint: "Entrar con correo y contraseña" },
-    { id: "register", label: "Crear cuenta", hint: "Soy la primera persona" },
-    { id: "pair", label: "Vincular cuenta", hint: "Conectar con mi pareja" }
+    { id: "login", label: "🔑 Entrar", hint: "Ya tengo cuenta" },
+    { id: "register", label: "🌱 Crear", hint: "Cuenta nueva" },
+    { id: "pair", label: "🔗 Unirme", hint: "Tengo un código" }
   ];
 
   return (
@@ -1818,24 +1846,20 @@ function Login({ onLogin }) {
       <div style={{ background: C.white, borderRadius: 24, padding: "22px 20px", width: "100%", maxWidth: 380, boxShadow: `0 4px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
         <div style={{ display: "flex", background: C.sand, borderRadius: 12, padding: 3, marginBottom: 18, gap: 3 }}>
           {TABS.map(t => (
-            <div key={t.id} onClick={() => { setTab(t.id); setErr(""); }} style={{ flex: 1, padding: "8px 6px", textAlign: "center", borderRadius: 9, cursor: "pointer", background: tab === t.id ? C.white : "transparent", color: tab === t.id ? C.dark : C.inkL, boxShadow: tab === t.id ? `0 2px 0 ${C.border}` : "none", border: tab === t.id ? `1.5px solid ${C.border}` : "1.5px solid transparent", transition: "all 0.18s" }}>
-              <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.8rem", lineHeight: 1.15 }}>{t.label}</div>
-              <div style={{ fontSize: "0.62rem", marginTop: 3, opacity: 0.85, fontWeight: 800, lineHeight: 1.2 }}>{t.hint}</div>
+            <div key={t.id} onClick={() => { setTab(t.id); setErr(""); }} style={{ flex: 1, padding: "10px 4px", textAlign: "center", borderRadius: 9, cursor: "pointer", background: tab === t.id ? C.white : "transparent", color: tab === t.id ? C.dark : C.inkL, boxShadow: tab === t.id ? `0 2px 0 ${C.border}` : "none", border: tab === t.id ? `1.5px solid ${C.border}` : "1.5px solid transparent", transition: "all 0.18s" }}>
+              <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.92rem", lineHeight: 1.2 }}>{t.label}</div>
+              <div style={{ fontSize: "0.65rem", marginTop: 2, opacity: 0.7, fontWeight: 700 }}>{t.hint}</div>
             </div>
           ))}
         </div>
         {tab === "register" && (
-          <div style={{ background: "#f0f7e8", borderRadius: 12, padding: "9px 14px", marginBottom: 10, border: "1px solid #c8ddb0", textAlign: "center" }}>
-            <div style={{ fontSize: "0.78rem", color: "#4a6a30", lineHeight: 1.6 }}>
-              🌱 <strong>¿Eres el primero?</strong> Crea la cuenta y le mandas tu código a tu pareja para que se una.
-            </div>
+          <div style={{ background: "#f0f7e8", borderRadius: 10, padding: "8px 14px", marginBottom: 10, border: "1px solid #c8ddb0", textAlign: "center", fontSize: "0.76rem", color: "#4a6a30", fontWeight: 700 }}>
+            Crea la cuenta y comparte tu código con tu pareja para conectarse.
           </div>
         )}
         {tab === "pair" && (
-          <div style={{ background: "#f0f0ff", borderRadius: 12, padding: "9px 14px", marginBottom: 10, border: "1px solid #b8b8e0", textAlign: "center" }}>
-            <div style={{ fontSize: "0.78rem", color: "#404090", lineHeight: 1.6 }}>
-              🐾 <strong>¿Tu pareja ya tiene cuenta?</strong> Pídele su código y úsalo aquí para conectarse.
-            </div>
+          <div style={{ background: "#f0f0ff", borderRadius: 10, padding: "8px 14px", marginBottom: 10, border: "1px solid #b8b8e0", textAlign: "center", fontSize: "0.76rem", color: "#404090", fontWeight: 700 }}>
+            Ingresa el código que te compartió tu pareja para conectarse.
           </div>
         )}
         {err && <div style={{ background: "#fce4e4", color: "#c04040", fontSize: "0.82rem", fontWeight: 700, padding: "9px 13px", borderRadius: 10, marginBottom: 12, textAlign: "center" }}>{err}</div>}
@@ -2908,6 +2932,23 @@ const TEST_AREAS = [
 const TEST_LABELS = ["Muy mal","Mal","Regular","Bien","Muy bien"];
 const TEST_COLORS = ["#e86040","#e8a030","#e8d840","#8ac860","#4a9a40"];
 
+const buildCombinedTestScores = (testData) => {
+  if (!testData?.ownerDone || !testData?.partnerDone) return null;
+  const ownerScores = testData.owner || {};
+  const partnerScores = testData.partner || {};
+  const hasAnyScore = TEST_AREAS.some(a => ownerScores[a.id] != null || partnerScores[a.id] != null);
+  if (!hasAnyScore) return null;
+
+  const combined = {};
+  TEST_AREAS.forEach(a => {
+    combined[a.id] = {
+      a: ownerScores[a.id] || 3,
+      b: partnerScores[a.id] || 3,
+    };
+  });
+  return combined;
+};
+
 // ═══════════════════════════════════════════════
 // DAILY LESSONS DATA
 // ═══════════════════════════════════════════════
@@ -3064,7 +3105,7 @@ function RelTest({ user, onDone }) {
       const avg = (sA + sB) / 2;
       return { ...a, avg, sA, sB };
     });
-    const total = avgs.reduce((s, a) => s + a.avg, 0) / avgs.length;
+    const total = avgs.length ? (avgs.reduce((s, a) => s + a.avg, 0) / avgs.length) : 3;
 
     let prognosis, progColor, progEmoji;
     if (total >= 4.2) { prognosis = "Su relación tiene bases muy sólidas. Mochi los acompañará a crecer aún más."; progColor = "#4a9a40"; progEmoji = "🌟"; }
@@ -3399,6 +3440,7 @@ export default function App() {
   const [gratitud, setGratitud] = useState([]);
   const [momentos, setMomentos] = useState([]);
   const happyTimer = useRef(null);
+  const messageUnsubRef = useRef(null);
 
   const saveKey = u => u?.email ? "mochi_prog_" + u.email : null;
   const toast = msg => { setToastMsg(msg); setTimeout(() => setToastMsg(null), 3000); };
@@ -3409,16 +3451,17 @@ export default function App() {
   }, []);
 
   const buildSave = useCallback((overrides = {}) => ({
-    bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit,
+    bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos,
     ...overrides
-  }), [bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit]);
+  }), [bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos]);
 
-  const save = useCallback((u, s) => {
+  const save = useCallback((u, overrides = {}) => {
+    const nextState = buildSave(overrides);
     const k = saveKey(u || user);
-    if (k) ls.set(k, s); // keep local backup
+    if (k) ls.set(k, nextState); // keep local backup
     const uid = (u || user)?.uid;
-    if (uid) fbSaveProgress(uid, s).catch(() => {});
-  }, [user]);
+    if (uid) fbSaveProgress(uid, nextState).catch(() => {});
+  }, [buildSave, user]);
 
   // Garden decay on login: -5 water per day away, -2 happiness per day
   const applyDecay = (savedState) => {
@@ -3437,16 +3480,42 @@ export default function App() {
   };
 
   const afterLogin = async (u, isNew) => {
-    const normalizedUser = { ...u, code: u?.code || u?.coupleCode || "" };
+    let normalizedUser = { ...u, code: u?.code || u?.coupleCode || "" };
+
+    if (normalizedUser?.uid && !normalizedUser?.isGuest) {
+      let codeRecord = null;
+      if (normalizedUser.code) {
+        const existingCode = await fbGetCode(normalizedUser.code).catch(() => null);
+        if (existingCode) codeRecord = { code: normalizedUser.code, ...existingCode };
+      }
+      if (!codeRecord) {
+        codeRecord = await fbFindCodeByUid(normalizedUser.uid).catch(() => null);
+      }
+      if (codeRecord) {
+        normalizedUser = {
+          ...normalizedUser,
+          code: codeRecord.code || normalizedUser.code,
+          names: codeRecord.names || normalizedUser.names,
+          since: codeRecord.since || normalizedUser.since,
+          isOwner: codeRecord.ownerUid ? codeRecord.ownerUid === normalizedUser.uid : normalizedUser.isOwner,
+        };
+      }
+    }
+
     setUser(normalizedUser);
     ls.set("mochi_last", normalizedUser.email || "guest");
     let loadedState = null;
+    let syncedTestScores = null;
     if (!isNew && u.uid) {
       // Try Firebase first, fallback to localStorage
       let s = null;
       try { s = await fbGetProgress(u.uid); } catch(e) {}
       if (!s) s = ls.get(saveKey(u));
       loadedState = s;
+      if (normalizedUser.code && !normalizedUser.isGuest) {
+        const remoteTest = await fbGetTest(normalizedUser.code).catch(() => null);
+        syncedTestScores = buildCombinedTestScores(remoteTest);
+      }
       if (s) {
         s = applyDecay(s);
         if (s.bamboo != null) setBamboo(s.bamboo);
@@ -3458,29 +3527,29 @@ export default function App() {
         if (s.conoce) setConoce(s.conoce);
         if (s.burbuja) setBurbuja(s.burbuja);
         if (s.coupleInfo) setCoupleInfo(s.coupleInfo);
-        if (s.testScores) setTestScores(s.testScores);
+        if (s.testScores || syncedTestScores) setTestScores(syncedTestScores || s.testScores);
         if (s.lessonsDone) setLessonsDone(s.lessonsDone);
         if (s.gratitud) setGratitud(s.gratitud);
         if (s.momentos) setMomentos(s.momentos);
       }
+      if (!s && syncedTestScores) setTestScores(syncedTestScores);
     }
-    // Listen to real-time messages if couple code exists
-    if (normalizedUser.code && !normalizedUser.isGuest) {
-      const unsub = fbListenMessages(normalizedUser.code, msgs => setMessages(msgs));
-      window._mochiMsgUnsub = unsub;
-    } else {
+    if (!normalizedUser.code || normalizedUser.isGuest) {
       const sharedMsgs = normalizedUser.code ? (ls.get("mochi_msgs_" + normalizedUser.code) || []) : [];
       setMessages(sharedMsgs);
+    } else {
+      setMessages([]);
     }
     setLastVisit(new Date().toISOString());
-    const hasInitialTest = Object.keys(loadedState?.testScores || {}).length > 0;
+    const hasInitialTest = Object.keys(syncedTestScores || loadedState?.testScores || {}).length > 0;
     setScreen(isNew ? "onboarding" : (hasInitialTest ? "main" : "reltest"));
   };
 
   // Keep messages in sync whenever user/code changes
   useEffect(() => {
+    messageUnsubRef.current?.();
+    messageUnsubRef.current = null;
     if (!user?.code || user?.isGuest) return;
-    if (window._mochiMsgUnsub) window._mochiMsgUnsub();
     const unsub = fbListenMessages(user.code, msgs => {
       setMessages(prev => {
         // Merge: keep any optimistic messages not yet in Firebase, plus all Firebase msgs
@@ -3491,9 +3560,12 @@ export default function App() {
         return merged;
       });
     });
-    window._mochiMsgUnsub = unsub;
-    return () => unsub();
-  }, [user?.code]);
+    messageUnsubRef.current = unsub;
+    return () => {
+      if (messageUnsubRef.current === unsub) messageUnsubRef.current = null;
+      unsub();
+    };
+  }, [user?.code, user?.isGuest]);
 
   // ─── Sync gratitud, momentos, conoce, lessons, bamboo, notifs ───
   useEffect(() => {
@@ -3515,8 +3587,21 @@ export default function App() {
     // Conocete answers (real-time both ways)
     unsubs.push(fbListenConoce(code, map => setConoce(map)));
 
+    // Burbuja agreements (real-time both ways)
+    unsubs.push(fbListenBurbuja(code, map => setBurbuja(map)));
+
     // Lessons (both must read)
     unsubs.push(fbListenLessons(code, map => setLessonsDone(map)));
+
+    // Shared garden state
+    unsubs.push(fbListenGardenState(code, state => {
+      if (!state) return;
+      if (state.garden) setGarden(state.garden);
+      if (state.accessories) setAccessories(state.accessories);
+      if (state.water != null) setWater(state.water);
+      if (state.happiness != null) setHappiness(state.happiness);
+      if (state.lastVisit) setLastVisit(state.lastVisit);
+    }));
 
     // Notifications
     unsubs.push(fbListenNotifs(code, items => {
@@ -3526,7 +3611,7 @@ export default function App() {
     }));
 
     return () => unsubs.forEach(u => u && u());
-  }, [user?.code]);
+  }, [user?.code, user?.uid, user?.isGuest]);
 
   useEffect(() => {
     // Use Firebase Auth state to keep session alive
@@ -3553,23 +3638,45 @@ export default function App() {
     return () => unsub();
   }, []); // eslint-disable-line
 
-  const buyItem = item => {
+  const buyItem = async item => {
     if (garden[item.id]) { toast("Ya está en el jardín"); return; }
     if (bamboo < item.cost) { toast("Necesitas más bambú — completa ejercicios"); return; }
     const nb = bamboo - item.cost, ng = { ...garden, [item.id]: true }, nh = Math.min(100, happiness + 10);
     const nv = new Date().toISOString();
+
+    if (user?.code && !user?.isGuest) {
+      try {
+        const nextBamboo = await fbPurchaseGardenUpdate(user.code, item.cost, {
+          garden: ng,
+          accessories,
+          happiness: nh,
+          water,
+          lastVisit: nv,
+        });
+        setBamboo(nextBamboo); setGarden(ng); setHappiness(nh); setLastVisit(nv); trigHappy();
+        toast(`${item.name} plantado 🌿`);
+        save(null, { bamboo: nextBamboo, happiness: nh, water, garden: ng, lastVisit: nv });
+      } catch (e) {
+        toast(e?.message === "INSUFFICIENT_BAMBOO" ? "Necesitas más bambú — completa ejercicios" : "No se pudo guardar la compra");
+      }
+      return;
+    }
+
     setBamboo(nb); setGarden(ng); setHappiness(nh); setLastVisit(nv); trigHappy();
     toast(`${item.name} plantado 🌿`);
-    save(null, { bamboo:nb, happiness:nh, water, garden:ng, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit:nv, testScores, lessonsDone, gratitud, momentos });
+    save(null, { bamboo: nb, happiness: nh, water, garden: ng, lastVisit: nv });
   };
 
-  const buyAccessory = item => {
+  const buyAccessory = async item => {
     // If already owned, toggle it on/off (equip/unequip)
     if (accessories[item.id] === "owned") {
       // Already owned but not equipped — equip it
       const na = { ...accessories, [item.id]: true };
       setAccessories(na);
-      save(null, { bamboo, happiness, water, garden, accessories: na, exDone, messages, conoce, burbuja, coupleInfo, lastVisit: new Date().toISOString(), testScores, lessonsDone });
+      if (user?.code && !user?.isGuest) {
+        await fbSaveGardenState(user.code, { garden, accessories: na, happiness, water, lastVisit: new Date().toISOString() }).catch(() => {});
+      }
+      save(null, { accessories: na, lastVisit: new Date().toISOString() });
       toast(`${item.name} puesto 🐼`);
       return;
     }
@@ -3577,24 +3684,49 @@ export default function App() {
       // Currently equipped — unequip but keep owned
       const na = { ...accessories, [item.id]: "owned" };
       setAccessories(na);
-      save(null, { bamboo, happiness, water, garden, accessories: na, exDone, messages, conoce, burbuja, coupleInfo, lastVisit: new Date().toISOString(), testScores, lessonsDone });
+      if (user?.code && !user?.isGuest) {
+        await fbSaveGardenState(user.code, { garden, accessories: na, happiness, water, lastVisit: new Date().toISOString() }).catch(() => {});
+      }
+      save(null, { accessories: na, lastVisit: new Date().toISOString() });
       toast(`${item.name} quitado`);
       return;
     }
     if (bamboo < item.cost) { toast("Necesitas más bambú"); return; }
     const nb = bamboo - item.cost, na = { ...accessories, [item.id]: true }, nh = Math.min(100, happiness + 5);
     const nv = new Date().toISOString();
+
+    if (user?.code && !user?.isGuest) {
+      try {
+        const nextBamboo = await fbPurchaseGardenUpdate(user.code, item.cost, {
+          garden,
+          accessories: na,
+          happiness: nh,
+          water,
+          lastVisit: nv,
+        });
+        setBamboo(nextBamboo); setAccessories(na); setHappiness(nh); setLastVisit(nv); trigHappy();
+        toast(`${item.name} puesto ${item.emoji} +5 amor`);
+        save(null, { bamboo: nextBamboo, happiness: nh, accessories: na, lastVisit: nv });
+      } catch (e) {
+        toast(e?.message === "INSUFFICIENT_BAMBOO" ? "Necesitas más bambú" : "No se pudo guardar la compra");
+      }
+      return;
+    }
+
     setBamboo(nb); setAccessories(na); setHappiness(nh); setLastVisit(nv); trigHappy();
     toast(`${item.name} puesto ${item.emoji} +5 amor`);
-    save(null, { bamboo:nb, happiness:nh, water, garden, accessories:na, exDone, messages, conoce, burbuja, coupleInfo, lastVisit:nv, testScores, lessonsDone, gratitud, momentos });
+    save(null, { bamboo: nb, happiness: nh, accessories: na, lastVisit: nv });
   };
 
-  const waterGarden = () => {
+  const waterGarden = async () => {
     const nw = Math.min(100, water + 10), nh = Math.min(100, happiness + 2);
     const nv = new Date().toISOString();
+    if (user?.code && !user?.isGuest) {
+      await fbSaveGardenState(user.code, { garden, accessories, water: nw, happiness: nh, lastVisit: nv }).catch(() => {});
+    }
     setWater(nw); setHappiness(nh); setLastVisit(nv); trigHappy();
     toast("Jardín regado 💧 ¡Gracias por volver!");
-    save(null, { bamboo, happiness:nh, water:nw, garden, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit:nv, testScores, lessonsDone, gratitud, momentos });
+    save(null, { happiness: nh, water: nw, lastVisit: nv });
   };
 
   const petMochi = () => {
@@ -3685,11 +3817,11 @@ export default function App() {
 
   // Poll partner messages
   useEffect(() => {
-    if (tab === "mensajes" && user?.code) {
+    if (tab === "mensajes" && user?.code && user?.isGuest) {
       const m = ls.get("mochi_msgs_" + user.code);
       if (m) setMessages(m);
     }
-  }, [tab]);
+  }, [tab, user?.code, user?.isGuest]);
 
   const saveConoce = async (cat, qIdx, myAnswer, _b, isNew) => {
     const key = `${cat}-${qIdx}`;
@@ -3727,16 +3859,19 @@ export default function App() {
     }
   };
 
-  const saveBurbuja = (id, data) => {
+  const saveBurbuja = async (id, data) => {
     const nb2 = { ...burbuja, [id]: data }; setBurbuja(nb2);
     const isNew = !burbuja[id];
+    if (user?.code && !user?.isGuest) {
+      await fbSaveBurbuja(user.code, id, data).catch(() => {});
+    }
     if (isNew) {
       const nb = bamboo + 10; setBamboo(nb); trigHappy();
       toast("Acuerdo guardado ✓ +10 bambú 🌿");
-      save(null, { bamboo:nb, happiness, water, garden, accessories, exDone, messages, conoce, burbuja:nb2, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
+      save(null, { bamboo: nb, burbuja: nb2 });
     } else {
       trigHappy(); toast("Acuerdo actualizado ✓");
-      save(null, { bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja:nb2, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
+      save(null, { burbuja: nb2 });
     }
   };
 
@@ -3791,25 +3926,42 @@ export default function App() {
     toast("✨ Guardado en el baúl de momentos");
   };
 
-  const logout = () => {
-    ls.set("mochi_last", null); setUser(null); setScreen("login");
+  const logout = async () => {
+    messageUnsubRef.current?.();
+    messageUnsubRef.current = null;
+    try { await fbLogout(); } catch {}
+    ls.set("mochi_last", null); setUser(null); setScreen("login"); setTab("jardin");
     setBamboo(0); setHappiness(20); setWater(40); setGarden({});
     setAccessories({}); setExDone({}); setMessages([]); setConoce({}); setBurbuja({}); setCoupleInfo({});
-    setGratitud([]); setMomentos([]);
+    setGratitud([]); setMomentos([]); setLastVisit(null); setTestScores(null); setLessonsDone({});
+    setNotifs([]); setNotifBadge(0); setPandaBubble(null);
   };
 
-  const deleteAccount = () => {
+  const deleteAccount = async () => {
     if (!window.confirm("¿Seguro que quieres eliminar tu cuenta? Esta acción no se puede deshacer.")) return;
+    const currentUser = user;
+    let remoteDeleteFailed = false;
+    if (currentUser?.uid && !currentUser?.isGuest) {
+      await fbCleanupBeforeAccountDelete({ uid: currentUser.uid, code: currentUser.code, isOwner: currentUser.isOwner !== false }).catch(() => {
+        remoteDeleteFailed = true;
+      });
+      await fbDeleteCurrentUser().catch(() => {
+        remoteDeleteFailed = true;
+      });
+    }
     const u = ls.get("mochi_users") || {};
     const c = ls.get("mochi_codes") || {};
-    if (user?.email) delete u[user.email];
-    if (user?.code) {
-      ls.remove ? ls.remove("mochi_msgs_" + user.code) : ls.set("mochi_msgs_" + user.code, null);
-      delete c[user.code];
+    if (currentUser?.email) delete u[currentUser.email];
+    if (currentUser?.code) {
+      ls.remove("mochi_msgs_" + currentUser.code);
+      delete c[currentUser.code];
     }
     ls.set("mochi_users", u); ls.set("mochi_codes", c);
-    ls.set("mochi_prog_" + (user?.email || ""), null);
-    logout();
+    ls.remove("mochi_prog_" + (currentUser?.email || ""));
+    await logout();
+    if (remoteDeleteFailed) {
+      window.alert("Se eliminó la sesión local, pero Firebase no pudo borrar la cuenta completa. Vuelve a iniciar sesión y repite el proceso.");
+    }
   };
 
   const unread = messages.filter(m => m.senderEmail !== (user?.email || "guest") && !m.read).length;
