@@ -1869,6 +1869,7 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
   const isOwner = user?.isOwner !== false;
   const myRole = isOwner ? 0 : 1; // 0 = A, 1 = B
   const isGuest = user?.isGuest || !user?.code;
+  const phases = Array.isArray(ex?.phases) ? ex.phases : [];
 
   const [session, setSession] = useState(null);
   const [val, setVal] = useState("");
@@ -1876,18 +1877,23 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
   const [started, setStarted] = useState(false);
   const messagesEndRef = useRef(null);
 
-  const messages = session?.messages || [];
+  const messages = Array.isArray(session?.messages) ? session.messages : [];
   const currentStep = session?.step ?? 0;
   const isDone = session?.done === true;
-  const cur = ex.phases[currentStep];
-  const isMyTurn = cur && cur.role === myRole;
+  const cur = phases[currentStep];
+  const starterRole = session?.starterRole === 1 ? 1 : 0;
+  const currentTurnRole = cur ? ((cur.role + starterRole) % 2) : 0;
+  const isMyTurn = cur && currentTurnRole === myRole;
+  const promptText = typeof cur?.q === "string"
+    ? cur.q.replace(/Persona A/g, nameA).replace(/Persona B/g, nameB)
+    : "Compartan lo que sienten en este momento.";
   const myName = isOwner ? nameA : nameB;
 
   // Start or listen to session
   useEffect(() => {
     if (isGuest) {
       // Local mode for guests
-      setSession({ messages: [], step: 0, totalSteps: ex.phases.length, done: false });
+      setSession({ messages: [], step: 0, totalSteps: phases.length, done: false, starterRole: 0 });
       setStarted(true);
       return;
     }
@@ -1904,15 +1910,15 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
   const startSession = async () => {
     if (isGuest || !user?.code) {
       // Local mode — just set session directly
-      setSession({ messages: [], step: 0, totalSteps: ex.phases.length, done: false });
+      setSession({ messages: [], step: 0, totalSteps: phases.length, done: false, starterRole: myRole });
       setStarted(true);
       return;
     }
     try {
-      await fbStartExSession(user.code, ex.id, ex.phases.length);
+      await fbStartExSession(user.code, ex.id, phases.length, myRole);
     } catch(e) {
       // Fallback to local if Firebase fails
-      setSession({ messages: [], step: 0, totalSteps: ex.phases.length, done: false });
+      setSession({ messages: [], step: 0, totalSteps: phases.length, done: false, starterRole: myRole });
       setStarted(true);
     }
   };
@@ -1922,7 +1928,7 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
     setSending(true);
     const newStep = currentStep + 1;
     const msg = { text: val.trim(), role: myRole, step: currentStep };
-    const isDoneNow = newStep >= ex.phases.length;
+    const isDoneNow = newStep >= phases.length;
 
     if (isGuest || !user?.code) {
       const newMsgs = [...messages, msg];
@@ -1931,7 +1937,7 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
       if (isDoneNow) onDone();
     } else {
       const newMessages = [...messages, msg];
-      await fbSendExMessage(user.code, ex.id, { messages: newMessages, step: newStep }).catch(() => {});
+      await fbSendExMessage(user.code, ex.id, { messages: newMessages, step: newStep, starterRole }).catch(() => {});
       if (isDoneNow) {
         await fbCompleteExSession(user.code, ex.id).catch(() => {});
         onDone();
@@ -1965,8 +1971,8 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
 
   return (
     <div>
-      <ProgBar value={currentStep} max={ex.phases.length} style={{ marginBottom: 6 }} />
-      <div style={{ fontSize:"0.7rem", color:C.inkL, fontWeight:800, textAlign:"right", marginBottom:12 }}>PASO {currentStep + 1} / {ex.phases.length}</div>
+      <ProgBar value={currentStep} max={phases.length || 1} style={{ marginBottom: 6 }} />
+      <div style={{ fontSize:"0.7rem", color:C.inkL, fontWeight:800, textAlign:"right", marginBottom:12 }}>PASO {currentStep + 1} / {phases.length || 1}</div>
 
       {/* Message history */}
       <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:12, maxHeight:200, overflowY:"auto" }}>
@@ -1982,24 +1988,24 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
       {/* Current prompt */}
       {cur && (
         <div style={{ background: C.sandL, borderRadius:16, padding:14, border:`1.5px solid ${C.border}` }}>
-          <PBadge who={cur.role === 0 ? "A" : "B"} name={cur.role === 0 ? nameA : nameB} />
+          <PBadge who={currentTurnRole === 0 ? "A" : "B"} name={currentTurnRole === 0 ? nameA : nameB} />
           <div style={{ fontSize:"0.9rem", color:C.ink, fontWeight:700, marginBottom:8, lineHeight:1.6 }}>
-            {cur.q.replace(/Persona A/g, nameA).replace(/Persona B/g, nameB)}
+            {promptText}
           </div>
-          {cur.hint && <div style={{ fontSize:"0.75rem", color:C.inkM, background:C.cream, borderRadius:8, padding:"6px 10px", marginBottom:9, border:`1px solid ${C.border}` }}>💡 {cur.hint}</div>}
+          {typeof cur.hint === "string" && cur.hint.trim() && <div style={{ fontSize:"0.75rem", color:C.inkM, background:C.cream, borderRadius:8, padding:"6px 10px", marginBottom:9, border:`1px solid ${C.border}` }}>💡 {cur.hint}</div>}
 
           {isMyTurn ? (
             <>
               <TA value={val} onChange={setVal} placeholder={cur.ph} rows={3} style={{ marginBottom:10 }} />
               <Btn onClick={send} style={{ width:"100%" }} disabled={sending}>
-                {sending ? "Enviando..." : currentStep < ex.phases.length - 1 ? "Enviar →" : "Finalizar ✓"}
+                {sending ? "Enviando..." : currentStep < phases.length - 1 ? "Enviar →" : "Finalizar ✓"}
               </Btn>
             </>
           ) : (
             <div style={{ textAlign:"center", padding:"14px 0", color:C.inkL }}>
               <div style={{ fontSize:"1.5rem", marginBottom:4 }}>⏳</div>
               <div style={{ fontSize:"0.82rem", fontWeight:700 }}>
-                Esperando a {cur.role === 0 ? nameA : nameB}...
+                Esperando a {currentTurnRole === 0 ? nameA : nameB}...
               </div>
               <div style={{ fontSize:"0.72rem", marginTop:4 }}>La pantalla se actualiza automáticamente ✨</div>
             </div>
@@ -3072,11 +3078,24 @@ function RelTest({ user, onDone }) {
         </div>
         <div style={{ background:"#e8f4e8", borderRadius:16, padding:14, marginBottom:20, border:`1px solid ${C.olive}30` }}>
           <div style={{ fontSize:"0.72rem", fontWeight:800, color:C.olive, marginBottom:6 }}>💡 ÁREAS PRIORITARIAS</div>
-          {[...avgs].sort((a,b)=>a.avg-b.avg).slice(0,2).map(a => (
+          {[...avgs].sort((a,b)=>a.avg-b.avg).slice(0,2).map((a, idx) => {
+            const variedTips = {
+              comunicacion: ["ensayen una pausa de 10 segundos antes de responder", "prueben resumir lo que escucharon antes de opinar", "usen una frase de validación antes de pedir cambios"],
+              afecto: ["practiquen un gesto pequeño de cariño al día", "cierren el día con una frase de agradecimiento", "propongan un mini ritual de conexión semanal"],
+              confianza: ["acuerden una conversación honesta de 15 minutos", "definan límites claros que ambos respeten", "empiecen con una promesa pequeña y cúmplanla"],
+              intimidad: ["reserven un espacio sin pantallas para conectar", "hablen de lo que les hace sentir seguros", "propongan un momento de cercanía con intención"],
+              proyecto: ["elijan una meta compartida para esta semana", "revisen juntos prioridades del mes", "dividan un objetivo en pasos concretos"],
+              convivencia: ["acuerden una regla simple para resolver roces", "repartan una tarea que hoy se sienta pesada", "definan un momento fijo para conversar logística"]
+            };
+            const fallback = ["pueden crecer aquí con los ejercicios de Mochi", "este punto mejorará con práctica guiada", "vale la pena enfocarse aquí esta semana"];
+            const tips = variedTips[a.id] || fallback;
+            const tip = tips[idx % tips.length];
+            return (
             <div key={a.id} style={{ fontSize:"0.84rem", color:C.inkM, marginBottom:4 }}>
-              → {a.emoji} <strong>{a.label}</strong> — pueden crecer aquí con los ejercicios de Mochi
+              → {a.emoji} <strong>{a.label}</strong> — {tip}
             </div>
-          ))}
+            );
+          })}
         </div>
         <button onClick={() => onDone(combinedScores)} style={{ width:"100%", background:C.dark, color:C.cream2, border:"none", borderRadius:14, padding:16, fontFamily:"'Fredoka One',cursive", fontSize:"1.1rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.2)" }}>
           Comenzar juntos 🐼
