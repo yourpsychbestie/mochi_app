@@ -2219,10 +2219,11 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
         </div>
         {(() => {
           const lessonPool = DAILY_LESSONS.filter(Boolean);
+          const safeLessonPool = lessonPool.length ? lessonPool : [{ id:"fallback", emoji:"📘", title:"Lección", tag:"Mochi", intro:"", sections:[], reflect:"" }];
           const dayOfYear = Math.floor((new Date()-new Date(new Date().getFullYear(),0,0))/86400000);
-          const todayLesson = lessonPool[dayOfYear % lessonPool.length] || lessonPool[0];
+          const todayLesson = safeLessonPool[dayOfYear % safeLessonPool.length] || safeLessonPool[0];
           const todayId = todayLesson?.id;
-          return lessonPool.map(lesson => {
+          return safeLessonPool.map(lesson => {
             const doneData = lessonsDone?.[lesson.id] || {};
             const myKey = user?.isOwner !== false ? "owner" : "partner";
             const iDone = doneData[myKey] === true;
@@ -2529,7 +2530,8 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
   const todayStr = new Date().toDateString();
   const todayLoveMsg = messages.find(m => m.senderEmail !== myEmail && new Date(m.time).toDateString() === todayStr);
   const lessonPool = DAILY_LESSONS.filter(Boolean);
-  const todayLesson = lessonPool[new Date().getDate() % lessonPool.length] || lessonPool[0];
+  const safeLessonPool = lessonPool.length ? lessonPool : [{ id:"fallback", emoji:"📘", title:"Lección", tag:"Mochi", intro:"", sections:[], reflect:"" }];
+  const todayLesson = safeLessonPool[new Date().getDate() % safeLessonPool.length] || safeLessonPool[0];
   const activityDateKeys = [
     ...(gratitud || []).map(x => x?.createdAt?.toDate ? x.createdAt.toDate() : new Date(x?.date || Date.now())),
     ...(momentos || []).map(x => x?.createdAt?.toDate ? x.createdAt.toDate() : new Date(x?.date || Date.now())),
@@ -3222,8 +3224,9 @@ function LeccionDia({ lessonsDone, onComplete }) {
 
   // Pick today's lesson based on day of year
   const lessonPool = DAILY_LESSONS.filter(Boolean);
+  const safeLessonPool = lessonPool.length ? lessonPool : [{ id:"fallback", emoji:"📘", title:"Lección", tag:"Mochi", intro:"", sections:[], reflect:"" }];
   const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
-  const todayLesson = lessonPool[dayOfYear % lessonPool.length] || lessonPool[0];
+  const todayLesson = safeLessonPool[dayOfYear % safeLessonPool.length] || safeLessonPool[0];
   const todayDone = lessonsDone?.[todayLesson?.id];
 
   const openLesson = (lesson) => { setOpen(lesson); setReading(true); setSection(0); };
@@ -3268,8 +3271,8 @@ function LeccionDia({ lessonsDone, onComplete }) {
             <div style={{ textAlign:"center", background:C.cream, borderRadius:14, padding:14, border:`1.5px solid ${C.border}` }}>
               <div style={{ fontFamily:"'Fredoka One',cursive", color:C.olive, marginBottom:6 }}>✓ Ya la completaste</div>
                     <div style={{ display:"flex", gap:10, justifyContent:"center" }}>
-                      <div style={{ fontSize:"0.75rem", fontWeight:800, color: lessonsDone?.[openLesson.id]?.owner ? C.olive : C.sand }}>🐼 {nameA} {lessonsDone?.[openLesson.id]?.owner ? "✓" : "pendiente"}</div>
-                      <div style={{ fontSize:"0.75rem", fontWeight:800, color: lessonsDone?.[openLesson.id]?.partner ? C.teal : C.sand }}>🐾 {nameB} {lessonsDone?.[openLesson.id]?.partner ? "✓" : "pendiente"}</div>
+                      <div style={{ fontSize:"0.75rem", fontWeight:800, color: lessonsDone?.[open?.id]?.owner ? C.olive : C.sand }}>🐼 {nameA} {lessonsDone?.[open?.id]?.owner ? "✓" : "pendiente"}</div>
+                      <div style={{ fontSize:"0.75rem", fontWeight:800, color: lessonsDone?.[open?.id]?.partner ? C.teal : C.sand }}>🐾 {nameB} {lessonsDone?.[open?.id]?.partner ? "✓" : "pendiente"}</div>
                     </div>
             </div>
           )}
@@ -3654,7 +3657,7 @@ export default function App() {
     if (!text || !text.trim()) return;
     const msg = {
       id: Date.now(), text: text.trim(),
-      sender: (user?.names || "Yo").split("&")[user?.isOwner !== false ? 0 : 1]?.trim() || "Yo",
+      sender: getUserDisplayName(user, "Yo"),
       senderEmail: user?.email || "guest",
       time: new Date().toISOString(), read: false
     };
