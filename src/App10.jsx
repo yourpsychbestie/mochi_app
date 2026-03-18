@@ -2343,6 +2343,7 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
   const [sending, setSending] = useState(false);
   const [starting, setStarting] = useState(false);
   const [started, setStarted] = useState(false);
+  const [forceLocalSession, setForceLocalSession] = useState(false);
   const messagesEndRef = useRef(null);
 
   const messages = Array.isArray(session?.messages) ? session.messages : [];
@@ -2359,7 +2360,7 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
 
   // Start or listen to session
   useEffect(() => {
-    if (isGuest) {
+    if (isGuest || forceLocalSession) {
       // Local mode for guests
       setSession({ messages: [], step: 0, totalSteps: phases.length, done: false, starterRole: 0 });
       setStarted(true);
@@ -2369,7 +2370,7 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
       if (data) { setSession(data); setStarted(true); }
     });
     return () => unsub();
-  }, [user?.code, ex.id]);
+  }, [user?.code, ex.id, forceLocalSession]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -2379,7 +2380,7 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
     if (starting) return;
     setStarting(true);
     const initialSession = { messages: [], step: 0, totalSteps: phases.length, done: false, starterRole: myRole };
-    if (isGuest || !user?.code) {
+    if (isGuest || forceLocalSession || !user?.code) {
       // Local mode — just set session directly
       setSession(initialSession);
       setStarted(true);
@@ -2392,7 +2393,8 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
       setStarted(true);
       await fbStartExSession(user.code, ex.id, phases.length, myRole);
     } catch(e) {
-      // Fallback to local if Firebase fails
+      // Keep local mode enabled if Firebase write fails (prevents stale remote state from overriding start).
+      setForceLocalSession(true);
       setSession(initialSession);
       setStarted(true);
     } finally {
@@ -2409,7 +2411,7 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
     const newMessages = [...messages, msg];
     const optimisticSession = { messages: newMessages, step: newStep, totalSteps: phases.length, done: isDoneNow, starterRole };
 
-    if (isGuest || !user?.code) {
+    if (isGuest || forceLocalSession || !user?.code) {
       setSession(s => ({ ...s, messages: newMessages, step: newStep, done: isDoneNow }));
       setVal("");
       if (isDoneNow) onDone();
@@ -3163,7 +3165,7 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
   const [editingName, setEditingName] = useState(false);
   const [loveText, setLoveText] = useState("");
   const [loveQuick, setLoveQuick] = useState(null);
-  const [loveTab, setLoveTab] = useState("recibidos");
+  const [showLoveComposer, setShowLoveComposer] = useState(false);
   const [sendingLove, setSendingLove] = useState(false);
   const [showTipModal, setShowTipModal] = useState(false);
   const [showDiarioModal, setShowDiarioModal] = useState(false);
@@ -3198,8 +3200,14 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
   const loveHistory = [...(messages || [])]
     .filter(m => (m?.text || "").trim())
     .sort((a, b) => new Date(b.time || 0).getTime() - new Date(a.time || 0).getTime());
-  const visibleLoveHistory = loveHistory.slice(0, 12);
-  const visibleReceivedHistory = loveHistory.filter(m => m.senderEmail !== myEmail).slice(0, 12);
+  const receivedHistory = loveHistory.filter(m => m.senderEmail !== myEmail);
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const receivedToday = receivedHistory
+    .filter(m => new Date(m.time || Date.now()).toISOString().slice(0, 10) === todayKey)
+    .slice(0, 3);
+  const receivedPast = receivedHistory
+    .filter(m => new Date(m.time || Date.now()).toISOString().slice(0, 10) !== todayKey)
+    .slice(0, 6);
   const activityDateKeys = [
     ...(gratitud || []).map(x => x?.createdAt?.toDate ? x.createdAt.toDate() : new Date(x?.date || Date.now())),
     ...(momentos || []).map(x => x?.createdAt?.toDate ? x.createdAt.toDate() : new Date(x?.date || Date.now())),
@@ -3326,103 +3334,60 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
       {/* 2. Mensajes de amor */}
       <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:16, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
         <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:8 }}>💌 Mensajes de amor</div>
-        <div style={{ marginTop: 8, background: C.sandL, borderRadius: 12, border: `1.5px solid ${C.border}`, padding: 8 }}>
-          <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
-            {[{ id: "recibidos", label: `Recibidos (${inboxMsgs})` }, { id: "historial", label: `Historial (${visibleLoveHistory.length})` }].map(t => (
-              <div key={t.id} onClick={() => setLoveTab(t.id)}
-                style={{ flex: 1, textAlign: "center", cursor: "pointer", borderRadius: 8, padding: "6px 8px", fontSize: "0.72rem", fontWeight: 800, background: loveTab === t.id ? C.dark : C.cream, color: loveTab === t.id ? C.cream2 : C.inkM }}>
-                {t.label}
-              </div>
-            ))}
+        <button
+          onClick={() => setShowLoveComposer(true)}
+          style={{ width:"100%", background:C.dark, color:C.cream2, border:"none", borderRadius:14, padding:"14px 16px", fontFamily:"'Fredoka One',cursive", fontSize:"1rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.2)", marginBottom:10 }}
+        >
+          Mandar mensaje de amor 💌
+        </button>
+
+        <div style={{ marginTop: 10, background: C.sandL, borderRadius: 12, border: `1.5px solid ${C.border}`, padding: 8 }}>
+          <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.inkL, letterSpacing: "0.5px", marginBottom: 6 }}>
+            HISTORIAL RECIBIDO ({inboxMsgs})
           </div>
 
-          {loveTab === "recibidos" && (visibleReceivedHistory.length === 0 ? (
+          {receivedHistory.length === 0 && (
             <div style={{ fontSize: "0.78rem", color: C.inkL, fontWeight: 700, padding: "2px 4px" }}>Todavía no tienes mensajes recibidos.</div>
-          ) : visibleReceivedHistory.map((m) => (
-            <div key={m.id || `${m.senderEmail}-${m.time}`} style={{ background: C.white, borderRadius: 10, border: `1px solid ${C.border}`, padding: "8px 10px", marginBottom: 6 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 4 }}>
-                <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.dark }}>{m.sender || "Tu pareja"}</div>
-                <div style={{ fontSize: "0.64rem", color: C.inkL, fontWeight: 700 }}>
-                  {new Date(m.time || Date.now()).toLocaleDateString("es", { day: "2-digit", month: "short" })}
-                </div>
-              </div>
-              <div style={{ fontSize: "0.78rem", color: C.inkM, lineHeight: 1.4 }}>
-                "{m.text}"
-              </div>
-            </div>
-          )))}
+          )}
 
-          {loveTab === "historial" && (visibleLoveHistory.length === 0 ? (
-            <div style={{ fontSize: "0.78rem", color: C.inkL, fontWeight: 700, padding: "2px 4px" }}>Todavía no tienen mensajes guardados.</div>
-          ) : visibleLoveHistory.map((m) => (
-            <div key={m.id || `${m.senderEmail}-${m.time}`} style={{ background: C.white, borderRadius: 10, border: `1px solid ${C.border}`, padding: "8px 10px", marginBottom: 6 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 4 }}>
-                <div style={{ fontSize: "0.68rem", fontWeight: 800, color: m.senderEmail === myEmail ? C.olive : C.dark }}>
-                  {m.senderEmail === myEmail ? "Tú" : (m.sender || "Tu pareja")}
+          {receivedToday.length > 0 && (
+            <div style={{ marginBottom: 6 }}>
+              <div style={{ fontSize: "0.66rem", fontWeight: 800, color: C.olive, marginBottom: 4, paddingLeft: 2 }}>Hoy</div>
+              {receivedToday.map((m) => (
+                <div key={`today-${m.id || `${m.senderEmail}-${m.time}`}`} style={{ background: C.white, borderRadius: 10, border: `1px solid ${C.border}`, padding: "7px 9px", marginBottom: 5 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 3 }}>
+                    <div style={{ fontSize: "0.66rem", fontWeight: 800, color: C.dark }}>{m.sender || "Tu pareja"}</div>
+                    <div style={{ fontSize: "0.62rem", color: C.inkL, fontWeight: 700 }}>
+                      {new Date(m.time || Date.now()).toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" })}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: "0.76rem", color: C.inkM, lineHeight: 1.35 }}>
+                    "{m.text}"
+                  </div>
                 </div>
-                <div style={{ fontSize: "0.64rem", color: C.inkL, fontWeight: 700 }}>
-                  {new Date(m.time || Date.now()).toLocaleDateString("es", { day: "2-digit", month: "short" })}
-                </div>
-              </div>
-              <div style={{ fontSize: "0.78rem", color: C.inkM, lineHeight: 1.4 }}>
-                "{m.text}"
-              </div>
+              ))}
             </div>
-          )))}
+          )}
+
+          {receivedPast.length > 0 && (
+            <div>
+              <div style={{ fontSize: "0.66rem", fontWeight: 800, color: C.inkL, marginBottom: 4, paddingLeft: 2 }}>Anteriores</div>
+              {receivedPast.map((m) => (
+                <div key={`past-${m.id || `${m.senderEmail}-${m.time}`}`} style={{ background: C.white, borderRadius: 10, border: `1px solid ${C.border}`, padding: "7px 9px", marginBottom: 5 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 3 }}>
+                    <div style={{ fontSize: "0.66rem", fontWeight: 800, color: C.dark }}>{m.sender || "Tu pareja"}</div>
+                    <div style={{ fontSize: "0.62rem", color: C.inkL, fontWeight: 700 }}>
+                      {new Date(m.time || Date.now()).toLocaleDateString("es", { day: "2-digit", month: "short" })}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: "0.76rem", color: C.inkM, lineHeight: 1.35 }}>
+                    "{m.text}"
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:6, marginTop:10 }}>
-          {LOVE_PROMPTS.slice(0, 4).map((p, i) => (
-            <div
-              key={i}
-              onClick={() => {
-                setLoveQuick(p.idea);
-                setLoveText(p.idea);
-              }}
-              style={{
-                background: loveQuick === p.idea ? C.cream : C.sandL,
-                borderRadius: 10,
-                padding: "7px 9px",
-                border: `1.5px solid ${loveQuick === p.idea ? C.olive : C.border}`,
-                cursor: "pointer",
-                fontSize: "0.72rem",
-                color: C.inkM,
-                lineHeight: 1.35,
-                fontWeight: 700,
-              }}
-            >
-              {p.icon} {p.idea}
-            </div>
-          ))}
-        </div>
-
-        <TA
-          value={loveText}
-          onChange={(v) => {
-            setLoveText(v);
-            setLoveQuick(null);
-          }}
-          placeholder="Completa una frase o escribe tu mensaje de amor..."
-          rows={2}
-          style={{ marginTop: 10, marginBottom: 0 }}
-        />
-
-        <Btn
-          onClick={async () => {
-            const cleanMsg = (loveText || "").trim();
-            if (!cleanMsg || sendingLove) return;
-            setSendingLove(true);
-            await Promise.resolve(onSendMessage?.(cleanMsg)).catch(() => {});
-            setLoveText("");
-            setLoveQuick(null);
-            setSendingLove(false);
-          }}
-          variant="sand"
-          style={{ width:"100%", marginTop:10, fontSize:"0.8rem" }}
-          disabled={sendingLove}
-        >
-          {sendingLove ? "Enviando..." : "Enviar mensaje de amor"}
-        </Btn>
       </div>
 
       {/* 3. Consejo del día */}
@@ -3482,6 +3447,58 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
             )}
             <div style={{ background:C.sandL, border:`1px solid ${C.border}`, borderRadius:12, padding:"10px 12px", fontSize:"0.82rem", color:C.inkM, lineHeight:1.6 }}>
               {todayTip?.context}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showLoveComposer && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.45)", zIndex:6200, display:"flex", alignItems:"center", justifyContent:"center", padding:"16px" }} onClick={() => setShowLoveComposer(false)}>
+          <div onClick={(e)=>e.stopPropagation()} style={{ width:"100%", maxWidth:420, background:C.white, borderRadius:24, padding:"16px 14px", border:`1.5px solid ${C.border}`, boxShadow:"0 14px 36px rgba(0,0,0,0.25)", maxHeight:"82vh", overflowY:"auto" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.02rem", color:C.dark }}>💌 Mandar mensaje de amor</div>
+              <button onClick={() => setShowLoveComposer(false)} style={{ width:34, height:34, borderRadius:"50%", border:"none", background:C.cream, color:C.inkM, fontWeight:900, fontSize:"1rem", cursor:"pointer" }}>✕</button>
+            </div>
+
+            <div style={{ fontSize:"0.76rem", color:C.inkM, lineHeight:1.5, marginBottom:9 }}>
+              Elige una frase para empezar o escribe tu mensaje libremente.
+            </div>
+
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:6, marginBottom:10 }}>
+              {LOVE_PROMPTS.slice(0, 6).map((p, i) => (
+                <div key={i} onClick={() => { setLoveQuick(p.idea); setLoveText(p.idea); }}
+                  style={{ background: loveQuick === p.idea ? C.cream : C.sandL, borderRadius:10, padding:"7px 9px", border:`1.5px solid ${loveQuick === p.idea ? C.olive : C.border}`, cursor:"pointer", fontSize:"0.72rem", color:C.inkM, lineHeight:1.35, fontWeight:700 }}>
+                  {p.icon} {p.idea}
+                </div>
+              ))}
+            </div>
+
+            <TA
+              value={loveText}
+              onChange={(v) => { setLoveText(v); setLoveQuick(null); }}
+              placeholder="Completa una frase o escribe tu mensaje de amor..."
+              rows={3}
+              style={{ marginBottom: 10 }}
+            />
+
+            <div style={{ display:"flex", gap:8 }}>
+              <Btn onClick={() => setShowLoveComposer(false)} variant="ghost" style={{ flex:1 }}>Cancelar</Btn>
+              <Btn
+                onClick={async () => {
+                  const cleanMsg = (loveText || "").trim();
+                  if (!cleanMsg || sendingLove) return;
+                  setSendingLove(true);
+                  await Promise.resolve(onSendMessage?.(cleanMsg)).catch(() => {});
+                  setLoveText("");
+                  setLoveQuick(null);
+                  setSendingLove(false);
+                  setShowLoveComposer(false);
+                }}
+                style={{ flex:2 }}
+                disabled={sendingLove || !(loveText || "").trim()}
+              >
+                {sendingLove ? "Guardando..." : "Guardar y enviar"}
+              </Btn>
             </div>
           </div>
         </div>
@@ -3911,6 +3928,25 @@ function RelTest({ user, onDone }) {
     });
     const total = rows.reduce((sum, r) => sum + r.avg, 0) / rows.length;
 
+    const strongest = [...rows].sort((a, b) => b.avg - a.avg)[0] || null;
+    const weakest = [...rows].sort((a, b) => a.avg - b.avg)[0] || null;
+
+    const strengthText = (row) => {
+      if (!row) return "Están construyendo una base útil para crecer juntos.";
+      if (row.id === "kms") {
+        return "Conectan bien en lo cotidiano: están sosteniendo presencia y escucha en su día a día.";
+      }
+      return "Tienen hábitos de cuidado que sí funcionan: vale la pena protegerlos y repetirlos esta semana.";
+    };
+
+    const opportunityText = (row) => {
+      if (!row) return "Elijan una micro-acción diaria para cuidarse mejor.";
+      if (row.id === "kms") {
+        return "Meta de la semana: 10 minutos diarios de check-in emocional sin pantallas.";
+      }
+      return "Meta de la semana: acuerden una acción pequeña diaria (gratitud + reparación breve).";
+    };
+
     const combinedScores = {};
     rows.forEach(r => { combinedScores[r.id] = { a: r.sA, b: r.sB }; });
 
@@ -3951,6 +3987,22 @@ function RelTest({ user, onDone }) {
               <div style={{ fontSize:"0.76rem", color:C.inkM }}>{interpretation(r.id, r.rawAvg)}</div>
             </div>
           ))}
+        </div>
+
+        <div style={{ background:C.white, borderRadius:20, padding:16, marginBottom:16, border:`1.5px solid ${C.border}` }}>
+          <div style={{ fontSize:"0.7rem", fontWeight:800, color:C.inkL, letterSpacing:"0.6px", marginBottom:10 }}>CONCLUSIONES DE ESTA SEMANA</div>
+
+          <div style={{ background:"#eaf7e8", border:`1px solid ${C.olive}55`, borderRadius:12, padding:"10px 12px", marginBottom:9 }}>
+            <div style={{ fontSize:"0.72rem", fontWeight:800, color:C.olive, marginBottom:4 }}>✅ Fortaleza principal</div>
+            <div style={{ fontSize:"0.82rem", color:C.ink, fontWeight:800, marginBottom:4 }}>{strongest?.emoji} {strongest?.label}</div>
+            <div style={{ fontSize:"0.78rem", color:C.inkM, lineHeight:1.5 }}>{strengthText(strongest)}</div>
+          </div>
+
+          <div style={{ background:"#fff6e8", border:"1px solid #e8c788", borderRadius:12, padding:"10px 12px" }}>
+            <div style={{ fontSize:"0.72rem", fontWeight:800, color:"#9a7020", marginBottom:4 }}>🛠 Área de oportunidad de la semana</div>
+            <div style={{ fontSize:"0.82rem", color:C.ink, fontWeight:800, marginBottom:4 }}>{weakest?.emoji} {weakest?.label}</div>
+            <div style={{ fontSize:"0.78rem", color:C.inkM, lineHeight:1.5 }}>{opportunityText(weakest)}</div>
+          </div>
         </div>
 
         <button onClick={() => onDone(combinedScores)} style={{ width:"100%", background:C.dark, color:C.cream2, border:"none", borderRadius:14, padding:16, fontFamily:"'Fredoka One',cursive", fontSize:"1.05rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.2)" }}>
