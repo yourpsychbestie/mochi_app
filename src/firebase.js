@@ -115,6 +115,12 @@ export const fbGetCode = async (code) => {
   const snap = await getDoc(doc(db, "codes", code));
   return snap.exists() ? snap.data() : null;
 };
+export const fbListenCode = (code, cb) => {
+  if (!code) return () => {};
+  return onSnapshot(doc(db, "codes", code), (snap) => {
+    cb(snap.exists() ? snap.data() : null);
+  }, () => cb(null));
+};
 
 export const fbFindCodeByUid = async (uid) => {
   if (!uid) return null;
@@ -203,7 +209,7 @@ export const fbListenMessages = (coupleCode, cb) => {
     cb(msgs);
   }, (error) => {
     console.error("Messages listener error:", error);
-    cb([]);
+    cb(null);
   });
 };
 

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import {
   fbRegister, fbLogin, fbLogout, fbOnAuthChange,
   fbSaveUser, fbGetUser,
-  fbCreateCodeOwner, fbGetCode, fbSaveCode, fbFindCodeByUid, fbClaimPartnerCode,
+  fbCreateCodeOwner, fbGetCode, fbListenCode, fbSaveCode, fbFindCodeByUid, fbClaimPartnerCode,
   fbSaveProgress, fbGetProgress,
   fbGetTest,
   fbSendMessage, fbListenMessages,
@@ -43,9 +43,13 @@ let _pendingLocalAuth = false;
 const parseCoupleNames = (names) => {
   const raw = typeof names === "string" ? names : "";
   const parts = raw.split("&").map(p => p.trim()).filter(Boolean);
+  const sanitize = (value, fallback) => {
+    const clean = String(value || "").trim();
+    return clean && clean !== "?" ? clean : fallback;
+  };
   return {
-    a: parts[0] || "Persona A",
-    b: parts[1] || "Persona B",
+    a: sanitize(parts[0], "Persona A"),
+    b: sanitize(parts[1], "Persona B"),
   };
 };
 
@@ -4586,9 +4590,9 @@ export default function App() {
       }
       if (!s && syncedTestScores) setTestScores(syncedTestScores);
     }
-    if (!normalizedUser.code || normalizedUser.isGuest) {
-      const sharedMsgs = normalizedUser.code ? (ls.get("mochi_msgs_" + normalizedUser.code) || []) : [];
-      setMessages(sharedMsgs);
+    if (normalizedUser.code) {
+      const sharedMsgs = ls.get("mochi_msgs_" + normalizedUser.code) || loadedState?.messages || [];
+      setMessages(Array.isArray(sharedMsgs) ? sharedMsgs : []);
     } else {
       setMessages([]);
     }
@@ -4599,7 +4603,7 @@ export default function App() {
     } else if (fromAuthRestore) {
       const activeScreen = screenRef.current;
       const preserveActiveFlow = activeScreen === "reltest" || activeScreen === "main";
-      setScreen(preserveActiveFlow ? activeScreen : (hasInitialTest ? "main" : "login"));
+      setScreen(preserveActiveFlow ? activeScreen : (hasInitialTest ? "main" : "reltest"));
     } else {
       setScreen(hasInitialTest ? "main" : "reltest");
     }
@@ -4611,6 +4615,8 @@ export default function App() {
     messageUnsubRef.current = null;
     if (!user?.code || user?.isGuest) return;
     const unsub = fbListenMessages(user.code, msgs => {
+      if (!Array.isArray(msgs)) return;
+      ls.set("mochi_msgs_" + user.code, msgs);
       setMessages(prev => {
         // Merge: keep any optimistic messages not yet in Firebase, plus all Firebase msgs
         const firebaseIds = new Set(msgs.map(m => String(m.id)));
@@ -4699,6 +4705,39 @@ export default function App() {
     return () => unsub();
   }, []); // eslint-disable-line
 
+  // Keep displayed names synced from shared code doc (e.g., when partner joins and replaces '?').
+  useEffect(() => {
+    if (!user?.code || user?.isGuest) return;
+    const unsub = fbListenCode(user.code, (codeData) => {
+      const nextNames = String(codeData?.names || "").trim();
+      if (!nextNames) return;
+      const nextSince = String(codeData?.since || "").trim();
+
+      setUser((prev) => {
+        if (!prev) return prev;
+        if (prev.names === nextNames && (!nextSince || prev.since === nextSince)) return prev;
+        return { ...prev, names: nextNames, since: nextSince || prev.since };
+      });
+
+      if (user?.email) {
+        const usersMap = ls.get("mochi_users") || {};
+        if (usersMap[user.email]) {
+          usersMap[user.email] = {
+            ...usersMap[user.email],
+            names: nextNames,
+            since: nextSince || usersMap[user.email].since,
+          };
+          ls.set("mochi_users", usersMap);
+        }
+      }
+
+      if (user?.uid) {
+        fbSaveUser(user.uid, { names: nextNames, ...(nextSince ? { since: nextSince } : {}) }).catch(() => {});
+      }
+    });
+    return () => unsub();
+  }, [user?.code, user?.uid, user?.email, user?.isGuest]);
+
   const buyItem = async item => {
     if (garden[item.id]) { toast("Ya está en el jardín"); return; }
     if (bamboo < item.cost) { toast("Necesitas más bambú — completa ejercicios"); return; }
@@ -4779,18 +4818,26 @@ export default function App() {
     save(null, { bamboo: nb, happiness: nh, accessories: na, lastVisit: nv });
   };
 
-  const showGardenMessages = (fallbackTextB = "Aquí aparecerán los mensajes de amor que envíes 💌") => {
+  const showGardenMessages = (fallbackTextB = "Aquí aparecerán los mensajes que te envíe tu pareja 💌") => {
     const parsedNames = parseCoupleNames(user?.names);
     const nameA = parsedNames.a || "Panda A";
     const nameB = parsedNames.b || "Panda B";
     const myEmail = user?.email || "guest";
-    const pandaAMsgs = [...messages].filter(m => user?.isOwner !== false ? m.senderEmail === myEmail : m.senderEmail !== myEmail);
-    const pandaBMsgs = [...messages].filter(m => user?.isOwner !== false ? m.senderEmail !== myEmail : m.senderEmail === myEmail);
-    const msgA = pandaAMsgs[0];
-    const msgB = pandaBMsgs[0];
-    const textA = msgA ? msgA.text.slice(0, 60) + (msgA.text.length > 60 ? "..." : "") : null;
-    const textB = msgB ? msgB.text.slice(0, 60) + (msgB.text.length > 60 ? "..." : "") : fallbackTextB;
-    setPandaBubble({ nameA: msgA ? nameA : null, textA, nameB, textB });
+    const partnerName = user?.isOwner !== false ? nameB : nameA;
+    const partnerMsgs = [...messages].filter(m => m.senderEmail !== myEmail);
+    const latestPartnerMsg = partnerMsgs[0] || null;
+    const hasAnyLoveMessage = [...messages].some(m => String(m?.text || "").trim().length > 0);
+    const textB = latestPartnerMsg
+      ? latestPartnerMsg.text.slice(0, 60) + (latestPartnerMsg.text.length > 60 ? "..." : "")
+      : (hasAnyLoveMessage ? null : fallbackTextB);
+
+    if (!textB) {
+      setPandaBubble(null);
+      return;
+    }
+
+    // Show only the partner's latest message in the garden for the current user.
+    setPandaBubble({ nameA: null, textA: null, nameB: partnerName, textB });
     setTimeout(() => setPandaBubble(null), 5000);
   };
 
@@ -4875,6 +4922,8 @@ export default function App() {
     if (user?.code && !user?.isGuest) {
       // Fire and forget — listener will sync
       fbSendMessage(user.code, msg).catch(e => console.warn("Send failed:", e));
+      const prev = ls.get("mochi_msgs_" + user.code) || [];
+      ls.set("mochi_msgs_" + user.code, [msg, ...prev]);
     } else {
       const key = user?.code ? "mochi_msgs_" + user.code : "mochi_msgs_guest";
       const prev = ls.get(key) || [];
