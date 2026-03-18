@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, deleteUser } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, deleteUser, setPersistence, browserLocalPersistence } from "firebase/auth";
 import { getFirestore, doc, setDoc, getDoc, collection, addDoc, onSnapshot, query, where, serverTimestamp, orderBy, runTransaction, getDocs, writeBatch, deleteDoc, limit } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -14,6 +14,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+// Keep users signed in across app restarts until they explicitly log out.
+setPersistence(auth, browserLocalPersistence).catch((err) => {
+  console.warn("Auth persistence setup warning:", err?.message || err);
+});
 
 // ─── AUTH ───────────────────────────────────────────────
 export const fbRegister = (email, password) =>

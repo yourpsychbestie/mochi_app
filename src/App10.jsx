@@ -2351,8 +2351,9 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
   const messagesEndRef = useRef(null);
 
   const messages = Array.isArray(session?.messages) ? session.messages : [];
-  const currentStep = session?.step ?? 0;
-  const isDone = session?.done === true;
+  const rawStep = Number.isFinite(session?.step) ? session.step : 0;
+  const currentStep = Math.max(rawStep, messages.length);
+  const isDone = session?.done === true || currentStep >= phases.length;
   const cur = phases[currentStep];
   const starterRole = session?.starterRole === 1 ? 1 : 0;
   const currentTurnRole = cur ? ((cur.role + starterRole) % 2) : 0;
@@ -2366,15 +2367,21 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
   useEffect(() => {
     if (isGuest || forceLocalSession) {
       // Local mode for guests
-      setSession({ messages: [], step: 0, totalSteps: phases.length, done: false, starterRole: 0 });
+      setSession({ messages: [], step: 0, totalSteps: phases.length, done: false, starterRole: myRole });
       setStarted(true);
       return;
     }
     const unsub = fbListenExSession(user.code, ex.id, data => {
-      if (data) { setSession(data); setStarted(true); }
+      if (data) {
+        const incomingMsgs = Array.isArray(data?.messages) ? data.messages : [];
+        const incomingRawStep = Number.isFinite(data?.step) ? data.step : 0;
+        const repairedStep = Math.max(incomingRawStep, incomingMsgs.length);
+        setSession({ ...data, step: repairedStep });
+        setStarted(true);
+      }
     });
     return () => unsub();
-  }, [user?.code, ex.id, forceLocalSession]);
+  }, [user?.code, ex.id, forceLocalSession, myRole]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -2409,8 +2416,9 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
   const send = async () => {
     if (!val.trim() || sending || !isMyTurn) return;
     setSending(true);
-    const newStep = currentStep + 1;
-    const msg = { text: val.trim(), role: myRole, step: currentStep };
+    const stepNow = currentStep;
+    const newStep = stepNow + 1;
+    const msg = { text: val.trim(), role: myRole, step: stepNow };
     const isDoneNow = newStep >= phases.length;
     const newMessages = [...messages, msg];
     const optimisticSession = { messages: newMessages, step: newStep, totalSteps: phases.length, done: isDoneNow, starterRole };
@@ -2503,14 +2511,43 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
 }
 
 
-function TimerEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B" }) {
+function TimerEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) {
+  const isOwner = user?.isOwner !== false;
+  const myRole = isOwner ? 0 : 1;
+  const isGuest = user?.isGuest || !user?.code;
   const [started, setStarted] = useState(false);
   const [secs, setSecs] = useState(ex.timer);
   const [done, setDone] = useState(false);
-  const [vals, setVals] = useState(["", ""]);
+  const [session, setSession] = useState(null);
+  const [val, setVal] = useState("");
+  const [saving, setSaving] = useState(false);
+  const completedRef = useRef(false);
   const tid = useRef(null);
 
   useEffect(() => () => clearInterval(tid.current), []);
+
+  useEffect(() => {
+    if (isGuest) {
+      setSession({ messages: [] });
+      return;
+    }
+    const unsub = fbListenExSession(user.code, ex.id, data => {
+      if (data) setSession(data);
+      else setSession({ messages: [] });
+    });
+    return () => unsub();
+  }, [user?.code, ex.id, isGuest]);
+
+  const messages = Array.isArray(session?.messages) ? session.messages : [];
+  const mine = messages.find(m => m.role === myRole);
+  const partner = messages.find(m => m.role !== myRole);
+  const hasBoth = !!mine && !!partner;
+
+  useEffect(() => {
+    if (!done || completedRef.current || !hasBoth) return;
+    completedRef.current = true;
+    onDone(messages);
+  }, [done, hasBoth, messages, onDone]);
 
   const start = () => {
     setStarted(true);
@@ -2518,6 +2555,33 @@ function TimerEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B" }) {
       if (s <= 1) { clearInterval(tid.current); setDone(true); return 0; }
       return s - 1;
     }), 1000);
+  };
+
+  const submit = async () => {
+    const currentText = (val || mine?.text || "").trim();
+    if (!currentText || saving) return;
+    setSaving(true);
+    const next = [
+      ...messages.filter(m => m.role !== myRole),
+      { role: myRole, text: currentText, updatedAt: new Date().toISOString() },
+    ];
+
+    if (isGuest) {
+      setSession({ messages: next });
+      if (next.length >= 2) {
+        completedRef.current = true;
+        onDone(next);
+      }
+    } else {
+      await fbSendExMessage(user.code, ex.id, { messages: next, step: next.length, starterRole: 0 }).catch(() => {});
+      setSession(s => ({ ...(s || {}), messages: next }));
+      if (next.length >= 2) {
+        completedRef.current = true;
+        onDone(next);
+      }
+    }
+    setVal("");
+    setSaving(false);
   };
 
   if (!started) return (
@@ -2541,11 +2605,32 @@ function TimerEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B" }) {
 
   return (
     <div>
-      <div style={{ display: "grid", gap: 10, marginBottom: 12 }}>
-        <textarea rows={4} placeholder={`${nameA}: que notaste en ti y en tu pareja?`} value={vals[0]} onChange={e => setVals(v => [e.target.value, v[1]])} style={inputStyle} />
-        <textarea rows={4} placeholder={`${nameB}: que notaste en ti y en tu pareja?`} value={vals[1]} onChange={e => setVals(v => [v[0], e.target.value])} style={inputStyle} />
+      <div style={{ background: C.sandL, borderRadius: 14, padding: 14, border: `1.5px solid ${C.border}` }}>
+        <PBadge who={myRole === 0 ? "A" : "B"} name={myRole === 0 ? nameA : nameB} />
+        <TA
+          value={val || mine?.text || ""}
+          onChange={setVal}
+          placeholder={ex?.afterPrompts?.[myRole]?.ph || `${myRole === 0 ? nameA : nameB}: ¿qué notaste en ti y en tu pareja?`}
+          rows={4}
+          style={{ marginBottom: 10 }}
+        />
+        <Btn onClick={submit} disabled={saving || !(val || mine?.text || "").trim()} variant="olive" style={{ width: "100%" }}>
+          {saving ? "Guardando..." : "Guardar y compartir"}
+        </Btn>
       </div>
-      <Btn onClick={() => onDone(vals)} disabled={!vals[0] || !vals[1]} variant="olive" style={{ width: "100%" }}>Finalizar</Btn>
+
+      {partner && (
+        <div style={{ marginTop: 10, background: C.white, borderRadius: 10, padding: 10, border: `1px solid ${C.border}` }}>
+          <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.inkL, marginBottom: 4 }}>{myRole === 0 ? nameB : nameA} compartió:</div>
+          <div style={{ fontSize: "0.82rem", color: C.inkM, lineHeight: 1.5 }}>{partner.text}</div>
+        </div>
+      )}
+
+      {!partner && mine && (
+        <div style={{ textAlign: "center", padding: "10px 0", color: C.inkL, fontSize: "0.78rem", fontWeight: 700 }}>
+          Esperando a {myRole === 0 ? nameB : nameA}... ✨
+        </div>
+      )}
     </div>
   );
 }
@@ -2691,7 +2776,7 @@ function ExModal({ ex, onClose, onComplete, nameA, nameB, user }) {
       </div>
 
       {ex.phases && <ChatEx ex={ex} onDone={finish} nameA={nameA} nameB={nameB} user={user} />}
-      {ex.timer && <TimerEx ex={ex} onDone={finish} nameA={nameA} nameB={nameB} />}
+      {ex.timer && <TimerEx ex={ex} onDone={finish} nameA={nameA} nameB={nameB} user={user} />}
       {ex.isEscritura && <WritingEx ex={ex} onDone={finish} nameA={nameA} nameB={nameB} user={user} />}
     </div>
   );
