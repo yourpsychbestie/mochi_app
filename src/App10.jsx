@@ -214,14 +214,14 @@ const EXERCISES = [
     timer:600,timerLabel:"Presencia plena — sin distracciones",
     beforeTimer:["Apaguen o silencien los teléfonos.","Siéntense cómodos, cerca.","No hay tema — solo estén presentes.","Hablen de lo que surja naturalmente.","Presionen INICIAR."],
     afterPrompts:[{role:0,ph:"Lo que noté en ti hoy fue…"},{role:1,ph:"Estar presente contigo me hizo sentir…"}]},
-  {id:"gracias_express",emoji:"✨",title:"Gracias Express",tags:"Gottman · Positiva",bamboo:15,time:"2 min",mode:"distancia",
+  {id:"gracias_express",emoji:"✨",title:"Gracias Express",tags:"Gottman · Positiva",bamboo:15,time:"5 min",mode:"distancia",
     desc:"La ciencia de Gottman muestra que expresar gratitud específica — no genérica — activa el mismo circuito de recompensa que recibir un regalo. Dos minutos de gratitud real cambian la química del vínculo.",
-    instructions:["Cada quien piensa en algo concreto que el otro hizo hoy o esta semana","La gratitud debe ser específica: qué hizo, cuándo, cómo te hizo sentir","Quien recibe solo responde: 'Gracias. Eso significa que...'","No desvíes ni minimices el halago","30 segundos cada uno — van juntos"],
+    instructions:["Todo se hace por mensajes: puede ser en sincronía o asincrónico","Cada turno agradece algo concreto (qué hizo, cuándo y cómo te hizo sentir)","Quien recibe responde solo: 'Gracias. Lo hice porque...'","Luego cambian roles y repiten"],
     phases:[
       {role:0,q:"Tu gratitud específica de hoy o esta semana.",ph:"Gracias por… cuando… porque eso me hizo sentir…",hint:"Específico: 'me mandaste audio antes de dormir' no 'eres atento/a'"},
-      {role:1,q:"Recibe y responde.",ph:"Gracias. Eso significa que…"},
+      {role:1,q:"Recibe y responde.",ph:"Gracias. Lo hice porque…"},
       {role:1,q:"Tu turno: tu gratitud del día.",ph:"Algo que agradezco es cuando tú…"},
-      {role:0,q:"Recibe.",ph:"Gracias. Eso me hizo sentir…"},
+      {role:0,q:"Recibe.",ph:"Gracias. Lo hice porque…"},
     ]},
   {id:"check_in_2min",emoji:"🌡",title:"Check-in de 2 Minutos",tags:"EFT · Sistémica",bamboo:15,time:"2 min",mode:"distancia",
     desc:"La Terapia Focalizada en Emociones (EFT) de Sue Johnson muestra que la sintonía emocional diaria — aunque sea breve — previene la acumulación de distancia. Tomarse 2 minutos para saber cómo está el otro reduce el porcentaje de malentendidos acumulados.",
@@ -240,6 +240,25 @@ const EXERCISES = [
       {role:1,q:"Persona B: Responde con honestidad.",ph:"Mi respuesta es…"},
       {role:1,q:"Ahora Persona B: tu pregunta.",ph:"Quiero preguntarte…"},
       {role:0,q:"Persona A: Responde.",ph:"Lo que pienso es…"},
+    ]},
+  {id:"micro_reconexion",emoji:"🧩",title:"Micro-reconexión",tags:"EFT · Apego",bamboo:20,time:"6 min",mode:"distancia",
+    desc:"Cuando hubo distancia durante el día, este ejercicio ayuda a reconectar sin discutir. Es breve, claro y por turnos en mensajes.",
+    instructions:["Todo el ejercicio es por mensajes, en turnos","Hablen en primera persona (yo siento / yo necesito)","No den consejos ni corrijan al otro mientras responde","Cierre con una acción concreta para hoy"],
+    phases:[
+      {role:0,q:"Persona A: ¿Qué te alejó hoy emocionalmente?",ph:"Hoy me alejé cuando…"},
+      {role:1,q:"Persona B: valida sin defenderte.",ph:"Te leo. Tiene sentido que te sintieras así cuando…"},
+      {role:1,q:"Persona B: ¿qué te acercaría hoy?",ph:"Para reconectar hoy me ayudaría…"},
+      {role:0,q:"Persona A: ofrece algo concreto para hoy.",ph:"Hoy puedo ofrecerte…"},
+    ]},
+  {id:"acuerdo_24h",emoji:"📅",title:"Acuerdo 24h",tags:"Sistémica · Gottman",bamboo:20,time:"7 min",mode:"distancia",
+    desc:"En vez de promesas grandes, acuerden una micro-acción para las próximas 24 horas. Lo pequeño sostenido transforma la relación.",
+    instructions:["Definan un tema puntual para mañana (no toda la relación)","Cada quien propone una acción propia (no exigir al otro)","Acuerden cómo confirmarán que sí se cumplió","Todo se escribe por mensaje en turnos"],
+    phases:[
+      {role:0,q:"Persona A: ¿qué te gustaría mejorar en las próximas 24 horas?",ph:"Mañana me gustaría que cuidáramos…"},
+      {role:1,q:"Persona B: propone TU acción concreta.",ph:"Mi acción concreta de mañana será…"},
+      {role:1,q:"Persona B: ¿qué te gustaría mejorar tú?",ph:"Yo quiero mejorar…"},
+      {role:0,q:"Persona A: propone TU acción concreta.",ph:"Mi acción concreta de mañana será…"},
+      {role:0,q:"Definan cómo lo van a confirmar mañana.",ph:"Mañana lo confirmamos con…"},
     ]},
 ];
 
@@ -479,6 +498,30 @@ const EXAMPLES_BY_EXERCISE = {
       "Que fue lo mejor de tu semana y por que te importo tanto?",
       "Que tema traes en la cabeza ultimamente que no me has contado?",
       "Gracias por contarme eso; quiero entenderte, no arreglarte.",
+    ],
+  },
+  micro_reconexion: {
+    no: [
+      "Otra vez con lo mismo, ya superalo.",
+      "No tengo tiempo para eso ahora.",
+      "Si te sentiste mal es tu problema.",
+    ],
+    si: [
+      "Gracias por decirme eso, quiero entenderte bien.",
+      "Hoy para reconectar te puedo ofrecer 15 minutos sin distracciones.",
+      "No quiero ganar, quiero volver a estar en equipo contigo.",
+    ],
+  },
+  acuerdo_24h: {
+    no: [
+      "Prometo cambiar TODO desde mañana.",
+      "El acuerdo es que tu dejes de hacer eso.",
+      "Luego vemos, no hace falta escribirlo.",
+    ],
+    si: [
+      "Mañana mi acción concreta será saludarte con un mensaje antes de las 10.",
+      "Yo me comprometo a avisarte cuando necesite pausa en vez de desaparecer.",
+      "Lo confirmamos mañana en la noche con un mensaje de cierre.",
     ],
   },
 };
@@ -2389,6 +2432,7 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
         <div style={{ fontSize:"2.5rem", marginBottom:8 }}>✨</div>
         <div style={{ fontFamily:"'Fredoka One',cursive", color:C.dark, fontSize:"1.1rem", marginBottom:6 }}>¡Ejercicio completado!</div>
         <div style={{ fontSize:"0.85rem", color:C.inkM }}>Bien hecho, {nameA} y {nameB} 🐼🐾</div>
+        <Btn onClick={startSession} style={{ width:"100%", marginTop:12 }} disabled={starting}>{starting ? "Reiniciando..." : "Empezar de nuevo 🌿"}</Btn>
       </div>
     );
   }
@@ -2655,6 +2699,11 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
   const [openLesson, setOpenLesson] = useState(null);
   const [ejTab, setEjTab] = useState("ejerc");
   const ex = EXERCISES.find(e => e.id === openId);
+  const toMinutes = (timeLabel = "") => {
+    const m = String(timeLabel).match(/(\d+)/);
+    return m ? Number(m[1]) : 999;
+  };
+  const orderedExercises = [...EXERCISES].sort((a, b) => toMinutes(a.time) - toMinutes(b.time));
 
   return (
     <>
@@ -2672,7 +2721,7 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
           </div>
         </div>
 
-        {ejTab === "ejerc" && EXERCISES.map(e => {
+        {ejTab === "ejerc" && orderedExercises.map(e => {
           const count = exDone[e.id] || 0;
           return (
             <div key={e.id} onClick={() => setOpenId(e.id)}
