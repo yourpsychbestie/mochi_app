@@ -282,16 +282,6 @@ export default function Cuestionarios({ conoce, onSave, onQuizComplete, user }) 
 
             {isOpen && (
               <div style={{ marginTop: 10 }}>
-                {prog.answered === prog.total && (
-                  <div style={{ background: "#e4f0e0", border: "1px solid rgba(74,110,48,0.3)", color: "#2f4f22", borderRadius: 10, padding: "8px 10px", fontSize: "0.74rem", fontWeight: 800, marginBottom: 8 }}>
-                    ✅ Ya completaste este cuestionario.
-                  </div>
-                )}
-                {quizNoticeById[quiz.id] && (
-                  <div style={{ background: "#eef6ea", border: "1px solid rgba(74,110,48,0.25)", color: "#2f4f22", borderRadius: 10, padding: "8px 10px", fontSize: "0.74rem", fontWeight: 800, marginBottom: 8 }}>
-                    {quizNoticeById[quiz.id]}
-                  </div>
-                )}
                 {quiz.questions.map((q, idx) => {
                   const key = `${quiz.catKey}-${idx}`;
                   const selected = conoce?.[key]?.[myRole];
@@ -352,6 +342,16 @@ export default function Cuestionarios({ conoce, onSave, onQuizComplete, user }) 
                     </div>
                   );
                 })}
+                {prog.answered === prog.total && (
+                  <div style={{ background: "#e4f0e0", border: "1px solid rgba(74,110,48,0.3)", color: "#2f4f22", borderRadius: 10, padding: "8px 10px", fontSize: "0.74rem", fontWeight: 800, marginTop: 8 }}>
+                    ✅ Ya completaste este cuestionario.
+                  </div>
+                )}
+                {quizNoticeById[quiz.id] && (
+                  <div style={{ background: "#eef6ea", border: "1px solid rgba(74,110,48,0.25)", color: "#2f4f22", borderRadius: 10, padding: "8px 10px", fontSize: "0.74rem", fontWeight: 800, marginTop: 8 }}>
+                    {quizNoticeById[quiz.id]}
+                  </div>
+                )}
               </div>
             )}
           </div>

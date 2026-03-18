@@ -1173,6 +1173,7 @@ function GardenItemIcon({ id, size = 38 }) {
 
 function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
   const owned = accessories || {};
+  const isEquipped = (id) => owned[id] === true;
   // New viewBox: 260x220 matching new CouplePandaSVG
   // Left panda head center: ~76, 88 (tilted +6deg)
   // Right panda head center: ~176, 88 (tilted -4deg)
@@ -1199,7 +1200,7 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
       {/* ══════════ LEFT PANDA ACCESSORIES ══════════ */}
 
       {/* HAT: FLOWER CROWN */}
-      {owned.hat_flower && (
+      {isEquipped("hat_flower") && (
         <g transform="rotate(6, 76, 88) translate(76, 44)">
           {/* Vine base */}
           <path d="M-36 0 C-24 -6 -10 -8 0 -8 C10 -8 24 -6 36 0" fill="none" stroke="#5a8a40" strokeWidth="3.5" strokeLinecap="round"/>
@@ -1222,7 +1223,7 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
       )}
 
       {/* HAT: CROWN */}
-      {owned.hat_crown && (
+      {isEquipped("hat_crown") && (
         <g transform="rotate(6, 76, 88) translate(76, 46)">
           {/* Band */}
           <path d="M-26 6 L-28 -8 L-16 0 L0 -16 L16 0 L28 -8 L26 6 Z" fill="url(#goldGrad)"/>
@@ -1239,7 +1240,7 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
       )}
 
       {/* HAT: STRAW HAT */}
-      {owned.hat_straw && (
+      {isEquipped("hat_straw") && (
         <g transform="rotate(6, 76, 88) translate(76, 48)">
           {/* Brim */}
           <ellipse cx="0" cy="2" rx="38" ry="9" fill="#d4a840" opacity="0.95"/>
@@ -1255,7 +1256,7 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
       )}
 
       {/* GLASSES: HEART */}
-      {owned.glasses_heart && (
+      {isEquipped("glasses_heart") && (
         <g transform="rotate(6, 76, 88) translate(76, 88)">
           {/* Left lens */}
           <path d="M-28 -4 C-28 -9 -24 -11 -20 -7 C-16 -11 -12 -9 -12 -4 C-12 2 -20 8 -20 8 C-20 8 -28 2 -28 -4Z"
@@ -1279,7 +1280,7 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
       )}
 
       {/* GLASSES: SUNGLASSES */}
-      {owned.glasses_sun && (
+      {isEquipped("glasses_sun") && (
         <g transform="rotate(6, 76, 88) translate(76, 88)">
           <rect x="-32" y="-8" width="20" height="14" rx="7" fill="#1a3050" opacity="0.88"/>
           <rect x="12" y="-8" width="20" height="14" rx="7" fill="#1a3050" opacity="0.88"/>
@@ -1292,7 +1293,7 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
       )}
 
       {/* ACC: BOW */}
-      {owned.acc_bow && (
+      {isEquipped("acc_bow") && (
         <g transform="rotate(6, 76, 88) translate(106, 60)">
           <path d="M-12 0 C-18 -8 -24 -10 -20 -2 C-16 6 -6 4 0 0Z" fill="#ffb8d0"/>
           <path d="M12 0 C18 -8 24 -10 20 -2 C16 6 6 4 0 0Z" fill="#ff90b8"/>
@@ -1302,7 +1303,7 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
       )}
 
       {/* ACC: SCARF — proper wraparound scarf */}
-      {owned.acc_scarf && (
+      {isEquipped("acc_scarf") && (
         <g>
           {/* Left panda scarf */}
           <path d="M40 135 C46 128 60 124 76 124 C92 124 106 128 112 135 C114 138 112 145 108 146 C104 147 96 144 76 144 C56 144 48 147 44 146 C40 145 38 138 40 135Z"
@@ -1328,7 +1329,7 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
       )}
 
       {/* OUTFIT: KIMONO */}
-      {owned.outfit_kimono && (
+      {isEquipped("outfit_kimono") && (
         <g>
           {/* Left panda kimono */}
           <path d="M38 140 C34 150 32 170 34 195 C40 200 70 202 114 195 C116 170 114 150 110 140 C100 132 88 130 76 130 C64 130 52 132 38 140Z"
@@ -1359,7 +1360,7 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
 
       {/* ══════════ RIGHT PANDA — same accessories mirrored ══════════ */}
 
-      {owned.hat_flower && (
+      {isEquipped("hat_flower") && (
         <g transform="rotate(-4, 176, 88) translate(176, 42)">
           <path d="M-36 0 C-24 -6 -10 -8 0 -8 C10 -8 24 -6 36 0" fill="none" stroke="#5a8a40" strokeWidth="3.5" strokeLinecap="round"/>
           <ellipse cx="-22" cy="-4" rx="7" ry="4" fill="#6aaa50" transform="rotate(-30 -22 -4)" opacity="0.9"/>
@@ -1378,7 +1379,7 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
         </g>
       )}
 
-      {owned.hat_crown && (
+      {isEquipped("hat_crown") && (
         <g transform="rotate(-4, 176, 88) translate(176, 44)">
           <path d="M-26 6 L-28 -8 L-16 0 L0 -16 L16 0 L28 -8 L26 6 Z" fill="url(#goldGrad)"/>
           <path d="M-26 6 L26 6" fill="none" stroke="#c89020" strokeWidth="2"/>
@@ -1391,7 +1392,7 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
         </g>
       )}
 
-      {owned.hat_straw && (
+      {isEquipped("hat_straw") && (
         <g transform="rotate(-4, 176, 88) translate(176, 46)">
           <ellipse cx="0" cy="2" rx="40" ry="9" fill="#d4a840" opacity="0.95"/>
           <ellipse cx="0" cy="2" rx="40" ry="9" fill="none" stroke="#b88820" strokeWidth="1.5"/>
@@ -1401,7 +1402,7 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
         </g>
       )}
 
-      {owned.glasses_heart && (
+      {isEquipped("glasses_heart") && (
         <g transform="rotate(-4, 176, 88) translate(176, 88)">
           <path d="M-28 -4 C-28 -9 -24 -11 -20 -7 C-16 -11 -12 -9 -12 -4 C-12 2 -20 8 -20 8 C-20 8 -28 2 -28 -4Z"
             fill="#ff7090" opacity="0.75"/>
@@ -1419,7 +1420,7 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
         </g>
       )}
 
-      {owned.glasses_sun && (
+      {isEquipped("glasses_sun") && (
         <g transform="rotate(-4, 176, 88) translate(176, 88)">
           <rect x="-34" y="-8" width="22" height="14" rx="7" fill="#1a3050" opacity="0.88"/>
           <rect x="12" y="-8" width="22" height="14" rx="7" fill="#1a3050" opacity="0.88"/>
@@ -1431,7 +1432,7 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
         </g>
       )}
 
-      {owned.acc_bow && (
+      {isEquipped("acc_bow") && (
         <g transform="rotate(-4, 176, 88) translate(206, 58)">
           <path d="M-12 0 C-18 -8 -24 -10 -20 -2 C-16 6 -6 4 0 0Z" fill="#a8c8f8"/>
           <path d="M12 0 C18 -8 24 -10 20 -2 C16 6 6 4 0 0Z" fill="#80aaf4"/>
@@ -1441,7 +1442,7 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
       )}
 
       {/* OUTFIT: SAILOR */}
-      {owned.outfit_sailor && (
+      {isEquipped("outfit_sailor") && (
         <g>
           {/* Sailor body - left */}
           <path d="M46 138 C42 152 40 174 42 196 C52 201 100 201 110 196 C112 174 110 152 106 138 C94 130 86 128 76 128 C66 128 58 130 46 138Z" fill="white" opacity="0.92"/>
@@ -1479,7 +1480,7 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
       )}
 
       {/* OUTFIT: WITCH */}
-      {owned.outfit_witch && (
+      {isEquipped("outfit_witch") && (
         <g>
           {/* Cape - left */}
           <path d="M40 134 C36 150 34 175 36 200 C50 206 100 206 116 200 C118 175 116 150 112 134 C100 126 88 124 76 124 C64 124 52 126 40 134Z" fill="#2a1060" opacity="0.85"/>
@@ -1515,7 +1516,7 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
       )}
 
       {/* OUTFIT: ANGEL */}
-      {owned.outfit_angel && (
+      {isEquipped("outfit_angel") && (
         <g>
           {/* Wings left of left panda */}
           <path d="M28 158 C10 144 4 122 18 110 C32 104 48 118 46 140Z" fill="white" opacity="0.9"/>
@@ -3004,12 +3005,12 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
                 const isToday = lesson.id === todayId;
                 return (
                   <div key={lesson.id} onClick={() => setOpenLesson(lesson)}
-                    style={{ background: isToday&&!iDone ? C.dark : C.white, borderRadius:16, padding:"12px 15px", marginBottom:9, cursor:"pointer", border:`1.5px solid ${isToday&&!iDone ? C.dark : bothDone ? C.olive+"50" : C.border}`, boxShadow:`0 2px 0 ${isToday&&!iDone?"rgba(0,0,0,0.2)":C.border}` }}>
+                    style={{ background: C.white, borderRadius:16, padding:"12px 15px", marginBottom:9, cursor:"pointer", border:`1.5px solid ${bothDone ? C.olive+"50" : C.border}`, boxShadow:`0 2px 0 ${C.border}` }}>
                     <div style={{ display:"flex", alignItems:"center", gap:10 }}>
                       <div style={{ fontSize:"1.6rem" }}>{lesson.emoji}</div>
                       <div style={{ flex:1 }}>
-                        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.92rem", color:isToday&&!iDone?C.cream2:C.dark }}>{lesson.title}</div>
-                        <div style={{ fontSize:"0.7rem", fontWeight:700, marginTop:2, color:isToday&&!iDone?`${C.cream}88`:C.inkL }}>{lesson.tag}{isToday?" · HOY":""}</div>
+                        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.92rem", color:C.dark }}>{lesson.title}</div>
+                        <div style={{ fontSize:"0.7rem", fontWeight:700, marginTop:2, color:C.inkL }}>{lesson.tag}{isToday?" · HOY":""}</div>
                       </div>
                       <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:3 }}>
                         {!iDone && <div style={{ background:isToday?C.olive:C.sandL, color:isToday?C.cream2:C.olive, borderRadius:7, padding:"3px 8px", fontSize:"0.68rem", fontWeight:800 }}>+10 🌿</div>}
