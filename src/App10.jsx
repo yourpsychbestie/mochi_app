@@ -21,13 +21,13 @@ import {
 import Cuestionarios, { getQuizAdviceFromConoce } from "./Cuestionarios";
 
 const C = {
-  cream:"#f5edda", cream2:"#fdf8ef", dark:"#1e2b1e",
-  olive:"#4a6e30", oliveL:"#7ab848", gold:"#d4a843",
-  salmon:"#e8907a", sky:"#88b8c8", sand:"#ede4cc", sandL:"#f8f2e4",
-  white:"#ffffff", ink:"#1e2b1e", inkM:"#5a6a4a", inkL:"#8a9a7a",
-  border:"rgba(30,43,30,0.14)", line:"rgba(30,43,30,0.08)",
-  pink:"#f4a8c0", rose:"#e8607a",
-  mint:"#b8e8d8", teal:"#4a9a8a",
+  cream:"#f1ecfb", cream2:"#fbf8ff", dark:"#2d1f46",
+  olive:"#3f7a4a", oliveL:"#79b58a", gold:"#9d7ed6",
+  salmon:"#c9a0e8", sky:"#a8c7e8", sand:"#ece6f7", sandL:"#f6f1ff",
+  white:"#ffffff", ink:"#2d1f46", inkM:"#5f4f78", inkL:"#8f84a8",
+  border:"rgba(45,31,70,0.16)", line:"rgba(45,31,70,0.08)",
+  pink:"#d9b8f4", rose:"#a778d8",
+  mint:"#c3ecd5", teal:"#3f8f68",
 };
 
 const ls = {
@@ -531,45 +531,45 @@ const EXAMPLES_BY_EXERCISE = {
 };
 
 const CONOCE_CATS = {
-  infancia:{emoji:"🧸",label:"Infancia",bg:"#f5edda",preguntas:["¿Cuál es tu recuerdo más feliz de la infancia?","¿Cómo era tu relación con tu mamá cuando eras pequeño/a?","¿Cómo era tu relación con tu papá cuando eras pequeño/a?","¿Qué aprendiste sobre el amor en tu familia de origen?","¿Cuál fue el momento más difícil de tu infancia?","¿Qué cosas de tu infancia te gustaría haber tenido?"]},
-  amor: {emoji:"💕",label:"El Amor",bg:"#fce8e0",preguntas:["¿Qué significa para ti sentirte amado/a?","¿Cuál ha sido tu mayor herida en el amor?","¿Qué es lo que más te da miedo en una relación?","¿Qué valoras más de nuestra relación hoy?","¿Hay algo que siempre has querido decirme y no has podido?","¿Qué necesitas de mí que quizás no me has pedido?"]},
-  suenos: {emoji:"🌙",label:"Sueños",bg:"#e4e8f8",preguntas:["¿Cuál es el sueño que sientes que aún no has perseguido?","¿Cómo te imaginas tu vida en 10 años?","¿Qué cosa quisiste lograr y aún no has intentado?","¿Qué nos falta vivir juntos?","Si el dinero no fuera problema, ¿cómo vivirías?","¿Qué legado quieres dejar en el mundo?"]},
-  miedos: {emoji:"🫂",label:"Miedos",bg:"#e4f0e0",preguntas:["¿A qué le tienes más miedo en la vida?","¿Cuándo más necesitas que te abracen?","¿Cuándo te sientes solo/a aunque esté presente?","¿Qué es lo que más te cuesta pedir?","¿Qué es lo que más te cuesta recibir?","¿Cuál es tu mayor inseguridad y cómo puedo apoyarte?"]},
+  infancia:{emoji:"🧸",label:"Infancia",bg:"#f1ecfb",preguntas:["¿Cuál es tu recuerdo más feliz de la infancia?","¿Cómo era tu relación con tu mamá cuando eras pequeño/a?","¿Cómo era tu relación con tu papá cuando eras pequeño/a?","¿Qué aprendiste sobre el amor en tu familia de origen?","¿Cuál fue el momento más difícil de tu infancia?","¿Qué cosas de tu infancia te gustaría haber tenido?"]},
+  amor: {emoji:"💕",label:"El Amor",bg:"#f7ecff",preguntas:["¿Qué significa para ti sentirte amado/a?","¿Cuál ha sido tu mayor herida en el amor?","¿Qué es lo que más te da miedo en una relación?","¿Qué valoras más de nuestra relación hoy?","¿Hay algo que siempre has querido decirme y no has podido?","¿Qué necesitas de mí que quizás no me has pedido?"]},
+  suenos: {emoji:"🌙",label:"Sueños",bg:"#ecebff",preguntas:["¿Cuál es el sueño que sientes que aún no has perseguido?","¿Cómo te imaginas tu vida en 10 años?","¿Qué cosa quisiste lograr y aún no has intentado?","¿Qué nos falta vivir juntos?","Si el dinero no fuera problema, ¿cómo vivirías?","¿Qué legado quieres dejar en el mundo?"]},
+  miedos: {emoji:"🫂",label:"Miedos",bg:"#e8f5ec",preguntas:["¿A qué le tienes más miedo en la vida?","¿Cuándo más necesitas que te abracen?","¿Cuándo te sientes solo/a aunque esté presente?","¿Qué es lo que más te cuesta pedir?","¿Qué es lo que más te cuesta recibir?","¿Cuál es tu mayor inseguridad y cómo puedo apoyarte?"]},
 };
 
 const BURBUJA_SECTIONS = [
-  {id:"tipo",icon:"💑",title:"Tipo de relación",sub:"Monogamia, exclusividad, definición",itemBg:"#fce4d0",
+  {id:"tipo",icon:"💑",title:"Tipo de relación",sub:"Monogamia, exclusividad, definición",itemBg:"#f5eeff",
     items:[
       {id:"tipo1",q:"¿Qué tipo de relación tienen? ¿Cómo la definirían? (ej: novios, pareja exclusiva, abiertos, en construcción)",phA:"Para mí nuestra relación es...",phB:"Para mí nuestra relación es..."},
       {id:"tipo2",q:"¿Cuánto espacio personal necesita cada uno?",phA:"Necesito...",phB:"Necesito..."},
       {id:"tipo3",q:"¿Cómo manejan el tiempo con amigos y familia por separado?",phA:"Para mí es importante...",phB:"Para mí es importante..."},
     ]},
-  {id:"fidelidad",icon:"🤝",title:"Fidelidad & Límites",sub:"Qué es infidelidad para nosotros",itemBg:"#fce4e4",
+  {id:"fidelidad",icon:"🤝",title:"Fidelidad & Límites",sub:"Qué es infidelidad para nosotros",itemBg:"#f3ebff",
     items:[
       {id:"fidel1",q:"¿Qué consideras tú que es infidelidad?",phA:"Para mí la infidelidad es...",phB:"Para mí la infidelidad es...",note:"Más allá de lo físico: mensajes, emocional, coqueteo. Sin respuestas incorrectas."},
       {id:"fidel2",q:"¿Qué le pides al otro para sentirte seguro/a?",phA:"Para sentirme seguro/a necesito...",phB:"Para sentirme seguro/a necesito..."},
       {id:"fidel3",q:"¿Cómo manejan la privacidad (teléfonos, contraseñas)?",phA:"Para mí la privacidad significa...",phB:"Para mí la privacidad significa..."},
     ]},
-  {id:"discusion",icon:"⚡",title:"Reglas para discutir",sub:"Cómo manejar conflictos juntos",itemBg:"#e8eafc",
+  {id:"discusion",icon:"⚡",title:"Reglas para discutir",sub:"Cómo manejar conflictos juntos",itemBg:"#ecebff",
     items:[
       {id:"disc1",q:"Señal de 'necesito pausa' — ¿cuál es la tuya?",phA:"Cuando me desborda...",phB:"Cuando me desborda..."},
       {id:"disc2",q:"¿Qué está PROHIBIDO en una discusión entre ustedes?",phA:"Ej: gritar, traer el pasado...",phB:"Ej: insultar, silencio de días..."},
       {id:"disc3",q:"¿Cómo se reconcilian después de una pelea?",phA:"Para reconciliarme necesito...",phB:"Para reconciliarme necesito..."},
       {id:"disc4",q:"¿Cuánto tiempo de pausa está bien antes de retomar una conversación?",phA:"Necesito al menos...",phB:"Necesito al menos..."},
     ]},
-  {id:"quiero",icon:"✨",title:"Lo que quiero del otro",sub:"Necesidades, deseos, peticiones",itemBg:"#fce4f4",
+  {id:"quiero",icon:"✨",title:"Lo que quiero del otro",sub:"Necesidades, deseos, peticiones",itemBg:"#f8efff",
     items:[
       {id:"quiero1",q:"¿Qué MÁS necesitas de tu pareja que no has pedido?",phA:"Lo que más necesito es...",phB:"Lo que más necesito es..."},
       {id:"quiero2",q:"¿Cómo prefieres recibir amor?",phA:"Me siento amado/a cuando...",phB:"Me siento amado/a cuando..."},
       {id:"quiero3",q:"¿Qué es algo pequeño que el otro podría hacer y te haría muy feliz?",phA:"Algo pequeño que me haría feliz...",phB:"Algo pequeño que me haría feliz..."},
     ]},
-  {id:"futuro",icon:"🌱",title:"El Futuro",sub:"Planes, metas y sueños compartidos",itemBg:"#e4f4e8",
+  {id:"futuro",icon:"🌱",title:"El Futuro",sub:"Planes, metas y sueños compartidos",itemBg:"#e8f5ec",
     items:[
       {id:"fut1",q:"¿Dónde se imaginan viviendo en 5 años?",phA:"Me imagino que...",phB:"Me imagino que..."},
       {id:"fut2",q:"¿Quieren tener o no tener hijos? ¿Cuándo?",phA:"Sobre los hijos, yo siento...",phB:"Sobre los hijos, yo siento..."},
       {id:"fut3",q:"¿Cómo se imaginan su hogar ideal?",phA:"Mi hogar ideal es...",phB:"Mi hogar ideal es..."},
     ]},
-  {id:"economia",icon:"💰",title:"Economía & Dinero",sub:"Finanzas, gastos y metas económicas",itemBg:"#fef8e0",
+  {id:"economia",icon:"💰",title:"Economía & Dinero",sub:"Finanzas, gastos y metas económicas",itemBg:"#f2edff",
     items:[
       {id:"eco1",q:"¿Cómo van a manejar el dinero? ¿Juntos, separados o mixto?",phA:"Para mí lo ideal es...",phB:"Para mí lo ideal es...",note:"No hay respuesta incorrecta: cuentas separadas, conjunta, o ambas. Lo importante es acordarlo."},
       {id:"eco2",q:"¿Cuánto es 'gasto grande' que requiere consultarse?",phA:"Para mí, más de...",phB:"Para mí, más de..."},
@@ -577,7 +577,7 @@ const BURBUJA_SECTIONS = [
       {id:"eco4",q:"¿Cómo manejan las deudas o situaciones económicas difíciles?",phA:"En esos momentos yo...",phB:"En esos momentos yo..."},
       {id:"eco5",q:"¿Ahorran juntos? ¿Para qué?",phA:"Me gustaría que ahorráramos para...",phB:"Me gustaría que ahorráramos para..."},
     ]},
-  {id:"familia",icon:"🏠",title:"Familia & Crianza",sub:"Familias de origen, hijos y límites",itemBg:"#ffe8f0",
+  {id:"familia",icon:"🏠",title:"Familia & Crianza",sub:"Familias de origen, hijos y límites",itemBg:"#f6efff",
     items:[
       {id:"fam1",q:"¿Cuánto espacio tiene la familia de origen en su relación?",phA:"Para mí, mi familia...",phB:"Para mí, mi familia...",note:"Las familias de origen pueden ser una gran fuente de amor o de tensión. Acuerden los límites juntos."},
       {id:"fam2",q:"¿Cómo manejan las opiniones o críticas de sus familias sobre la relación?",phA:"Cuando mi familia opina...",phB:"Cuando mi familia opina..."},
@@ -967,7 +967,7 @@ function PBadge({ who = "A", name }) {
 }
 
 function ScreenTop({ title, sub, bg }) {
-  return <div style={{ background: bg || C.dark, padding: "48px 20px 24px", textAlign: "center" }}>
+  return <div style={{ background: bg || "linear-gradient(120deg, #2d1f46 0%, #3a2a5e 62%, #2f6c47 100%)", padding: "48px 20px 24px", textAlign: "center" }}>
     <h1 style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.9rem", color: C.cream2, margin: 0, letterSpacing: "0.5px" }}>{title}</h1>
     {sub && <p style={{ color: `${C.cream}88`, fontSize: "0.86rem", fontWeight: 600, margin: "4px 0 0" }}>{sub}</p>}
   </div>;
@@ -1889,7 +1889,7 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
       {/* Header */}
-      <div style={{ background: C.dark, padding: "44px 18px 14px" }}>
+      <div style={{ background: "linear-gradient(120deg, #2d1f46 0%, #3b2b60 70%, #2f6c47 100%)", padding: "44px 18px 14px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
           <div>
             <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.55rem", color: C.cream2 }}>El Jardín</div>
@@ -1922,28 +1922,28 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
             {/* Speech bubbles */}
             {pandaBubble?.textA && (
               <div style={{ position:"absolute", bottom:"88%", left:"-10px", maxWidth:130, background:"white",
-                border:"2px solid #4a6e30", borderRadius:"14px 14px 4px 14px", padding:"6px 10px",
-                fontSize:"0.7rem", color:"#1e2b1e", fontWeight:700, lineHeight:1.4,
+                border:`2px solid ${C.teal}`, borderRadius:"14px 14px 4px 14px", padding:"6px 10px",
+                fontSize:"0.7rem", color:C.ink, fontWeight:700, lineHeight:1.4,
                 boxShadow:"0 2px 8px rgba(0,0,0,0.15)", zIndex:10, animation:"fadeIn 0.3s ease",
                 transform: pandaBubble?.textB ? "translate(-8px, -26px)" : "translate(-2px, -10px)" }}>
-                {pandaBubble.nameA && <div style={{ fontSize:"0.6rem", color:"#4a6e30", fontWeight:800, marginBottom:2 }}>{pandaBubble.nameA}</div>}
+                {pandaBubble.nameA && <div style={{ fontSize:"0.6rem", color:C.teal, fontWeight:800, marginBottom:2 }}>{pandaBubble.nameA}</div>}
                 {pandaBubble.textA}
                 <div style={{ position:"absolute", bottom:-8, left:10, width:0, height:0,
                   borderLeft:"8px solid transparent", borderRight:"0 solid transparent",
-                  borderTop:"8px solid #4a6e30" }}/>
+                  borderTop:`8px solid ${C.teal}` }}/>
               </div>
             )}
             {pandaBubble?.textB && (
               <div style={{ position:"absolute", bottom:"88%", right:"-10px", maxWidth:130, background:"white",
-                border:"2px solid #e8907a", borderRadius:"14px 14px 14px 4px", padding:"6px 10px",
-                fontSize:"0.7rem", color:"#1e2b1e", fontWeight:700, lineHeight:1.4,
+                border:`2px solid ${C.rose}`, borderRadius:"14px 14px 14px 4px", padding:"6px 10px",
+                fontSize:"0.7rem", color:C.ink, fontWeight:700, lineHeight:1.4,
                 boxShadow:"0 2px 8px rgba(0,0,0,0.15)", zIndex:10, animation:"fadeIn 0.3s ease",
                 transform: pandaBubble?.textA ? "translate(8px, 8px)" : "translate(2px, -10px)" }}>
-                {pandaBubble.nameB && <div style={{ fontSize:"0.6rem", color:"#e8907a", fontWeight:800, marginBottom:2 }}>{pandaBubble.nameB}</div>}
+                {pandaBubble.nameB && <div style={{ fontSize:"0.6rem", color:C.rose, fontWeight:800, marginBottom:2 }}>{pandaBubble.nameB}</div>}
                 {pandaBubble.textB}
                 <div style={{ position:"absolute", bottom:-8, right:10, width:0, height:0,
                   borderLeft:"0 solid transparent", borderRight:"8px solid transparent",
-                  borderTop:"8px solid #e8907a" }}/>
+                  borderTop:`8px solid ${C.rose}` }}/>
               </div>
             )}
             <CouplePandaSVG happy={mochiHappy} size={140}/>
@@ -1982,9 +1982,9 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
             const owned = shopTab === "accesorios" ? accessories?.[item.id] : garden?.[item.id];
             return (
               <div key={item.id} onClick={() => shopTab==="accesorios" ? onBuyAccessory(item) : onBuy(item)}
-                style={{ background:owned===true?"#d4e8c4":owned==="owned"?C.cream:C.sandL, border:`2px solid ${owned===true?C.olive:owned==="owned"?"#c8b060":C.border}`,
+                style={{ background:owned===true?C.mint:owned==="owned"?C.cream:C.sandL, border:`2px solid ${owned===true?C.teal:owned==="owned"?C.gold:C.border}`,
                   borderRadius:16, padding:"12px 10px", textAlign:"center", cursor:"pointer",
-                  minWidth:84, flexShrink:0, boxShadow:owned?`0 3px 0 ${C.olive}50`:`0 2px 0 ${C.border}`,
+                  minWidth:84, flexShrink:0, boxShadow:owned?`0 3px 0 ${C.teal}40`:`0 2px 0 ${C.border}`,
                   transition:"all 0.15s" }}>
                 <div style={{ display:"flex", justifyContent:"center", marginBottom:4 }}>
                   {shopTab === "accesorios"
@@ -2461,7 +2461,8 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
   const [sending, setSending] = useState(false);
   const [starting, setStarting] = useState(false);
   const [started, setStarted] = useState(false);
-  const [forceLocalSession, setForceLocalSession] = useState(false);
+  const [forceLocalSession] = useState(false);
+  const [syncErr, setSyncErr] = useState("");
   const messagesEndRef = useRef(null);
 
   const messages = Array.isArray(session?.messages) ? session.messages : [];
@@ -2503,6 +2504,7 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
 
   const startSession = async () => {
     if (starting) return;
+    setSyncErr("");
     setStarting(true);
     const initialSession = { messages: [], step: 0, totalSteps: phases.length, done: false, starterRole: myRole };
     if (isGuest || forceLocalSession || !user?.code) {
@@ -2518,10 +2520,10 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
       setStarted(true);
       await fbStartExSession(user.code, ex.id, phases.length, myRole);
     } catch(e) {
-      // Keep local mode enabled if Firebase write fails (prevents stale remote state from overriding start).
-      setForceLocalSession(true);
-      setSession(initialSession);
-      setStarted(true);
+      // Signed-in users must not silently fall back to local mode or partner sync will break.
+      setStarted(false);
+      setSession(null);
+      setSyncErr("No se pudo iniciar en tiempo real. Revisa conexion o permisos de Firebase e intenta de nuevo.");
     } finally {
       setStarting(false);
     }
@@ -2529,6 +2531,7 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
 
   const send = async () => {
     if (!val.trim() || sending || !isMyTurn) return;
+    setSyncErr("");
     setSending(true);
     const stepNow = currentStep;
     const newStep = stepNow + 1;
@@ -2542,14 +2545,18 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
       setVal("");
       if (isDoneNow) onDone();
     } else {
-      // Optimistic update so the current user can keep moving even if Firestore responds slowly.
-      setSession(s => ({ ...(s || optimisticSession), messages: newMessages, step: newStep, totalSteps: phases.length, done: isDoneNow, starterRole }));
-      await fbSendExMessage(user.code, ex.id, { messages: newMessages, step: newStep, starterRole }).catch(() => {});
-      if (isDoneNow) {
-        await fbCompleteExSession(user.code, ex.id).catch(() => {});
-        onDone();
+      try {
+        // Optimistic update so the current user can keep moving even if Firestore responds slowly.
+        setSession(s => ({ ...(s || optimisticSession), messages: newMessages, step: newStep, totalSteps: phases.length, done: isDoneNow, starterRole }));
+        await fbSendExMessage(user.code, ex.id, { messages: newMessages, step: newStep, starterRole });
+        if (isDoneNow) {
+          await fbCompleteExSession(user.code, ex.id);
+          onDone();
+        }
+        setVal("");
+      } catch (e) {
+        setSyncErr("No se pudo sincronizar tu respuesta. Intenta de nuevo.");
       }
-      setVal("");
     }
     setSending(false);
   };
@@ -2573,6 +2580,7 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
         </div>
         <Btn onClick={startSession} style={{ width:"100%" }} disabled={starting}>{starting ? "Iniciando..." : "Empezar ejercicio 🌿"}</Btn>
         <div style={{ fontSize:"0.75rem", color:C.inkL, marginTop:8, textAlign:"center" }}>La pantalla se actualizará automáticamente ✨</div>
+        {syncErr && <div style={{ marginTop:8, fontSize:"0.72rem", color:"#a04040", fontWeight:800 }}>{syncErr}</div>}
       </div>
     );
   }
@@ -2598,6 +2606,7 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
             {promptText}
           </div>
           {typeof cur.hint === "string" && cur.hint.trim() && <div style={{ fontSize:"0.75rem", color:C.inkM, background:C.cream, borderRadius:8, padding:"6px 10px", marginBottom:9, border:`1px solid ${C.border}` }}>💡 {cur.hint}</div>}
+          {syncErr && <div style={{ fontSize:"0.72rem", color:"#a04040", background:"#ffeaea", borderRadius:8, padding:"6px 10px", marginBottom:9, border:"1px solid #f2c0c0" }}>{syncErr}</div>}
 
           {isMyTurn ? (
             <>
@@ -2632,6 +2641,7 @@ function TimerEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user })
   const [session, setSession] = useState(null);
   const [val, setVal] = useState("");
   const [saving, setSaving] = useState(false);
+  const [syncErr, setSyncErr] = useState("");
   const completedRef = useRef(false);
   const tid = useRef(null);
 
@@ -2671,6 +2681,7 @@ function TimerEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user })
   const submit = async () => {
     const currentText = (val || mine?.text || "").trim();
     if (!currentText || saving) return;
+    setSyncErr("");
     setSaving(true);
     const next = [
       ...messages.filter(m => m.role !== myRole),
@@ -2684,11 +2695,15 @@ function TimerEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user })
         onDone(next);
       }
     } else {
-      await fbSendExMessage(user.code, ex.id, { messages: next, step: next.length, starterRole: 0 }).catch(() => {});
-      setSession(s => ({ ...(s || {}), messages: next }));
-      if (next.length >= 2) {
-        completedRef.current = true;
-        onDone(next);
+      try {
+        await fbSendExMessage(user.code, ex.id, { messages: next, step: next.length, starterRole: 0 });
+        setSession(s => ({ ...(s || {}), messages: next }));
+        if (next.length >= 2) {
+          completedRef.current = true;
+          onDone(next);
+        }
+      } catch (e) {
+        setSyncErr("No se pudo sincronizar tu respuesta. Intenta de nuevo.");
       }
     }
     setVal("");
@@ -2742,6 +2757,7 @@ function TimerEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user })
           Esperando a {myRole === 0 ? nameB : nameA}... ✨
         </div>
       )}
+      {syncErr && <div style={{ marginTop: 8, fontSize: "0.74rem", color: "#a04040", fontWeight: 800, textAlign: "center" }}>{syncErr}</div>}
     </div>
   );
 }
@@ -2753,6 +2769,7 @@ function WritingEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user 
   const [session, setSession] = useState(null);
   const [val, setVal] = useState("");
   const [saving, setSaving] = useState(false);
+  const [syncErr, setSyncErr] = useState("");
 
   useEffect(() => {
     if (isGuest) {
@@ -2773,6 +2790,7 @@ function WritingEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user 
   const submit = async () => {
     const clean = (val || "").trim();
     if (!clean || saving) return;
+    setSyncErr("");
     setSaving(true);
     const next = [
       ...messages.filter(m => m.role !== myRole),
@@ -2781,8 +2799,14 @@ function WritingEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user 
     if (isGuest) {
       setSession({ messages: next });
     } else {
-      await fbSendExMessage(user.code, ex.id, { messages: next, step: next.length, starterRole: 0 }).catch(() => {});
-      setSession(s => ({ ...(s || {}), messages: next }));
+      try {
+        await fbSendExMessage(user.code, ex.id, { messages: next, step: next.length, starterRole: 0 });
+        setSession(s => ({ ...(s || {}), messages: next }));
+      } catch (e) {
+        setSyncErr("No se pudo sincronizar tu texto. Intenta de nuevo.");
+        setSaving(false);
+        return;
+      }
     }
     setSaving(false);
     if (next.length >= 2) onDone();
@@ -2792,6 +2816,7 @@ function WritingEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user 
     <div style={{ background: C.sandL, borderRadius: 14, padding: 14, border: `1.5px solid ${C.border}` }}>
       <div style={{ fontSize: "0.82rem", color: C.inkM, lineHeight: 1.55, marginBottom: 8 }}>{ex.instruccion}</div>
       <TA value={val || mine?.text || ""} onChange={setVal} placeholder="Escribe aqui dentro de Mochi y compartelo con tu pareja..." rows={8} style={{ marginBottom: 8 }} />
+      {syncErr && <div style={{ marginBottom: 8, fontSize: "0.74rem", color: "#a04040", fontWeight: 800 }}>{syncErr}</div>}
       <Btn onClick={submit} style={{ width: "100%" }} disabled={saving}>{saving ? "Guardando..." : "Guardar y compartir"}</Btn>
       {partner && (
         <div style={{ marginTop: 10, background: C.white, borderRadius: 10, padding: 10, border: `1px solid ${C.border}` }}>
@@ -3408,6 +3433,7 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
   const loveHistory = [...(messages || [])]
     .filter(m => (m?.text || "").trim())
     .sort((a, b) => new Date(b.time || 0).getTime() - new Date(a.time || 0).getTime());
+  const composerHistory = [...loveHistory].slice(0, 24).reverse();
   const receivedHistory = loveHistory.filter(m => m.senderEmail !== myEmail);
   const todayKey = new Date().toISOString().slice(0, 10);
   const receivedToday = receivedHistory
@@ -3689,6 +3715,39 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
               style={{ marginBottom: 10 }}
             />
 
+            <div style={{ background:C.sandL, border:`1.5px solid ${C.border}`, borderRadius:12, padding:"9px 10px", marginBottom:10 }}>
+              <div style={{ fontSize:"0.68rem", fontWeight:800, color:C.inkL, letterSpacing:"0.5px", marginBottom:7 }}>
+                Historial de amor
+              </div>
+              <div style={{ maxHeight:170, overflowY:"auto", paddingRight:2 }}>
+                {composerHistory.length === 0 ? (
+                  <div style={{ fontSize:"0.74rem", color:C.inkL, lineHeight:1.45, padding:"6px 2px" }}>
+                    Aún no hay mensajes. Escribe el primero 💌
+                  </div>
+                ) : (
+                  composerHistory.map((m, i) => {
+                    const mine = m.senderEmail === myEmail;
+                    return (
+                      <div key={`composer-${m.id || `${m.senderEmail}-${m.time}-${i}`}`}
+                        style={{ background: mine ? "#eaf7e8" : C.white, border:`1px solid ${C.border}`, borderRadius:10, padding:"7px 9px", marginBottom:6 }}>
+                        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:8, marginBottom:3 }}>
+                          <div style={{ fontSize:"0.64rem", fontWeight:800, color: mine ? C.olive : C.dark }}>
+                            {mine ? "Tú" : (m.sender || "Tu pareja")}
+                          </div>
+                          <div style={{ fontSize:"0.61rem", color:C.inkL, fontWeight:700 }}>
+                            {new Date(m.time || Date.now()).toLocaleDateString("es", { day:"2-digit", month:"short" })}
+                          </div>
+                        </div>
+                        <div style={{ fontSize:"0.76rem", color:C.inkM, lineHeight:1.35 }}>
+                          "{m.text}"
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
             <div style={{ display:"flex", gap:8 }}>
               <Btn onClick={() => setShowLoveComposer(false)} variant="ghost" style={{ flex:1 }}>Cancelar</Btn>
               <Btn
@@ -3836,12 +3895,12 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
 const STYLES = `
 @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: #f8f2e4; }
+body { background: linear-gradient(180deg, #f8f4ff 0%, #f3eeff 46%, #f6f1ff 100%); }
 @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
 @keyframes floatHappy { 0%,100%{transform:translateY(0) rotate(-1.5deg)} 50%{transform:translateY(-18px) rotate(1.5deg)} }
-textarea:focus, input:focus { border-color: #4a6e30 !important; box-shadow: 0 0 0 3px rgba(74,110,48,0.15) !important; outline: none !important; }
+textarea:focus, input:focus { border-color: #6f53a9 !important; box-shadow: 0 0 0 3px rgba(111,83,169,0.18) !important; outline: none !important; }
 ::-webkit-scrollbar { width:4px; height:4px; }
-::-webkit-scrollbar-thumb { background:#ede4cc; border-radius:50px; }
+::-webkit-scrollbar-thumb { background:#d9ccf3; border-radius:50px; }
 select { appearance: none; }
 @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
 `;
@@ -4976,10 +5035,20 @@ export default function App() {
     if (accessories[item.id] === "owned") {
       // Already owned but not equipped — equip it
       const na = { ...accessories, [item.id]: true };
-      setAccessories(na);
       if (user?.code && !user?.isGuest) {
-        await fbSaveGardenState(user.code, { garden, accessories: na, happiness, water, lastVisit: new Date().toISOString() }).catch(() => {});
+        const nv = new Date().toISOString();
+        try {
+          await fbSaveGardenState(user.code, { garden, accessories: na, happiness, water, lastVisit: nv });
+          setAccessories(na);
+          setLastVisit(nv);
+          save(null, { accessories: na, lastVisit: nv });
+          toast(`${item.name} puesto 🐼`);
+        } catch (e) {
+          toast("No se pudo sincronizar el accesorio. Revisa conexión e intenta de nuevo.");
+        }
+        return;
       }
+      setAccessories(na);
       save(null, { accessories: na, lastVisit: new Date().toISOString() });
       toast(`${item.name} puesto 🐼`);
       return;
@@ -4987,10 +5056,20 @@ export default function App() {
     if (accessories[item.id] === true) {
       // Currently equipped — unequip but keep owned
       const na = { ...accessories, [item.id]: "owned" };
-      setAccessories(na);
       if (user?.code && !user?.isGuest) {
-        await fbSaveGardenState(user.code, { garden, accessories: na, happiness, water, lastVisit: new Date().toISOString() }).catch(() => {});
+        const nv = new Date().toISOString();
+        try {
+          await fbSaveGardenState(user.code, { garden, accessories: na, happiness, water, lastVisit: nv });
+          setAccessories(na);
+          setLastVisit(nv);
+          save(null, { accessories: na, lastVisit: nv });
+          toast(`${item.name} quitado`);
+        } catch (e) {
+          toast("No se pudo sincronizar el accesorio. Revisa conexión e intenta de nuevo.");
+        }
+        return;
       }
+      setAccessories(na);
       save(null, { accessories: na, lastVisit: new Date().toISOString() });
       toast(`${item.name} quitado`);
       return;
@@ -5049,7 +5128,12 @@ export default function App() {
     const nw = Math.min(100, water + 10), nh = Math.min(100, happiness + 2);
     const nv = new Date().toISOString();
     if (user?.code && !user?.isGuest) {
-      await fbSaveGardenState(user.code, { garden, accessories, water: nw, happiness: nh, lastVisit: nv }).catch(() => {});
+      try {
+        await fbSaveGardenState(user.code, { garden, accessories, water: nw, happiness: nh, lastVisit: nv });
+      } catch (e) {
+        toast("No se pudo sincronizar el riego. Revisa conexión e intenta de nuevo.");
+        return;
+      }
     }
     setWater(nw); setHappiness(nh); setLastVisit(nv); trigHappy();
     showGardenMessages("Tu jardín florece más cuando se escriben bonito 💌");
