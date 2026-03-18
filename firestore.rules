@@ -65,6 +65,12 @@ service cloud.firestore {
         && isCodeParticipant(resource.data.coupleCode);
     }
 
+    function keepsCoupleCodeStable() {
+      return request.resource.data.coupleCode is string
+        && resource.data.coupleCode is string
+        && request.resource.data.coupleCode == resource.data.coupleCode;
+    }
+
     // ── codes ────────────────────────────────────────────────────────────
     // Allow public READ so unauthenticated users can look up a partner's
     // code before registering (join flow calls fbGetCode before fbRegister).
@@ -74,7 +80,12 @@ service cloud.firestore {
       allow update: if isSignedIn() && (
         resource.data.ownerUid == request.auth.uid
         || resource.data.partnerUid == request.auth.uid
-        || request.resource.data.partnerUid == request.auth.uid
+        || (
+          !(resource.data.partnerUid is string)
+          && request.resource.data.partnerUid == request.auth.uid
+          && request.resource.data.ownerUid == resource.data.ownerUid
+          && request.resource.data.ownerEmail == resource.data.ownerEmail
+        )
       );
       allow delete: if isSignedIn() && resource.data.ownerUid == request.auth.uid;
     }
@@ -110,47 +121,56 @@ service cloud.firestore {
 
     match /messages/{docId} {
       allow create: if canCreateCoupleScoped();
-      allow read, update, delete: if canAccessStoredCoupleScoped();
+      allow read, delete: if canAccessStoredCoupleScoped();
+      allow update: if canAccessStoredCoupleScoped() && keepsCoupleCodeStable();
     }
 
     match /gratitud/{docId} {
       allow create: if canCreateCoupleScoped();
-      allow read, update, delete: if canAccessStoredCoupleScoped();
+      allow read, delete: if canAccessStoredCoupleScoped();
+      allow update: if canAccessStoredCoupleScoped() && keepsCoupleCodeStable();
     }
 
     match /momentos/{docId} {
       allow create: if canCreateCoupleScoped();
-      allow read, update, delete: if canAccessStoredCoupleScoped();
+      allow read, delete: if canAccessStoredCoupleScoped();
+      allow update: if canAccessStoredCoupleScoped() && keepsCoupleCodeStable();
     }
 
     match /conoce/{docId} {
       allow create: if canCreateCoupleScoped();
-      allow read, update, delete: if canAccessStoredCoupleScoped();
+      allow read, delete: if canAccessStoredCoupleScoped();
+      allow update: if canAccessStoredCoupleScoped() && keepsCoupleCodeStable();
     }
 
     match /lessons/{docId} {
       allow create: if canCreateCoupleScoped();
-      allow read, update, delete: if canAccessStoredCoupleScoped();
+      allow read, delete: if canAccessStoredCoupleScoped();
+      allow update: if canAccessStoredCoupleScoped() && keepsCoupleCodeStable();
     }
 
     match /burbuja/{docId} {
       allow create: if canCreateCoupleScoped();
-      allow read, update, delete: if canAccessStoredCoupleScoped();
+      allow read, delete: if canAccessStoredCoupleScoped();
+      allow update: if canAccessStoredCoupleScoped() && keepsCoupleCodeStable();
     }
 
     match /notifs/{docId} {
       allow create: if canCreateCoupleScoped();
-      allow read, update, delete: if canAccessStoredCoupleScoped();
+      allow read, delete: if canAccessStoredCoupleScoped();
+      allow update: if canAccessStoredCoupleScoped() && keepsCoupleCodeStable();
     }
 
     match /streakInteractions/{docId} {
       allow create: if canCreateCoupleScoped();
-      allow read, update, delete: if canAccessStoredCoupleScoped();
+      allow read, delete: if canAccessStoredCoupleScoped();
+      allow update: if canAccessStoredCoupleScoped() && keepsCoupleCodeStable();
     }
 
     match /exSessions/{docId} {
       allow create: if canCreateCoupleScoped();
-      allow read, update, delete: if canAccessStoredCoupleScoped();
+      allow read, delete: if canAccessStoredCoupleScoped();
+      allow update: if canAccessStoredCoupleScoped() && keepsCoupleCodeStable();
     }
 
     match /{document=**} {
