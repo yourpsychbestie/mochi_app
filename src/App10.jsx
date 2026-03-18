@@ -2814,6 +2814,8 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
 
         {ejTab === "ejerc" && orderedExercises.map(e => {
           const count = exDone[e.id] || 0;
+          const doneOnce = count >= 1;
+          const repeatProgress = Math.min(3, count);
           return (
             <div key={e.id} onClick={() => setOpenId(e.id)}
               style={{ background: C.white, borderRadius: 20, padding: 18, margin: "10px 14px", boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}`, cursor: "pointer", transition: "transform 0.13s" }}
@@ -2825,9 +2827,15 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
                   <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", color: C.dark }}>{e.title}</div>
                   <Tag bg={C.cream} color={C.inkM} style={{ marginTop: 3 }}>{e.tags}</Tag>
                 </div>
-                <div style={{ display: "flex", gap: 3 }}>{[0, 1, 2].map(i => <div key={i} style={{ width: 9, height: 9, borderRadius: "50%", background: i < count ? (count >= 3 ? C.gold : C.olive) : C.sand }} />)}</div>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                  {doneOnce && <div style={{ background: "#eaf7e8", color: C.olive, borderRadius: 7, padding: "2px 8px", fontSize: "0.66rem", fontWeight: 800 }}>✓ Completado</div>}
+                  <div style={{ display: "flex", gap: 3 }}>{[0, 1, 2].map(i => <div key={i} style={{ width: 9, height: 9, borderRadius: "50%", background: i < repeatProgress ? (repeatProgress >= 3 ? C.gold : C.olive) : C.sand }} />)}</div>
+                </div>
               </div>
               <div style={{ fontSize: "0.85rem", color: C.inkM, lineHeight: 1.5, marginBottom: 12 }}>{e.desc}</div>
+              <div style={{ fontSize: "0.72rem", fontWeight: 800, color: repeatProgress >= 3 ? "#9a7020" : C.inkL, marginBottom: 10 }}>
+                Progreso ideal: {repeatProgress}/3 repeticiones {repeatProgress >= 3 ? "✨" : "· háganlo 3 veces para integrarlo mejor"}
+              </div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div style={{ display:"flex", gap:6, alignItems:"center" }}>
                   <div style={{ background: C.olive, color: C.cream2, borderRadius: 8, padding: "4px 12px", fontWeight: 800, fontSize: "0.78rem" }}>+{e.bamboo} bambú</div>
