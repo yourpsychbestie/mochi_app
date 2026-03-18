@@ -62,18 +62,22 @@ const QUIZZES = [
     ],
   },
   {
-    id: "personalidad",
-    catKey: "quizPersonalidad",
-    title: "Rasgos de personalidad",
-    emoji: "🧠",
-    subtitle: "Tu estilo para amar, decidir y comunicar",
+    id: "sternberg",
+    catKey: "quizSternberg",
+    title: "Triangulo de Sternberg",
+    emoji: "🔺",
+    subtitle: "Intimidad, pasion y compromiso en su vinculo",
     type: "scale",
     questions: [
-      { text: "Me resulta facil mostrar emociones en el momento.", trait: "expresividad" },
-      { text: "Prefiero planear antes de actuar.", trait: "organizacion" },
-      { text: "Disfruto improvisar y cambiar planes.", trait: "espontaneidad" },
-      { text: "En discusiones, voy directo al punto.", trait: "directo" },
-      { text: "Necesito pausas para procesar antes de hablar.", trait: "reflexivo" },
+      { text: "Siento una conexión emocional profunda con mi pareja.", trait: "intimidad_1" },
+      { text: "Puedo hablar de temas íntimos y vulnerables con mi pareja.", trait: "intimidad_2" },
+      { text: "Mi pareja realmente me comprende como persona.", trait: "intimidad_3" },
+      { text: "Siento atracción y deseo hacia mi pareja.", trait: "pasion_1" },
+      { text: "Buscamos activamente momentos de cercanía romántica.", trait: "pasion_2" },
+      { text: "La química entre nosotros se mantiene viva.", trait: "pasion_3" },
+      { text: "Estoy comprometido/a a cuidar esta relación a largo plazo.", trait: "compromiso_1" },
+      { text: "Cuando hay dificultades, sigo eligiendo construir juntos.", trait: "compromiso_2" },
+      { text: "Siento que ambos protegemos este vínculo con decisiones concretas.", trait: "compromiso_3" },
     ],
   },
 ];
@@ -84,11 +88,15 @@ const TRAIT_LABELS = {
   afecto: "demostracion de afecto",
   vulnerabilidad: "vulnerabilidad sana",
   presencia: "presencia de calidad",
-  expresividad: "expresividad emocional",
-  organizacion: "organizacion",
-  espontaneidad: "espontaneidad",
-  directo: "comunicacion directa",
-  reflexivo: "procesamiento reflexivo",
+  intimidad_1: "intimidad emocional",
+  intimidad_2: "vulnerabilidad compartida",
+  intimidad_3: "comprension mutua",
+  pasion_1: "deseo",
+  pasion_2: "cercania romantica",
+  pasion_3: "quimica",
+  compromiso_1: "compromiso",
+  compromiso_2: "eleccion mutua",
+  compromiso_3: "proteccion del vinculo",
 };
 
 function parseScale(v) {
@@ -174,7 +182,7 @@ function getQuizRoleAnswers(conoce, role) {
       if (quiz.id === "valores") {
         val[`q${idx}`] = String(raw);
       }
-      if (quiz.id === "personalidad") {
+      if (quiz.id === "sternberg") {
         const score = parseScale(raw);
         if (score != null) pers[q.trait] = score;
       }

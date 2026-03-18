@@ -3331,61 +3331,33 @@ const OB = [
 ];
 
 // ═══════════════════════════════════════════════
-// RELATIONSHIP TESTS — validated public-domain instruments
+// RELATIONSHIP TESTS — lightweight initial diagnostic
 // ═══════════════════════════════════════════════
 const TEST_INSTRUMENTS = [
   {
     id: "kms",
-    label: "Satisfacción Relacional de Kansas (KMS)",
+    label: "Chequeo de conexión diaria",
     emoji: "💍",
-    scaleMax: 7,
-    labels: ["Nada", "Muy poco", "Poco", "Neutral", "Algo", "Mucho", "Extremadamente"],
-    sub: "Satisfacción global de pareja · versión ampliada de uso público (7 ítems)",
+    scaleMax: 5,
+    labels: ["Muy bajo", "Bajo", "Medio", "Alto", "Muy alto"],
+    sub: "Diagnóstico breve para tomar temperatura del vínculo",
     questions: [
-      "¿Qué tan satisfecho/a estás con tu relación en general?",
-      "¿Qué tan satisfecho/a estás con tu pareja como compañero/a?",
-      "¿Qué tan satisfecho/a estás con la forma en que resuelven diferencias?",
-      "¿Qué tan satisfecho/a estás con el apoyo emocional que recibes?",
-      "¿Qué tan satisfecho/a estás con su cercanía afectiva diaria?",
-      "¿Qué tan satisfecho/a estás con la confianza dentro de la relación?",
-      "Si pudieras elegir de nuevo, ¿volverías a elegir esta relación?",
-    ],
-  },
-  {
-    id: "sternberg",
-    label: "Escala de Intimidad de Sternberg",
-    emoji: "🔺",
-    scaleMax: 7,
-    labels: ["Nada", "Muy poco", "Poco", "Neutral", "Algo", "Mucho", "Totalmente"],
-    sub: "Triángulo del amor: intimidad, pasión y compromiso",
-    questions: [
-      "Siento una conexión emocional profunda con mi pareja.",
-      "Puedo hablar de temas íntimos y vulnerables con mi pareja.",
-      "Mi pareja realmente me comprende como persona.",
-      "Siento atracción y deseo hacia mi pareja.",
-      "Buscamos activamente momentos de cercanía romántica.",
-      "La química entre nosotros se mantiene viva.",
-      "Estoy comprometido/a a cuidar esta relación a largo plazo.",
-      "Cuando hay dificultades, sigo eligiendo construir juntos.",
-      "Siento que ambos protegemos este vínculo con decisiones concretas.",
+      "¿Qué tan conectados se sintieron esta semana?",
+      "¿Qué tan escuchado/a te sentiste por tu pareja?",
+      "¿Qué tan satisfecho/a estás con la relación hoy?",
     ],
   },
   {
     id: "via_pareja",
-    label: "Inventario de Fortalezas de Pareja (VIA)",
+    label: "Hábitos que sostienen la relación",
     emoji: "🧠",
     scaleMax: 5,
     labels: ["Casi nunca", "Pocas veces", "A veces", "Frecuente", "Muy frecuente"],
-    sub: "Fortalezas compartidas inspiradas en VIA Character Strengths",
+    sub: "Micro-hábitos de cuidado mutuo",
     questions: [
-      "Como pareja mostramos gratitud en lo cotidiano.",
-      "Cuando hay estrés, practicamos autorregulación antes de reaccionar.",
-      "Actuamos con amabilidad incluso durante desacuerdos.",
-      "Tomamos decisiones importantes con prudencia.",
-      "Mantenemos esperanza realista frente a momentos difíciles.",
-      "La honestidad guía nuestras conversaciones importantes.",
-      "Percibimos trabajo en equipo al enfrentar problemas.",
-      "Reconocemos y celebramos lo mejor del otro con frecuencia.",
+      "Reparamos rápido cuando hay un malentendido.",
+      "Podemos hablar difícil sin atacarnos.",
+      "Nos sentimos equipo frente a los problemas.",
     ],
   },
 ];
@@ -3653,14 +3625,9 @@ function RelTest({ user, onDone }) {
 
     const interpretation = (instId, val) => {
       if (instId === "kms") {
-        if (val >= 5.8) return "Satisfaccion alta y estable. Mantengan sus rituales de cuidado.";
-        if (val >= 4.5) return "Base saludable con espacio de mejora en habitos cotidianos.";
-        return "Conviene priorizar conversaciones de reparacion y escucha semanal.";
-      }
-      if (instId === "sternberg") {
-        if (val >= 5.6) return "Buen equilibrio entre intimidad, pasion y compromiso.";
-        if (val >= 4.3) return "Hay conexion; enfoquense en intimidad emocional y tiempo de calidad.";
-        return "Necesitan reconstruir cercania y acuerdos de compromiso graduales.";
+        if (val >= 4.3) return "Conexión alta: sigan cuidando sus rituales diarios.";
+        if (val >= 3.3) return "Base buena: una conversación semanal de check-in puede subir mucho.";
+        return "Conviene priorizar escucha y presencia antes de resolver temas complejos.";
       }
       if (val >= 4.2) return "Fortalezas compartidas visibles: sigan reforzando gratitud y trabajo en equipo.";
       if (val >= 3.3) return "Tienen recursos; conviertan fortalezas en habitos semanales.";
