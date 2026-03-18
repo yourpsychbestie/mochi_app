@@ -111,7 +111,7 @@ const PANDA_ACCESSORIES = [
 
 
 const EXERCISES = [
-  {id:"validacion",emoji:"💬",title:"La Danza de la Validación",tags:"DBT · Sistémica",bamboo:40,time:"15 min",
+  {id:"validacion",emoji:"💬",title:"La Danza de la Validación",tags:"DBT · Sistémica",bamboo:40,time:"15 min",mode:"distancia",
     desc:"Aprendan a validar las emociones del otro sin defenderse ni explicar. La validación no significa estar de acuerdo — significa decir 'tiene sentido que sientas eso'.",
     instructions:["Abran Mochi en sus celulares al mismo tiempo","Persona A escribe algo que le molestó recientemente","Persona B responde validando, sin defenderse ni explicar","Intercambien roles en el siguiente turno","Al terminar, cierren con una frase de cuidado: 'Gracias por escucharme'"],
     phases:[
@@ -122,13 +122,13 @@ const EXERCISES = [
       {role:0,q:"Persona A: Valida a tu pareja.",ph:"Tiene sentido porque…"},
       {role:1,q:"Persona B: ¿Cómo fue recibir esa validación?",ph:"Eso me hizo sentir…"},
     ]},
-  {id:"ojos",emoji:"👁",title:"4 Minutos de Contacto Visual",tags:"ACT · Arthur Aron",bamboo:30,time:"5 min",
+  {id:"ojos",emoji:"👁",title:"4 Minutos de Contacto Visual",tags:"ACT · Arthur Aron",bamboo:30,time:"5 min",mode:"presencial",
     desc:"Mirarse a los ojos 4 minutos sin hablar. Estudios de Arthur Aron demuestran que esta práctica genera sentimientos de amor profundo entre extraños — imagina entre parejas.",
     instructions:["Abran Mochi al mismo tiempo en sus celulares","Este ejercicio es de presencia — sin hablar, solo escribir","Escriban lo que sienten al pensar en el otro en este momento","Lean la respuesta del otro en silencio","Compartan una palabra de cómo se sintieron al final"],
     timer:240,timerLabel:"Mírense a los ojos en silencio",
     beforeTimer:["Siéntense frente a frente, muy cerca.","Pongan el teléfono entre los dos.","Está permitido sonreír — no hablar.","Presionen INICIAR cuando estén listos."],
     afterPrompts:[{role:0,ph:"Una palabra para lo que sentí…"},{role:1,ph:"Lo que vi en tus ojos fue…"}]},
-  {id:"espejo",emoji:"🪞",title:"Técnica del Espejo",tags:"Imago · Narrativa",bamboo:35,time:"20 min",
+  {id:"espejo",emoji:"🪞",title:"Técnica del Espejo",tags:"Imago · Narrativa",bamboo:35,time:"20 min",mode:"distancia",
     desc:"El espejo confirma que el mensaje fue recibido antes de responder. Basada en terapia Imago de Harville Hendrix.",
     instructions:["Persona A escribe algo importante que quiera compartir","Persona B refleja con sus palabras lo que entendió","A confirma si fue bien capturado o aclara","B valida la experiencia de A sin dar consejos","Intercambien roles en la siguiente ronda"],
     phases:[
@@ -140,7 +140,7 @@ const EXERCISES = [
       {role:0,q:"Persona A: Refleja.",ph:"Lo que escucho es…"},
       {role:1,q:"¿Cómo fue sentirte reflejado/a?",ph:"De este ejercicio me llevo…"},
     ]},
-  {id:"apreciacion",emoji:"💝",title:"3 Apreciaciones Específicas",tags:"Gottman · TCC+",bamboo:25,time:"10 min",
+  {id:"apreciacion",emoji:"💝",title:"3 Apreciaciones Específicas",tags:"Gottman · TCC+",bamboo:25,time:"10 min",mode:"distancia",
     desc:"La fórmula Gottman: 5 interacciones positivas por cada negativa. Las apreciaciones vagas no nutren — las específicas sí.",
     instructions:["Cada persona piensa en 3 cosas específicas que aprecia del otro","Compartan una a la vez por turno","Quien recibe, solo responde gracias y cómo le hizo sentir","No minimicen ni desvíen los halagos","Dejen que el amor entre ✨"],
     phases:[
@@ -151,20 +151,20 @@ const EXERCISES = [
       {role:0,q:"Persona A: Algo que admiras profundamente.",ph:"Lo que más admiro de cómo enfrentas la vida es…"},
       {role:1,q:"¿Cómo se sienten después?",ph:"Hacer esto juntos me hace sentir que nuestra relación…"},
     ]},
-  {id:"respiracion",emoji:"🌬",title:"Respiración Sincronizada",tags:"ACT · Mindfulness",bamboo:20,time:"8 min",
+  {id:"respiracion",emoji:"🌬",title:"Respiración Sincronizada",tags:"ACT · Mindfulness",bamboo:20,time:"8 min",mode:"presencial",
     desc:"Respirar juntos activa el nervio vago — el nervio de la seguridad. Sincronizar la respiración reduce cortisol y genera co-regulación emocional.",
     instructions:["Búsquense un lugar tranquilo en sus respectivos espacios","Escriban cómo se sienten en este momento (sin filtro)","El otro responde con presencia, sin consejos","Compartan una cosa que necesitan del otro hoy","Terminen enviando un emoji que represente cómo se sienten"],
     timer:300,timerLabel:"4 seg inhalar · 2 sostener · 6 exhalar",
     beforeTimer:["Siéntense uno detrás del otro.","El de atrás coloca su mano en la espalda.","Sigan el ritmo 4-2-6 juntos.","Presionen INICIAR."],
     afterPrompts:[{role:0,ph:"Después de respirar juntos, siento…"},{role:1,ph:"Lo que noté al sincronizarme fue…"}]},
-  {id:"carta",emoji:"✉️",title:"Carta a mi Herida",tags:"Narrativa · TCC",bamboo:60,time:"30 min",
+  {id:"carta",emoji:"✉️",title:"Carta a mi Herida",tags:"Narrativa · TCC",bamboo:60,time:"30 min",mode:"distancia",
     desc:"Identificar las creencias de infancia que gobiernan cómo amamos. Cada uno escribe individualmente y luego comparte lo que quiera.",
     instructions:["Escriban su carta directamente en el campo de Mochi","Guarden y compartan cuando se sientan listos","Lean la carta del otro con presencia, sin consejo","Validen una emocion que aparezca en lo escrito","Cierren con un mensaje de cuidado"],
     isEscritura:true,
     instruccion:"Escribe aqui tu carta a una herida de infancia. Puedes empezar con: 'Querida [soledad / miedo al abandono], se que estas ahi porque...'",
     prompts:["¿Cómo y cuándo apareciste en mi vida?","¿Qué creencias sobre el amor me enseñaste?","¿Cómo apareces en mi relación hoy?","¿Qué quiero decirte desde mi yo adulto?"],
     afterPrompts:[{role:0,ph:"Compartir esto me hizo sentir…"},{role:1,ph:"Después de escucharte, entiendo mejor que…"}]},
-  {id:"suenos",emoji:"🌙",title:"Mapa de Sueños",tags:"Narrativa · Positiva",bamboo:35,time:"15 min",
+  {id:"suenos",emoji:"🌙",title:"Mapa de Sueños",tags:"Narrativa · Positiva",bamboo:35,time:"15 min",mode:"distancia",
     desc:"Las parejas que conocen los sueños del otro tienen 3x más probabilidades de navegar conflictos. Este ejercicio crea un mapa compartido del futuro.",
     instructions:["Cada persona piensa en 3 sueños personales","Compartan sin juzgar ni 'aterrizar' los sueños","Busquen los sueños que se superponen","Identifiquen uno que puedan perseguir juntos","Celébrense por soñar en voz alta"],
     phases:[
@@ -175,7 +175,7 @@ const EXERCISES = [
       {role:0,q:"¿Hay un sueño que quieran perseguir juntos?",ph:"Un sueño que podríamos tener juntos…"},
       {role:1,q:"¿Cuál sería el primer paso?",ph:"El primer paso podría ser…"},
     ]},
-  {id:"perdida",emoji:"🕊",title:"El Perdón Activo",tags:"Gottman · EFT",bamboo:55,time:"25 min",
+  {id:"perdida",emoji:"🕊",title:"El Perdón Activo",tags:"Gottman · EFT",bamboo:55,time:"25 min",mode:"distancia",
     desc:"El perdón no es olvidar — es soltar la carga. Basado en el modelo de Gottman: reconocer, asumir responsabilidad, reparar.",
     instructions:["Elijan algo específico que quieran sanar juntos","No es para reabrir heridas — es para cerrarlas","Quien pide perdón escribe desde el corazón, sin justificarse","Quien perdona responde con apertura, sin condiciones","Terminen con un mensaje de cierre y un compromiso"],
     phases:[
@@ -186,7 +186,7 @@ const EXERCISES = [
       {role:1,q:"Persona B: ¿Puedes ofrecerlo?",ph:"Lo que puedo ofrecerte es…"},
       {role:0,q:"¿Cómo se sienten ahora?",ph:"Después de este ejercicio, me siento…"},
     ]},
-  {id:"amor_idiomas",emoji:"💞",title:"Idiomas del Amor",tags:"Chapman · ACT",bamboo:30,time:"12 min",
+  {id:"amor_idiomas",emoji:"💞",title:"Idiomas del Amor",tags:"Chapman · ACT",bamboo:30,time:"12 min",mode:"distancia",
     desc:"Gary Chapman identificó 5 idiomas del amor. Conocer el idioma de tu pareja evita que el amor se pierda en traducción.",
     instructions:["Lean los 5 idiomas juntos","Cada quien elige su TOP 2","Compartan sin juzgar","Hablen de cómo pueden 'hablar' el idioma del otro","Hagan un pequeño compromiso"],
     phases:[
@@ -197,7 +197,7 @@ const EXERCISES = [
       {role:0,q:"Un pequeño compromiso para esta semana.",ph:"Esta semana voy a…"},
       {role:1,q:"¿Cómo se sienten con este compromiso?",ph:"Este compromiso me hace sentir…"},
     ]},
-  {id:"conflicto",emoji:"⚡",title:"Mapa del Conflicto",tags:"EFT · Sistémica",bamboo:45,time:"20 min",
+  {id:"conflicto",emoji:"⚡",title:"Mapa del Conflicto",tags:"EFT · Sistémica",bamboo:45,time:"20 min",mode:"distancia",
     desc:"Bajo cada pelea hay una necesidad no expresada. Este ejercicio les ayuda a ir de la superficie al corazón del conflicto.",
     instructions:["Elijan un conflicto reciente (no el más grande)","No busquen quién tiene razón","Busquen qué necesidad hay detrás","El objetivo es entenderse, no ganar","Hablen despacio y hagan pausas"],
     phases:[
@@ -208,12 +208,39 @@ const EXERCISES = [
       {role:0,q:"¿Pueden ver el ciclo? ¿Cómo se activan mutuamente?",ph:"Creo que cuando tú… yo reacciono con… y eso te hace…"},
       {role:1,q:"¿Qué podrían hacer diferente la próxima vez?",ph:"La próxima vez podríamos…"},
     ]},
-  {id:"presencia",emoji:"🌿",title:"Presencia Plena",tags:"Mindfulness · ACT",bamboo:25,time:"10 min",
+  {id:"presencia",emoji:"🌿",title:"Presencia Plena",tags:"Mindfulness · ACT",bamboo:25,time:"10 min",mode:"presencial",
     desc:"En un mundo de distracciones, dar presencia plena es el regalo más raro. 10 minutos sin teléfonos, sin listas mentales — solo ustedes.",
     instructions:["Silencien notificaciones — solo Mochi abierto","No hay agenda — solo estar presentes el uno para el otro","Escriban lo primero que piensan al ver el nombre del otro","No hay respuesta correcta ni incorrecta","Al terminar, compartan una observación del ejercicio"],
     timer:600,timerLabel:"Presencia plena — sin distracciones",
     beforeTimer:["Apaguen o silencien los teléfonos.","Siéntense cómodos, cerca.","No hay tema — solo estén presentes.","Hablen de lo que surja naturalmente.","Presionen INICIAR."],
     afterPrompts:[{role:0,ph:"Lo que noté en ti hoy fue…"},{role:1,ph:"Estar presente contigo me hizo sentir…"}]},
+  {id:"gracias_express",emoji:"✨",title:"Gracias Express",tags:"Gottman · Positiva",bamboo:15,time:"2 min",mode:"distancia",
+    desc:"La ciencia de Gottman muestra que expresar gratitud específica — no genérica — activa el mismo circuito de recompensa que recibir un regalo. Dos minutos de gratitud real cambian la química del vínculo.",
+    instructions:["Cada quien piensa en algo concreto que el otro hizo hoy o esta semana","La gratitud debe ser específica: qué hizo, cuándo, cómo te hizo sentir","Quien recibe solo responde: 'Gracias. Eso significa que...'","No desvíes ni minimices el halago","30 segundos cada uno — van juntos"],
+    phases:[
+      {role:0,q:"Tu gratitud específica de hoy o esta semana.",ph:"Gracias por… cuando… porque eso me hizo sentir…",hint:"Específico: 'me mandaste audio antes de dormir' no 'eres atento/a'"},
+      {role:1,q:"Recibe y responde.",ph:"Gracias. Eso significa que…"},
+      {role:1,q:"Tu turno: tu gratitud del día.",ph:"Algo que agradezco es cuando tú…"},
+      {role:0,q:"Recibe.",ph:"Gracias. Eso me hizo sentir…"},
+    ]},
+  {id:"check_in_2min",emoji:"🌡",title:"Check-in de 2 Minutos",tags:"EFT · Sistémica",bamboo:15,time:"2 min",mode:"distancia",
+    desc:"La Terapia Focalizada en Emociones (EFT) de Sue Johnson muestra que la sintonía emocional diaria — aunque sea breve — previene la acumulación de distancia. Tomarse 2 minutos para saber cómo está el otro reduce el porcentaje de malentendidos acumulados.",
+    instructions:["Respondan individualmente y en honestidad","No hay respuesta correcta — no es el momento de resolver nada","El objetivo es solo conocer el estado emocional del otro","Si ven que el otro está bajo, pueden preguntar: '¿Qué necesitas hoy?'","Terminen con un emoji que represente cómo se sienten en este momento"],
+    phases:[
+      {role:0,q:"En 3 palabras: ¿cómo estás emocionalmente hoy?",ph:"Hoy estoy… / Me siento…",hint:"Ejemplo: cansado, esperanzado, ansioso. Lo más honesto posible."},
+      {role:1,q:"En 3 palabras: ¿cómo estás tú?",ph:"Yo hoy estoy…"},
+      {role:0,q:"¿Qué necesitas del otro hoy?",ph:"Hoy necesito que…"},
+      {role:1,q:"¿Qué puedes ofrecerle al otro hoy?",ph:"Hoy puedo darte…"},
+    ]},
+  {id:"una_pregunta",emoji:"❓",title:"Una Pregunta",tags:"Gottman · Narrativa",bamboo:15,time:"2 min",mode:"distancia",
+    desc:"Gottman llama 'mapas del amor' al conocimiento profundo del mundo interno de tu pareja: sus miedos, sueños, recuerdos. Hacer preguntas reales — y escuchar de verdad — construye ese mapa. Una pregunta bien hecha crea más conexión que horas de conversación superficial.",
+    instructions:["Un@ hace la pregunta, el otro responde sin prisa","No analicen ni den consejos — solo escuchen","Terminen cambiando roles: quien respondió, ahora pregunta algo","Las preguntas no tienen que ser profundas — la curiosidad sincera es lo que importa","Si quieren, guarden la respuesta más bonita en su diario"],
+    phases:[
+      {role:0,q:"Persona A: Elige UNA pregunta y escríbela.",ph:"Mi pregunta para ti es…",hint:"Puede ser simple: '¿Qué fue lo mejor de tu semana?' o más profunda: '¿Qué te genera miedo últimamente?'"},
+      {role:1,q:"Persona B: Responde con honestidad.",ph:"Mi respuesta es…"},
+      {role:1,q:"Ahora Persona B: tu pregunta.",ph:"Quiero preguntarte…"},
+      {role:0,q:"Persona A: Responde.",ph:"Lo que pienso es…"},
+    ]},
 ];
 
 const DAILY_TIPS = [
@@ -266,6 +293,23 @@ const DAILY_TIPS = [
   {text:"El amor maduro es más tranquilo, no menos real.",context:"En las primeras etapas, el amor se siente intensamente. En relaciones más maduras, es más tranquilo pero no menos profundo. Una relación estable con cariño consistente es un logro — no una señal de que 'ya se apagó la llama'."},
   {text:"Pregunta qué necesita el otro, no qué necesitarías tú.",context:"A veces consolamos desde lo que a nosotros nos funcionaría, no desde lo que el otro necesita. '¿Qué te ayuda más cuando estás así?' es una de las preguntas más útiles de una relación, y las respuestas pueden sorprenderte."},
   {text:"El amor es un verbo, no un estado.",context:"Decir 'te amo' es importante, pero el amor se sustenta en las acciones diarias: preguntar, recordar, aparecer, insistir, reparar. Las palabras abren el camino, pero los actos son los que lo pavimentan. El amor que solo se declara se desgasta — el que se practica crece."},
+];
+
+// Same order as DAILY_TIPS — used to show therapeutic source in the tip modal
+const DAILY_TIP_SOURCES = [
+  "Gottman","Psicología Positiva","Neurociencia del Apego","CNV · Rosenberg",
+  "Gottman","Gottman","Gottman","DBT · Linehan",
+  "Regulación Emocional","Gottman","EFT · Sue Johnson","Gottman",
+  "CNV · Rosenberg","Psicología Social","Terapia del Apego","Gottman",
+  "Psicología Positiva","Gottman","TCC","DBT · Linehan",
+  "Gottman","Gottman","Terapia del Apego","Gary Chapman",
+  "Gottman","Gottman","EFT · Sue Johnson","Gary Chapman",
+  "Gottman","Gottman","EFT · Sue Johnson","EFT · Sue Johnson",
+  "Terapia del Apego","Gottman","Gottman","Gottman",
+  "TCC","Terapia del Apego","Brené Brown","Gottman",
+  "CNV · Rosenberg","Gottman","Gottman","Gottman",
+  "TCC","Gottman","Terapia del Apego","EFT · Sue Johnson",
+  "Gary Chapman",
 ];
 
 const EXAMPLES_BY_EXERCISE = {
@@ -1967,7 +2011,8 @@ function Login({ onLogin }) {
         partnerUid: uid,
         partnerName: nameB.trim() || "?",
       });
-      const names = claimed?.names || codeData.names || "Nosotros";
+      const ownerRaw = (claimed?.names || codeData.names || "").split("&")[0].trim() || "Nosotros";
+      const names = ownerRaw + " & " + (nameB.trim() || "Pareja");
       const since = claimed?.since || codeData.since || "Juntos desde hoy";
       const ownerUid = claimed?.ownerUid || codeData?.ownerUid || null;
       await fbSaveUser(uid, { email: cleanPartnerEmail, names, code: resolvedCode, since, isOwner: false });
@@ -1996,7 +2041,8 @@ function Login({ onLogin }) {
             partnerUid: uid2,
             partnerName: nameB.trim() || "?",
           });
-          const names2 = claimed2.names || "Nosotros";
+          const ownerRaw2 = (claimed2.names || "").split("&")[0].trim() || "Nosotros";
+          const names2 = ownerRaw2 + " & " + (nameB.trim() || "Pareja");
           const since2 = claimed2.since || "Juntos";
           const ownerUid2 = claimed2?.ownerUid || resolved2?.data?.ownerUid || null;
           await fbSaveUser(uid2, { email: cleanPartnerEmail, names: names2, code: resolved2.code, since: since2, isOwner: false }).catch(()=>{});
@@ -2511,7 +2557,10 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
               </div>
               <div style={{ fontSize: "0.85rem", color: C.inkM, lineHeight: 1.5, marginBottom: 12 }}>{e.desc}</div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ background: C.olive, color: C.cream2, borderRadius: 8, padding: "4px 12px", fontWeight: 800, fontSize: "0.78rem" }}>+{e.bamboo} bambú</div>
+                <div style={{ display:"flex", gap:6, alignItems:"center" }}>
+                  <div style={{ background: C.olive, color: C.cream2, borderRadius: 8, padding: "4px 12px", fontWeight: 800, fontSize: "0.78rem" }}>+{e.bamboo} bambú</div>
+                  {e.mode && <div style={{ background: e.mode==="presencial" ? "#e8f0ff" : "#f0ffe8", color: e.mode==="presencial" ? "#4060b0" : "#408040", borderRadius: 8, padding: "4px 10px", fontWeight: 700, fontSize: "0.72rem" }}>{e.mode==="presencial" ? "🏠 Presencial" : "📱 Distancia"}</div>}
+                </div>
                 <span style={{ color: C.inkL, fontSize: "0.78rem", fontWeight: 700 }}>{e.time}</span>
               </div>
             </div>
@@ -2588,7 +2637,7 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
               </div>
               {!(lessonsDone?.[openLesson.id]?.[user?.isOwner !== false ? "owner" : "partner"])
                 ? <button onClick={() => { onCompleteLesson(openLesson.id); setOpenLesson(null); }} style={{ width:"100%", background:C.olive, color:C.cream2, border:"none", borderRadius:14, padding:15, fontFamily:"'Fredoka One',cursive", fontSize:"1rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.2)" }}>
-                    ✓ Leímos esto juntos · +10 bambú 🌿
+                    ✓ Ya la leí · +10 bambú 🌿
                   </button>
                 : <div style={{ textAlign:"center", background:C.cream, borderRadius:12, padding:12, border:`1.5px solid ${C.border}` }}>
                     <div style={{ fontFamily:"'Fredoka One',cursive", color:C.olive, marginBottom:6 }}>✓ Ya la completaste</div>
@@ -2710,7 +2759,18 @@ function Conocete({ conoce, onSave, user }) {
       <div style={{ margin: "10px 14px 0", background: C.white, borderRadius: 16, padding: 14, border: `1.5px solid ${C.border}`, boxShadow: `0 2px 0 ${C.border}` }}>
         <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark, marginBottom: 6 }}>🧪 Resultado de tests de personalidad</div>
         <div style={{ fontSize: "0.8rem", color: C.inkL, fontWeight: 700, marginBottom: 6 }}>{quizAdvice.progress.answered}/{quizAdvice.progress.total} completados</div>
-        <div style={{ fontSize: "0.75rem", color: C.inkM, lineHeight: 1.55 }}>{quizAdvice.complete ? "Completados. Revisa tus recomendaciones personalizadas aquí mismo en Conócete." : "Completen los tests para desbloquear recomendaciones personalizadas."}</div>
+        {quizAdvice.complete ? (
+          <div>
+            <div style={{ fontSize: "0.75rem", color: C.olive, fontWeight: 800, marginBottom: 8 }}>✓ Tests completados · tus recomendaciones personalizadas:</div>
+            {quizAdvice.tips.map((tip, i) => (
+              <div key={i} style={{ background: C.sandL, borderRadius: 10, padding: "8px 11px", marginBottom: 7, border: `1px solid ${C.border}`, fontSize: "0.78rem", color: C.inkM, lineHeight: 1.6 }}>
+                💡 {tip}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ fontSize: "0.75rem", color: C.inkM, lineHeight: 1.55 }}>Completen los tests para desbloquear recomendaciones personalizadas.</div>
+        )}
       </div>
       <div style={{ margin: "10px 14px 0" }}>
         <Cuestionarios conoce={conoce} onSave={onSave} user={user} />
@@ -2822,6 +2882,55 @@ function Burbuja({ burbuja, onSave, user }) {
           </div>
         ))}
       </div>
+
+      {burTab === "negociacion" && (() => {
+        const relOptions = ["Compañeros de vida 💑","Novios / Pareja 💕","Amigovios · sin etiqueta 🤫","Construyendo algo a largo plazo 🌱","Otro ✏️"];
+        const saved = burbuja["tipo_relacion"] || {};
+        const savedChoice = saved.c || "";
+        return (
+          <div style={{ background: C.white, borderRadius: 18, margin: "0 14px 10px", padding: 16, boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
+            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:10 }}>🫂 ¿Cómo definen su relación?</div>
+            <div style={{ display:"flex", flexDirection:"column", gap:7 }}>
+              {relOptions.map(opt => {
+                const isCustom = opt.startsWith("Otro");
+                const isActive = !isCustom && savedChoice === opt;
+                const isCustomActive = isCustom && savedChoice && !relOptions.slice(0,-1).includes(savedChoice);
+                return (
+                  <div key={opt}>
+                    <button
+                      onClick={() => {
+                        if (isCustom) return;
+                        onSave("tipo_relacion", { c: opt, at: new Date().toISOString() });
+                      }}
+                      style={{ width:"100%", padding:"9px 14px", textAlign:"left", borderRadius:10, border:`1.5px solid ${isActive ? C.olive : C.border}`, background: isActive ? "#f0ffe8" : C.cream, color: C.dark, fontSize:"0.84rem", fontWeight: isActive ? 800 : 600, cursor: isCustom ? "default" : "pointer" }}>
+                      {isActive && "✓ "}{isCustom ? "Otro:" : opt}
+                    </button>
+                    {isCustom && (
+                      <div style={{ display:"flex", gap:6, marginTop:5 }}>
+                        <input
+                          defaultValue={isCustomActive ? savedChoice : ""}
+                          placeholder="Escribe cómo la definen..."
+                          style={{ flex:1, padding:"7px 10px", borderRadius:9, border:`1.5px solid ${C.border}`, fontSize:"0.82rem", outline:"none" }}
+                          id="burbuja-rel-custom"
+                        />
+                        <button
+                          onClick={() => {
+                            const val = document.getElementById("burbuja-rel-custom")?.value?.trim();
+                            if (val) onSave("tipo_relacion", { c: val, at: new Date().toISOString() });
+                          }}
+                          style={{ padding:"7px 12px", background:C.olive, color:C.cream2, border:"none", borderRadius:9, fontSize:"0.8rem", fontWeight:800, cursor:"pointer" }}>
+                          Guardar
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            {savedChoice && <div style={{ marginTop:8, fontSize:"0.73rem", color:C.inkL, fontWeight:700 }}>Definición actual: "{savedChoice}"</div>}
+          </div>
+        );
+      })()}
 
       {burTab === "negociacion" && BURBUJA_SECTIONS.map(sec => (
         <div key={sec.id} style={{ background: C.white, borderRadius: 18, margin: "0 14px 10px", boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}`, overflow: "hidden" }}>
@@ -2949,7 +3058,9 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
   const tipDateKey = new Date().toISOString().slice(0, 10);
   const tipRewardKey = `mochi_tip_reward_${user?.uid || user?.email || "guest"}_${tipDateKey}`;
   const [tipRewarded, setTipRewarded] = useState(!!ls.get(tipRewardKey));
-  const todayTip = DAILY_TIPS[new Date().getDate() % DAILY_TIPS.length];
+  const tipIdx = new Date().getDate() % DAILY_TIPS.length;
+  const todayTip = DAILY_TIPS[tipIdx];
+  const todayTipSource = DAILY_TIP_SOURCES[tipIdx];
   const loveHistory = [...(messages || [])]
     .filter(m => (m?.text || "").trim())
     .sort((a, b) => new Date(b.time || 0).getTime() - new Date(a.time || 0).getTime());
@@ -3201,6 +3312,11 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
             <div style={{ background:C.cream, border:`1.5px solid ${C.border}`, borderRadius:12, padding:"10px 12px", fontSize:"0.88rem", color:C.dark, fontWeight:800, lineHeight:1.45, marginBottom:10 }}>
               {todayTip?.text}
             </div>
+            {todayTipSource && (
+              <div style={{ fontSize:"0.7rem", fontWeight:800, color:C.olive, letterSpacing:"0.5px", marginBottom:7, paddingLeft:2 }}>
+                Según {todayTipSource}:
+              </div>
+            )}
             <div style={{ background:C.sandL, border:`1px solid ${C.border}`, borderRadius:12, padding:"10px 12px", fontSize:"0.82rem", color:C.inkM, lineHeight:1.6 }}>
               {todayTip?.context}
             </div>
@@ -3878,11 +3994,184 @@ function Onboarding({ onDone }) {
   );
 }
 
+// ═══════════════════════════════════════════════
+// DIARIO PERSONAL
+// ═══════════════════════════════════════════════
+const DIARIO_TYPES = [
+  {
+    id: "abcd", label: "🧠 ABCD", sub: "Reestructura un pensamiento",
+    prompts: [
+      { key:"a", label:"A · Situación activadora", hint:"¿Qué pasó exactamente?" },
+      { key:"b", label:"B · Pensamiento automático", hint:"¿Qué pensé en ese momento?" },
+      { key:"c", label:"C · Emoción y consecuencia", hint:"¿Cómo me sentí? ¿Qué hice?" },
+      { key:"d", label:"D · Perspectiva alternativa", hint:"¿Qué puedo ver de otra manera?" },
+    ]
+  },
+  {
+    id: "discusion", label: "⚡ Discusión", sub: "Procesa un conflicto",
+    prompts: [
+      { key:"q1", label:"¿Qué pasó?", hint:"Sin culpar, solo los hechos..." },
+      { key:"q2", label:"¿Qué sentí?", hint:"Emociones, sensaciones..." },
+      { key:"q3", label:"¿Qué necesitaba yo?", hint:"La necesidad detrás de la reacción..." },
+      { key:"q4", label:"¿Qué querría decirle?", hint:"Con calma, ¿qué diría ahora?" },
+    ]
+  },
+  {
+    id: "hoy", label: "🌙 Cómo estuve hoy", sub: "Registro diario",
+    prompts: [
+      { key:"q1", label:"Mi día en una oración", hint:"¿Cómo estuvo?" },
+      { key:"q2", label:"Lo más significativo", hint:"Un momento, una palabra..." },
+      { key:"q3", label:"En mi relación hoy", hint:"¿Cómo me sentí con mi pareja?" },
+    ]
+  },
+  {
+    id: "interpersonal", label: "🫶 Interpersonal", sub: "Conexión y comunicación",
+    prompts: [
+      { key:"q1", label:"Momento de conexión", hint:"¿Hubo alguno hoy?" },
+      { key:"q2", label:"Lo que me costó expresar", hint:"¿Qué no le dije?" },
+      { key:"q3", label:"Lo que necesito pedirle", hint:"Una petición clara..." },
+    ]
+  },
+];
+
+function DiarioPersonal({ entries, onSave, user }) {
+  const [view, setView] = useState("list"); // "list" | "new" | "detail"
+  const [selType, setSelType] = useState(null);
+  const [draft, setDraft] = useState({});
+  const [selEntry, setSelEntry] = useState(null);
+
+  const sortedEntries = Object.values(entries || {}).sort((a, b) => b.ts.localeCompare(a.ts));
+
+  const fmtDate = ts => {
+    const d = new Date(ts);
+    const today = new Date(); const yesterday = new Date(); yesterday.setDate(today.getDate()-1);
+    if (d.toDateString() === today.toDateString()) return "Hoy";
+    if (d.toDateString() === yesterday.toDateString()) return "Ayer";
+    return d.toLocaleDateString("es-MX", { weekday:"long", day:"numeric", month:"short" });
+  };
+  const fmtTime = ts => new Date(ts).toLocaleTimeString("es-MX", { hour:"2-digit", minute:"2-digit" });
+
+  const handleSave = () => {
+    const type = DIARIO_TYPES.find(t => t.id === selType);
+    if (!type) return;
+    const filled = type.prompts.filter(p => (draft[p.key] || "").trim().length > 0);
+    if (filled.length === 0) return;
+    const ts = new Date().toISOString();
+    onSave({ id: ts, ts, type: selType, prompts: { ...draft } });
+    setDraft({}); setSelType(null); setView("list");
+  };
+
+  if (view === "new" && selType) {
+    const type = DIARIO_TYPES.find(t => t.id === selType);
+    return (
+      <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
+        <ScreenTop title={type.label} sub={type.sub} />
+        <div style={{ padding: "10px 14px 0" }}>
+          {type.prompts.map(p => (
+            <div key={p.key} style={{ background: C.white, borderRadius: 14, padding: 14, marginBottom: 10, border: `1.5px solid ${C.border}` }}>
+              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", color:C.dark, marginBottom:7 }}>{p.label}</div>
+              <textarea
+                value={draft[p.key] || ""}
+                onChange={e => setDraft(d => ({ ...d, [p.key]: e.target.value }))}
+                placeholder={p.hint}
+                rows={3}
+                style={{ width:"100%", border:`1.5px solid ${C.border}`, borderRadius:10, padding:"9px 11px", fontSize:"0.84rem", fontFamily:"'Nunito',sans-serif", resize:"none", outline:"none", boxSizing:"border-box", color:C.ink, lineHeight:1.6 }}
+              />
+            </div>
+          ))}
+          <div style={{ display:"flex", gap:10, marginTop:4 }}>
+            <button onClick={() => { setSelType(null); setView("new"); }} style={{ flex:1, padding:13, background:C.cream, border:`1.5px solid ${C.border}`, borderRadius:14, fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", cursor:"pointer", color:C.inkM }}>← Tipo</button>
+            <button onClick={handleSave} style={{ flex:2, padding:13, background:C.dark, color:C.cream2, border:"none", borderRadius:14, fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.2)" }}>Guardar entrada ✓</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === "new") {
+    return (
+      <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
+        <ScreenTop title="📓 Diario" sub="¿Qué tipo de entrada?" />
+        <div style={{ padding: "10px 14px 0" }}>
+          {DIARIO_TYPES.map(t => (
+            <div key={t.id} onClick={() => setSelType(t.id)}
+              style={{ background:C.white, borderRadius:16, padding:"14px 16px", marginBottom:10, cursor:"pointer", border:`1.5px solid ${C.border}`, boxShadow:`0 3px 0 ${C.border}` }}>
+              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.05rem", color:C.dark }}>{t.label}</div>
+              <div style={{ fontSize:"0.8rem", color:C.inkM, marginTop:3 }}>{t.sub}</div>
+            </div>
+          ))}
+          <button onClick={() => setView("list")} style={{ width:"100%", padding:12, background:"transparent", border:`1.5px solid ${C.border}`, borderRadius:14, fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", cursor:"pointer", color:C.inkM, marginTop:4 }}>← Volver</button>
+        </div>
+      </div>
+    );
+  }
+
+  // list view
+  return (
+    <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
+      <ScreenTop title="📓 Diario" sub="Tu espacio personal de reflexión" />
+      <div style={{ padding: "10px 14px 0" }}>
+        <button onClick={() => setView("new")} style={{ width:"100%", background:C.dark, color:C.cream2, border:"none", borderRadius:14, padding:"13px 16px", fontFamily:"'Fredoka One',cursive", fontSize:"1rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.25)", marginBottom:14, textAlign:"left" }}>
+          + Nueva entrada 📝
+        </button>
+        {sortedEntries.length === 0 && (
+          <div style={{ textAlign:"center", padding:"40px 20px", color:C.inkL, fontSize:"0.88rem" }}>
+            <div style={{ fontSize:"2.5rem", marginBottom:10 }}>📓</div>
+            Tu diario está vacío. Empieza con una entrada hoy.
+          </div>
+        )}
+        {sortedEntries.map(entry => {
+          const type = DIARIO_TYPES.find(t => t.id === entry.type);
+          const firstPromptKey = type?.prompts?.[0]?.key;
+          const preview = firstPromptKey ? (entry.prompts?.[firstPromptKey] || "") : "";
+          return (
+            <div key={entry.id} onClick={() => { setSelEntry(entry); }}
+              style={{ background:C.white, borderRadius:16, padding:"13px 15px", marginBottom:9, border:`1.5px solid ${C.border}`, boxShadow:`0 2px 0 ${C.border}`, cursor:"pointer" }}>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:5 }}>
+                <div style={{ background:C.cream, borderRadius:8, padding:"3px 10px", fontSize:"0.72rem", fontWeight:800, color:C.dark }}>{type?.label || entry.type}</div>
+                <div style={{ fontSize:"0.7rem", color:C.inkL, fontWeight:700 }}>{fmtDate(entry.ts)} · {fmtTime(entry.ts)}</div>
+              </div>
+              {preview && <div style={{ fontSize:"0.84rem", color:C.inkM, lineHeight:1.55, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{preview}</div>}
+            </div>
+          );
+        })}
+      </div>
+      {selEntry && (() => {
+        const type = DIARIO_TYPES.find(t => t.id === selEntry.type);
+        return (
+          <div style={{ position:"fixed", inset:0, background:"rgba(15,25,15,0.65)", zIndex:5000, display:"flex", alignItems:"flex-end" }} onClick={() => setSelEntry(null)}>
+            <div onClick={e => e.stopPropagation()} style={{ background:C.sandL, borderRadius:"22px 22px 0 0", width:"100%", maxHeight:"88vh", overflowY:"auto", border:`1.5px solid ${C.border}` }}>
+              <div style={{ background:C.dark, padding:"16px 18px 18px", borderRadius:"22px 22px 0 0" }}>
+                <div style={{ width:34, height:5, background:"rgba(255,255,255,0.2)", borderRadius:50, margin:"0 auto 12px" }}/>
+                <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.1rem", color:C.cream2 }}>{type?.label}</div>
+                <div style={{ fontSize:"0.75rem", color:`${C.cream}88`, marginTop:3 }}>{fmtDate(selEntry.ts)} · {fmtTime(selEntry.ts)}</div>
+              </div>
+              <div style={{ padding:"14px 16px 32px" }}>
+                {(type?.prompts || []).map(p => {
+                  const val = selEntry.prompts?.[p.key];
+                  if (!val) return null;
+                  return (
+                    <div key={p.key} style={{ background:C.white, borderRadius:12, padding:"11px 13px", marginBottom:9, border:`1.5px solid ${C.border}` }}>
+                      <div style={{ fontSize:"0.72rem", fontWeight:800, color:C.inkL, marginBottom:5, textTransform:"uppercase", letterSpacing:"0.5px" }}>{p.label}</div>
+                      <div style={{ fontSize:"0.86rem", color:C.ink, lineHeight:1.65 }}>{val}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+    </div>
+  );
+}
+
 const NAV = [
   { id: "jardin", emoji: "🌿", label: "Jardín" },
   { id: "ejerc", emoji: "⭐", label: "Ejerc." },
   { id: "conocete", emoji: "💬", label: "Conócete" },
   { id: "burbuja", emoji: "🫧", label: "Burbuja" },
+  { id: "diario", emoji: "📓", label: "Diario" },
   { id: "perfil", emoji: "👤", label: "Nosotros" },
 ];
 
@@ -3913,6 +4202,7 @@ export default function App() {
   const [lessonsDone, setLessonsDone] = useState({});
   const [gratitud, setGratitud] = useState([]);
   const [momentos, setMomentos] = useState([]);
+  const [diarioEntries, setDiarioEntries] = useState({});
   const happyTimer = useRef(null);
   const messageUnsubRef = useRef(null);
   const screenRef = useRef("login");
@@ -3930,9 +4220,9 @@ export default function App() {
   }, []);
 
   const buildSave = useCallback((overrides = {}) => ({
-    bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos,
+    bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos, diarioEntries,
     ...overrides
-  }), [bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos]);
+  }), [bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos, diarioEntries]);
 
   const save = useCallback((u, overrides = {}) => {
     const nextState = buildSave(overrides);
@@ -4022,6 +4312,7 @@ export default function App() {
         if (s.lessonsDone) setLessonsDone(s.lessonsDone);
         if (s.gratitud) setGratitud(s.gratitud);
         if (s.momentos) setMomentos(s.momentos);
+        if (s.diarioEntries) setDiarioEntries(s.diarioEntries);
       }
       if (!s && syncedTestScores) setTestScores(syncedTestScores);
     }
@@ -4412,6 +4703,12 @@ export default function App() {
     toast("✏️ Nombre actualizado");
   };
 
+  const saveDiarioEntry = (entry) => {
+    const next = { ...(diarioEntries || {}), [entry.id]: entry };
+    setDiarioEntries(next);
+    save(user, { diarioEntries: next });
+  };
+
   const addGratitud = async (entry) => {
     const myName = getUserDisplayName(user, "Yo");
     const enriched = { ...entry, authorName: myName, authorUid: user?.uid, date: new Date().toLocaleDateString("es", {day:"numeric",month:"short"}) };
@@ -4468,7 +4765,7 @@ export default function App() {
     ls.set("mochi_last", null); setUser(null); setScreen("login"); setTab("jardin");
     setBamboo(0); setHappiness(20); setWater(40); setGarden({});
     setAccessories({}); setExDone({}); setMessages([]); setConoce({}); setBurbuja({}); setCoupleInfo({});
-    setGratitud([]); setMomentos([]); setLastVisit(null); setTestScores(null); setLessonsDone({});
+    setGratitud([]); setMomentos([]); setLastVisit(null); setTestScores(null); setLessonsDone({}); setDiarioEntries({});
     setNotifs([]); setNotifBadge(0); setPandaBubble(null);
   };
 
@@ -4511,6 +4808,7 @@ export default function App() {
         {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson}/>}
         {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user}/>}
         {tab==="burbuja" && <Burbuja burbuja={burbuja} onSave={saveBurbuja} user={user}/>}
+        {tab==="diario" && <DiarioPersonal entries={diarioEntries} onSave={saveDiarioEntry} user={user}/>}
         {tab==="perfil" && <Perfil user={user} bamboo={bamboo} exDone={exDone} messages={messages} burbuja={burbuja} coupleInfo={coupleInfo} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} conoce={conoce} onOpenConocete={() => setTab("conocete")} onSendMessage={sendMsg} onAddBamboo={addBambooBonus}/>}
       </div>
       <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:480, background:C.white, borderTop:`1.5px solid ${C.border}`, display:"flex", zIndex:1000, boxShadow:`0 -3px 0 ${C.line}` }}>
