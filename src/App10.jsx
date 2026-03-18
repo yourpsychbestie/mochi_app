@@ -314,48 +314,172 @@ const DAILY_TIP_SOURCES = [
 
 const EXAMPLES_BY_EXERCISE = {
   validacion: {
-    no: ["Ya vas a empezar con lo mismo, exageras.", "Eso no es para tanto, deberias calmarte."],
-    si: ["Tiene sentido que te sintieras asi con lo que paso.", "Quiero entenderte bien, cuentame mas de como lo viviste."],
+    no: [
+      "Ya vas a empezar con lo mismo, exageras.",
+      "Eso no es para tanto, deberias calmarte.",
+      "Siempre dramatizas todo, mejor cambia de tema.",
+    ],
+    si: [
+      "Tiene sentido que te sintieras asi con lo que paso.",
+      "Quiero entenderte bien, cuentame mas de como lo viviste.",
+      "Aunque yo lo vea distinto, entiendo por que te dolio.",
+    ],
   },
   ojos: {
-    no: ["Miremos rapido para terminar de una vez.", "Aprovecho para revisar notificaciones mientras tanto."],
-    si: ["Me quedo presente contigo estos minutos, sin prisa.", "Si me incomodo, respiro y vuelvo a mirarte con ternura."],
+    no: [
+      "Miremos rapido para terminar de una vez.",
+      "Aprovecho para revisar notificaciones mientras tanto.",
+      "Me da pena, mejor me rio y corto el ejercicio.",
+    ],
+    si: [
+      "Me quedo presente contigo estos minutos, sin prisa.",
+      "Si me incomodo, respiro y vuelvo a mirarte con ternura.",
+      "Sostengo la mirada con suavidad, sin presionarte.",
+    ],
   },
   espejo: {
-    no: ["Lo que quieres decir es que yo tengo la culpa.", "Ya entendi, pero lo mio es peor."],
-    si: ["Lo que te escuche fue..., dime si lo capte bien.", "Tiene sentido que eso te afectara de esa forma."],
+    no: [
+      "Lo que quieres decir es que yo tengo la culpa.",
+      "Ya entendi, pero lo mio es peor.",
+      "No, eso no fue asi, estas confundiendo todo.",
+    ],
+    si: [
+      "Lo que te escuche fue..., dime si lo capte bien.",
+      "Tiene sentido que eso te afectara de esa forma.",
+      "Antes de responder, quiero asegurarme de haberte entendido.",
+    ],
   },
   apreciacion: {
-    no: ["Bueno, gracias supongo.", "Si, pero tambien deberias mejorar en..."],
-    si: ["Gracias, me hizo sentir querido/a que notaras eso.", "Aprecio cuando ayer me esperaste para cenar juntos."],
+    no: [
+      "Bueno, gracias supongo.",
+      "Si, pero tambien deberias mejorar en...",
+      "Eso lo haces porque te toca, no es para agradecer.",
+    ],
+    si: [
+      "Gracias, me hizo sentir querido/a que notaras eso.",
+      "Aprecio cuando ayer me esperaste para cenar juntos.",
+      "Valoro que hoy me escribieras antes de mi junta, me dio calma.",
+    ],
   },
   respiracion: {
-    no: ["No sirve, mejor sigamos peleando.", "Hazlo tu, yo no tengo tiempo para esto."],
-    si: ["Voy a seguir el ritmo contigo para calmarnos.", "Respiremos juntos y despues hablamos con mas calma."],
+    no: [
+      "No sirve, mejor sigamos peleando.",
+      "Hazlo tu, yo no tengo tiempo para esto.",
+      "Voy a respirar, pero para demostrar que tu estas mal.",
+    ],
+    si: [
+      "Voy a seguir el ritmo contigo para calmarnos.",
+      "Respiremos juntos y despues hablamos con mas calma.",
+      "Primero regulamos el cuerpo, luego resolvemos el tema.",
+    ],
   },
   carta: {
-    no: ["No voy a escribir nada, esto es una tonteria.", "Te mando dos lineas para salir del paso."],
-    si: ["Quiero escribir lo que me cuesta mostrar para abrirme contigo.", "Te comparto esto porque confio en que me leeras con cuidado."],
+    no: [
+      "No voy a escribir nada, esto es una tonteria.",
+      "Te mando dos lineas para salir del paso.",
+      "Te escribo esto para que te sientas culpable.",
+    ],
+    si: [
+      "Quiero escribir lo que me cuesta mostrar para abrirme contigo.",
+      "Te comparto esto porque confio en que me leeras con cuidado.",
+      "No busco culparte; busco mostrar una parte vulnerable mia.",
+    ],
   },
   suenos: {
-    no: ["Eso es imposible, mejor ni lo pienses.", "Tu sueno no tiene sentido para nuestra vida."],
-    si: ["Me gusta escuchar eso que te ilusiona, cuentame mas.", "Podemos pensar un primer paso pequeno para acercarnos."],
+    no: [
+      "Eso es imposible, mejor ni lo pienses.",
+      "Tu sueno no tiene sentido para nuestra vida.",
+      "No pierdas tiempo con eso, madura.",
+    ],
+    si: [
+      "Me gusta escuchar eso que te ilusiona, cuentame mas.",
+      "Podemos pensar un primer paso pequeno para acercarnos.",
+      "Quiero entender por que ese sueno es importante para ti.",
+    ],
   },
   perdida: {
-    no: ["Ya superalo, eso fue hace tiempo.", "Perdoname y listo, no quiero hablar mas."],
-    si: ["Reconozco que eso te dolio y asumo mi parte.", "Quiero reparar esto contigo, dime que necesitas para sanar."],
+    no: [
+      "Ya superalo, eso fue hace tiempo.",
+      "Perdoname y listo, no quiero hablar mas.",
+      "Si te dolio es porque eres muy sensible.",
+    ],
+    si: [
+      "Reconozco que eso te dolio y asumo mi parte.",
+      "Quiero reparar esto contigo, dime que necesitas para sanar.",
+      "No puedo cambiar el pasado, pero si como te cuido desde hoy.",
+    ],
   },
   amor_idiomas: {
-    no: ["Tu idioma es raro, deberias cambiar.", "Si no te gusta como amo, es tu problema."],
-    si: ["Quiero aprender a hablar tu idioma del amor.", "Dime un gesto concreto que te haga sentir amado/a."],
+    no: [
+      "Tu idioma es raro, deberias cambiar.",
+      "Si no te gusta como amo, es tu problema.",
+      "Ya deberias saber que te amo, no necesito demostrarlo.",
+    ],
+    si: [
+      "Quiero aprender a hablar tu idioma del amor.",
+      "Dime un gesto concreto que te haga sentir amado/a.",
+      "Aunque no sea natural para mi, quiero practicarlo por ti.",
+    ],
   },
   conflicto: {
-    no: ["Tu siempre arruinas todo.", "Lo importante es demostrar que yo tenia razon."],
-    si: ["Cuando paso eso, yo senti miedo y frustracion.", "Quiero entender que necesitabas tu en ese momento."],
+    no: [
+      "Tu siempre arruinas todo.",
+      "Lo importante es demostrar que yo tenia razon.",
+      "Otra vez lo mismo, contigo no se puede hablar.",
+    ],
+    si: [
+      "Cuando paso eso, yo senti miedo y frustracion.",
+      "Quiero entender que necesitabas tu en ese momento.",
+      "No busco ganar, busco que salgamos de esto juntos.",
+    ],
   },
   presencia: {
-    no: ["Te escucho, pero sigo contestando mensajes.", "Hablemos luego, ahora no quiero estar aqui."],
-    si: ["Te regalo estos minutos con atencion completa.", "Estoy aqui contigo, sin pantallas ni distracciones."],
+    no: [
+      "Te escucho, pero sigo contestando mensajes.",
+      "Hablemos luego, ahora no quiero estar aqui.",
+      "Si, si te oigo... mientras veo videos.",
+    ],
+    si: [
+      "Te regalo estos minutos con atencion completa.",
+      "Estoy aqui contigo, sin pantallas ni distracciones.",
+      "Pongo el celular boca abajo para estar realmente presente.",
+    ],
+  },
+  gracias_express: {
+    no: [
+      "Gracias por todo, ya sabes.",
+      "Obvio me ayudaste, era tu obligacion.",
+      "Gracias, pero igual lo hiciste tarde.",
+    ],
+    si: [
+      "Gracias por llamarme despues de mi cita, me senti acompanado/a.",
+      "Agradezco que hoy me preguntaras como estaba en serio.",
+      "Gracias por ese mensaje de animo en la manana, me cambio el dia.",
+    ],
+  },
+  check_in_2min: {
+    no: [
+      "Bien, mal, equis. Siguiente.",
+      "No te digo porque luego lo usas en mi contra.",
+      "Estoy mal, pero no me importa lo que tu sientas.",
+    ],
+    si: [
+      "Hoy estoy cansado/a, sensible y con un poco de ansiedad.",
+      "Hoy necesito paciencia y un mensajito de apoyo en la tarde.",
+      "Hoy puedo ofrecerte escucharte 10 minutos sin interrumpirte.",
+    ],
+  },
+  una_pregunta: {
+    no: [
+      "Pregunta rapido para acabar: todo bien?",
+      "Ya te pregunte, pero no tengo tiempo de escuchar.",
+      "Te hago una pregunta solo para corregirte.",
+    ],
+    si: [
+      "Que fue lo mejor de tu semana y por que te importo tanto?",
+      "Que tema traes en la cabeza ultimamente que no me has contado?",
+      "Gracias por contarme eso; quiero entenderte, no arreglarte.",
+    ],
   },
 };
 
@@ -3312,9 +3436,8 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
       </div>
 
       {showTipModal && (
-        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.45)", zIndex:80, display:"flex", alignItems:"flex-end" }} onClick={() => setShowTipModal(false)}>
-          <div onClick={(e)=>e.stopPropagation()} style={{ width:"100%", background:C.white, borderRadius:"24px 24px 0 0", padding:"18px 16px 22px", borderTop:`2px solid ${C.border}`, boxShadow:"0 -6px 18px rgba(0,0,0,0.18)", maxHeight:"82vh", overflowY:"auto" }}>
-            <div style={{ width:58, height:8, borderRadius:10, background:C.border, margin:"0 auto 14px" }} />
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.45)", zIndex:6000, display:"flex", alignItems:"center", justifyContent:"center", padding:"16px" }} onClick={() => setShowTipModal(false)}>
+          <div onClick={(e)=>e.stopPropagation()} style={{ width:"100%", maxWidth:420, background:C.white, borderRadius:24, padding:"16px 14px 16px", border:`1.5px solid ${C.border}`, boxShadow:"0 14px 36px rgba(0,0,0,0.25)", maxHeight:"78vh", overflowY:"auto" }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
               <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.02rem", color:C.dark }}>📖 Consejo del dia</div>
               <button onClick={() => setShowTipModal(false)} style={{ width:36, height:36, borderRadius:"50%", border:"none", background:C.cream, color:C.inkM, fontWeight:900, fontSize:"1rem", cursor:"pointer" }}>✕</button>
