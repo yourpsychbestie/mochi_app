@@ -493,7 +493,7 @@ const CONOCE_CATS = {
 const BURBUJA_SECTIONS = [
   {id:"tipo",icon:"💑",title:"Tipo de relación",sub:"Monogamia, exclusividad, definición",itemBg:"#fce4d0",
     items:[
-      {id:"tipo1",q:"¿Qué tipo de relación tienen? ¿Cómo la definirían?",phA:"Para mí nuestra relación es...",phB:"Para mí nuestra relación es..."},
+      {id:"tipo1",q:"¿Qué tipo de relación tienen? ¿Cómo la definirían? (ej: novios, pareja exclusiva, abiertos, en construcción)",phA:"Para mí nuestra relación es...",phB:"Para mí nuestra relación es..."},
       {id:"tipo2",q:"¿Cuánto espacio personal necesita cada uno?",phA:"Necesito...",phB:"Necesito..."},
       {id:"tipo3",q:"¿Cómo manejan el tiempo con amigos y familia por separado?",phA:"Para mí es importante...",phB:"Para mí es importante..."},
     ]},
@@ -1763,7 +1763,8 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
               <div style={{ position:"absolute", bottom:"88%", left:"-10px", maxWidth:130, background:"white",
                 border:"2px solid #4a6e30", borderRadius:"14px 14px 4px 14px", padding:"6px 10px",
                 fontSize:"0.7rem", color:"#1e2b1e", fontWeight:700, lineHeight:1.4,
-                boxShadow:"0 2px 8px rgba(0,0,0,0.15)", zIndex:10, animation:"fadeIn 0.3s ease" }}>
+                boxShadow:"0 2px 8px rgba(0,0,0,0.15)", zIndex:10, animation:"fadeIn 0.3s ease",
+                transform: pandaBubble?.textB ? "translate(-8px, -26px)" : "translate(-2px, -10px)" }}>
                 {pandaBubble.nameA && <div style={{ fontSize:"0.6rem", color:"#4a6e30", fontWeight:800, marginBottom:2 }}>{pandaBubble.nameA}</div>}
                 {pandaBubble.textA}
                 <div style={{ position:"absolute", bottom:-8, left:10, width:0, height:0,
@@ -1775,7 +1776,8 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
               <div style={{ position:"absolute", bottom:"88%", right:"-10px", maxWidth:130, background:"white",
                 border:"2px solid #e8907a", borderRadius:"14px 14px 14px 4px", padding:"6px 10px",
                 fontSize:"0.7rem", color:"#1e2b1e", fontWeight:700, lineHeight:1.4,
-                boxShadow:"0 2px 8px rgba(0,0,0,0.15)", zIndex:10, animation:"fadeIn 0.3s ease" }}>
+                boxShadow:"0 2px 8px rgba(0,0,0,0.15)", zIndex:10, animation:"fadeIn 0.3s ease",
+                transform: pandaBubble?.textA ? "translate(8px, 8px)" : "translate(2px, -10px)" }}>
                 {pandaBubble.nameB && <div style={{ fontSize:"0.6rem", color:"#e8907a", fontWeight:800, marginBottom:2 }}>{pandaBubble.nameB}</div>}
                 {pandaBubble.textB}
                 <div style={{ position:"absolute", bottom:-8, right:10, width:0, height:0,
@@ -2333,18 +2335,22 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
   const startSession = async () => {
     if (starting) return;
     setStarting(true);
+    const initialSession = { messages: [], step: 0, totalSteps: phases.length, done: false, starterRole: myRole };
     if (isGuest || !user?.code) {
       // Local mode — just set session directly
-      setSession({ messages: [], step: 0, totalSteps: phases.length, done: false, starterRole: myRole });
+      setSession(initialSession);
       setStarted(true);
       setStarting(false);
       return;
     }
     try {
+      // Optimistic start so either partner can begin immediately, even if snapshot lags.
+      setSession(initialSession);
+      setStarted(true);
       await fbStartExSession(user.code, ex.id, phases.length, myRole);
     } catch(e) {
       // Fallback to local if Firebase fails
-      setSession({ messages: [], step: 0, totalSteps: phases.length, done: false, starterRole: myRole });
+      setSession(initialSession);
       setStarted(true);
     } finally {
       setStarting(false);
@@ -2357,14 +2363,16 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
     const newStep = currentStep + 1;
     const msg = { text: val.trim(), role: myRole, step: currentStep };
     const isDoneNow = newStep >= phases.length;
+    const newMessages = [...messages, msg];
+    const optimisticSession = { messages: newMessages, step: newStep, totalSteps: phases.length, done: isDoneNow, starterRole };
 
     if (isGuest || !user?.code) {
-      const newMsgs = [...messages, msg];
-      setSession(s => ({ ...s, messages: newMsgs, step: newStep, done: isDoneNow }));
+      setSession(s => ({ ...s, messages: newMessages, step: newStep, done: isDoneNow }));
       setVal("");
       if (isDoneNow) onDone();
     } else {
-      const newMessages = [...messages, msg];
+      // Optimistic update so the current user can keep moving even if Firestore responds slowly.
+      setSession(s => ({ ...(s || optimisticSession), messages: newMessages, step: newStep, totalSteps: phases.length, done: isDoneNow, starterRole }));
       await fbSendExMessage(user.code, ex.id, { messages: newMessages, step: newStep, starterRole }).catch(() => {});
       if (isDoneNow) {
         await fbCompleteExSession(user.code, ex.id).catch(() => {});
@@ -2881,7 +2889,7 @@ function Conocete({ conoce, onSave, user }) {
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
       <ScreenTop title="Conócete" sub="Preguntas para descubrirse" />
       <div style={{ margin: "10px 14px 0", background: C.white, borderRadius: 16, padding: 14, border: `1.5px solid ${C.border}`, boxShadow: `0 2px 0 ${C.border}` }}>
-        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark, marginBottom: 6 }}>🧪 Resultado de tests de personalidad</div>
+        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark, marginBottom: 6 }}>🧪 Resultado de tests + Mochi recomienda</div>
         <div style={{ fontSize: "0.8rem", color: C.inkL, fontWeight: 700, marginBottom: 6 }}>{quizAdvice.progress.answered}/{quizAdvice.progress.total} completados</div>
         {quizAdvice.complete ? (
           <div>
@@ -3008,55 +3016,6 @@ function Burbuja({ burbuja, onSave, user }) {
         ))}
       </div>
 
-      {burTab === "negociacion" && (() => {
-        const relOptions = ["Compañeros de vida 💑","Novios / Pareja 💕","Amigovios · sin etiqueta 🤫","Construyendo algo a largo plazo 🌱","Otro ✏️"];
-        const saved = burbuja["tipo_relacion"] || {};
-        const savedChoice = saved.c || "";
-        return (
-          <div style={{ background: C.white, borderRadius: 18, margin: "0 14px 10px", padding: 16, boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
-            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:10 }}>🫂 ¿Cómo definen su relación?</div>
-            <div style={{ display:"flex", flexDirection:"column", gap:7 }}>
-              {relOptions.map(opt => {
-                const isCustom = opt.startsWith("Otro");
-                const isActive = !isCustom && savedChoice === opt;
-                const isCustomActive = isCustom && savedChoice && !relOptions.slice(0,-1).includes(savedChoice);
-                return (
-                  <div key={opt}>
-                    <button
-                      onClick={() => {
-                        if (isCustom) return;
-                        onSave("tipo_relacion", { c: opt, at: new Date().toISOString() });
-                      }}
-                      style={{ width:"100%", padding:"9px 14px", textAlign:"left", borderRadius:10, border:`1.5px solid ${isActive ? C.olive : C.border}`, background: isActive ? "#f0ffe8" : C.cream, color: C.dark, fontSize:"0.84rem", fontWeight: isActive ? 800 : 600, cursor: isCustom ? "default" : "pointer" }}>
-                      {isActive && "✓ "}{isCustom ? "Otro:" : opt}
-                    </button>
-                    {isCustom && (
-                      <div style={{ display:"flex", gap:6, marginTop:5 }}>
-                        <input
-                          defaultValue={isCustomActive ? savedChoice : ""}
-                          placeholder="Escribe cómo la definen..."
-                          style={{ flex:1, padding:"7px 10px", borderRadius:9, border:`1.5px solid ${C.border}`, fontSize:"0.82rem", outline:"none" }}
-                          id="burbuja-rel-custom"
-                        />
-                        <button
-                          onClick={() => {
-                            const val = document.getElementById("burbuja-rel-custom")?.value?.trim();
-                            if (val) onSave("tipo_relacion", { c: val, at: new Date().toISOString() });
-                          }}
-                          style={{ padding:"7px 12px", background:C.olive, color:C.cream2, border:"none", borderRadius:9, fontSize:"0.8rem", fontWeight:800, cursor:"pointer" }}>
-                          Guardar
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            {savedChoice && <div style={{ marginTop:8, fontSize:"0.73rem", color:C.inkL, fontWeight:700 }}>Definición actual: "{savedChoice}"</div>}
-          </div>
-        );
-      })()}
-
       {burTab === "negociacion" && BURBUJA_SECTIONS.map(sec => (
         <div key={sec.id} style={{ background: C.white, borderRadius: 18, margin: "0 14px 10px", boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}`, overflow: "hidden" }}>
           <div onClick={() => setOpen(p => ({ ...p, [sec.id]: !p[sec.id] }))} style={{ display: "flex", alignItems: "center", gap: 12, padding: 16, cursor: "pointer" }}>
@@ -3150,13 +3109,15 @@ function Burbuja({ burbuja, onSave, user }) {
 }
 
 // PROFILE — Enhanced with more info fields
-function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento, conoce, onOpenConocete, onSendMessage, onAddBamboo }) {
+function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento, conoce, onOpenConocete, onSendMessage, onAddBamboo, diarioEntries, onSaveDiarioEntry }) {
   const [editMode, setEditMode] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [loveText, setLoveText] = useState("");
   const [loveQuick, setLoveQuick] = useState(null);
+  const [loveTab, setLoveTab] = useState("recibidos");
   const [sendingLove, setSendingLove] = useState(false);
   const [showTipModal, setShowTipModal] = useState(false);
+  const [showDiarioModal, setShowDiarioModal] = useState(false);
   const [nameInput, setNameInput] = useState(user?.names || "");
   const [form, setForm] = useState({
     anniversary: coupleInfo.anniversary || "",
@@ -3178,8 +3139,6 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
   const myEmail = user?.email || "guest";
   const myMsgs = messages.filter(m => m.senderEmail === myEmail).length;
   const inboxMsgs = messages.filter(m => m.senderEmail !== myEmail).length;
-  const todayStr = new Date().toDateString();
-  const todayLoveMsg = messages.find(m => m.senderEmail !== myEmail && new Date(m.time).toDateString() === todayStr);
   const tipDateKey = new Date().toISOString().slice(0, 10);
   const tipRewardKey = `mochi_tip_reward_${user?.uid || user?.email || "guest"}_${tipDateKey}`;
   const [tipRewarded, setTipRewarded] = useState(!!ls.get(tipRewardKey));
@@ -3191,6 +3150,7 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
     .filter(m => (m?.text || "").trim())
     .sort((a, b) => new Date(b.time || 0).getTime() - new Date(a.time || 0).getTime());
   const visibleLoveHistory = loveHistory.slice(0, 12);
+  const visibleReceivedHistory = loveHistory.filter(m => m.senderEmail !== myEmail).slice(0, 12);
   const activityDateKeys = [
     ...(gratitud || []).map(x => x?.createdAt?.toDate ? x.createdAt.toDate() : new Date(x?.date || Date.now())),
     ...(momentos || []).map(x => x?.createdAt?.toDate ? x.createdAt.toDate() : new Date(x?.date || Date.now())),
@@ -3317,23 +3277,34 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
       {/* 2. Mensajes de amor */}
       <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:16, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
         <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:8 }}>💌 Mensajes de amor</div>
-        {todayLoveMsg ? (
-          <>
-            <div style={{ fontSize:"0.84rem", color:C.ink, lineHeight:1.55 }}>
-              "{todayLoveMsg.text}"
-            </div>
-            <div style={{ fontSize:"0.7rem", color:C.inkL, fontWeight:700, marginTop:6 }}>Mensaje de hoy ✓</div>
-          </>
-        ) : (
-          <div style={{ fontSize:"0.82rem", color:C.inkL, fontWeight:700 }}>
-            Aún no hay mensaje de hoy. Recibidos: {inboxMsgs}
+        <div style={{ marginTop: 8, background: C.sandL, borderRadius: 12, border: `1.5px solid ${C.border}`, padding: 8 }}>
+          <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+            {[{ id: "recibidos", label: `Recibidos (${inboxMsgs})` }, { id: "historial", label: `Historial (${visibleLoveHistory.length})` }].map(t => (
+              <div key={t.id} onClick={() => setLoveTab(t.id)}
+                style={{ flex: 1, textAlign: "center", cursor: "pointer", borderRadius: 8, padding: "6px 8px", fontSize: "0.72rem", fontWeight: 800, background: loveTab === t.id ? C.dark : C.cream, color: loveTab === t.id ? C.cream2 : C.inkM }}>
+                {t.label}
+              </div>
+            ))}
           </div>
-        )}
 
-        <div style={{ marginTop: 10, background: C.sandL, borderRadius: 12, border: `1.5px solid ${C.border}`, padding: 10 }}>
-          <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.inkL, letterSpacing: "0.5px", marginBottom: 8 }}>HISTORIAL DE MENSAJES</div>
-          {visibleLoveHistory.length === 0 ? (
-            <div style={{ fontSize: "0.78rem", color: C.inkL, fontWeight: 700 }}>Todavía no tienen mensajes guardados.</div>
+          {loveTab === "recibidos" && (visibleReceivedHistory.length === 0 ? (
+            <div style={{ fontSize: "0.78rem", color: C.inkL, fontWeight: 700, padding: "2px 4px" }}>Todavía no tienes mensajes recibidos.</div>
+          ) : visibleReceivedHistory.map((m) => (
+            <div key={m.id || `${m.senderEmail}-${m.time}`} style={{ background: C.white, borderRadius: 10, border: `1px solid ${C.border}`, padding: "8px 10px", marginBottom: 6 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 4 }}>
+                <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.dark }}>{m.sender || "Tu pareja"}</div>
+                <div style={{ fontSize: "0.64rem", color: C.inkL, fontWeight: 700 }}>
+                  {new Date(m.time || Date.now()).toLocaleDateString("es", { day: "2-digit", month: "short" })}
+                </div>
+              </div>
+              <div style={{ fontSize: "0.78rem", color: C.inkM, lineHeight: 1.4 }}>
+                "{m.text}"
+              </div>
+            </div>
+          )))}
+
+          {loveTab === "historial" && (visibleLoveHistory.length === 0 ? (
+            <div style={{ fontSize: "0.78rem", color: C.inkL, fontWeight: 700, padding: "2px 4px" }}>Todavía no tienen mensajes guardados.</div>
           ) : visibleLoveHistory.map((m) => (
             <div key={m.id || `${m.senderEmail}-${m.time}`} style={{ background: C.white, borderRadius: 10, border: `1px solid ${C.border}`, padding: "8px 10px", marginBottom: 6 }}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 4 }}>
@@ -3348,7 +3319,7 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
                 "{m.text}"
               </div>
             </div>
-          ))}
+          )))}
         </div>
 
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:6, marginTop:10 }}>
@@ -3425,6 +3396,16 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
         />
       </div>
 
+      <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:16, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
+        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:6 }}>📓 Diario personal</div>
+        <div style={{ fontSize:"0.78rem", color:C.inkM, lineHeight:1.5, marginBottom:10 }}>
+          Espacio privado para registrar discusiones, ABCD y reflexiones personales.
+        </div>
+        <Btn onClick={() => setShowDiarioModal(true)} variant="sand" style={{ width:"100%", fontSize:"0.84rem" }}>
+          Abrir diario
+        </Btn>
+      </div>
+
       {/* 6. Logros */}
       <div style={{ padding: "4px 14px 6px", fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark }}>Logros</div>
       <div style={{ display: "flex", gap: 10, padding: "4px 14px 18px", overflowX: "auto" }}>
@@ -3453,6 +3434,18 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
             <div style={{ background:C.sandL, border:`1px solid ${C.border}`, borderRadius:12, padding:"10px 12px", fontSize:"0.82rem", color:C.inkM, lineHeight:1.6 }}>
               {todayTip?.context}
             </div>
+          </div>
+        </div>
+      )}
+
+      {showDiarioModal && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.55)", zIndex:6500 }}>
+          <div style={{ position:"absolute", inset:0, background:C.sandL, overflowY:"auto" }}>
+            <div style={{ position:"sticky", top:0, zIndex:2, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 14px", background:C.white, borderBottom:`1.5px solid ${C.border}` }}>
+              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark }}>📓 Diario personal</div>
+              <button onClick={() => setShowDiarioModal(false)} style={{ width:34, height:34, borderRadius:"50%", border:"none", background:C.cream, color:C.inkM, fontWeight:900, fontSize:"1rem", cursor:"pointer" }}>✕</button>
+            </div>
+            <DiarioPersonal entries={diarioEntries} onSave={onSaveDiarioEntry} user={user} />
           </div>
         </div>
       )}
@@ -4304,7 +4297,6 @@ const NAV = [
   { id: "ejerc", emoji: "⭐", label: "Ejerc." },
   { id: "conocete", emoji: "💬", label: "Conócete" },
   { id: "burbuja", emoji: "🫧", label: "Burbuja" },
-  { id: "diario", emoji: "📓", label: "Diario" },
   { id: "perfil", emoji: "👤", label: "Nosotros" },
 ];
 
@@ -4642,19 +4634,7 @@ export default function App() {
     save(null, { bamboo: nb, happiness: nh, accessories: na, lastVisit: nv });
   };
 
-  const waterGarden = async () => {
-    const nw = Math.min(100, water + 10), nh = Math.min(100, happiness + 2);
-    const nv = new Date().toISOString();
-    if (user?.code && !user?.isGuest) {
-      await fbSaveGardenState(user.code, { garden, accessories, water: nw, happiness: nh, lastVisit: nv }).catch(() => {});
-    }
-    setWater(nw); setHappiness(nh); setLastVisit(nv); trigHappy();
-    toast("Jardín regado 💧 ¡Gracias por volver!");
-    save(null, { happiness: nh, water: nw, lastVisit: nv });
-  };
-
-  const petMochi = () => {
-    trigHappy();
+  const showGardenMessages = (fallbackTextB = "Aquí aparecerán los mensajes de amor que envíes 💌") => {
     const parsedNames = parseCoupleNames(user?.names);
     const nameA = parsedNames.a || "Panda A";
     const nameB = parsedNames.b || "Panda B";
@@ -4664,10 +4644,26 @@ export default function App() {
     const msgA = pandaAMsgs[0];
     const msgB = pandaBMsgs[0];
     const textA = msgA ? msgA.text.slice(0, 60) + (msgA.text.length > 60 ? "..." : "") : null;
-    const textB = msgB ? msgB.text.slice(0, 60) + (msgB.text.length > 60 ? "..." : "") : "Aquí aparecerán los mensajes de amor que envíes 💌";
-    // Show speech bubbles over pandas for 5 seconds
+    const textB = msgB ? msgB.text.slice(0, 60) + (msgB.text.length > 60 ? "..." : "") : fallbackTextB;
     setPandaBubble({ nameA: msgA ? nameA : null, textA, nameB, textB });
     setTimeout(() => setPandaBubble(null), 5000);
+  };
+
+  const waterGarden = async () => {
+    const nw = Math.min(100, water + 10), nh = Math.min(100, happiness + 2);
+    const nv = new Date().toISOString();
+    if (user?.code && !user?.isGuest) {
+      await fbSaveGardenState(user.code, { garden, accessories, water: nw, happiness: nh, lastVisit: nv }).catch(() => {});
+    }
+    setWater(nw); setHappiness(nh); setLastVisit(nv); trigHappy();
+    showGardenMessages("Tu jardín florece más cuando se escriben bonito 💌");
+    toast("Jardín regado 💧 ¡Gracias por volver!");
+    save(null, { happiness: nh, water: nw, lastVisit: nv });
+  };
+
+  const petMochi = () => {
+    trigHappy();
+    showGardenMessages();
     const nh = Math.min(100, happiness + 2);
     setHappiness(nh);
   };
@@ -4941,8 +4937,7 @@ export default function App() {
         {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson}/>}
         {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user}/>}
         {tab==="burbuja" && <Burbuja burbuja={burbuja} onSave={saveBurbuja} user={user}/>}
-        {tab==="diario" && <DiarioPersonal entries={diarioEntries} onSave={saveDiarioEntry} user={user}/>}
-        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} exDone={exDone} messages={messages} burbuja={burbuja} coupleInfo={coupleInfo} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} conoce={conoce} onOpenConocete={() => setTab("conocete")} onSendMessage={sendMsg} onAddBamboo={addBambooBonus}/>}
+        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} exDone={exDone} messages={messages} burbuja={burbuja} coupleInfo={coupleInfo} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} conoce={conoce} onOpenConocete={() => setTab("conocete")} onSendMessage={sendMsg} onAddBamboo={addBambooBonus} diarioEntries={diarioEntries} onSaveDiarioEntry={saveDiarioEntry}/>}
       </div>
       <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:480, background:C.white, borderTop:`1.5px solid ${C.border}`, display:"flex", zIndex:1000, boxShadow:`0 -3px 0 ${C.line}` }}>
         {NAV.map(n => {

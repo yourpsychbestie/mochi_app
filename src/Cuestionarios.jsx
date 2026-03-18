@@ -336,21 +336,8 @@ export default function Cuestionarios({ conoce, onSave, user }) {
         );
       })}
 
-      <div style={{ background: "#f5edda", borderRadius: 12, padding: 11, border: "1px solid rgba(30,43,30,0.12)", marginTop: 8 }}>
-        <div style={{ fontWeight: 800, color: "#1e2b1e", fontSize: "0.82rem", marginBottom: 6 }}>
-          Mochi recomienda
-        </div>
-        {!myAdvice.complete ? (
-          <div style={{ fontSize: "0.76rem", color: "#5a6a4a", lineHeight: 1.6 }}>
-            Completa los 3 test para generar tus 5 consejos personalizados ({myAdvice.progress.answered}/{myAdvice.progress.total}).
-          </div>
-        ) : (
-          <ol style={{ margin: 0, paddingLeft: 18, color: "#1e2b1e" }}>
-            {myAdvice.tips.map((tip, idx) => (
-              <li key={idx} style={{ fontSize: "0.76rem", lineHeight: 1.6, marginBottom: 4 }}>{tip}</li>
-            ))}
-          </ol>
-        )}
+      <div style={{ fontSize: "0.74rem", color: "#5a6a4a", marginTop: 4 }}>
+        Los consejos de "Mochi recomienda" ahora aparecen arriba en Resultado de tests.
       </div>
     </div>
   );
