@@ -2813,6 +2813,7 @@ function Burbuja({ burbuja, onSave, user }) {
     if (r.status === "approved") return true;
     return !r.status && (r.c || r.a || r.b);
   });
+  const savedCount = savedItems.length;
 
   const sendProposal = (itemId, text, asCounter = false) => {
     const clean = (text || "").trim();
@@ -2869,8 +2870,8 @@ function Burbuja({ burbuja, onSave, user }) {
         <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.05rem", color: C.dark, marginBottom: 5 }}>¿Qué es la burbuja?</div>
         <div style={{ fontSize: "0.85rem", color: C.inkM, lineHeight: 1.7 }}>Su relación tiene sus propias reglas — únicas para ustedes. Este es el espacio para definirlas juntos, sin juicios.</div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
-          <ProgBar value={Object.keys(burbuja).length} max={total} color={C.olive} height={7} style={{ flex: 1 }} />
-          <div style={{ fontSize: "0.76rem", fontWeight: 800, color: C.olive, whiteSpace: "nowrap" }}>{Object.keys(burbuja).length} / {total}</div>
+          <ProgBar value={savedCount} max={total} color={C.olive} height={7} style={{ flex: 1 }} />
+          <div style={{ fontSize: "0.76rem", fontWeight: 800, color: C.olive, whiteSpace: "nowrap" }}>{savedCount} / {total}</div>
         </div>
       </div>
 
@@ -3058,7 +3059,8 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
   const tipDateKey = new Date().toISOString().slice(0, 10);
   const tipRewardKey = `mochi_tip_reward_${user?.uid || user?.email || "guest"}_${tipDateKey}`;
   const [tipRewarded, setTipRewarded] = useState(!!ls.get(tipRewardKey));
-  const tipIdx = new Date().getDate() % DAILY_TIPS.length;
+  const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+  const tipIdx = dayOfYear % DAILY_TIPS.length;
   const todayTip = DAILY_TIPS[tipIdx];
   const todayTipSource = DAILY_TIP_SOURCES[tipIdx];
   const loveHistory = [...(messages || [])]
@@ -3097,6 +3099,14 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
     return yStreak;
   })();
   const [connected, setConnected] = useState(false);
+  const burbujaSavedCount = BURBUJA_SECTIONS
+    .flatMap(sec => sec.items)
+    .filter(item => {
+      const r = burbuja[item.id];
+      if (!r) return false;
+      if (r.status === "approved") return true;
+      return !r.status && (r.c || r.a || r.b);
+    }).length;
   useEffect(() => {
     if (user?.code && !user?.isGuest) {
       fbGetCode(user.code).then(ci => {
@@ -3115,9 +3125,9 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
     { icon: "⭐", name: "10 ejercicios", desc: "Completa 10 ejercicios", done: totalEx >= 10 },
     { icon: "🔗", name: "Pareja conectada", desc: "Ambos unidos por código", done: connected },
     { icon: "💌", name: "5 mensajitos", desc: "Enviar o recibir 5 mensajes", done: myMsgs + inboxMsgs >= 5 },
-    { icon: "🌸", name: "5 acuerdos", desc: "Guardar 5 acuerdos de burbuja", done: Object.keys(burbuja).length >= 5 },
+    { icon: "🌸", name: "5 acuerdos", desc: "Guardar 5 acuerdos de burbuja", done: burbujaSavedCount >= 5 },
     { icon: "🌿", name: "100 bambú", desc: "Llegar a 100 bambú", done: bamboo >= 100 },
-    { icon: "💝", name: "Jardín lleno", desc: "10 elementos de relación activos", done: Object.keys(burbuja).length >= 10 },
+    { icon: "💝", name: "Jardín lleno", desc: "10 elementos de relación activos", done: burbujaSavedCount >= 10 },
     { icon: "🏆", name: "25 ejercicios", desc: "Constancia total", done: totalEx >= 25 },
   ];
 
