@@ -1173,7 +1173,7 @@ function GardenItemIcon({ id, size = 38 }) {
 
 function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
   const owned = accessories || {};
-  const isEquipped = (id) => owned[id] === true;
+  const isEquipped = (id) => owned[id] === true || owned[id] === "true" || owned[id] === 1 || owned[id] === "equipped";
   // New viewBox: 260x220 matching new CouplePandaSVG
   // Left panda head center: ~76, 88 (tilted +6deg)
   // Right panda head center: ~176, 88 (tilted -4deg)
@@ -1885,7 +1885,7 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
     : GARDEN_ITEMS.filter(i => i.cat === shopTab);
   const accessoryStatus = (itemId) => {
     const v = accessories?.[itemId];
-    if (v === true) return "equipped";
+    if (v === true || v === "true" || v === 1 || v === "equipped") return "equipped";
     if (v === "owned") return "owned";
     return "new";
   };
@@ -5050,8 +5050,15 @@ export default function App() {
     if (busyAccessoryId === item.id) return;
     setBusyAccessoryId(item.id);
 
+    const accessoryMode = (value) => {
+      if (value === true || value === "true" || value === 1 || value === "equipped") return "equipped";
+      if (value === "owned") return "owned";
+      return "new";
+    };
+    const currentMode = accessoryMode(accessories[item.id]);
+
     // If already owned, toggle it on/off (equip/unequip)
-    if (accessories[item.id] === "owned") {
+    if (currentMode === "owned") {
       // Already owned but not equipped — equip it
       const na = { ...accessories, [item.id]: true };
       if (user?.code && !user?.isGuest) {
@@ -5074,7 +5081,7 @@ export default function App() {
       setBusyAccessoryId(null);
       return;
     }
-    if (accessories[item.id] === true) {
+    if (currentMode === "equipped") {
       // Currently equipped — unequip but keep owned
       const na = { ...accessories, [item.id]: "owned" };
       if (user?.code && !user?.isGuest) {
