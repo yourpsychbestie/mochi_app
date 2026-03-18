@@ -214,7 +214,7 @@ const EXERCISES = [
     ]},
   {id:"presencia",emoji:"🌿",title:"Presencia Plena",tags:"Mindfulness · ACT",bamboo:25,time:"10 min",mode:"presencial",
     desc:"En un mundo de distracciones, dar presencia plena es el regalo más raro. 10 minutos sin teléfonos, sin listas mentales — solo ustedes.",
-    instructions:["Silencien notificaciones — solo Mochi abierto","No hay agenda — solo estar presentes el uno para el otro","Escriban lo primero que piensan al ver el nombre del otro","No hay respuesta correcta ni incorrecta","Al terminar, compartan una observación del ejercicio"],
+    instructions:["Silencien notificaciones — solo Mochi abierto","No hay agenda — solo estar presentes el uno para el otro","Escriban lo primero que piensan al ver el nombre del otro","No hay respuesta incorrecta","Al terminar, compartan una observación del ejercicio"],
     timer:600,timerLabel:"Presencia plena — sin distracciones",
     beforeTimer:["Apaguen o silencien los teléfonos.","Siéntense cómodos, cerca.","No hay tema — solo estén presentes.","Hablen de lo que surja naturalmente.","Presionen INICIAR."],
     afterPrompts:[{role:0,ph:"Lo que noté en ti hoy fue…"},{role:1,ph:"Estar presente contigo me hizo sentir…"}]},
@@ -229,7 +229,7 @@ const EXERCISES = [
     ]},
   {id:"check_in_2min",emoji:"🌡",title:"Check-in de 2 Minutos",tags:"EFT · Sistémica",bamboo:15,time:"2 min",mode:"distancia",
     desc:"La Terapia Focalizada en Emociones (EFT) de Sue Johnson muestra que la sintonía emocional diaria — aunque sea breve — previene la acumulación de distancia. Tomarse 2 minutos para saber cómo está el otro reduce el porcentaje de malentendidos acumulados.",
-    instructions:["Respondan individualmente y en honestidad","No hay respuesta correcta — no es el momento de resolver nada","El objetivo es solo conocer el estado emocional del otro","Si ven que el otro está bajo, pueden preguntar: '¿Qué necesitas hoy?'","Terminen con un emoji que represente cómo se sienten en este momento"],
+    instructions:["Respondan individualmente y en honestidad","No hay respuesta incorrecta — no es el momento de resolver nada","El objetivo es solo conocer el estado emocional del otro","Si ven que el otro está bajo, pueden preguntar: '¿Qué necesitas hoy?'","Terminen con un emoji que represente cómo se sienten en este momento"],
     phases:[
       {role:0,q:"En 3 palabras: ¿cómo estás emocionalmente hoy?",ph:"Hoy estoy… / Me siento…",hint:"Ejemplo: cansado, esperanzado, ansioso. Lo más honesto posible."},
       {role:1,q:"En 3 palabras: ¿cómo estás tú?",ph:"Yo hoy estoy…"},
@@ -571,7 +571,7 @@ const BURBUJA_SECTIONS = [
     ]},
   {id:"economia",icon:"💰",title:"Economía & Dinero",sub:"Finanzas, gastos y metas económicas",itemBg:"#fef8e0",
     items:[
-      {id:"eco1",q:"¿Cómo van a manejar el dinero? ¿Juntos, separados o mixto?",phA:"Para mí lo ideal es...",phB:"Para mí lo ideal es...",note:"No hay respuesta correcta: cuentas separadas, conjunta, o ambas. Lo importante es acordarlo."},
+      {id:"eco1",q:"¿Cómo van a manejar el dinero? ¿Juntos, separados o mixto?",phA:"Para mí lo ideal es...",phB:"Para mí lo ideal es...",note:"No hay respuesta incorrecta: cuentas separadas, conjunta, o ambas. Lo importante es acordarlo."},
       {id:"eco2",q:"¿Cuánto es 'gasto grande' que requiere consultarse?",phA:"Para mí, más de...",phB:"Para mí, más de..."},
       {id:"eco3",q:"¿Qué metas económicas tienen juntos?",phA:"Una meta que quiero es...",phB:"Una meta que quiero es..."},
       {id:"eco4",q:"¿Cómo manejan las deudas o situaciones económicas difíciles?",phA:"En esos momentos yo...",phB:"En esos momentos yo..."},
@@ -1437,6 +1437,120 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
           <path d="M12 0 C18 -8 24 -10 20 -2 C16 6 6 4 0 0Z" fill="#80aaf4"/>
           <circle cx="0" cy="0" r="5" fill="#c8dcfc"/>
           <circle cx="0" cy="0" r="2.5" fill="#80aaf4"/>
+        </g>
+      )}
+
+      {/* OUTFIT: SAILOR */}
+      {owned.outfit_sailor && (
+        <g>
+          {/* Sailor body - left */}
+          <path d="M46 138 C42 152 40 174 42 196 C52 201 100 201 110 196 C112 174 110 152 106 138 C94 130 86 128 76 128 C66 128 58 130 46 138Z" fill="white" opacity="0.92"/>
+          {/* Navy V-collar - left */}
+          <path d="M54 126 L76 158 L98 126 C96 120 88 116 76 116 C64 116 56 120 54 126Z" fill="#1a3a6a" opacity="0.9"/>
+          <path d="M54 126 L76 158 L98 126" fill="none" stroke="white" strokeWidth="2.5" strokeLinejoin="round"/>
+          <path d="M58 122 C70 118 82 118 94 122" fill="none" stroke="white" strokeWidth="1.5" opacity="0.7"/>
+          {/* Sailor hat - left */}
+          <g transform="rotate(6, 76, 88) translate(76, 52)">
+            <ellipse cx="0" cy="5" rx="32" ry="8" fill="white"/>
+            <ellipse cx="0" cy="5" rx="32" ry="8" fill="none" stroke="#1a3a6a" strokeWidth="1.5"/>
+            <rect x="-20" y="-14" width="40" height="19" rx="3" fill="white"/>
+            <rect x="-20" y="-14" width="40" height="19" rx="3" fill="none" stroke="#1a3a6a" strokeWidth="1.5"/>
+            <rect x="-20" y="1" width="40" height="4" fill="#1a3a6a" opacity="0.9"/>
+            <circle cx="0" cy="-7" r="3.5" fill="#f8c040" opacity="0.9"/>
+            <circle cx="0" cy="-7" r="2" fill="#c89020"/>
+          </g>
+          {/* Sailor body - right */}
+          <path d="M146 138 C142 152 140 174 142 196 C152 201 200 201 210 196 C212 174 210 152 206 138 C194 130 186 128 176 128 C166 128 158 130 146 138Z" fill="white" opacity="0.92"/>
+          {/* Navy V-collar - right */}
+          <path d="M154 126 L176 158 L198 126 C196 120 188 116 176 116 C164 116 156 120 154 126Z" fill="#1a3a6a" opacity="0.9"/>
+          <path d="M154 126 L176 158 L198 126" fill="none" stroke="white" strokeWidth="2.5" strokeLinejoin="round"/>
+          <path d="M158 122 C170 118 182 118 194 122" fill="none" stroke="white" strokeWidth="1.5" opacity="0.7"/>
+          {/* Sailor hat - right */}
+          <g transform="rotate(-4, 176, 88) translate(176, 50)">
+            <ellipse cx="0" cy="5" rx="32" ry="8" fill="white"/>
+            <ellipse cx="0" cy="5" rx="32" ry="8" fill="none" stroke="#1a3a6a" strokeWidth="1.5"/>
+            <rect x="-20" y="-14" width="40" height="19" rx="3" fill="white"/>
+            <rect x="-20" y="-14" width="40" height="19" rx="3" fill="none" stroke="#1a3a6a" strokeWidth="1.5"/>
+            <rect x="-20" y="1" width="40" height="4" fill="#1a3a6a" opacity="0.9"/>
+            <circle cx="0" cy="-7" r="3.5" fill="#f8c040" opacity="0.9"/>
+            <circle cx="0" cy="-7" r="2" fill="#c89020"/>
+          </g>
+        </g>
+      )}
+
+      {/* OUTFIT: WITCH */}
+      {owned.outfit_witch && (
+        <g>
+          {/* Cape - left */}
+          <path d="M40 134 C36 150 34 175 36 200 C50 206 100 206 116 200 C118 175 116 150 112 134 C100 126 88 124 76 124 C64 124 52 126 40 134Z" fill="#2a1060" opacity="0.85"/>
+          <circle cx="76" cy="133" r="6" fill="#8050d0" opacity="0.9"/>
+          <circle cx="76" cy="133" r="3.5" fill="#b080f0"/>
+          {/* Witch hat - left */}
+          <g transform="rotate(6, 76, 88) translate(76, 50)">
+            <ellipse cx="0" cy="7" rx="38" ry="9" fill="#1a1228" opacity="0.97"/>
+            <ellipse cx="0" cy="7" rx="38" ry="9" fill="none" stroke="#6040b0" strokeWidth="1.5"/>
+            <path d="M-14 7 C-8 -8 -3 -24 0 -40 C3 -24 8 -8 14 7Z" fill="#1a1228" opacity="0.97"/>
+            <path d="M-14 7 C-8 -8 -3 -24 0 -40 C3 -24 8 -8 14 7Z" fill="none" stroke="#6040b0" strokeWidth="1.5"/>
+            <path d="M-14 7 C-6 3 6 3 14 7" fill="none" stroke="#a070e0" strokeWidth="3.5" strokeLinecap="round"/>
+            <circle cx="-4" cy="-20" r="1.8" fill="#d4a0f8" opacity="0.85"/>
+            <circle cx="5" cy="-30" r="1.2" fill="#e8c0ff" opacity="0.8"/>
+            <circle cx="6" cy="-12" r="1" fill="#d4a0f8" opacity="0.75"/>
+          </g>
+          {/* Cape - right */}
+          <path d="M140 134 C136 150 134 175 136 200 C150 206 200 206 216 200 C218 175 216 150 212 134 C200 126 188 124 176 124 C164 124 152 126 140 134Z" fill="#2a1060" opacity="0.85"/>
+          <circle cx="176" cy="133" r="6" fill="#8050d0" opacity="0.9"/>
+          <circle cx="176" cy="133" r="3.5" fill="#b080f0"/>
+          {/* Witch hat - right */}
+          <g transform="rotate(-4, 176, 88) translate(176, 48)">
+            <ellipse cx="0" cy="7" rx="38" ry="9" fill="#1a1228" opacity="0.97"/>
+            <ellipse cx="0" cy="7" rx="38" ry="9" fill="none" stroke="#6040b0" strokeWidth="1.5"/>
+            <path d="M-14 7 C-8 -8 -3 -24 0 -40 C3 -24 8 -8 14 7Z" fill="#1a1228" opacity="0.97"/>
+            <path d="M-14 7 C-8 -8 -3 -24 0 -40 C3 -24 8 -8 14 7Z" fill="none" stroke="#6040b0" strokeWidth="1.5"/>
+            <path d="M-14 7 C-6 3 6 3 14 7" fill="none" stroke="#a070e0" strokeWidth="3.5" strokeLinecap="round"/>
+            <circle cx="-4" cy="-20" r="1.8" fill="#d4a0f8" opacity="0.85"/>
+            <circle cx="5" cy="-30" r="1.2" fill="#e8c0ff" opacity="0.8"/>
+            <circle cx="6" cy="-12" r="1" fill="#d4a0f8" opacity="0.75"/>
+          </g>
+        </g>
+      )}
+
+      {/* OUTFIT: ANGEL */}
+      {owned.outfit_angel && (
+        <g>
+          {/* Wings left of left panda */}
+          <path d="M28 158 C10 144 4 122 18 110 C32 104 48 118 46 140Z" fill="white" opacity="0.9"/>
+          <path d="M28 158 C10 144 4 122 18 110 C32 104 48 118 46 140Z" fill="none" stroke="#e8d898" strokeWidth="1.5"/>
+          <path d="M30 170 C14 160 8 142 18 130 C28 120 40 130 40 150Z" fill="white" opacity="0.65"/>
+          {/* Wings right of left panda */}
+          <path d="M124 158 C142 144 148 122 134 110 C120 104 104 118 106 140Z" fill="white" opacity="0.9"/>
+          <path d="M124 158 C142 144 148 122 134 110 C120 104 104 118 106 140Z" fill="none" stroke="#e8d898" strokeWidth="1.5"/>
+          <path d="M122 170 C138 160 144 142 134 130 C124 120 112 130 112 150Z" fill="white" opacity="0.65"/>
+          {/* White robe - left */}
+          <path d="M46 136 C42 150 40 172 42 196 C52 201 100 201 110 196 C112 172 110 150 106 136 C94 128 86 126 76 126 C66 126 58 128 46 136Z" fill="white" opacity="0.88"/>
+          <path d="M42 196 C52 201 100 201 110 196" fill="none" stroke="#d4a020" strokeWidth="3" strokeLinecap="round"/>
+          <path d="M46 160 C58 156 68 154 76 154 C84 154 94 156 106 160" fill="none" stroke="#d4a020" strokeWidth="2.5" strokeLinecap="round"/>
+          {/* Halo - left */}
+          <g transform="rotate(6, 76, 88) translate(76, 50)">
+            <ellipse cx="0" cy="0" rx="22" ry="6" fill="none" stroke="#c89020" strokeWidth="5" opacity="0.95"/>
+            <ellipse cx="0" cy="0" rx="22" ry="6" fill="none" stroke="#f8e878" strokeWidth="2.5" opacity="0.7"/>
+          </g>
+          {/* Wings left of right panda */}
+          <path d="M128 158 C110 144 104 122 118 110 C132 104 148 118 146 140Z" fill="white" opacity="0.9"/>
+          <path d="M128 158 C110 144 104 122 118 110 C132 104 148 118 146 140Z" fill="none" stroke="#e8d898" strokeWidth="1.5"/>
+          <path d="M130 170 C114 160 108 142 118 130 C128 120 140 130 140 150Z" fill="white" opacity="0.65"/>
+          {/* Wings right of right panda */}
+          <path d="M224 158 C242 144 248 122 234 110 C220 104 204 118 206 140Z" fill="white" opacity="0.9"/>
+          <path d="M224 158 C242 144 248 122 234 110 C220 104 204 118 206 140Z" fill="none" stroke="#e8d898" strokeWidth="1.5"/>
+          <path d="M222 170 C238 160 244 142 234 130 C224 120 212 130 212 150Z" fill="white" opacity="0.65"/>
+          {/* White robe - right */}
+          <path d="M146 136 C142 150 140 172 142 196 C152 201 200 201 210 196 C212 172 210 150 206 136 C194 128 186 126 176 126 C166 126 158 128 146 136Z" fill="white" opacity="0.88"/>
+          <path d="M142 196 C152 201 200 201 210 196" fill="none" stroke="#d4a020" strokeWidth="3" strokeLinecap="round"/>
+          <path d="M146 160 C158 156 168 154 176 154 C184 154 194 156 206 160" fill="none" stroke="#d4a020" strokeWidth="2.5" strokeLinecap="round"/>
+          {/* Halo - right */}
+          <g transform="rotate(-4, 176, 88) translate(176, 48)">
+            <ellipse cx="0" cy="0" rx="22" ry="6" fill="none" stroke="#c89020" strokeWidth="5" opacity="0.95"/>
+            <ellipse cx="0" cy="0" rx="22" ry="6" fill="none" stroke="#f8e878" strokeWidth="2.5" opacity="0.7"/>
+          </g>
         </g>
       )}
 
@@ -2465,10 +2579,7 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
 
   return (
     <div>
-      <ProgBar value={currentStep} max={phases.length || 1} style={{ marginBottom: 6 }} />
-      <div style={{ fontSize:"0.7rem", color:C.inkL, fontWeight:800, textAlign:"right", marginBottom:12 }}>PASO {currentStep + 1} / {phases.length || 1}</div>
-
-      {/* Message history */}
+        {/* Message history */}
       <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:12, maxHeight:200, overflowY:"auto" }}>
         {messages.map((h, i) => (
           <div key={i} style={{ background: h.role === 0 ? C.cream : "#d4e8c4", borderRadius:14, padding:"9px 13px", maxWidth:"88%", alignSelf: h.role === 0 ? "flex-start" : "flex-end" }}>
@@ -4329,7 +4440,7 @@ function Onboarding({ onDone }) {
 // ═══════════════════════════════════════════════
 const DIARIO_TYPES = [
   {
-    id: "abcd", label: "🧠 ABCD", sub: "Ordena lo que pasó y encuentra una mirada más justa",
+    id: "abcd", label: "🧠 ABCD", sub: "Entender cómo te afectó algo que pasó",
     prompts: [
       { key:"a", label:"A · Situación activadora", hint:"¿Qué pasó exactamente?" },
       { key:"b", label:"B · Pensamiento automático", hint:"¿Qué pensé en ese momento?" },
@@ -4338,7 +4449,7 @@ const DIARIO_TYPES = [
     ]
   },
   {
-    id: "discusion", label: "⚡ Discusión", sub: "Procesa un conflicto",
+    id: "discusion", label: "⚡ Discusión", sub: "Registrar y soltar un conflicto",
     prompts: [
       { key:"q1", label:"¿Qué pasó?", hint:"Sin culpar, solo los hechos..." },
       { key:"q2", label:"¿Qué sentí?", hint:"Emociones, sensaciones..." },
@@ -4347,7 +4458,7 @@ const DIARIO_TYPES = [
     ]
   },
   {
-    id: "hoy", label: "🌙 Cómo estuve hoy", sub: "Registro diario",
+    id: "hoy", label: "🌙 Cómo estuve hoy", sub: "Un registro rápido de cómo me sentí",
     prompts: [
       { key:"q1", label:"Mi día en una oración", hint:"¿Cómo estuvo?" },
       { key:"q2", label:"Lo más significativo", hint:"Un momento, una palabra..." },
@@ -4355,7 +4466,7 @@ const DIARIO_TYPES = [
     ]
   },
   {
-    id: "interpersonal", label: "🫶 Interpersonal", sub: "Conexión y comunicación",
+    id: "interpersonal", label: "🫶 Interpersonal", sub: "Reflexionar sobre lo que siento en mi relación",
     prompts: [
       { key:"q1", label:"Momento de conexión", hint:"¿Hubo alguno hoy?" },
       { key:"q2", label:"Lo que me costó expresar", hint:"¿Qué no le dije?" },
