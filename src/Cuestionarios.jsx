@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 
 const SCALE_OPTIONS = [
   { id: "1", label: "Casi nunca", color: "#fbe4cf" },
@@ -204,9 +204,11 @@ export function getQuizAdviceFromConoce(conoce, role) {
   return { complete, tips, progress: { answered: totalAnswered, total: totalNeeded } };
 }
 
-export default function Cuestionarios({ conoce, onSave, user }) {
+export default function Cuestionarios({ conoce, onSave, onQuizComplete, user }) {
   const myRole = user?.isOwner !== false ? "owner" : "partner";
   const [openQuiz, setOpenQuiz] = useState(null);
+  const [quizNoticeById, setQuizNoticeById] = useState({});
+  const rewardedByQuizRef = useRef({});
 
   const progressByQuiz = useMemo(() => {
     const map = {};
@@ -223,10 +225,18 @@ export default function Cuestionarios({ conoce, onSave, user }) {
 
   const myAdvice = useMemo(() => getQuizAdviceFromConoce(conoce || {}, myRole), [conoce, myRole]);
 
-  const saveResponse = (quiz, idx, value) => {
+  const saveResponse = (quiz, idx, value, alreadyAnswered, answeredBefore) => {
     const key = `${quiz.catKey}-${idx}`;
     const isNewMine = !conoce?.[key]?.[myRole];
     onSave(quiz.catKey, idx, String(value), null, isNewMine);
+
+    const nextAnswered = answeredBefore + (alreadyAnswered ? 0 : 1);
+    const completedNow = answeredBefore < quiz.questions.length && nextAnswered === quiz.questions.length;
+    if (completedNow && !rewardedByQuizRef.current[quiz.id]) {
+      rewardedByQuizRef.current[quiz.id] = true;
+      setQuizNoticeById((prev) => ({ ...prev, [quiz.id]: `✅ ${quiz.title} completado. +15 bambú.` }));
+      onQuizComplete?.(quiz.title);
+    }
   };
 
   return (
@@ -272,9 +282,21 @@ export default function Cuestionarios({ conoce, onSave, user }) {
 
             {isOpen && (
               <div style={{ marginTop: 10 }}>
+                {prog.answered === prog.total && (
+                  <div style={{ background: "#e4f0e0", border: "1px solid rgba(74,110,48,0.3)", color: "#2f4f22", borderRadius: 10, padding: "8px 10px", fontSize: "0.74rem", fontWeight: 800, marginBottom: 8 }}>
+                    ✅ Ya completaste este cuestionario.
+                  </div>
+                )}
+                {quizNoticeById[quiz.id] && (
+                  <div style={{ background: "#eef6ea", border: "1px solid rgba(74,110,48,0.25)", color: "#2f4f22", borderRadius: 10, padding: "8px 10px", fontSize: "0.74rem", fontWeight: 800, marginBottom: 8 }}>
+                    {quizNoticeById[quiz.id]}
+                  </div>
+                )}
                 {quiz.questions.map((q, idx) => {
                   const key = `${quiz.catKey}-${idx}`;
                   const selected = conoce?.[key]?.[myRole];
+                  const alreadyAnswered = !!selected;
+                  const answeredBefore = prog.answered;
                   return (
                     <div key={idx} style={{ background: "#fff", borderRadius: 12, padding: 10, marginBottom: 8, border: "1px solid rgba(30,43,30,0.1)" }}>
                       <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "#1e2b1e", marginBottom: 8 }}>
@@ -286,7 +308,7 @@ export default function Cuestionarios({ conoce, onSave, user }) {
                           {SCALE_OPTIONS.map((opt) => (
                             <button
                               key={opt.id}
-                              onClick={() => saveResponse(quiz, idx, opt.id)}
+                              onClick={() => saveResponse(quiz, idx, opt.id, alreadyAnswered, answeredBefore)}
                               style={{
                                 border: selected === opt.id ? "2px solid #4a6e30" : "1px solid rgba(30,43,30,0.15)",
                                 background: opt.color,
@@ -309,7 +331,7 @@ export default function Cuestionarios({ conoce, onSave, user }) {
                           {q.options.map((opt) => (
                             <button
                               key={opt.id}
-                              onClick={() => saveResponse(quiz, idx, opt.id)}
+                              onClick={() => saveResponse(quiz, idx, opt.id, alreadyAnswered, answeredBefore)}
                               style={{
                                 border: selected === opt.id ? "2px solid #4a6e30" : "1px solid rgba(30,43,30,0.15)",
                                 background: selected === opt.id ? "#e4f0e0" : "#fff",

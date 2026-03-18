@@ -971,7 +971,7 @@ function ScreenTop({ title, sub, bg }) {
 
 function Toast({ msg }) {
   if (!msg) return null;
-  return <div style={{ position: "fixed", bottom: 90, left: "50%", transform: "translateX(-50%)", background: C.dark, color: C.cream2, padding: "11px 22px", borderRadius: 12, fontFamily: "'Nunito',sans-serif", fontWeight: 700, fontSize: "0.88rem", whiteSpace: "nowrap", zIndex: 9999, boxShadow: "0 4px 0 rgba(0,0,0,0.2)" }}>{msg}</div>;
+  return <div style={{ position: "fixed", bottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)", left: "50%", transform: "translateX(-50%)", width: "calc(100% - 24px)", maxWidth: 456, background: C.dark, color: C.cream2, padding: "11px 14px", borderRadius: 12, fontFamily: "'Nunito',sans-serif", fontWeight: 700, fontSize: "0.86rem", lineHeight: 1.45, textAlign: "center", whiteSpace: "normal", wordBreak: "break-word", zIndex: 9999, boxShadow: "0 4px 0 rgba(0,0,0,0.2)" }}>{msg}</div>;
 }
 
 // ═══════════════════════════════════════════════════════
@@ -2851,7 +2851,7 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
 
 
 // CONOCETE
-function Conocete({ conoce, onSave, user }) {
+function Conocete({ conoce, onSave, onQuizComplete, user }) {
   const parsedNames = parseCoupleNames(user?.names);
   const nameA = parsedNames.a;
   const nameB = parsedNames.b;
@@ -2956,7 +2956,7 @@ function Conocete({ conoce, onSave, user }) {
         )}
       </div>
       <div style={{ margin: "10px 14px 0" }}>
-        <Cuestionarios conoce={conoce} onSave={onSave} user={user} />
+        <Cuestionarios conoce={conoce} onSave={onSave} onQuizComplete={onQuizComplete} user={user} />
       </div>
       <div style={{ padding: "8px 14px 0", fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark }}>Elige una categoría</div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 11, padding: "10px 14px" }}>
@@ -3506,13 +3506,19 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
 
       {showDiarioModal && (
         <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.55)", zIndex:6500 }}>
-          <div style={{ position:"absolute", inset:0, background:C.sandL, overflowY:"auto" }}>
-            <div style={{ position:"sticky", top:0, zIndex:2, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 14px", background:C.white, borderBottom:`1.5px solid ${C.border}` }}>
+          <div style={{ position:"absolute", inset:0, background:C.sandL, overflowY:"auto", paddingBottom:"calc(env(safe-area-inset-bottom, 0px) + 72px)" }}>
+            <div style={{ position:"sticky", top:0, zIndex:2, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"calc(env(safe-area-inset-top, 0px) + 12px) 14px 12px", background:C.white, borderBottom:`1.5px solid ${C.border}` }}>
               <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark }}>📓 Diario personal</div>
               <button onClick={() => setShowDiarioModal(false)} style={{ width:34, height:34, borderRadius:"50%", border:"none", background:C.cream, color:C.inkM, fontWeight:900, fontSize:"1rem", cursor:"pointer" }}>✕</button>
             </div>
             <DiarioPersonal entries={diarioEntries} onSave={onSaveDiarioEntry} user={user} />
           </div>
+          <button
+            onClick={() => setShowDiarioModal(false)}
+            style={{ position:"fixed", right:14, bottom:"calc(env(safe-area-inset-bottom, 0px) + 14px)", zIndex:6600, border:"none", background:C.dark, color:C.cream2, borderRadius:14, padding:"12px 16px", fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", cursor:"pointer", boxShadow:"0 6px 18px rgba(0,0,0,0.3)" }}
+          >
+            Cerrar diario ✕
+          </button>
         </div>
       )}
 
@@ -4226,7 +4232,7 @@ function Onboarding({ onDone }) {
 // ═══════════════════════════════════════════════
 const DIARIO_TYPES = [
   {
-    id: "abcd", label: "🧠 ABCD", sub: "Reestructura un pensamiento",
+    id: "abcd", label: "🧠 ABCD", sub: "Ordena lo que pasó y encuentra una mirada más justa",
     prompts: [
       { key:"a", label:"A · Situación activadora", hint:"¿Qué pasó exactamente?" },
       { key:"b", label:"B · Pensamiento automático", hint:"¿Qué pensé en ese momento?" },
@@ -4290,13 +4296,37 @@ function DiarioPersonal({ entries, onSave, user }) {
 
   if (view === "new" && selType) {
     const type = DIARIO_TYPES.find(t => t.id === selType);
+    const abcdFieldHelp = {
+      a: "Describe solo el hecho visible, como una camara. Evita interpretar intenciones.",
+      b: "Escribe la frase exacta que se te vino a la mente, incluso si suena extrema.",
+      c: "Nombra emocion + reaccion: por ejemplo ansiedad + me calle / enojo + discuti.",
+      d: "Busca una version mas amplia y realista, sin negar lo que sentiste.",
+    };
     return (
       <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
         <ScreenTop title={type.label} sub={type.sub} />
         <div style={{ padding: "10px 14px 0" }}>
+          {selType === "abcd" && (
+            <div style={{ background:"#eef6ea", borderRadius:14, padding:14, marginBottom:10, border:`1.5px solid ${C.border}` }}>
+              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", color:C.dark, marginBottom:6 }}>¿Qué es ABCD y qué significa reestructurar?</div>
+              <div style={{ fontSize:"0.8rem", color:C.inkM, lineHeight:1.6, marginBottom:8 }}>
+                ABCD es una forma simple de ordenar tu mente cuando te activas. Reestructurar no es mentirte:
+                es pasar de un pensamiento automático que duele a una idea más completa y justa.
+              </div>
+              <div style={{ background:C.white, borderRadius:10, padding:"9px 10px", border:`1px solid ${C.border}`, fontSize:"0.75rem", color:C.inkM, lineHeight:1.55 }}>
+                <b>Ejemplo:</b> A: "No respondió en 2 horas". B: "Seguro ya no le importo".
+                C: "Ansiedad, me cerré". D: "Puede estar ocupado/a; cuando pueda, pregunto con calma".
+              </div>
+            </div>
+          )}
           {type.prompts.map(p => (
             <div key={p.key} style={{ background: C.white, borderRadius: 14, padding: 14, marginBottom: 10, border: `1.5px solid ${C.border}` }}>
               <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", color:C.dark, marginBottom:7 }}>{p.label}</div>
+              {selType === "abcd" && abcdFieldHelp[p.key] && (
+                <div style={{ fontSize:"0.76rem", color:C.inkL, lineHeight:1.55, marginBottom:8, background:C.cream, border:`1px solid ${C.border}`, borderRadius:9, padding:"7px 9px" }}>
+                  {abcdFieldHelp[p.key]}
+                </div>
+              )}
               <textarea
                 value={draft[p.key] || ""}
                 onChange={e => setDraft(d => ({ ...d, [p.key]: e.target.value }))}
@@ -4320,6 +4350,15 @@ function DiarioPersonal({ entries, onSave, user }) {
       <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
         <ScreenTop title="📓 Diario" sub="¿Qué tipo de entrada?" />
         <div style={{ padding: "10px 14px 0" }}>
+          <div style={{ background:C.white, borderRadius:14, padding:14, marginBottom:10, border:`1.5px solid ${C.border}` }}>
+            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.88rem", color:C.dark, marginBottom:6 }}>Guía rápida (sin psicología complicada)</div>
+            <div style={{ fontSize:"0.8rem", color:C.inkM, lineHeight:1.6, marginBottom:6 }}>
+              Si nunca has hecho esto, empieza por <b>ABCD</b>. Es una plantilla para entender:
+            </div>
+            <div style={{ fontSize:"0.78rem", color:C.inkM, lineHeight:1.6 }}>
+              A = qué pasó, B = qué pensé, C = cómo me sentí y qué hice, D = una mirada alternativa más justa.
+            </div>
+          </div>
           {DIARIO_TYPES.map(t => (
             <div key={t.id} onClick={() => setSelType(t.id)}
               style={{ background:C.white, borderRadius:16, padding:"14px 16px", marginBottom:10, cursor:"pointer", border:`1.5px solid ${C.border}`, boxShadow:`0 3px 0 ${C.border}` }}>
@@ -4439,6 +4478,11 @@ export default function App() {
 
   const saveKey = u => u?.email ? "mochi_prog_" + u.email : null;
   const toast = msg => { setToastMsg(msg); setTimeout(() => setToastMsg(null), 3000); };
+  const notifIsForMe = useCallback((notif) => {
+    if (!notif || !user?.uid) return false;
+    if (notif.forUid === user.uid) return true;
+    return notif.forUid === "partner" && notif.fromUid !== user.uid;
+  }, [user?.uid]);
   const trigHappy = useCallback(() => {
     setMochiHappy(true);
     clearTimeout(happyTimer.current);
@@ -4622,12 +4666,12 @@ export default function App() {
     // Notifications
     unsubs.push(fbListenNotifs(code, items => {
       setNotifs(items);
-      const unread = items.filter(n => !n.read && n.forUid === user.uid).length;
+      const unread = items.filter(n => !n.read && notifIsForMe(n)).length;
       setNotifBadge(unread);
     }));
 
     return () => unsubs.forEach(u => u && u());
-  }, [user?.code, user?.uid, user?.isGuest]);
+  }, [user?.code, user?.uid, user?.isGuest, notifIsForMe]);
 
   useEffect(() => {
     // Use Firebase Auth state to keep session alive
@@ -4866,7 +4910,7 @@ export default function App() {
       } else if (isNew) {
         // I answered first — notify partner
         trigHappy();
-        toast("¡Guardado! Esperando que tu pareja responda para ganar bambú 🌿");
+        toast("Guardado ✓ Esperando a tu pareja para completar esta pregunta.");
         fbSendNotif(user.code, { type:"conoce", msg:`${myName} respondió una pregunta — ¡tu turno! 🌿`, forUid:"partner", fromUid: user.uid }).catch(()=>{});
       }
     } else {
@@ -4875,6 +4919,10 @@ export default function App() {
       setConoce(nc);
       if (isNew) { setBamboo(b => b + 15); trigHappy(); toast("+15 bambú por conocerse más 🌿"); }
     }
+  };
+
+  const handleQuizCompleted = async (quizTitle) => {
+    await addBambooBonus(15, `+15 bambú por completar ${quizTitle} 🌿`);
   };
 
   const saveBurbuja = async (id, data) => {
@@ -5036,7 +5084,7 @@ export default function App() {
       <div style={{ paddingBottom:72 }}>
         {tab==="jardin" && <Jardin bamboo={bamboo} happiness={happiness} water={water} garden={garden} accessories={accessories} mochiHappy={mochiHappy} pandaBubble={pandaBubble} onPet={petMochi} onBuy={buyItem} onWater={waterGarden} onBuyAccessory={buyAccessory}/>}
         {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson}/>}
-        {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user}/>}
+        {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} onQuizComplete={handleQuizCompleted} user={user}/>}
         {tab==="burbuja" && <Burbuja burbuja={burbuja} onSave={saveBurbuja} user={user}/>}
         {tab==="perfil" && <Perfil user={user} bamboo={bamboo} exDone={exDone} messages={messages} burbuja={burbuja} coupleInfo={coupleInfo} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} conoce={conoce} onOpenConocete={() => setTab("conocete")} onSendMessage={sendMsg} onAddBamboo={addBambooBonus} diarioEntries={diarioEntries} onSaveDiarioEntry={saveDiarioEntry}/>}
       </div>
@@ -5044,13 +5092,13 @@ export default function App() {
         {NAV.map(n => {
           const active = tab === n.id;
           const notifTypes = { "ejerc":["ejercicio","leccion"], "conocete":["conoce"], "burbuja":["gratitud","momento"], "perfil":[] };
-          const nBadge = notifTypes[n.id] ? notifs.filter(x=>!x.read && x.forUid===user?.uid && notifTypes[n.id].includes(x.type)).length : 0;
-          const badge = nBadge > 0 ? nBadge : null;
+          const fixedBadge = notifTypes[n.id] ? notifs.filter(x => !x.read && notifIsForMe(x) && notifTypes[n.id].includes(x.type)).length : 0;
+          const badge = fixedBadge > 0 ? fixedBadge : null;
           return (
             <div key={n.id} onClick={()=>{
               setTab(n.id);
               // Mark related notifs as read
-              notifs.filter(x=>!x.read && x.forUid===user?.uid).forEach(x=>fbMarkNotifRead(x.id).catch(()=>{}));
+              notifs.filter(x => !x.read && notifIsForMe(x)).forEach(x => fbMarkNotifRead(x.id).catch(()=>{}));
             }} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", padding:"8px 0 7px", cursor:"pointer" }}>
               <div style={{ position:"relative" }}>
                 <div style={{ fontSize:active?"1.3rem":"1.1rem", transition:"all 0.15s", filter:active?"none":"opacity(0.45)", transform:active?"scale(1.15) translateY(-2px)":"none" }}>{n.emoji}</div>
