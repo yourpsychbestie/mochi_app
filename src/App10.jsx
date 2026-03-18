@@ -1883,6 +1883,12 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
   const shopItems = shopTab === "accesorios"
     ? PANDA_ACCESSORIES
     : GARDEN_ITEMS.filter(i => i.cat === shopTab);
+  const accessoryStatus = (itemId) => {
+    const v = accessories?.[itemId];
+    if (v === true) return "equipped";
+    if (v === "owned") return "owned";
+    return "new";
+  };
 
   const dry = water < 20;
   const withering = water < 40;
@@ -1980,10 +1986,12 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
         {/* Items grid */}
         <div style={{ display:"flex", gap:10, overflowX:"auto", padding:"8px 14px 20px" }}>
           {shopItems.map(item => {
-            const owned = shopTab === "accesorios" ? accessories?.[item.id] : garden?.[item.id];
+            const accessoryState = shopTab === "accesorios" ? accessoryStatus(item.id) : "new";
+            const equipped = shopTab === "accesorios" && accessoryState === "equipped";
+            const owned = shopTab === "accesorios" ? accessoryState !== "new" : !!garden?.[item.id];
             return (
               <div key={item.id} onClick={() => shopTab==="accesorios" ? onBuyAccessory(item) : onBuy(item)}
-                style={{ background:owned===true?C.mint:owned==="owned"?C.cream:C.sandL, border:`2px solid ${owned===true?C.teal:owned==="owned"?C.gold:C.border}`,
+                style={{ background: equipped ? C.mint : owned ? C.cream : C.sandL, border:`2px solid ${equipped ? C.teal : owned ? C.gold : C.border}`,
                   borderRadius:16, padding:"12px 10px", textAlign:"center", cursor:"pointer",
                   minWidth:84, flexShrink:0, boxShadow:owned?`0 3px 0 ${C.teal}40`:`0 2px 0 ${C.border}`,
                   transition:"all 0.15s" }}>
@@ -1994,9 +2002,15 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
                 </div>
                 <div style={{ fontSize:"0.67rem", fontWeight:800, color:C.ink, marginBottom:2, lineHeight:1.2 }}>{item.name}</div>
                 <div style={{ fontSize:"0.62rem", color:C.inkL, marginBottom:5, lineHeight:1.2 }}>{item.desc}</div>
-                {owned
-                  ? <div style={{ background:C.olive, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>✓</div>
-                  : <div style={{ background:C.dark, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>{item.cost} 🌿</div>}
+                {shopTab === "accesorios"
+                  ? (equipped
+                      ? <div style={{ background:C.olive, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>Quitar</div>
+                      : owned
+                        ? <div style={{ background:C.gold, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>Poner</div>
+                        : <div style={{ background:C.dark, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>{item.cost} 🌿</div>)
+                  : (owned
+                      ? <div style={{ background:C.olive, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>✓</div>
+                      : <div style={{ background:C.dark, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>{item.cost} 🌿</div>)}
               </div>
             );
           })}
@@ -4728,6 +4742,7 @@ export default function App() {
   const [coupleInfo, setCoupleInfo] = useState({});
   const [notifs, setNotifs] = useState([]);
   const [notifBadge, setNotifBadge] = useState(0);
+  const [busyAccessoryId, setBusyAccessoryId] = useState(null);
   const [pandaBubble, setPandaBubble] = useState(null); // {nameA, textA, nameB, textB}
   const [mochiHappy, setMochiHappy] = useState(false);
   const [lastVisit, setLastVisit] = useState(null);
@@ -5032,6 +5047,9 @@ export default function App() {
   };
 
   const buyAccessory = async item => {
+    if (busyAccessoryId === item.id) return;
+    setBusyAccessoryId(item.id);
+
     // If already owned, toggle it on/off (equip/unequip)
     if (accessories[item.id] === "owned") {
       // Already owned but not equipped — equip it
@@ -5047,11 +5065,13 @@ export default function App() {
         } catch (e) {
           toast("No se pudo sincronizar el accesorio. Revisa conexión e intenta de nuevo.");
         }
+        setBusyAccessoryId(null);
         return;
       }
       setAccessories(na);
       save(null, { accessories: na, lastVisit: new Date().toISOString() });
       toast(`${item.name} puesto 🐼`);
+      setBusyAccessoryId(null);
       return;
     }
     if (accessories[item.id] === true) {
@@ -5068,14 +5088,16 @@ export default function App() {
         } catch (e) {
           toast("No se pudo sincronizar el accesorio. Revisa conexión e intenta de nuevo.");
         }
+        setBusyAccessoryId(null);
         return;
       }
       setAccessories(na);
       save(null, { accessories: na, lastVisit: new Date().toISOString() });
       toast(`${item.name} quitado`);
+      setBusyAccessoryId(null);
       return;
     }
-    if (bamboo < item.cost) { toast("Necesitas más bambú"); return; }
+    if (bamboo < item.cost) { toast("Necesitas más bambú"); setBusyAccessoryId(null); return; }
     const nb = bamboo - item.cost, na = { ...accessories, [item.id]: true }, nh = Math.min(100, happiness + 5);
     const nv = new Date().toISOString();
 
@@ -5094,12 +5116,14 @@ export default function App() {
       } catch (e) {
         toast(e?.message === "INSUFFICIENT_BAMBOO" ? "Necesitas más bambú" : "No se pudo guardar la compra");
       }
+      setBusyAccessoryId(null);
       return;
     }
 
     setBamboo(nb); setAccessories(na); setHappiness(nh); setLastVisit(nv); trigHappy();
     toast(`${item.name} puesto ${item.emoji} +5 amor`);
     save(null, { bamboo: nb, happiness: nh, accessories: na, lastVisit: nv });
+    setBusyAccessoryId(null);
   };
 
   const showGardenMessages = (fallbackTextB = "Aquí aparecerán los mensajes que te envíe tu pareja 💌") => {
