@@ -11,7 +11,7 @@ import {
   fbListenBamboo, fbIncrementBamboo, fbGetBamboo,
   fbListenGardenState, fbSaveGardenState, fbPurchaseGardenUpdate,
   fbAddGratitud, fbSaveGratitudEntry, fbListenGratitud,
-  fbAddMomento, fbListenMomentos,
+  fbAddMomento, fbSaveMomentoEntry, fbListenMomentos,
   fbSaveConoce, fbListenConoce,
   fbSaveBurbuja, fbListenBurbuja,
   fbSaveLessonRead, fbListenLessons,
@@ -3428,7 +3428,7 @@ function Burbuja({ burbuja, onSave, user }) {
 }
 
 // PROFILE — Enhanced with more info fields
-function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onEditGratitud, onAddMomento, conoce, onOpenConocete, onSendMessage, onAddBamboo, diarioEntries, onSaveDiarioEntry }) {
+function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onEditGratitud, onAddMomento, onEditMomento, conoce, onOpenConocete, onSendMessage, onAddBamboo, diarioEntries, onSaveDiarioEntry }) {
   const [editMode, setEditMode] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [loveText, setLoveText] = useState("");
@@ -3674,7 +3674,7 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
       <div style={{ margin:"0 14px 12px" }}>
         <BaulSection
           gratitud={gratitud} momentos={momentos}
-          onAddGratitud={onAddGratitud} onEditGratitud={onEditGratitud} onAddMomento={onAddMomento}
+          onAddGratitud={onAddGratitud} onEditGratitud={onEditGratitud} onAddMomento={onAddMomento} onEditMomento={onEditMomento}
           user={user}
         />
       </div>
@@ -5258,6 +5258,14 @@ export default function App() {
     if (user?.code && !user?.isGuest) {
       // Fire and forget — listener will sync
       fbSendMessage(user.code, msg).catch(e => console.warn("Send failed:", e));
+      if (user?.uid) {
+        fbSendNotif(user.code, {
+          type:"mensaje",
+          msg:`${msg.sender} te envió un mensaje 💌`,
+          forUid:"partner",
+          fromUid: user.uid
+        }).catch(()=>{});
+      }
       const prev = ls.get("mochi_msgs_" + user.code) || [];
       ls.set("mochi_msgs_" + user.code, [msg, ...prev]);
     } else {
@@ -5318,6 +5326,18 @@ export default function App() {
     const rewardNow = !wasApproved && isApprovedNow;
     if (user?.code && !user?.isGuest) {
       await fbSaveBurbuja(user.code, id, data).catch(() => {});
+      if (user?.uid) {
+        const myName = getUserDisplayName(user, "Yo");
+        const notifMsg = isApprovedNow
+          ? `${myName} confirmó un acuerdo ✅`
+          : `${myName} envió/actualizó una propuesta en Burbuja 🫧`;
+        fbSendNotif(user.code, {
+          type:"acuerdo",
+          msg: notifMsg,
+          forUid:"partner",
+          fromUid: user.uid
+        }).catch(()=>{});
+      }
     }
     if (rewardNow) {
       const nb = bamboo + 10; setBamboo(nb); trigHappy();
@@ -5395,10 +5415,12 @@ export default function App() {
     const clean = String(text || "").trim();
     if (!entryId || !clean) return;
     let synced = true;
+    const myName = getUserDisplayName(user, "Yo");
     const nextGratitud = (gratitud || []).map(g => g.id === entryId ? { ...g, text: clean, editedAt: new Date().toISOString() } : g);
     setGratitud(nextGratitud);
     if (user?.code && !user?.isGuest) {
       await fbSaveGratitudEntry(entryId, user.code, { text: clean, editedAt: new Date().toISOString() }).catch(() => { synced = false; });
+      if (user?.uid) fbSendNotif(user.code, { type:"gratitud", msg:`${myName} editó un agradecimiento 💛`, forUid:"partner", fromUid: user.uid }).catch(()=>{});
     }
     save(null, { gratitud: nextGratitud });
     toast(synced ? "💛 Agradecimiento editado" : "💛 Editado localmente. Firebase no sincronizó este cambio.");
@@ -5420,6 +5442,21 @@ export default function App() {
       setBamboo(b => b + 5);
     }
     toast(synced ? "✨ Guardado en el baúl de momentos +5 bambú 🌿" : "✨ Guardado localmente. Firebase no sincronizó este momento (+5 bambú local).");
+  };
+
+  const editMomento = async (entryId, text) => {
+    const clean = String(text || "").trim();
+    if (!entryId || !clean) return;
+    let synced = true;
+    const myName = getUserDisplayName(user, "Yo");
+    const nextMomentos = (momentos || []).map(m => m.id === entryId ? { ...m, text: clean, editedAt: new Date().toISOString() } : m);
+    setMomentos(nextMomentos);
+    if (user?.code && !user?.isGuest) {
+      await fbSaveMomentoEntry(entryId, user.code, { text: clean, editedAt: new Date().toISOString() }).catch(() => { synced = false; });
+      if (user?.uid) fbSendNotif(user.code, { type:"momento", msg:`${myName} editó un momento ✨`, forUid:"partner", fromUid: user.uid }).catch(()=>{});
+    }
+    save(null, { momentos: nextMomentos });
+    toast(synced ? "✨ Momento editado" : "✨ Editado localmente. Firebase no sincronizó este cambio.");
   };
 
   const addBambooBonus = async (points, message) => {
@@ -5484,19 +5521,24 @@ export default function App() {
         {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson}/>}
         {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} onQuizComplete={handleQuizCompleted} user={user}/>}
         {tab==="burbuja" && <Burbuja burbuja={burbuja} onSave={saveBurbuja} user={user}/>}
-        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} exDone={exDone} messages={messages} burbuja={burbuja} coupleInfo={coupleInfo} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onEditGratitud={editGratitud} onAddMomento={addMomento} conoce={conoce} onOpenConocete={() => setTab("conocete")} onSendMessage={sendMsg} onAddBamboo={addBambooBonus} diarioEntries={diarioEntries} onSaveDiarioEntry={saveDiarioEntry}/>}
+        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} exDone={exDone} messages={messages} burbuja={burbuja} coupleInfo={coupleInfo} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onEditGratitud={editGratitud} onAddMomento={addMomento} onEditMomento={editMomento} conoce={conoce} onOpenConocete={() => setTab("conocete")} onSendMessage={sendMsg} onAddBamboo={addBambooBonus} diarioEntries={diarioEntries} onSaveDiarioEntry={saveDiarioEntry}/>}
       </div>
       <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:480, background:C.white, borderTop:`1.5px solid ${C.border}`, display:"flex", zIndex:1000, boxShadow:`0 -3px 0 ${C.line}` }}>
         {NAV.map(n => {
           const active = tab === n.id;
-          const notifTypes = { "ejerc":["ejercicio","leccion"], "conocete":["conoce"], "burbuja":["gratitud","momento"], "perfil":[] };
-          const fixedBadge = notifTypes[n.id] ? notifs.filter(x => !x.read && notifIsForMe(x) && notifTypes[n.id].includes(x.type)).length : 0;
+          const notifTypes = { "ejerc":["ejercicio","leccion"], "conocete":["conoce"], "burbuja":["gratitud","momento","acuerdo"], "perfil":["mensaje"] };
+          const tabNotifTypes = notifTypes[n.id] || [];
+          const fixedBadge = tabNotifTypes.length ? notifs.filter(x => !x.read && notifIsForMe(x) && tabNotifTypes.includes(x.type)).length : 0;
           const badge = fixedBadge > 0 ? fixedBadge : null;
           return (
             <div key={n.id} onClick={()=>{
               setTab(n.id);
-              // Mark related notifs as read
-              notifs.filter(x => !x.read && notifIsForMe(x)).forEach(x => fbMarkNotifRead(x.id).catch(()=>{}));
+              // Mark only this tab's notifications as read
+              if (tabNotifTypes.length) {
+                notifs
+                  .filter(x => !x.read && notifIsForMe(x) && tabNotifTypes.includes(x.type))
+                  .forEach(x => fbMarkNotifRead(x.id).catch(()=>{}));
+              }
             }} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", padding:"8px 0 7px", cursor:"pointer" }}>
               <div style={{ position:"relative" }}>
                 <div style={{ fontSize:active?"1.3rem":"1.1rem", transition:"all 0.15s", filter:active?"none":"opacity(0.45)", transform:active?"scale(1.15) translateY(-2px)":"none" }}>{n.emoji}</div>
@@ -5516,7 +5558,7 @@ export default function App() {
 // ═══════════════════════════════════════════════
 // BAUL SECTION — embedded in Perfil
 // ═══════════════════════════════════════════════
-function BaulSection({ user, gratitud, momentos, onAddGratitud, onEditGratitud, onAddMomento }) {
+function BaulSection({ user, gratitud, momentos, onAddGratitud, onEditGratitud, onAddMomento, onEditMomento }) {
   const parsedNames = parseCoupleNames(user?.names);
   const nameA = parsedNames.a || "Panda A";
   const nameB = parsedNames.b || "Panda B";
@@ -5527,6 +5569,8 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onEditGratitud, 
   const [mTitle, setMTitle] = useState(""); const [mText, setMText] = useState("");
   const [editingGratitudId, setEditingGratitudId] = useState(null);
   const [editingGratitudText, setEditingGratitudText] = useState("");
+  const [editingMomentoId, setEditingMomentoId] = useState(null);
+  const [editingMomentoText, setEditingMomentoText] = useState("");
 
   const submitG = () => { if (!gText.trim()) return; onAddGratitud({ text:gText.trim() }); setGText(""); setShowGForm(false); };
   const submitM = () => { if (!mTitle.trim()||!mText.trim()) return; onAddMomento({ title:mTitle.trim(), text:mText.trim() }); setMTitle(""); setMText(""); setShowMForm(false); };
@@ -5617,7 +5661,34 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onEditGratitud, 
                     <div style={{ fontSize:"0.68rem", color:C.inkL, fontWeight:700 }}>{m.date}</div>
                   </div>
                   <div style={{ fontSize:"0.7rem", fontWeight:800, color:C.inkL, marginBottom:4 }}>Agregado por {m.authorName || "Tu pareja"}</div>
-                  <div style={{ fontSize:"0.85rem", color:C.inkM, lineHeight:1.65 }}>{m.text}</div>
+                  {editingMomentoId === m.id ? (
+                    <>
+                      <TA value={editingMomentoText} onChange={setEditingMomentoText} rows={3} style={{ marginBottom:8 }} />
+                      <div style={{ display:"flex", gap:8 }}>
+                        <Btn
+                          onClick={() => {
+                            const clean = (editingMomentoText || "").trim();
+                            if (!clean) return;
+                            onEditMomento?.(m.id, clean);
+                            setEditingMomentoId(null);
+                            setEditingMomentoText("");
+                          }}
+                          style={{ flex:1, fontSize:"0.8rem", padding:"9px 10px" }}
+                        >Guardar</Btn>
+                        <Btn onClick={() => { setEditingMomentoId(null); setEditingMomentoText(""); }} variant="ghost" style={{ padding:"9px 10px" }}>Cancelar</Btn>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ fontSize:"0.85rem", color:C.inkM, lineHeight:1.65 }}>{m.text}</div>
+                      {(m.authorUid === user?.uid || user?.isGuest) && !!m.id && (
+                        <button
+                          onClick={() => { setEditingMomentoId(m.id); setEditingMomentoText(m.text || ""); }}
+                          style={{ border:`1px solid ${C.border}`, background:C.white, color:C.inkM, borderRadius:8, padding:"4px 10px", fontSize:"0.72rem", fontWeight:800, cursor:"pointer", marginTop:6 }}
+                        >Editar</button>
+                      )}
+                    </>
+                  )}
                 </div>
               ))}
             {momentos.length > 5 && <div style={{ textAlign:"center", fontSize:"0.78rem", color:C.inkL, fontWeight:700, marginTop:4 }}>+{momentos.length-5} más</div>}

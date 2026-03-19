@@ -348,6 +348,8 @@ export const fbListenGratitud = (coupleCode, cb) => {
 // ─── MOMENTOS (synced entries) ─────────────────────────
 export const fbAddMomento = (coupleCode, entry) =>
   addDoc(collection(db, "momentos"), { ...entry, coupleCode, createdAt: serverTimestamp() });
+export const fbSaveMomentoEntry = (entryId, coupleCode, data) =>
+  setDoc(doc(db, "momentos", entryId), { ...data, coupleCode, updatedAt: serverTimestamp() }, { merge: true });
 export const fbListenMomentos = (coupleCode, cb) => {
   const q = query(collection(db, "momentos"), where("coupleCode", "==", coupleCode));
   return onSnapshot(q, snap => {
