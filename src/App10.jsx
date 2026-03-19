@@ -3231,6 +3231,7 @@ function Burbuja({ burbuja, onSave, user }) {
   const [draft, setDraft] = useState({});
   const [counterDraft, setCounterDraft] = useState({});
   const [showCounter, setShowCounter] = useState({});
+  const [approvalText, setApprovalText] = useState({});
   const [burTab, setBurTab] = useState("negociacion");
   const myRole = user?.isOwner !== false ? "a" : "b";
   const otherRole = myRole === "a" ? "b" : "a";
@@ -3270,25 +3271,40 @@ function Burbuja({ burbuja, onSave, user }) {
     setShowCounter(p => ({ ...p, [itemId]: false }));
   };
 
-  const approveProposal = (itemId) => {
+  const approveProposal = (itemId, ownText = "") => {
     const prev = burbuja[itemId];
     if (!prev?.proposalText) return;
+    
     const approvedBy = { ...(prev.approvedBy || {}), [myRole]: true };
     const bothApproved = !!(approvedBy.a && approvedBy.b);
+    
+    // Combine original text with approval text if provided
+    const cleanOwnText = (ownText || "").trim();
+    let finalText = prev.proposalText;
+    if (cleanOwnText && bothApproved) {
+      // Combine both: original + own addition
+      finalText = `${prev.proposalText}\n\n(Agregado por ${roleLabel(myRole)}: ${cleanOwnText})`;
+    }
+    
     const history = [...(prev.history || []), {
       from: myRole,
       action: "approve",
       text: prev.proposalText,
+      ownText: cleanOwnText || null,
       at: new Date().toISOString(),
     }];
+    
     onSave(itemId, {
       ...prev,
       approvedBy,
       pendingFor: bothApproved ? null : otherRole,
       status: bothApproved ? "approved" : "pending",
-      c: bothApproved ? prev.proposalText : "",
+      c: bothApproved ? finalText : "",
       history,
     });
+    
+    // Clear approval text input
+    setApprovalText(p => ({ ...p, [itemId]: "" }));
   };
 
   return (
@@ -3365,8 +3381,12 @@ function Burbuja({ burbuja, onSave, user }) {
 
                     {pendingForMe && (
                       <>
+                        <div style={{ background: C.cream, borderRadius: 10, padding: "8px 10px", marginBottom: 8, fontSize: "0.76rem", fontWeight: 700, color: C.olive }}>
+                          💡 Puedes agregar tu perspectiva al aprobar (opcional)
+                        </div>
+                        <TA value={approvalText[item.id] || ""} onChange={v => setApprovalText(p => ({ ...p, [item.id]: v }))} placeholder="Tu aporte (opcional)..." rows={2} style={{ marginBottom: 8 }} />
                         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:8 }}>
-                          <Btn onClick={() => approveProposal(item.id)} variant="olive" style={{ fontSize:"0.8rem", padding:"10px 8px" }}>✅ Aprobar</Btn>
+                          <Btn onClick={() => approveProposal(item.id, approvalText[item.id] || "")} variant="olive" style={{ fontSize:"0.8rem", padding:"10px 8px" }}>✅ Aprobar</Btn>
                           <Btn onClick={() => setShowCounter(p => ({ ...p, [item.id]: !p[item.id] }))} variant="sand" style={{ fontSize:"0.8rem", padding:"10px 8px" }}>✏️ Negociar</Btn>
                         </div>
                         {showCounter[item.id] && (
