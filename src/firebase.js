@@ -334,6 +334,8 @@ export const fbPurchaseGardenUpdate = async (coupleCode, amount, data) => {
 // ─── GRATITUD (synced entries) ─────────────────────────
 export const fbAddGratitud = (coupleCode, entry) =>
   addDoc(collection(db, "gratitud"), { ...entry, coupleCode, createdAt: serverTimestamp() });
+export const fbSaveGratitudEntry = (entryId, coupleCode, data) =>
+  setDoc(doc(db, "gratitud", entryId), { ...data, coupleCode, updatedAt: serverTimestamp() }, { merge: true });
 export const fbListenGratitud = (coupleCode, cb) => {
   const q = query(collection(db, "gratitud"), where("coupleCode", "==", coupleCode));
   return onSnapshot(q, snap => {

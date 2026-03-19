@@ -10,7 +10,7 @@ import {
   fbListenExSession, fbSendExMessage, fbStartExSession, fbCompleteExSession,
   fbListenBamboo, fbIncrementBamboo, fbGetBamboo,
   fbListenGardenState, fbSaveGardenState, fbPurchaseGardenUpdate,
-  fbAddGratitud, fbListenGratitud,
+  fbAddGratitud, fbSaveGratitudEntry, fbListenGratitud,
   fbAddMomento, fbListenMomentos,
   fbSaveConoce, fbListenConoce,
   fbSaveBurbuja, fbListenBurbuja,
@@ -3408,7 +3408,7 @@ function Burbuja({ burbuja, onSave, user }) {
 }
 
 // PROFILE — Enhanced with more info fields
-function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento, conoce, onOpenConocete, onSendMessage, onAddBamboo, diarioEntries, onSaveDiarioEntry }) {
+function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onEditGratitud, onAddMomento, conoce, onOpenConocete, onSendMessage, onAddBamboo, diarioEntries, onSaveDiarioEntry }) {
   const [editMode, setEditMode] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [loveText, setLoveText] = useState("");
@@ -3654,7 +3654,7 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
       <div style={{ margin:"0 14px 12px" }}>
         <BaulSection
           gratitud={gratitud} momentos={momentos}
-          onAddGratitud={onAddGratitud} onAddMomento={onAddMomento}
+          onAddGratitud={onAddGratitud} onEditGratitud={onEditGratitud} onAddMomento={onAddMomento}
           user={user}
         />
       </div>
@@ -3662,7 +3662,7 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
       <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:16, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
         <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:6 }}>📓 Diario personal</div>
         <div style={{ fontSize:"0.78rem", color:C.inkM, lineHeight:1.5, marginBottom:10 }}>
-          Espacio privado para registrar discusiones, ABCD y reflexiones personales.
+          Un espacio solo tuyo para ordenar emociones, registrar situaciones y ver tu propio avance con calma.
         </div>
         <Btn onClick={() => setShowDiarioModal(true)} variant="sand" style={{ width:"100%", fontSize:"0.84rem" }}>
           Abrir diario
@@ -4632,15 +4632,6 @@ function DiarioPersonal({ entries, onSave, user }) {
       <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
         <ScreenTop title="📓 Diario" sub="¿Qué tipo de entrada?" />
         <div style={{ padding: "10px 14px 0" }}>
-          <div style={{ background:C.white, borderRadius:14, padding:14, marginBottom:10, border:`1.5px solid ${C.border}` }}>
-            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.88rem", color:C.dark, marginBottom:6 }}>Guía rápida (sin psicología complicada)</div>
-            <div style={{ fontSize:"0.8rem", color:C.inkM, lineHeight:1.6, marginBottom:6 }}>
-              Si nunca has hecho esto, empieza por <b>ABCD</b>. Es una plantilla para entender:
-            </div>
-            <div style={{ fontSize:"0.78rem", color:C.inkM, lineHeight:1.6 }}>
-              A = qué pasó, B = qué pensé, C = cómo me sentí y qué hice, D = una mirada alternativa más justa.
-            </div>
-          </div>
           {DIARIO_TYPES.map(t => (
             <div key={t.id} onClick={() => setSelType(t.id)}
               style={{ background:C.white, borderRadius:16, padding:"14px 16px", marginBottom:10, cursor:"pointer", border:`1.5px solid ${C.border}`, boxShadow:`0 3px 0 ${C.border}` }}>
@@ -4659,6 +4650,11 @@ function DiarioPersonal({ entries, onSave, user }) {
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
       <ScreenTop title="📓 Diario" sub="Tu espacio personal de reflexión" />
       <div style={{ padding: "10px 14px 0" }}>
+        <div style={{ background:C.white, borderRadius:14, padding:12, marginBottom:10, border:`1.5px solid ${C.border}` }}>
+          <div style={{ fontSize:"0.8rem", color:C.inkM, lineHeight:1.55 }}>
+            Este diario es privado: te ayuda a bajar ruido mental, entender lo que sentiste y escribir con claridad antes de reaccionar.
+          </div>
+        </div>
         <button onClick={() => setView("new")} style={{ width:"100%", background:C.dark, color:C.cream2, border:"none", borderRadius:14, padding:"13px 16px", fontFamily:"'Fredoka One',cursive", fontSize:"1rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.25)", marginBottom:14, textAlign:"left" }}>
           + Nueva entrada 📝
         </button>
@@ -5375,6 +5371,19 @@ export default function App() {
     toast(synced ? "💛 Guardado en el baúl de gratitud +5 bambú 🌿" : "💛 Guardado localmente. Firebase no sincronizó esta entrada (+5 bambú local).");
   };
 
+  const editGratitud = async (entryId, text) => {
+    const clean = String(text || "").trim();
+    if (!entryId || !clean) return;
+    let synced = true;
+    const nextGratitud = (gratitud || []).map(g => g.id === entryId ? { ...g, text: clean, editedAt: new Date().toISOString() } : g);
+    setGratitud(nextGratitud);
+    if (user?.code && !user?.isGuest) {
+      await fbSaveGratitudEntry(entryId, user.code, { text: clean, editedAt: new Date().toISOString() }).catch(() => { synced = false; });
+    }
+    save(null, { gratitud: nextGratitud });
+    toast(synced ? "💛 Agradecimiento editado" : "💛 Editado localmente. Firebase no sincronizó este cambio.");
+  };
+
   const addMomento = async (entry) => {
     const myName = getUserDisplayName(user, "Yo");
     const enriched = { ...entry, authorName: myName, authorUid: user?.uid, date: new Date().toLocaleDateString("es", {day:"numeric",month:"short",year:"numeric"}) };
@@ -5455,7 +5464,7 @@ export default function App() {
         {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson}/>}
         {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} onQuizComplete={handleQuizCompleted} user={user}/>}
         {tab==="burbuja" && <Burbuja burbuja={burbuja} onSave={saveBurbuja} user={user}/>}
-        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} exDone={exDone} messages={messages} burbuja={burbuja} coupleInfo={coupleInfo} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} conoce={conoce} onOpenConocete={() => setTab("conocete")} onSendMessage={sendMsg} onAddBamboo={addBambooBonus} diarioEntries={diarioEntries} onSaveDiarioEntry={saveDiarioEntry}/>}
+        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} exDone={exDone} messages={messages} burbuja={burbuja} coupleInfo={coupleInfo} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onEditGratitud={editGratitud} onAddMomento={addMomento} conoce={conoce} onOpenConocete={() => setTab("conocete")} onSendMessage={sendMsg} onAddBamboo={addBambooBonus} diarioEntries={diarioEntries} onSaveDiarioEntry={saveDiarioEntry}/>}
       </div>
       <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:480, background:C.white, borderTop:`1.5px solid ${C.border}`, display:"flex", zIndex:1000, boxShadow:`0 -3px 0 ${C.line}` }}>
         {NAV.map(n => {
@@ -5487,15 +5496,17 @@ export default function App() {
 // ═══════════════════════════════════════════════
 // BAUL SECTION — embedded in Perfil
 // ═══════════════════════════════════════════════
-function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) {
+function BaulSection({ user, gratitud, momentos, onAddGratitud, onEditGratitud, onAddMomento }) {
   const parsedNames = parseCoupleNames(user?.names);
   const nameA = parsedNames.a || "Panda A";
   const nameB = parsedNames.b || "Panda B";
   const [activeTab, setActiveTab] = useState("gratitud");
   const [showGForm, setShowGForm] = useState(false);
   const [showMForm, setShowMForm] = useState(false);
-  const [gText, setGText] = useState(""); const [gWho, setGWho] = useState("A");
+  const [gText, setGText] = useState("");
   const [mTitle, setMTitle] = useState(""); const [mText, setMText] = useState("");
+  const [editingGratitudId, setEditingGratitudId] = useState(null);
+  const [editingGratitudText, setEditingGratitudText] = useState("");
 
   const submitG = () => { if (!gText.trim()) return; onAddGratitud({ text:gText.trim() }); setGText(""); setShowGForm(false); };
   const submitM = () => { if (!mTitle.trim()||!mText.trim()) return; onAddMomento({ title:mTitle.trim(), text:mText.trim() }); setMTitle(""); setMText(""); setShowMForm(false); };
@@ -5534,7 +5545,34 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
                     <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.8rem", color:C.dark }}>🐼 {g.authorName || g.name || "Tú"}</div>
                     <div style={{ fontSize:"0.68rem", color:C.inkL, fontWeight:700 }}>{g.date}</div>
                   </div>
-                  <div style={{ fontSize:"0.86rem", color:C.inkM, lineHeight:1.6 }}>{g.text}</div>
+                  {editingGratitudId === g.id ? (
+                    <>
+                      <TA value={editingGratitudText} onChange={setEditingGratitudText} rows={2} style={{ marginBottom:8 }} />
+                      <div style={{ display:"flex", gap:8 }}>
+                        <Btn
+                          onClick={() => {
+                            const clean = (editingGratitudText || "").trim();
+                            if (!clean) return;
+                            onEditGratitud?.(g.id, clean);
+                            setEditingGratitudId(null);
+                            setEditingGratitudText("");
+                          }}
+                          style={{ flex:1, fontSize:"0.8rem", padding:"9px 10px" }}
+                        >Guardar</Btn>
+                        <Btn onClick={() => { setEditingGratitudId(null); setEditingGratitudText(""); }} variant="ghost" style={{ padding:"9px 10px" }}>Cancelar</Btn>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ fontSize:"0.86rem", color:C.inkM, lineHeight:1.6, marginBottom:6 }}>{g.text}</div>
+                      {(g.authorUid === user?.uid || user?.isGuest) && !!g.id && (
+                        <button
+                          onClick={() => { setEditingGratitudId(g.id); setEditingGratitudText(g.text || ""); }}
+                          style={{ border:`1px solid ${C.border}`, background:C.white, color:C.inkM, borderRadius:8, padding:"4px 10px", fontSize:"0.72rem", fontWeight:800, cursor:"pointer" }}
+                        >Editar</button>
+                      )}
+                    </>
+                  )}
                 </div>
               ))}
             {gratitud.length > 5 && <div style={{ textAlign:"center", fontSize:"0.78rem", color:C.inkL, fontWeight:700, marginTop:4 }}>+{gratitud.length-5} más</div>}
@@ -5558,6 +5596,7 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
                     <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.88rem", color:C.dark }}>✨ {m.title}</div>
                     <div style={{ fontSize:"0.68rem", color:C.inkL, fontWeight:700 }}>{m.date}</div>
                   </div>
+                  <div style={{ fontSize:"0.7rem", fontWeight:800, color:C.inkL, marginBottom:4 }}>Agregado por {m.authorName || "Tu pareja"}</div>
                   <div style={{ fontSize:"0.85rem", color:C.inkM, lineHeight:1.65 }}>{m.text}</div>
                 </div>
               ))}
