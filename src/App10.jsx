@@ -62,113 +62,113 @@ const getUserDisplayName = (user, fallback = "Yo") => {
 // GARDEN ITEMS — multiple quantities, koi/lotus aesthetic
 // ═══════════════════════════════════════════════
 const GARDEN_ITEMS = [
-  // Plantas
-  {id:"bamboo1",  cat:"plantas", name:"Bambú",        cost:20,  desc:"Trae serenidad"},
-  {id:"bamboo2",  cat:"plantas", name:"Bambusal",      cost:35,  desc:"Bosquecito de bambú"},
-  {id:"lotus1",   cat:"plantas", name:"Loto Rosa",     cost:25,  desc:"Flor del amor puro"},
-  {id:"lotus2",   cat:"plantas", name:"Loto Blanco",   cost:30,  desc:"Pureza y paz"},
-  {id:"willow",   cat:"plantas", name:"Sauce Llorón",  cost:45,  desc:"Elegancia serena"},
-  {id:"peony",    cat:"plantas", name:"Peonía",        cost:15,  desc:"Flores de primavera"},
-  {id:"cherry",   cat:"plantas", name:"Cerezo",        cost:80,  desc:"Belleza efímera"},
-  {id:"lily",     cat:"plantas", name:"Lirio Azul",    cost:20,  desc:"Calma y claridad"},
-  // Agua
-  {id:"pond",     cat:"agua",    name:"Estanque",      cost:60,  desc:"Espejo del cielo"},
-  {id:"koi1",     cat:"agua",    name:"Pez Koi Rojo",  cost:40,  desc:"Buena fortuna"},
-  {id:"koi2",     cat:"agua",    name:"Pez Koi Dorado",cost:55,  desc:"Prosperidad"},
-  {id:"lotus_pad",cat:"agua",    name:"Hoja de Loto",  cost:20,  desc:"Reposa en el agua"},
-  // Cielo
-  {id:"sun",      cat:"cielo",   name:"Sol",           cost:30,  desc:"Calienta el jardín"},
-  {id:"rainbow",  cat:"cielo",   name:"Arcoíris",      cost:100, desc:"Magia después de la lluvia"},
-  {id:"swallow1", cat:"cielo",   name:"Golondrina",    cost:35,  desc:"Mensajera del amor"},
-  {id:"swallow2", cat:"cielo",   name:"Par de Golondrinas",cost:55,desc:"Vuelo juntos"},
-  {id:"clouds",   cat:"cielo",   name:"Nubes",         cost:25,  desc:"Sueños flotantes"},
-  // Decoración
-  {id:"lantern",  cat:"deco",    name:"Farolito",      cost:25,  desc:"Luz cálida"},
-  {id:"lantern2", cat:"deco",    name:"Farolitos",     cost:40,  desc:"Noche romántica"},
-  {id:"heart",    cat:"deco",    name:"Corazón",       cost:50,  desc:"Amor visible"},
-  {id:"bridge",   cat:"deco",    name:"Puente",        cost:70,  desc:"Un camino juntos"},
-  {id:"pagoda",   cat:"deco",    name:"Pagoda",        cost:90,  desc:"Refugio sagrado"},
-  // Especiales
-  {id:"firefly",  cat:"especial",name:"Luciérnagas",   cost:65,  desc:"Magia nocturna"},
-  {id:"moongate", cat:"especial",name:"Luna Llena",    cost:120, desc:"Romance bajo la luna"},
+  // Plants
+  {id:"bamboo1",  cat:"plantas", name:"Bamboo",         cost:20,  desc:"Brings serenity"},
+  {id:"bamboo2",  cat:"plantas", name:"Bamboo Grove",   cost:35,  desc:"A tiny bamboo forest"},
+  {id:"lotus1",   cat:"plantas", name:"Pink Lotus",     cost:25,  desc:"Flower of pure love"},
+  {id:"lotus2",   cat:"plantas", name:"White Lotus",    cost:30,  desc:"Purity and peace"},
+  {id:"willow",   cat:"plantas", name:"Weeping Willow", cost:45,  desc:"Serene elegance"},
+  {id:"peony",    cat:"plantas", name:"Peony",          cost:15,  desc:"Spring blossoms"},
+  {id:"cherry",   cat:"plantas", name:"Cherry Tree",    cost:80,  desc:"Fleeting beauty"},
+  {id:"lily",     cat:"plantas", name:"Blue Lily",      cost:20,  desc:"Calm and clarity"},
+  // Water
+  {id:"pond",     cat:"agua",    name:"Pond",           cost:60,  desc:"Mirror of the sky"},
+  {id:"koi1",     cat:"agua",    name:"Red Koi",        cost:40,  desc:"Good fortune"},
+  {id:"koi2",     cat:"agua",    name:"Golden Koi",     cost:55,  desc:"Prosperity"},
+  {id:"lotus_pad",cat:"agua",    name:"Lotus Leaf",     cost:20,  desc:"Floating peace"},
+  // Sky
+  {id:"sun",      cat:"cielo",   name:"Sun",            cost:30,  desc:"Warms the garden"},
+  {id:"rainbow",  cat:"cielo",   name:"Rainbow",        cost:100, desc:"Magic after the rain"},
+  {id:"swallow1", cat:"cielo",   name:"Swallow",        cost:35,  desc:"Messenger of love"},
+  {id:"swallow2", cat:"cielo",   name:"Swallow Pair",   cost:55,  desc:"Flying together"},
+  {id:"clouds",   cat:"cielo",   name:"Clouds",         cost:25,  desc:"Floating dreams"},
+  // Decoration
+  {id:"lantern",  cat:"deco",    name:"Lantern",        cost:25,  desc:"Warm light"},
+  {id:"lantern2", cat:"deco",    name:"Lanterns",       cost:40,  desc:"Romantic night"},
+  {id:"heart",    cat:"deco",    name:"Heart",          cost:50,  desc:"Visible love"},
+  {id:"bridge",   cat:"deco",    name:"Bridge",         cost:70,  desc:"A path together"},
+  {id:"pagoda",   cat:"deco",    name:"Pagoda",         cost:90,  desc:"Sacred shelter"},
+  // Specials
+  {id:"firefly",  cat:"especial",name:"Fireflies",      cost:65,  desc:"Night magic"},
+  {id:"moongate", cat:"especial",name:"Full Moon",      cost:120, desc:"Romance under the moon"},
 ];
 
-// Regar sigue siendo acción especial
-const WATER_ACTION = {id:"water", name:"Regar", cost:5};
+// Watering remains a special action
+const WATER_ACTION = {id:"water", name:"Water", cost:5};
 
 // ═══════════════════════════════════════════════
 // PANDA ACCESSORIES
 // ═══════════════════════════════════════════════
 const PANDA_ACCESSORIES = [
-  {id:"hat_flower", cat:"sombrero", name:"Corona de Flores", cost:40,  emoji:"🌸", desc:"Romanticísima"},
-  {id:"hat_crown",  cat:"sombrero", name:"Corona Real",      cost:70,  emoji:"👑", desc:"Son reyes"},
-  {id:"hat_straw",  cat:"sombrero", name:"Sombrero de Paja", cost:25,  emoji:"🎋", desc:"Para el jardín"},
-  {id:"glasses_heart", cat:"lentes", name:"Lentes Corazón", cost:30,  emoji:"💝", desc:"Ver con amor"},
-  {id:"glasses_sun",   cat:"lentes", name:"Lentes de Sol",  cost:25,  emoji:"😎", desc:"Fresquísimos"},
-  {id:"acc_bow",    cat:"accesorio", name:"Moño Rosa",       cost:20,  emoji:"🎀", desc:"Kawaii"},
-  {id:"acc_scarf",  cat:"accesorio", name:"Bufanda",         cost:25,  emoji:"🧣", desc:"Para el frío"},
-  {id:"outfit_kimono",  cat:"traje", name:"Kimono",          cost:60,  emoji:"👘", desc:"Elegancia japonesa"},
-  {id:"outfit_sailor",  cat:"traje", name:"Marinero",         cost:55,  emoji:"⚓", desc:"Aventureros del mar"},
-  {id:"outfit_witch",   cat:"traje", name:"Brujita",          cost:65,  emoji:"🧙", desc:"Magia y misterio"},
-  {id:"outfit_angel",   cat:"traje", name:"Angelitos",        cost:80,  emoji:"👼", desc:"Purísimos"},
+  {id:"hat_flower", cat:"sombrero", name:"Flower Crown",     cost:40,  emoji:"🌸", desc:"Super romantic"},
+  {id:"hat_crown",  cat:"sombrero", name:"Royal Crown",      cost:70,  emoji:"👑", desc:"King and queen"},
+  {id:"hat_straw",  cat:"sombrero", name:"Straw Hat",        cost:25,  emoji:"🎋", desc:"Garden style"},
+  {id:"glasses_heart", cat:"lentes", name:"Heart Glasses",   cost:30,  emoji:"💝", desc:"See with love"},
+  {id:"glasses_sun",   cat:"lentes", name:"Sunglasses",      cost:25,  emoji:"😎", desc:"Cool and fresh"},
+  {id:"acc_bow",    cat:"accesorio", name:"Pink Bow",         cost:20,  emoji:"🎀", desc:"Kawaii"},
+  {id:"acc_scarf",  cat:"accesorio", name:"Scarf",            cost:25,  emoji:"🧣", desc:"For cold days"},
+  {id:"outfit_kimono",  cat:"traje", name:"Kimono",          cost:60,  emoji:"👘", desc:"Japanese elegance"},
+  {id:"outfit_sailor",  cat:"traje", name:"Sailor",           cost:55,  emoji:"⚓", desc:"Sea adventure"},
+  {id:"outfit_witch",   cat:"traje", name:"Witch",            cost:65,  emoji:"🧙", desc:"Magic and mystery"},
+  {id:"outfit_angel",   cat:"traje", name:"Little Angels",    cost:80,  emoji:"👼", desc:"Pure sweetness"},
 ];
 
 
 const EXERCISES = [
-  {id:"validacion",emoji:"💬",title:"La Danza de la Validación",tags:"DBT · Sistémica",bamboo:40,time:"15 min",mode:"distancia",
-    desc:"Aprendan a validar las emociones del otro sin defenderse ni explicar. La validación no significa estar de acuerdo — significa decir 'tiene sentido que sientas eso'.",
-    instructions:["Abran Mochi en sus celulares al mismo tiempo","Persona A escribe algo que le molestó recientemente","Persona B responde validando, sin defenderse ni explicar","Intercambien roles en el siguiente turno","Al terminar, cierren con una frase de cuidado: 'Gracias por escucharme'"],
+  {id:"validacion",emoji:"💬",title:"The Validation Dance",tags:"DBT · Sistémica",bamboo:40,time:"15 min",mode:"remote",
+    desc:"Learn to validate your partner's emotions without defending or over-explaining. Validation is not agreement; it means saying 'it makes sense you felt that way'.",
+    instructions:["Open Mochi on both phones at the same time","Person A writes something that bothered them recently","Person B responds with validation, without defending or explaining","Switch roles in the next turn","At the end, close with a caring phrase: 'Thank you for listening to me'"],
     phases:[
-      {role:0,q:"Persona A: Comparte algo que te molestó esta semana (no tiene que ser sobre tu pareja).",ph:"Esta semana me sentí… cuando…",hint:"Habla desde el 'yo'. Ej: 'Me sentí ignorado/a cuando…'"},
-      {role:1,q:"Persona B: Valida con 'Tiene sentido porque...'",ph:"Tiene sentido porque…",hint:"Validar no es estar de acuerdo. Solo reconocer."},
-      {role:0,q:"Persona A: ¿Te sentiste comprendido/a?",ph:"Me sentí comprendido/a cuando…"},
-      {role:1,q:"Persona B: Tu turno — comparte algo que hayas sentido.",ph:"Esta semana yo sentí…"},
-      {role:0,q:"Persona A: Valida a tu pareja.",ph:"Tiene sentido porque…"},
-      {role:1,q:"Persona B: ¿Cómo fue recibir esa validación?",ph:"Eso me hizo sentir…"},
+      {role:0,q:"Person A: Share something that bothered you this week (it does not have to be about your partner).",ph:"This week I felt... when...",hint:"Speak from 'I'. Example: 'I felt ignored when...'"},
+      {role:1,q:"Person B: Validate with 'It makes sense because...'",ph:"It makes sense because...",hint:"Validation is not agreement. It is recognition."},
+      {role:0,q:"Person A: Did you feel understood?",ph:"I felt understood when..."},
+      {role:1,q:"Person B: Your turn - share something you felt.",ph:"This week I felt..."},
+      {role:0,q:"Person A: Validate your partner.",ph:"It makes sense because..."},
+      {role:1,q:"Person B: How was it to receive that validation?",ph:"That made me feel..."},
     ]},
-  {id:"ojos",emoji:"👁",title:"4 Minutos de Contacto Visual",tags:"ACT · Arthur Aron",bamboo:30,time:"5 min",mode:"presencial",
-    desc:"Mirarse a los ojos 4 minutos sin hablar. Estudios de Arthur Aron demuestran que esta práctica genera sentimientos de amor profundo entre extraños — imagina entre parejas.",
+  {id:"ojos",emoji:"👁",title:"4 Minutes of Eye Contact",tags:"ACT · Arthur Aron",bamboo:30,time:"5 min",mode:"in-person",
+    desc:"Look into each other's eyes for 4 minutes without speaking. Arthur Aron's studies show this can create deep love, even between strangers - imagine what it can do for couples.",
     instructions:["Abran Mochi al mismo tiempo en sus celulares","Este ejercicio es de presencia — sin hablar, solo escribir","Escriban lo que sienten al pensar en el otro en este momento","Lean la respuesta del otro en silencio","Compartan una palabra de cómo se sintieron al final"],
     timer:240,timerLabel:"Mírense a los ojos en silencio",
     beforeTimer:["Siéntense frente a frente, muy cerca.","Pongan el teléfono entre los dos.","Está permitido sonreír — no hablar.","Presionen INICIAR cuando estén listos."],
     afterPrompts:[{role:0,ph:"Una palabra para lo que sentí…"},{role:1,ph:"Lo que vi en tus ojos fue…"}]},
-  {id:"espejo",emoji:"🪞",title:"Técnica del Espejo",tags:"Imago · Narrativa",bamboo:35,time:"20 min",mode:"distancia",
+  {id:"espejo",emoji:"🪞",title:"Técnica del Espejo",tags:"Imago · Narrativa",bamboo:35,time:"20 min",mode:"remote",
     desc:"El espejo confirma que el mensaje fue recibido antes de responder. Basada en terapia Imago de Harville Hendrix.",
     instructions:["Persona A escribe algo importante que quiera compartir","Persona B refleja con sus palabras lo que entendió","A confirma si fue bien capturado o aclara","B valida la experiencia de A sin dar consejos","Intercambien roles en la siguiente ronda"],
     phases:[
-      {role:0,q:"Persona A: Algo que quieras que tu pareja entienda mejor.",ph:"Quiero que entiendas que…"},
+      {role:0,q:"Persona A: Algo que quieras que your partner entienda mejor.",ph:"Quiero que entiendas que…"},
       {role:1,q:"Persona B: Refleja lo que escuchaste.",ph:"Lo que escucho es… ¿Lo capté bien?",hint:"No interpretes — solo refleja. Usa sus mismas palabras."},
       {role:0,q:"Persona A: ¿Te sentiste reflejado/a?",ph:"Sí captaste… / Lo que faltó fue…"},
-      {role:1,q:"Persona B: Valida.",ph:"Tiene sentido porque…"},
+      {role:1,q:"Persona B: Valida.",ph:"It makes sense because..."},
       {role:1,q:"Persona B: Ahora comparte tú.",ph:"Quiero que entiendas que…"},
       {role:0,q:"Persona A: Refleja.",ph:"Lo que escucho es…"},
       {role:1,q:"¿Cómo fue sentirte reflejado/a?",ph:"De este ejercicio me llevo…"},
     ]},
-  {id:"apreciacion",emoji:"💝",title:"3 Apreciaciones Específicas",tags:"Gottman · TCC+",bamboo:25,time:"10 min",mode:"distancia",
+  {id:"apreciacion",emoji:"💝",title:"3 Apreciaciones Específicas",tags:"Gottman · TCC+",bamboo:25,time:"10 min",mode:"remote",
     desc:"La fórmula Gottman: 5 interacciones positivas por cada negativa. Las apreciaciones vagas no nutren — las específicas sí.",
     instructions:["Cada persona piensa en 3 cosas específicas que aprecia del otro","Compartan una a la vez por turno","Quien recibe, solo responde gracias y cómo le hizo sentir","No minimicen ni desvíen los halagos","Dejen que el amor entre ✨"],
     phases:[
       {role:0,q:"Persona A: Una apreciación MUY específica.",ph:"Aprecio cuando hiciste…",hint:"Específico: 'me preparaste café el martes', no 'eres atento/a'"},
-      {role:1,q:"Persona B: Recibe. Di 'Gracias' y cómo te hizo sentir.",ph:"Gracias. Eso me hizo sentir…"},
+      {role:1,q:"Persona B: Recibe. Di 'Gracias' y cómo te hizo sentir.",ph:"Gracias. That made me feel..."},
       {role:1,q:"Persona B: Tu apreciación específica.",ph:"Aprecio cuando tú…"},
-      {role:0,q:"Persona A: Recibe.",ph:"Gracias. Eso me hizo sentir…"},
+      {role:0,q:"Persona A: Recibe.",ph:"Gracias. That made me feel..."},
       {role:0,q:"Persona A: Algo que admiras profundamente.",ph:"Lo que más admiro de cómo enfrentas la vida es…"},
       {role:1,q:"¿Cómo se sienten después?",ph:"Hacer esto juntos me hace sentir que nuestra relación…"},
     ]},
-  {id:"respiracion",emoji:"🌬",title:"Respiración Sincronizada",tags:"ACT · Mindfulness",bamboo:20,time:"8 min",mode:"presencial",
+  {id:"respiracion",emoji:"🌬",title:"Respiración Sincronizada",tags:"ACT · Mindfulness",bamboo:20,time:"8 min",mode:"in-person",
     desc:"Respirar juntos activa el nervio vago — el nervio de la seguridad. Sincronizar la respiración reduce cortisol y genera co-regulación emocional.",
     instructions:["Búsquense un lugar tranquilo en sus respectivos espacios","Escriban cómo se sienten en este momento (sin filtro)","El otro responde con presencia, sin consejos","Compartan una cosa que necesitan del otro hoy","Terminen enviando un emoji que represente cómo se sienten"],
     timer:300,timerLabel:"4 seg inhalar · 2 sostener · 6 exhalar",
     beforeTimer:["Siéntense uno detrás del otro.","El de atrás coloca su mano en la espalda.","Sigan el ritmo 4-2-6 juntos.","Presionen INICIAR."],
     afterPrompts:[{role:0,ph:"Después de respirar juntos, siento…"},{role:1,ph:"Lo que noté al sincronizarme fue…"}]},
-  {id:"carta",emoji:"✉️",title:"Carta a mi Herida",tags:"Narrativa · TCC",bamboo:60,time:"30 min",mode:"distancia",
+  {id:"carta",emoji:"✉️",title:"Carta a mi Herida",tags:"Narrativa · TCC",bamboo:60,time:"30 min",mode:"remote",
     desc:"Identificar las creencias de infancia que gobiernan cómo amamos. Cada uno escribe individualmente y luego comparte lo que quiera.",
     instructions:["Escriban su carta directamente en el campo de Mochi","Guarden y compartan cuando se sientan listos","Lean la carta del otro con presencia, sin consejo","Validen una emocion que aparezca en lo escrito","Cierren con un mensaje de cuidado"],
     isEscritura:true,
     instruccion:"Escribe aqui tu carta a una herida de infancia. Puedes empezar con: 'Querida [soledad / miedo al abandono], se que estas ahi porque...'",
     prompts:["¿Cómo y cuándo apareciste en mi vida?","¿Qué creencias sobre el amor me enseñaste?","¿Cómo apareces en mi relación hoy?","¿Qué quiero decirte desde mi yo adulto?"],
     afterPrompts:[{role:0,ph:"Compartir esto me hizo sentir…"},{role:1,ph:"Después de escucharte, entiendo mejor que…"}]},
-  {id:"suenos",emoji:"🌙",title:"Mapa de Sueños",tags:"Narrativa · Positiva",bamboo:35,time:"15 min",mode:"distancia",
+  {id:"suenos",emoji:"🌙",title:"Mapa de Sueños",tags:"Narrativa · Positiva",bamboo:35,time:"15 min",mode:"remote",
     desc:"Las parejas que conocen los sueños del otro tienen 3x más probabilidades de navegar conflictos. Este ejercicio crea un mapa compartido del futuro.",
     instructions:["Cada persona piensa en 3 sueños personales","Compartan sin juzgar ni 'aterrizar' los sueños","Busquen los sueños que se superponen","Identifiquen uno que puedan perseguir juntos","Celébrense por soñar en voz alta"],
     phases:[
@@ -179,7 +179,7 @@ const EXERCISES = [
       {role:0,q:"¿Hay un sueño que quieran perseguir juntos?",ph:"Un sueño que podríamos tener juntos…"},
       {role:1,q:"¿Cuál sería el primer paso?",ph:"El primer paso podría ser…"},
     ]},
-  {id:"perdida",emoji:"🕊",title:"El Perdón Activo",tags:"Gottman · EFT",bamboo:55,time:"25 min",mode:"distancia",
+  {id:"perdida",emoji:"🕊",title:"El Perdón Activo",tags:"Gottman · EFT",bamboo:55,time:"25 min",mode:"remote",
     desc:"El perdón no es olvidar — es soltar la carga. Basado en el modelo de Gottman: reconocer, asumir responsabilidad, reparar.",
     instructions:["Elijan algo específico que quieran sanar juntos","No es para reabrir heridas — es para cerrarlas","Quien pide perdón escribe desde el corazón, sin justificarse","Quien perdona responde con apertura, sin condiciones","Terminen con un mensaje de cierre y un compromiso"],
     phases:[
@@ -190,18 +190,18 @@ const EXERCISES = [
       {role:1,q:"Persona B: ¿Puedes ofrecerlo?",ph:"Lo que puedo ofrecerte es…"},
       {role:0,q:"¿Cómo se sienten ahora?",ph:"Después de este ejercicio, me siento…"},
     ]},
-  {id:"amor_idiomas",emoji:"💞",title:"Idiomas del Amor",tags:"Chapman · ACT",bamboo:30,time:"12 min",mode:"distancia",
-    desc:"Gary Chapman identificó 5 idiomas del amor. Conocer el idioma de tu pareja evita que el amor se pierda en traducción.",
+  {id:"amor_idiomas",emoji:"💞",title:"Idiomas del Amor",tags:"Chapman · ACT",bamboo:30,time:"12 min",mode:"remote",
+    desc:"Gary Chapman identificó 5 idiomas del amor. Conocer el idioma de your partner evita que el amor se pierda en traducción.",
     instructions:["Lean los 5 idiomas juntos","Cada quien elige su TOP 2","Compartan sin juzgar","Hablen de cómo pueden 'hablar' el idioma del otro","Hagan un pequeño compromiso"],
     phases:[
       {role:0,q:"De estos 5, ¿cuál es tu idioma principal? (Palabras de afirmación / Tiempo de calidad / Regalos / Actos de servicio / Contacto físico)",ph:"Mi idioma del amor principal es…",hint:"El que más te hace sentir amado/a cuando lo recibes."},
       {role:1,q:"Persona B: ¿Cuál es tu idioma?",ph:"Mi idioma del amor es…"},
-      {role:0,q:"¿Cómo podrías hablar mejor el idioma de tu pareja?",ph:"Podría hablar tu idioma cuando…"},
-      {role:1,q:"Persona B: ¿Cómo podrías hablar el idioma de tu pareja?",ph:"Podría hablar tu idioma cuando…"},
+      {role:0,q:"¿Cómo podrías hablar mejor el idioma de your partner?",ph:"Podría hablar tu idioma cuando…"},
+      {role:1,q:"Persona B: ¿Cómo podrías hablar el idioma de your partner?",ph:"Podría hablar tu idioma cuando…"},
       {role:0,q:"Un pequeño compromiso para esta semana.",ph:"Esta semana voy a…"},
       {role:1,q:"¿Cómo se sienten con este compromiso?",ph:"Este compromiso me hace sentir…"},
     ]},
-  {id:"conflicto",emoji:"⚡",title:"Mapa del Conflicto",tags:"EFT · Sistémica",bamboo:45,time:"20 min",mode:"distancia",
+  {id:"conflicto",emoji:"⚡",title:"Mapa del Conflicto",tags:"EFT · Sistémica",bamboo:45,time:"20 min",mode:"remote",
     desc:"Bajo cada pelea hay una necesidad no expresada. Este ejercicio les ayuda a ir de la superficie al corazón del conflicto.",
     instructions:["Elijan un conflicto reciente (no el más grande)","No busquen quién tiene razón","Busquen qué necesidad hay detrás","El objetivo es entenderse, no ganar","Hablen despacio y hagan pausas"],
     phases:[
@@ -212,13 +212,13 @@ const EXERCISES = [
       {role:0,q:"¿Pueden ver el ciclo? ¿Cómo se activan mutuamente?",ph:"Creo que cuando tú… yo reacciono con… y eso te hace…"},
       {role:1,q:"¿Qué podrían hacer diferente la próxima vez?",ph:"La próxima vez podríamos…"},
     ]},
-  {id:"presencia",emoji:"🌿",title:"Presencia Plena",tags:"Mindfulness · ACT",bamboo:25,time:"10 min",mode:"presencial",
+  {id:"presencia",emoji:"🌿",title:"Presencia Plena",tags:"Mindfulness · ACT",bamboo:25,time:"10 min",mode:"in-person",
     desc:"En un mundo de distracciones, dar presencia plena es el regalo más raro. 10 minutos sin teléfonos, sin listas mentales — solo ustedes.",
     instructions:["Silencien notificaciones — solo Mochi abierto","No hay agenda — solo estar presentes el uno para el otro","Escriban lo primero que piensan al ver el nombre del otro","No hay respuesta incorrecta","Al terminar, compartan una observación del ejercicio"],
     timer:600,timerLabel:"Presencia plena — sin distracciones",
     beforeTimer:["Apaguen o silencien los teléfonos.","Siéntense cómodos, cerca.","No hay tema — solo estén presentes.","Hablen de lo que surja naturalmente.","Presionen INICIAR."],
     afterPrompts:[{role:0,ph:"Lo que noté en ti hoy fue…"},{role:1,ph:"Estar presente contigo me hizo sentir…"}]},
-  {id:"gracias_express",emoji:"✨",title:"Gracias Express",tags:"Gottman · Positiva",bamboo:15,time:"5 min",mode:"distancia",
+  {id:"gracias_express",emoji:"✨",title:"Gracias Express",tags:"Gottman · Positiva",bamboo:15,time:"5 min",mode:"remote",
     desc:"La ciencia de Gottman muestra que expresar gratitud específica — no genérica — activa el mismo circuito de recompensa que recibir un regalo. Dos minutos de gratitud real cambian la química del vínculo.",
     instructions:["Todo se hace por mensajes: puede ser en sincronía o asincrónico","Cada turno agradece algo concreto (qué hizo, cuándo y cómo te hizo sentir)","Quien recibe responde solo: 'Gracias. Lo hice porque...'","Luego cambian roles y repiten"],
     phases:[
@@ -227,7 +227,7 @@ const EXERCISES = [
       {role:1,q:"Tu turno: tu gratitud del día.",ph:"Algo que agradezco es cuando tú…"},
       {role:0,q:"Recibe.",ph:"Gracias. Lo hice porque…"},
     ]},
-  {id:"check_in_2min",emoji:"🌡",title:"Check-in de 2 Minutos",tags:"EFT · Sistémica",bamboo:15,time:"2 min",mode:"distancia",
+  {id:"check_in_2min",emoji:"🌡",title:"Check-in de 2 Minutos",tags:"EFT · Sistémica",bamboo:15,time:"2 min",mode:"remote",
     desc:"La Terapia Focalizada en Emociones (EFT) de Sue Johnson muestra que la sintonía emocional diaria — aunque sea breve — previene la acumulación de distancia. Tomarse 2 minutos para saber cómo está el otro reduce el porcentaje de malentendidos acumulados.",
     instructions:["Respondan individualmente y en honestidad","No hay respuesta incorrecta — no es el momento de resolver nada","El objetivo es solo conocer el estado emocional del otro","Si ven que el otro está bajo, pueden preguntar: '¿Qué necesitas hoy?'","Terminen con un emoji que represente cómo se sienten en este momento"],
     phases:[
@@ -236,8 +236,8 @@ const EXERCISES = [
       {role:0,q:"¿Qué necesitas del otro hoy?",ph:"Hoy necesito que…"},
       {role:1,q:"¿Qué puedes ofrecerle al otro hoy?",ph:"Hoy puedo darte…"},
     ]},
-  {id:"una_pregunta",emoji:"❓",title:"Una Pregunta",tags:"Gottman · Narrativa",bamboo:15,time:"2 min",mode:"distancia",
-    desc:"Gottman llama 'mapas del amor' al conocimiento profundo del mundo interno de tu pareja: sus miedos, sueños, recuerdos. Hacer preguntas reales — y escuchar de verdad — construye ese mapa. Una pregunta bien hecha crea más conexión que horas de conversación superficial.",
+  {id:"una_pregunta",emoji:"❓",title:"Una Pregunta",tags:"Gottman · Narrativa",bamboo:15,time:"2 min",mode:"remote",
+    desc:"Gottman llama 'mapas del amor' al conocimiento profundo del mundo interno de your partner: sus miedos, sueños, recuerdos. Hacer preguntas reales — y escuchar de verdad — construye ese mapa. Una pregunta bien hecha crea más conexión que horas de conversación superficial.",
     instructions:["Un@ hace la pregunta, el otro responde sin prisa","No analicen ni den consejos — solo escuchen","Terminen cambiando roles: quien respondió, ahora pregunta algo","Las preguntas no tienen que ser profundas — la curiosidad sincera es lo que importa","Si quieren, guarden la respuesta más bonita en su diario"],
     phases:[
       {role:0,q:"Persona A: Elige UNA pregunta y escríbela.",ph:"Mi pregunta para ti es…",hint:"Puede ser simple: '¿Qué fue lo mejor de tu semana?' o más profunda: '¿Qué te genera miedo últimamente?'"},
@@ -245,7 +245,7 @@ const EXERCISES = [
       {role:1,q:"Ahora Persona B: tu pregunta.",ph:"Quiero preguntarte…"},
       {role:0,q:"Persona A: Responde.",ph:"Lo que pienso es…"},
     ]},
-  {id:"micro_reconexion",emoji:"🧩",title:"Micro-reconexión",tags:"EFT · Apego",bamboo:20,time:"6 min",mode:"distancia",
+  {id:"micro_reconexion",emoji:"🧩",title:"Micro-reconexión",tags:"EFT · Apego",bamboo:20,time:"6 min",mode:"remote",
     desc:"Cuando hubo distancia durante el día, este ejercicio ayuda a reconectar sin discutir. Es breve, claro y por turnos en mensajes.",
     instructions:["Todo el ejercicio es por mensajes, en turnos","Hablen en primera persona (yo siento / yo necesito)","No den consejos ni corrijan al otro mientras responde","Cierre con una acción concreta para hoy"],
     phases:[
@@ -254,7 +254,7 @@ const EXERCISES = [
       {role:1,q:"Persona B: ¿qué te acercaría hoy?",ph:"Para reconectar hoy me ayudaría…"},
       {role:0,q:"Persona A: ofrece algo concreto para hoy.",ph:"Hoy puedo ofrecerte…"},
     ]},
-  {id:"acuerdo_24h",emoji:"📅",title:"Acuerdo 24h",tags:"Sistémica · Gottman",bamboo:20,time:"7 min",mode:"distancia",
+  {id:"acuerdo_24h",emoji:"📅",title:"Acuerdo 24h",tags:"Sistémica · Gottman",bamboo:20,time:"7 min",mode:"remote",
     desc:"En vez de promesas grandes, acuerden una micro-acción para las próximas 24 horas. Lo pequeño sostenido transforma la relación.",
     instructions:["Definan un tema puntual para mañana (no toda la relación)","Cada quien propone una acción propia (no exigir al otro)","Acuerden cómo confirmarán que sí se cumplió","Todo se escribe por mensaje en turnos"],
     phases:[
@@ -267,72 +267,25 @@ const EXERCISES = [
 ];
 
 const DAILY_TIPS = [
-  {text:"Escucha para entender, no para responder.",context:"Cuando tu pareja habla, la mayoría de nosotros ya estamos formando nuestra respuesta. Prueba escuchar el 100% antes de pensar en qué decir. Esta diferencia cambia completamente la calidad de la conversación."},
-  {text:"Di 'gracias' por algo específico hoy.",context:"Las parejas satisfechas expresan gratitud de forma regular y concreta. No es solo decir 'eres bueno/a' — es decir qué hiciste, cuándo, y cómo me hizo sentir. La especificidad convierte un cumplido en un regalo."},
-  {text:"Tóquense sin segundo interés.",context:"El contacto físico no-sexual — un abrazo largo, un beso en la frente, tomar la mano — reduce el cortisol y aumenta la oxitocina. Cuando el toque siempre lleva a algo más, quien es más reticente cierra esa puerta. El toque por el toque crea seguridad."},
-  {text:"Aprende a pedir, no a quejarte.",context:"Quejarse dice qué está mal. Pedir dice qué necesitas. Son muy distintos: 'Nunca estás presente' vs. 'Necesito 20 minutos de atención total esta noche'. Las parejas que piden claramente tienen conflictos que se resuelven."},
-  {text:"El 80% de los conflictos de pareja son perpetuos.",context:"El Dr. Gottman descubrió que la mayoría de los temas de pareja no tienen solución: son diferencias de personalidad, valores o estilos. El objetivo no es resolverlos sino manejarlos con humor y respeto. Saber esto quita una presión enorme."},
-  {text:"Celebra las victorias de tu pareja con entusiasmo.",context:"Cómo reaccionas a las buenas noticias importa tanto como cómo reaccionas a las malas. Responder con genuino interés ('¡Eso es increíble! ¡Cuéntame cómo fue!') construye confianza más que estar presente solo en los días difíciles."},
-  {text:"Repara rápido cuando te equivocas.",context:"Todos hacemos daño sin querer. La diferencia está en qué tan rápido lo reparamos. Un 'oye, me salí de línea — lo siento' dicho pronto pesa más que mil excusas días después. La reparación es la habilidad más importante del amor."},
-  {text:"Nombra lo que sientes antes de reaccionar.",context:"Antes de estallar, para un segundo y nómbrate: '¿Qué siento ahora mismo?' La emoción nombrada pierde gran parte de su fuerza. No se trata de reprimirla — se trata de no dejar que ella te maneje a ti."},
-  {text:"Conócete en los momentos de calma.",context:"Las conversaciones importantes no deberían empezar cuando ya están activados. Cuando el sistema nervioso está en alerta, el pensamiento creativo se apaga. Aprende cómo te activás, qué te calma, y compártelo con tu pareja en días tranquilos."},
-  {text:"Un ritual pequeño sostenido vale más que un gesto grande.",context:"El beso de buenos días, el mensaje de 'llegué', el 'cuéntame de tu día' — estos micro-rituales crean la trama de seguridad de una relación. Son invisibles cuando están, y ensordecedores cuando faltan."},
-  {text:"Ve el intento detrás de la acción.",context:"Tu pareja intenta amarte desde sus posibilidades actuales. Cuando algo no llega bien, antes de señalar el error, busca el intento detrás del gesto. 'Qué quería lograr con esto?' cambia la respuesta desde la ternura."},
-  {text:"Los sueños de tu pareja merecen respeto.",context:"Cuando atacamos los sueños del otro — 'eso es poco realista', '¿y cómo lo vas a pagar?' — creamos una herida profunda. Incluso si no compartes el sueño, puedes honrar que él o ella lo tenga."},
-  {text:"Practica el 'y' antes del 'pero'.",context:"Cuando usamos 'pero' después de escuchar a alguien, borramos todo lo que dijimos antes. Prueba: 'Entiendo que estás agotado/a, y también necesito...' El 'y' abre espacio donde el 'pero' cierra puertas."},
-  {text:"Mírense a los ojos 30 segundos hoy.",context:"Investigaciones muestran que el contacto visual sostenido activa las mismas vías del cerebro que el amor romántico. No hace falta decir nada — solo mirar. Inténtalo esta noche sin reírse los primeros 10 segundos."},
-  {text:"Respeta los límites de energía de tu pareja.",context:"No todos cargamos la misma batería emocional. Cuando tu pareja dice 'hoy no tengo más', no es rechazo — es información. Aprender a respetar ese límite y preguntar cuándo puede ser es un acto de amor maduro."},
-  {text:"Deja que tu pareja influya en ti.",context:"Las parejas donde ambos se dejan influir mutuamente son más felices. No se trata de perder tu identidad — se trata de que las perspectivas del otro tengan peso en tus decisiones. La rigidez muchas veces disfraza el miedo."},
-  {text:"Hagan algo nuevo juntos cada mes.",context:"La novedad reactiva la dopamina del enamoramiento. No necesita ser costoso ni lejos — un restaurante nuevo, una ruta diferente, aprender algo que ninguno sabe hacer. La sorpresa compartida une."},
-  {text:"Cuida tu temperatura emocional.",context:"Cuando tu frecuencia cardíaca sube considerablemente, el pensamiento racional se bloquea. Aprende tus señales de activación — mandíbula, hombros, tono de voz — y pide un descanso antes de continuar. No es huir, es prepararte para conectar."},
-  {text:"Pregunta antes de asumir.",context:"La mayoría de los malentendidos empiezan con una historia que nos contamos sin verificar. 'Pareció enojada' se convierte en 'está enojada conmigo' en segundos. Un simple '¿cómo estás?' antes de interpretar salva horas de distancia."},
-  {text:"Valida sin estar de acuerdo.",context:"Validar no significa que el otro tiene razón — significa que su experiencia tiene sentido desde donde está. 'Entiendo por qué te sentiste así' puede decirse sin ceder tu punto de vista. Y esas pocas palabras pueden desarmar una pelea entera."},
-  {text:"Acepta las reparaciones que te ofrecen.",context:"Cuando tu pareja intenta hacer las paces — un chiste, un abrazo, un 'oye, perdón' — recibirlo es un acto de generosidad. No siempre hay que procesar todo antes de aceptar el gesto. El perdón puede empezar con abrirle la puerta al otro."},
-  {text:"Habla de lo que te gusta, no solo de lo que no te gusta.",context:"Tenemos una tendencia natural a señalar problemas. Pero las parejas satisfechas tienen al menos 5 interacciones positivas por cada negativa. Dí hoy una cosa específica que te gusta de cómo tu pareja te ama."},
-  {text:"Cada uno necesita espacio para ser individuo.",context:"La paradoja del amor es que, para estar bien juntos, necesitan estar bien por separado. Tener tiempo propio, amigos y proyectos individuales no amenaza la relación — la enriquece. El miedo al espacio es el que la asfixia."},
-  {text:"Aprende cómo pide perdón tu pareja.",context:"Hay diferentes formas de pedir perdón: expresar arrepentimiento, aceptar responsabilidad, hacer reparación o solo pedir que te perdonen. Tu pareja puede necesitar escuchar una forma diferente a la que tú usas. Descúbranlo juntos."},
-  {text:"Presta atención a los intentos de conexión del otro.",context:"Según Gottman, la conexión se construye respondiendo a los 'intentos' del otro: comentarios, chistes, observaciones. El 87% de las parejas satisfechas responden a estos gestos. Las que se distancian los ignoran."},
-  {text:"La crítica es diferente de la queja.",context:"Una queja habla de una acción específica: 'Dejaste los platos sin lavar'. Una crítica ataca la personalidad: 'Eres irresponsable'. Si tu queja tiene las palabras 'siempre', 'nunca' o 'eres', ya se convirtió en crítica."},
-  {text:"Comparte algo que te asuste hoy.",context:"La vulnerabilidad crea intimidad más rápido que cualquier otra cosa. Compartir un miedo, una inseguridad o una vergüenza no te hace débil — te hace humano/a. Y al hacerlo, le das permiso a tu pareja para mostrarse también."},
-  {text:"Aprende a recibir amor en el idioma de quien lo da.",context:"Es fácil recibir amor cuando llega en tu idioma. El crecimiento está en apreciarlo cuando llega en el de tu pareja. Si ella o él hace actos de servicio y tú necesitas palabras, practica notar el acto como lo que es: un 'te amo' en otro idioma."},
-  {text:"El sarcasmo corroe la confianza lentamente.",context:"Gottman lo llama 'desprecio' y es el predictor más fuerte del divorcio. Los ojos en blanco, los comentarios que minimizan — aunque se digan 'en broma' — acumulan un daño lento y real. La alternativa es decir lo que sientes sin degradar al otro."},
-  {text:"Hablen del futuro con regularidad.",context:"Cada ciertos meses, háganse estas preguntas: ¿Qué queremos este año? ¿Qué sueño podemos perseguir juntos? Las parejas que co-crean su futuro se sienten más unidas. Los proyectos compartidos crean historia."},
-  {text:"Cuando no sepas qué decir, di 'estoy aquí'.",context:"A veces no hay palabras para el dolor del otro. Y no hace falta que haya. 'Estoy aquí' es una de las cosas más poderosas que puedes decir. La presencia sin palabras es una forma de amor que no necesita soluciones."},
-  {text:"La rabia es siempre una emoción secundaria.",context:"Detrás de cada momento de rabia hay una emoción primaria: miedo, dolor, vergüenza, decepción. Cuando alguien explota, la pregunta real es '¿qué le duele?'. Aprende a reconocer eso en ti y a buscarlo en tu pareja antes de responder a la rabia."},
-  {text:"La seguridad se construye con consistencia.",context:"Las promesas grandes son menos importantes que los actos pequeños sostenidos. Decir lo que vas a hacer, hacer lo que dijiste, en los pequeños momentos del día — eso construye confianza. No hace falta ser perfecto/a, hace falta ser confiable."},
-  {text:"Pregunta cómo fue el día con curiosidad real.",context:"No como formalidad — como sincero interés. '¿Qué fue lo mejor que te pasó hoy?' abre más que '¿Cómo estás?'. La curiosidad activa dirigida al otro se siente muy diferente a la pregunta automática."},
-  {text:"Celebren juntos, no solo se apoyen en las crisis.",context:"Es fácil estar presente en las dificultades. Lo que separa a las parejas que duran es que también se celebran en los logros. Responder con entusiasmo a las buenas noticias del otro es altamente predictivo de satisfacción de pareja."},
-  {text:"Hablen de cómo manejan los conflictos.",context:"¿Necesitas espacio para procesar antes de hablar? ¿O necesitas hablar de inmediato para que no se acumule? Estas diferencias crean muchos meta-conflictos. Hablar de eso cuando no están en uno cambia todo."},
-  {text:"No conviertas el silencio en castigo.",context:"El silencio punitivo — dejar de hablar para que el otro sufra — es una de las formas más dañinas de comunicar enojo. Si necesitas silencio para procesar, es válido, pero decirlo transforma el silencio en cuidado."},
-  {text:"Apoyen los proyectos individuales del otro.",context:"Celebrar el crecimiento de tu pareja, incluso cuando ese crecimiento te genera algo de inseguridad, es amor en su forma más madura. Las personas que se sienten apoyadas en sus metas individuales reportan mayor satisfacción en la relación."},
-  {text:"La vergüenza y la culpa son emociones diferentes.",context:"Culpa: 'Hice algo malo.' Vergüenza: 'Soy algo malo.' La culpa puede llevar a la reparación. La vergüenza paraliza o ataca. Cuando tu pareja se equivoca, apunta al comportamiento, no a la persona."},
-  {text:"Hagan un check-in de pareja cada semana.",context:"Quince minutos semanales donde ambos preguntan: '¿Hay algo que te dejé pendiente esta semana?', '¿Hay algo que quieras que hagamos más?'. Este ritual previene que los pequeños resentimientos se conviertan en grandes distancias."},
-  {text:"Pide lo que necesitas cuando estás bien.",context:"Las necesidades pedidas en calma tienen más probabilidad de ser escuchadas. 'Esta semana necesitaría que...' dicho en un momento de conexión llega diferente que la misma frase en medio de una pelea. El timing en el amor importa."},
-  {text:"La intimidad emocional prepara la intimidad física.",context:"La conexión emocional pre-dispone el cuerpo para la intimidad física. Las parejas que se sienten emocionalmente aisladas reportan menor satisfacción sexual. La intimidad no empieza en el dormitorio — empieza a las 6 pm cuando uno pregunta '¿cómo te fue?'."},
-  {text:"Habla bien de tu pareja cuando no está.",context:"Las palabras que usamos para describir a nuestra pareja a otros revelan y refuerzan cómo la vemos. Hablar bien de ella o él cuando no está cultiva un respeto que después se nota en el trato del día a día."},
-  {text:"Aprendan una señal para pausar los conflictos.",context:"Pedir un descanso de 20 minutos cuando la discusión escala no es rendirse — es madurez emocional. El sistema nervioso necesita ese tiempo para calmarse. Pongan una palabra clave que ambos respeten para marcar la pausa."},
-  {text:"Las expectativas no dichas se convierten en resentimientos.",context:"No podemos enojarnos con alguien por no cumplir una expectativa que nunca le dijimos. Si esperabas algo y no llegó, la pregunta honesta es: ¿Lo pedí claramente? No asumir que 'debería saber' salva muchos malentendidos."},
-  {text:"La historia de su relación importa.",context:"Las parejas que recuerdan bien su historia — cómo se conocieron, los momentos difíciles que superaron — tienen más recursos emocionales para los conflictos presentes. Recuerden su historia juntos: es el mapa de lo que son."},
-  {text:"El amor maduro es más tranquilo, no menos real.",context:"En las primeras etapas, el amor se siente intensamente. En relaciones más maduras, es más tranquilo pero no menos profundo. Una relación estable con cariño consistente es un logro — no una señal de que 'ya se apagó la llama'."},
-  {text:"Pregunta qué necesita el otro, no qué necesitarías tú.",context:"A veces consolamos desde lo que a nosotros nos funcionaría, no desde lo que el otro necesita. '¿Qué te ayuda más cuando estás así?' es una de las preguntas más útiles de una relación, y las respuestas pueden sorprenderte."},
-  {text:"El amor es un verbo, no un estado.",context:"Decir 'te amo' es importante, pero el amor se sustenta en las acciones diarias: preguntar, recordar, aparecer, insistir, reparar. Las palabras abren el camino, pero los actos son los que lo pavimentan. El amor que solo se declara se desgasta — el que se practica crece."},
+  {text:"Listen to understand, not to reply.",context:"When your partner speaks, pause your inner response and give full attention. Deep listening changes the tone of the whole relationship."},
+  {text:"Say a specific thank-you today.",context:"Specific gratitude feels more real: what happened, when, and how it made you feel."},
+  {text:"Ask clearly, don't complain vaguely.",context:"A clear request has direction. Complaints only amplify frustration."},
+  {text:"Repair quickly after mistakes.",context:"A fast and sincere repair builds more trust than long explanations later."},
+  {text:"Name your emotion before reacting.",context:"When you label your feeling, it loses intensity and gives you choice."},
+  {text:"Small rituals beat big gestures.",context:"Daily micro-rituals like check-ins and goodnight messages build safety over time."},
+  {text:"Validate without needing to agree.",context:"Validation says: your experience makes sense from your perspective."},
+  {text:"Celebrate your partner's wins.",context:"Active enthusiasm during good news strengthens the bond."},
+  {text:"Respect energy limits.",context:"If one partner is depleted, timing matters. Love includes emotional pacing."},
+  {text:"Use 'and' instead of 'but'.",context:"'And' keeps both truths in the room. 'But' often shuts one down."},
+  {text:"Ask before assuming.",context:"A simple check-in prevents stories and misunderstandings from growing."},
+  {text:"Connection grows from consistency.",context:"Trust comes from repeated small actions: say it, do it, repeat."},
 ];
 
 // Same order as DAILY_TIPS — used to show therapeutic source in the tip modal
 const DAILY_TIP_SOURCES = [
-  "Gottman","Psicología Positiva","Neurociencia del Apego","CNV · Rosenberg",
-  "Gottman","Gottman","Gottman","DBT · Linehan",
-  "Regulación Emocional","Gottman","EFT · Sue Johnson","Gottman",
-  "CNV · Rosenberg","Psicología Social","Terapia del Apego","Gottman",
-  "Psicología Positiva","Gottman","TCC","DBT · Linehan",
-  "Gottman","Gottman","Terapia del Apego","Gary Chapman",
-  "Gottman","Gottman","EFT · Sue Johnson","Gary Chapman",
-  "Gottman","Gottman","EFT · Sue Johnson","EFT · Sue Johnson",
-  "Terapia del Apego","Gottman","Gottman","Gottman",
-  "TCC","Terapia del Apego","Brené Brown","Gottman",
-  "CNV · Rosenberg","Gottman","Gottman","Gottman",
-  "TCC","Gottman","Terapia del Apego","EFT · Sue Johnson",
-  "Gary Chapman",
+  "Gottman","Positive Psychology","Attachment Neuroscience","NVC · Rosenberg",
+  "Gottman","Gottman","EFT · Sue Johnson","Positive Psychology",
+  "Polyvagal Theory","NVC · Rosenberg","CBT","Attachment Theory",
 ];
 
 const EXAMPLES_BY_EXERCISE = {
@@ -531,72 +484,72 @@ const EXAMPLES_BY_EXERCISE = {
 };
 
 const CONOCE_CATS = {
-  infancia:{emoji:"🧸",label:"Infancia",bg:"#f1ecfb",preguntas:["¿Cuál es tu recuerdo más feliz de la infancia?","¿Cómo era tu relación con tu mamá cuando eras pequeño/a?","¿Cómo era tu relación con tu papá cuando eras pequeño/a?","¿Qué aprendiste sobre el amor en tu familia de origen?","¿Cuál fue el momento más difícil de tu infancia?","¿Qué cosas de tu infancia te gustaría haber tenido?"]},
-  amor: {emoji:"💕",label:"El Amor",bg:"#f7ecff",preguntas:["¿Qué significa para ti sentirte amado/a?","¿Cuál ha sido tu mayor herida en el amor?","¿Qué es lo que más te da miedo en una relación?","¿Qué valoras más de nuestra relación hoy?","¿Hay algo que siempre has querido decirme y no has podido?","¿Qué necesitas de mí que quizás no me has pedido?"]},
-  suenos: {emoji:"🌙",label:"Sueños",bg:"#ecebff",preguntas:["¿Cuál es el sueño que sientes que aún no has perseguido?","¿Cómo te imaginas tu vida en 10 años?","¿Qué cosa quisiste lograr y aún no has intentado?","¿Qué nos falta vivir juntos?","Si el dinero no fuera problema, ¿cómo vivirías?","¿Qué legado quieres dejar en el mundo?"]},
-  miedos: {emoji:"🫂",label:"Miedos",bg:"#e8f5ec",preguntas:["¿A qué le tienes más miedo en la vida?","¿Cuándo más necesitas que te abracen?","¿Cuándo te sientes solo/a aunque esté presente?","¿Qué es lo que más te cuesta pedir?","¿Qué es lo que más te cuesta recibir?","¿Cuál es tu mayor inseguridad y cómo puedo apoyarte?"]},
+  infancia:{emoji:"🧸",label:"Childhood",bg:"#f1ecfb",preguntas:["What is your happiest childhood memory?","What was your relationship with your mom like when you were little?","What was your relationship with your dad like when you were little?","What did your family teach you about love?","What was the hardest moment of your childhood?","What do you wish you had more of as a child?"]},
+  amor: {emoji:"💕",label:"Love",bg:"#f7ecff",preguntas:["What helps you feel truly loved?","What has been your biggest wound in love?","What scares you most in relationships?","What do you value most about our relationship today?","Is there something you have always wanted to tell me but haven't yet?","What do you need from me that you may not have asked for?"]},
+  suenos: {emoji:"🌙",label:"Dreams",bg:"#ecebff",preguntas:["What dream do you still want to pursue?","How do you imagine your life in 10 years?","What goal have you wanted but not attempted yet?","What do you feel we still need to experience together?","If money were not an issue, how would you live?","What legacy do you want to leave in the world?"]},
+  miedos: {emoji:"🫂",label:"Fears",bg:"#e8f5ec",preguntas:["What do you fear most in life?","When do you most need a hug?","When do you feel lonely even when I am here?","What is hardest for you to ask for?","What is hardest for you to receive?","What is your biggest insecurity and how can I support you?"]},
 };
 
 const BURBUJA_SECTIONS = [
-  {id:"tipo",icon:"💑",title:"Tipo de relación",sub:"Monogamia, exclusividad, definición",itemBg:"#f5eeff",
+  {id:"tipo",icon:"💑",title:"Relationship type",sub:"Monogamy, exclusivity, and definition",itemBg:"#f5eeff",
     items:[
-      {id:"tipo1",q:"¿Qué tipo de relación tienen? ¿Cómo la definirían? (ej: novios, pareja exclusiva, abiertos, en construcción)",phA:"Para mí nuestra relación es...",phB:"Para mí nuestra relación es..."},
-      {id:"tipo2",q:"¿Cuánto espacio personal necesita cada uno?",phA:"Necesito...",phB:"Necesito..."},
-      {id:"tipo3",q:"¿Cómo manejan el tiempo con amigos y familia por separado?",phA:"Para mí es importante...",phB:"Para mí es importante..."},
+      {id:"tipo1",q:"What kind of relationship do you have? How would you define it? (ex: dating, exclusive, open, in progress)",phA:"For me, our relationship is...",phB:"For me, our relationship is..."},
+      {id:"tipo2",q:"How much personal space does each of you need?",phA:"I need...",phB:"I need..."},
+      {id:"tipo3",q:"How do you handle separate time with friends and family?",phA:"For me, it's important...",phB:"For me, it's important..."},
     ]},
-  {id:"fidelidad",icon:"🤝",title:"Fidelidad & Límites",sub:"Qué es infidelidad para nosotros",itemBg:"#f3ebff",
+  {id:"fidelidad",icon:"🤝",title:"Fidelity & Boundaries",sub:"What counts as infidelity for us",itemBg:"#f3ebff",
     items:[
-      {id:"fidel1",q:"¿Qué consideras tú que es infidelidad?",phA:"Para mí la infidelidad es...",phB:"Para mí la infidelidad es...",note:"Más allá de lo físico: mensajes, emocional, coqueteo. Sin respuestas incorrectas."},
-      {id:"fidel2",q:"¿Qué le pides al otro para sentirte seguro/a?",phA:"Para sentirme seguro/a necesito...",phB:"Para sentirme seguro/a necesito..."},
-      {id:"fidel3",q:"¿Cómo manejan la privacidad (teléfonos, contraseñas)?",phA:"Para mí la privacidad significa...",phB:"Para mí la privacidad significa..."},
+      {id:"fidel1",q:"What do you consider infidelity?",phA:"For me, infidelity is...",phB:"For me, infidelity is...",note:"Beyond physical: messaging, emotional intimacy, flirting. No wrong answers."},
+      {id:"fidel2",q:"What do you need from your partner to feel safe?",phA:"To feel safe, I need...",phB:"To feel safe, I need..."},
+      {id:"fidel3",q:"How do you handle privacy (phones, passwords)?",phA:"For me, privacy means...",phB:"For me, privacy means..."},
     ]},
-  {id:"discusion",icon:"⚡",title:"Reglas para discutir",sub:"Cómo manejar conflictos juntos",itemBg:"#ecebff",
+  {id:"discusion",icon:"⚡",title:"Conflict rules",sub:"How to handle conflict together",itemBg:"#ecebff",
     items:[
-      {id:"disc1",q:"Señal de 'necesito pausa' — ¿cuál es la tuya?",phA:"Cuando me desborda...",phB:"Cuando me desborda..."},
-      {id:"disc2",q:"¿Qué está PROHIBIDO en una discusión entre ustedes?",phA:"Ej: gritar, traer el pasado...",phB:"Ej: insultar, silencio de días..."},
-      {id:"disc3",q:"¿Cómo se reconcilian después de una pelea?",phA:"Para reconciliarme necesito...",phB:"Para reconciliarme necesito..."},
-      {id:"disc4",q:"¿Cuánto tiempo de pausa está bien antes de retomar una conversación?",phA:"Necesito al menos...",phB:"Necesito al menos..."},
+      {id:"disc1",q:"What is your signal for 'I need a pause'?",phA:"When I feel overwhelmed...",phB:"When I feel overwhelmed..."},
+      {id:"disc2",q:"What is off-limits in your arguments?",phA:"Ex: yelling, bringing up old issues...",phB:"Ex: insults, silent treatment for days..."},
+      {id:"disc3",q:"How do you reconnect after a fight?",phA:"To reconnect, I need...",phB:"To reconnect, I need..."},
+      {id:"disc4",q:"How long of a break feels okay before returning to the conversation?",phA:"I need at least...",phB:"I need at least..."},
     ]},
-  {id:"quiero",icon:"✨",title:"Lo que quiero del otro",sub:"Necesidades, deseos, peticiones",itemBg:"#f8efff",
+  {id:"quiero",icon:"✨",title:"What I need from you",sub:"Needs, wishes, and requests",itemBg:"#f8efff",
     items:[
-      {id:"quiero1",q:"¿Qué MÁS necesitas de tu pareja que no has pedido?",phA:"Lo que más necesito es...",phB:"Lo que más necesito es..."},
-      {id:"quiero2",q:"¿Cómo prefieres recibir amor?",phA:"Me siento amado/a cuando...",phB:"Me siento amado/a cuando..."},
-      {id:"quiero3",q:"¿Qué es algo pequeño que el otro podría hacer y te haría muy feliz?",phA:"Algo pequeño que me haría feliz...",phB:"Algo pequeño que me haría feliz..."},
+      {id:"quiero1",q:"What do you need more of from your partner that you have not asked for?",phA:"What I need most is...",phB:"What I need most is..."},
+      {id:"quiero2",q:"How do you prefer to receive love?",phA:"I feel loved when...",phB:"I feel loved when..."},
+      {id:"quiero3",q:"What is one small thing your partner could do that would make you very happy?",phA:"A small thing that would make me happy...",phB:"A small thing that would make me happy..."},
     ]},
-  {id:"futuro",icon:"🌱",title:"El Futuro",sub:"Planes, metas y sueños compartidos",itemBg:"#e8f5ec",
+  {id:"futuro",icon:"🌱",title:"The Future",sub:"Shared plans, goals, and dreams",itemBg:"#e8f5ec",
     items:[
-      {id:"fut1",q:"¿Dónde se imaginan viviendo en 5 años?",phA:"Me imagino que...",phB:"Me imagino que..."},
-      {id:"fut2",q:"¿Quieren tener o no tener hijos? ¿Cuándo?",phA:"Sobre los hijos, yo siento...",phB:"Sobre los hijos, yo siento..."},
-      {id:"fut3",q:"¿Cómo se imaginan su hogar ideal?",phA:"Mi hogar ideal es...",phB:"Mi hogar ideal es..."},
+      {id:"fut1",q:"Where do you imagine living in 5 years?",phA:"I imagine that...",phB:"I imagine that..."},
+      {id:"fut2",q:"Do you want children or not? If yes, when?",phA:"About children, I feel...",phB:"About children, I feel..."},
+      {id:"fut3",q:"How do you imagine your ideal home?",phA:"My ideal home is...",phB:"My ideal home is..."},
     ]},
-  {id:"economia",icon:"💰",title:"Economía & Dinero",sub:"Finanzas, gastos y metas económicas",itemBg:"#f2edff",
+  {id:"economia",icon:"💰",title:"Money & Finances",sub:"Spending, savings, and financial goals",itemBg:"#f2edff",
     items:[
-      {id:"eco1",q:"¿Cómo van a manejar el dinero? ¿Juntos, separados o mixto?",phA:"Para mí lo ideal es...",phB:"Para mí lo ideal es...",note:"No hay respuesta incorrecta: cuentas separadas, conjunta, o ambas. Lo importante es acordarlo."},
-      {id:"eco2",q:"¿Cuánto es 'gasto grande' que requiere consultarse?",phA:"Para mí, más de...",phB:"Para mí, más de..."},
-      {id:"eco3",q:"¿Qué metas económicas tienen juntos?",phA:"Una meta que quiero es...",phB:"Una meta que quiero es..."},
-      {id:"eco4",q:"¿Cómo manejan las deudas o situaciones económicas difíciles?",phA:"En esos momentos yo...",phB:"En esos momentos yo..."},
-      {id:"eco5",q:"¿Ahorran juntos? ¿Para qué?",phA:"Me gustaría que ahorráramos para...",phB:"Me gustaría que ahorráramos para..."},
+      {id:"eco1",q:"How will you manage money? Shared, separate, or hybrid?",phA:"For me, the ideal is...",phB:"For me, the ideal is...",note:"No wrong answer: separate accounts, shared account, or both. What matters is agreeing together."},
+      {id:"eco2",q:"What counts as a 'big expense' that should be discussed first?",phA:"For me, anything over...",phB:"For me, anything over..."},
+      {id:"eco3",q:"What financial goals do you share?",phA:"One goal I want is...",phB:"One goal I want is..."},
+      {id:"eco4",q:"How do you handle debt or hard financial situations?",phA:"In those moments I...",phB:"In those moments I..."},
+      {id:"eco5",q:"Do you save together? What for?",phA:"I would like us to save for...",phB:"I would like us to save for..."},
     ]},
-  {id:"familia",icon:"🏠",title:"Familia & Crianza",sub:"Familias de origen, hijos y límites",itemBg:"#f6efff",
+  {id:"familia",icon:"🏠",title:"Family & Parenting",sub:"Families of origin, kids, and boundaries",itemBg:"#f6efff",
     items:[
-      {id:"fam1",q:"¿Cuánto espacio tiene la familia de origen en su relación?",phA:"Para mí, mi familia...",phB:"Para mí, mi familia...",note:"Las familias de origen pueden ser una gran fuente de amor o de tensión. Acuerden los límites juntos."},
-      {id:"fam2",q:"¿Cómo manejan las opiniones o críticas de sus familias sobre la relación?",phA:"Cuando mi familia opina...",phB:"Cuando mi familia opina..."},
-      {id:"fam3",q:"¿Quieren tener hijos? ¿Cuántos y cuándo?",phA:"Sobre los hijos yo pienso...",phB:"Sobre los hijos yo pienso..."},
-      {id:"fam4",q:"¿Cómo quieren criar a sus hijos? ¿Qué valores son innegociables?",phA:"Para mí es esencial enseñar...",phB:"Para mí es esencial enseñar..."},
-      {id:"fam5",q:"¿Cómo dividen responsabilidades del hogar?",phA:"Yo me siento cómodo/a haciendo...",phB:"Yo me siento cómodo/a haciendo..."},
-      {id:"fam6",q:"¿Tienen mascotas o quieren tenerlas?",phA:"Sobre las mascotas...",phB:"Sobre las mascotas..."},
+      {id:"fam1",q:"How much space should your families of origin have in your relationship?",phA:"For me, my family...",phB:"For me, my family...",note:"Families can be a source of love or tension. Set boundaries together."},
+      {id:"fam2",q:"How do you handle family opinions or criticism about your relationship?",phA:"When my family gives opinions...",phB:"When my family gives opinions..."},
+      {id:"fam3",q:"Do you want children? How many and when?",phA:"About children, I think...",phB:"About children, I think..."},
+      {id:"fam4",q:"How do you want to raise your children? What values are non-negotiable?",phA:"For me, it's essential to teach...",phB:"For me, it's essential to teach..."},
+      {id:"fam5",q:"How do you divide household responsibilities?",phA:"I feel comfortable doing...",phB:"I feel comfortable doing..."},
+      {id:"fam6",q:"Do you have pets or want them?",phA:"About pets...",phB:"About pets..."},
     ]},
 ];
 
 const LOVE_PROMPTS = [
-  { icon:"🌸", idea:"Hoy noté algo lindo en ti: " },
-  { icon:"💜", idea:"Gracias por... me hizo sentir " },
-  { icon:"🌍", idea:"Cuando estoy contigo pienso en " },
-  { icon:"🐼", idea:"Te extraño porque " },
-  { icon:"✨", idea:"Eres especial para mí porque " },
-  { icon:"🌿", idea:"Hoy me sonreí al recordar cuando " },
-  { icon:"🫶", idea:"Llevo todo el día pensando en decirte que " },
-  { icon:"💫", idea:"Cuando estás cerca siento " },
+  { icon:"🌸", idea:"Today I noticed something beautiful about you: " },
+  { icon:"💜", idea:"Thank you for... it made me feel " },
+  { icon:"🌍", idea:"When I am with you, I think about " },
+  { icon:"🐼", idea:"I miss you because " },
+  { icon:"✨", idea:"You are special to me because " },
+  { icon:"🌿", idea:"Today I smiled remembering when " },
+  { icon:"🫶", idea:"I have been thinking all day about telling you that " },
+  { icon:"💫", idea:"When you are close, I feel " },
 ];
 
 // ═══════════════════════════════════════════════════════
@@ -1899,7 +1852,7 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
       <div style={{ background: "linear-gradient(120deg, #2d1f46 0%, #3b2b60 70%, #2f6c47 100%)", padding: "44px 18px 14px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
           <div>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.55rem", color: C.cream2 }}>El Jardín</div>
+            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.55rem", color: C.cream2 }}>The Garden</div>
             <div style={{ fontSize: "0.72rem", color: `${C.cream}88`, fontWeight: 700, letterSpacing: "0.5px" }}>
               {water < 20 ? "🏜️ JARDÍN SECO" : water < 40 ? "🌱 SEDIENTO" : water < 60 ? "🌿 SANO" : water < 80 ? "🌸 FLORECIENDO" : "🌺 RADIANTE"}
             </div>
@@ -1917,7 +1870,7 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
           </div>
         ))}
         {dry && <div style={{ background:"#e86030", borderRadius:8, padding:"6px 12px", fontSize:"0.76rem", color:"white", fontWeight:800, textAlign:"center", marginTop:6 }}>⚠️ ¡El jardín se está secando! Riégalo pronto</div>}
-        {!dry && withering && <div style={{ background:"#e8a030", borderRadius:8, padding:"6px 12px", fontSize:"0.76rem", color:"white", fontWeight:800, textAlign:"center", marginTop:6 }}>🌱 El jardín necesita agua</div>}
+        {!dry && withering && <div style={{ background:"#e8a030", borderRadius:8, padding:"6px 12px", fontSize:"0.76rem", color:"white", fontWeight:800, textAlign:"center", marginTop:6 }}>🌱 The garden needs water</div>}
       </div>
 
       {/* Garden scene */}
@@ -1963,13 +1916,13 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
       <div style={{ textAlign:"center", padding:"22px 14px 6px" }}>
         <button onClick={onWater} style={{ background: dry?"#e86030":C.sky, color:C.white, border:"none", borderRadius:12,
           padding:"10px 22px", fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", cursor:"pointer",
-          boxShadow:"0 3px 0 rgba(0,0,0,0.18)" }}>💧 Regar el jardín</button>
+          boxShadow:"0 3px 0 rgba(0,0,0,0.18)" }}>💧 Water the garden</button>
       </div>
 
       {/* Shop */}
       <div style={{ background:C.white, borderRadius:"22px 22px 0 0", border:`1.5px solid ${C.border}`, boxShadow:`0 -3px 0 ${C.border}`, marginTop:10 }}>
         <div style={{ padding:"16px 16px 0" }}>
-          <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.1rem", color:C.dark }}>Tienda del jardín</div>
+          <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.1rem", color:C.dark }}>Garden shop</div>
         </div>
         {/* Category tabs */}
         <div style={{ display:"flex", gap:6, overflowX:"auto", padding:"10px 14px 6px" }}>
@@ -2021,7 +1974,7 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
 }
 
 // ═══════════════════════════════════════════════
-// MENSAJES — updated with inbox from partner
+// MESSAGES — updated with inbox from partner
 // ═══════════════════════════════════════════════
 function Mensajes({ user, messages, onSend }) {
   const [modal, setModal] = useState(false);
@@ -2051,13 +2004,13 @@ function Mensajes({ user, messages, onSend }) {
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
       <div style={{ background: "#c05068", padding: "48px 20px 24px", textAlign: "center" }}>
-        <h1 style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.9rem", color: C.cream2, margin: 0 }}>Mensajes</h1>
-        <p style={{ color: `${C.cream}88`, fontSize: "0.86rem", fontWeight: 600, margin: "4px 0 0" }}>Buzón de amor · +5 bambú por enviar 🌿</p>
+        <h1 style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.9rem", color: C.cream2, margin: 0 }}>Messages</h1>
+        <p style={{ color: `${C.cream}88`, fontSize: "0.86rem", fontWeight: 600, margin: "4px 0 0" }}>Love inbox · +5 bamboo per message 🌿</p>
       </div>
 
       {/* Tab bar */}
       <div style={{ display:"flex", gap:0, background:C.white, borderBottom:`1.5px solid ${C.border}` }}>
-        {[{id:"inbox",label:"📬 Recibidos",badge:unread},{id:"sent",label:"💌 Enviados",badge:0}].map(t=>(
+        {[{id:"inbox",label:"📬 Inbox",badge:unread},{id:"sent",label:"💌 Sent",badge:0}].map(t=>(
           <div key={t.id} onClick={()=>setView(t.id)}
             style={{ flex:1, padding:"12px 0", textAlign:"center", cursor:"pointer",
               fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem",
@@ -2074,16 +2027,16 @@ function Mensajes({ user, messages, onSend }) {
       {view === "inbox" && (
         <div style={{ margin:"14px 14px 0" }}>
           <div style={{ background:C.white, borderRadius:20, padding:18, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
-            <div style={{ fontSize:"0.7rem", fontWeight:800, color:"#c05068", marginBottom:10, letterSpacing:"0.5px" }}>💌 HOY</div>
+            <div style={{ fontSize:"0.7rem", fontWeight:800, color:"#c05068", marginBottom:10, letterSpacing:"0.5px" }}>💌 TODAY</div>
             {todayFromPartner
               ? <div style={{ background:C.dark, color:C.cream2, borderRadius:"16px 16px 16px 4px", padding:"13px 16px", fontSize:"0.92rem", lineHeight:1.6 }}>
                   <div style={{ fontSize:"1.5rem", marginBottom:4 }}>💝</div>
                   {todayFromPartner.text}
-                  <div style={{ fontSize:"0.7rem", opacity:0.65, marginTop:4 }}>De {todayFromPartner.sender} · {new Date(todayFromPartner.time).toLocaleTimeString("es",{hour:"2-digit",minute:"2-digit"})}</div>
+                  <div style={{ fontSize:"0.7rem", opacity:0.65, marginTop:4 }}>From {todayFromPartner.sender} · {new Date(todayFromPartner.time).toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"})}</div>
                 </div>
               : <div style={{ textAlign:"center", padding:"14px 0", fontSize:"0.86rem", color:C.inkL }}>
                   <div style={{ fontSize:"2.8rem", marginBottom:8 }}>🕊</div>
-                  Tu pareja no ha enviado mensajito hoy aún
+                  Your partner has not sent a message yet today
                 </div>}
           </div>
         </div>
@@ -2092,20 +2045,20 @@ function Mensajes({ user, messages, onSend }) {
       {/* Message list */}
       <div style={{ background:C.white, borderRadius:20, margin:14, padding:18, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
         <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:12 }}>
-          {view==="inbox" ? "Todos los mensajes recibidos" : "Mensajes enviados"}
+          {view==="inbox" ? "All received messages" : "Sent messages"}
         </div>
         {(view==="inbox"?inbox:sent).length === 0
           ? <div style={{ textAlign:"center", fontSize:"0.85rem", color:C.inkL, padding:14 }}>
-              {view==="inbox" ? "Aquí aparecerán los mensajes de tu pareja 🌸" : "Aún no has enviado mensajes 💌"}
+              {view==="inbox" ? "Your partner's messages will appear here 🌸" : "You have not sent any messages yet 💌"}
             </div>
           : (view==="inbox"?inbox:sent).slice(0,30).map(m => (
             <div key={m.id} style={{ background:view==="inbox"?C.cream:C.sand, borderRadius:13, padding:12, marginBottom:8, borderLeft:`4px solid ${view==="inbox"?"#c05068":C.olive}` }}>
               <div style={{ fontSize:"0.7rem", fontWeight:800, color:"#c05068", marginBottom:2 }}>
-                {view==="inbox" ? `De ${m.sender}` : "Tú enviaste"}
+                {view==="inbox" ? `From ${m.sender}` : "You sent"}
               </div>
               <div style={{ fontSize:"0.88rem", color:C.ink, lineHeight:1.6 }}>{m.text}</div>
               <div style={{ fontSize:"0.68rem", color:C.inkL, marginTop:3, fontWeight:700 }}>
-                {new Date(m.time).toLocaleDateString("es",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}
+                {new Date(m.time).toLocaleDateString("en-US",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}
               </div>
             </div>
           ))}
@@ -2117,7 +2070,7 @@ function Mensajes({ user, messages, onSend }) {
           fontFamily:"'Fredoka One',cursive", fontSize:"1.05rem", cursor:"pointer",
           width:"calc(100% - 28px)", margin:"0 14px 14px", display:"block",
           boxShadow:"0 3px 0 rgba(0,0,0,0.18)" }}>
-        💌 Enviar mensajito
+        💌 Send message
       </button>
 
       {/* Compose modal */}
@@ -2129,8 +2082,8 @@ function Mensajes({ user, messages, onSend }) {
               <div style={{ width:34, height:5, background:C.sand, borderRadius:50 }}/>
               <div onClick={()=>{ setModal(false);setQuick(null);setText(""); }} style={{ width:30, height:30, borderRadius:"50%", background:C.sand, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", fontSize:"1rem", color:C.inkM, fontWeight:800 }}>✕</div>
             </div>
-            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.3rem", color:C.dark, marginBottom:2 }}>💌 Mensajito de amor</div>
-            <div style={{ fontSize:"0.78rem", color:C.inkL, marginBottom:14, fontWeight:600 }}>+5 bambú 🌿 · Elige una idea o escribe lo que sientas</div>
+            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.3rem", color:C.dark, marginBottom:2 }}>💌 Love note</div>
+            <div style={{ fontSize:"0.78rem", color:C.inkL, marginBottom:14, fontWeight:600 }}>+5 bamboo 🌿 · Pick an idea or write what you feel</div>
             {/* Prompt ideas */}
             <div style={{ display:"flex", flexDirection:"column", gap:6, marginBottom:14 }}>
               {LOVE_PROMPTS.map((p,i)=>(
@@ -2145,10 +2098,10 @@ function Mensajes({ user, messages, onSend }) {
               ))}
             </div>
             {/* Always-editable textarea */}
-            <div style={{ fontSize:"0.7rem", fontWeight:800, color:C.inkL, marginBottom:6, letterSpacing:"0.5px" }}>TU MENSAJE</div>
+            <div style={{ fontSize:"0.7rem", fontWeight:800, color:C.inkL, marginBottom:6, letterSpacing:"0.5px" }}>YOUR MESSAGE</div>
             <TA value={text} onChange={v=>{ setText(v); setQuick(null); }}
-              placeholder="Escribe aquí... o edita la idea que elegiste 💬" rows={3} style={{ marginBottom:12 }}/>
-            <Btn onClick={send} variant="salmon" style={{ width:"100%", fontSize:"1.05rem" }} disabled={sending}>{sending ? "Enviando..." : "Enviar con amor 💌"}</Btn>
+              placeholder="Write here... or edit the idea you picked 💬" rows={3} style={{ marginBottom:12 }}/>
+            <Btn onClick={send} variant="salmon" style={{ width:"100%", fontSize:"1.05rem" }} disabled={sending}>{sending ? "Sending..." : "Send with love 💌"}</Btn>
           </div>
         </div>
       )}
@@ -2197,7 +2150,7 @@ function Login({ onLogin }) {
 
   const [tab, setTab] = useState("login");
   const [email, setEmail] = useState(""); const [pass, setPass] = useState("");
-  const [nameA, setNameA] = useState(""); const [nameB, setNameB] = useState(""); const [durN, setDurN] = useState(""); const [durU, setDurU] = useState("meses");
+  const [nameA, setNameA] = useState(""); const [nameB, setNameB] = useState(""); const [durN, setDurN] = useState(""); const [durU, setDurU] = useState("months");
   const [pCode, setPCode] = useState(""); const [pEmail, setPEmail] = useState(""); const [pPass, setPPass] = useState("");
   const [err, setErr] = useState("");
   const [code] = useState(makePairCode());
@@ -2206,7 +2159,7 @@ function Login({ onLogin }) {
 
   const doLogin = async () => {
     const cleanEmail = normalizeEmail(email);
-    if (!cleanEmail || !pass) { setErr("Completa correo y contraseña"); return; }
+    if (!cleanEmail || !pass) { setErr("Enter email and password"); return; }
     _pendingLocalAuth = true;
     setLoading(true); setErr("");
     try {
@@ -2220,17 +2173,17 @@ function Login({ onLogin }) {
     } catch(e) {
       const code = e.code || "";
       if (code === "auth/invalid-credential" || code === "auth/wrong-password") {
-        setErr("Correo o contraseña incorrectos");
+        setErr("Incorrect email or password");
       } else if (code === "auth/user-not-found") {
-        setErr("No existe una cuenta con ese correo");
+        setErr("No account exists with that email");
       } else if (code === "auth/too-many-requests") {
-        setErr("Demasiados intentos, espera unos minutos");
+        setErr("Too many attempts, please wait a few minutes");
       } else if (code === "auth/invalid-email") {
-        setErr("Correo inválido");
+        setErr("Invalid email");
       } else if (code === "auth/network-request-failed") {
-        setErr("Sin conexión o red bloqueada. Intenta de nuevo.");
+        setErr("No connection or network blocked. Try again.");
       } else {
-        setErr("Error al entrar: " + (e.message || e.code || "desconocido"));
+        setErr("Login error: " + (e.message || e.code || "unknown"));
       }
     } finally {
       _pendingLocalAuth = false;
@@ -2241,12 +2194,12 @@ function Login({ onLogin }) {
   const doReg = async () => {
     const names = nameA.trim() + " & ?";
     const cleanEmail = normalizeEmail(email);
-    if (!nameA || !cleanEmail || pass.length < 6) { setErr("Completa tu nombre, correo y contraseña (mín. 6 caracteres)"); return; }
+    if (!nameA || !cleanEmail || pass.length < 6) { setErr("Enter your name, email, and password (min 6 characters)"); return; }
     _pendingLocalAuth = true;
     setLoading(true); setErr("");
     let createdAuthUser = false;
     try {
-      const since = durN ? `Juntos ${durN} ${durU}` : "Juntos desde hoy";
+      const since = durN ? `Together ${durN} ${durU}` : "Together from today";
       const cred = await fbRegister(cleanEmail, pass);
       createdAuthUser = true;
       const uid = cred.user.uid;
@@ -2273,15 +2226,15 @@ function Login({ onLogin }) {
       onLogin({ uid, email: cleanEmail, names, code: ownerCode, since, isOwner: true, isGuest: false }, true);
     } catch(e) {
       if (e.code === "auth/email-already-in-use") {
-        setErr("Este correo ya tiene cuenta");
+        setErr("This email already has an account");
       } else if (e.code === "auth/weak-password") {
-        setErr("La contraseña debe tener al menos 6 caracteres");
+        setErr("Password must be at least 6 characters");
       } else if (e.code === "permission-denied" || e.message?.includes("permission") || e.message?.includes("Missing")) {
         if (createdAuthUser) await fbDeleteCurrentUser().catch(() => {});
-        setErr("Firebase bloqueó la creación del código. Revisa Firestore Rules para la colección codes.");
+        setErr("Firebase blocked code creation. Check Firestore Rules for the codes collection.");
       } else {
         if (createdAuthUser) await fbDeleteCurrentUser().catch(() => {});
-        setErr("Error al crear cuenta");
+        setErr("Error creating account");
       }
     } finally {
       _pendingLocalAuth = false;
@@ -2291,20 +2244,20 @@ function Login({ onLogin }) {
 
   const doJoin = async () => {
     const cleanPartnerEmail = normalizeEmail(pEmail);
-    if (!nameB || !pCode || !cleanPartnerEmail || pPass.length < 6) { setErr("Completa tu nombre, código, correo y contraseña"); return; }
+    if (!nameB || !pCode || !cleanPartnerEmail || pPass.length < 6) { setErr("Enter your name, code, email, and password"); return; }
     _pendingLocalAuth = true;
     setLoading(true); setErr("");
     let justCreated = false;
     try {
       const cleanCode = pCode.trim().toUpperCase();
       if (!/^MO[A-Z0-9]{4}$/.test(cleanCode)) {
-        setErr("Código inválido — usa el formato MO1234");
+        setErr("Invalid code — use format MO1234");
         return;
       }
       const resolved = await resolveExistingCode(cleanCode);
       const resolvedCode = resolved.code;
       const codeData = resolved.data;
-      if (!codeData) { setErr("Código no encontrado — revisa que esté bien escrito"); return; }
+      if (!codeData) { setErr("Code not found — check that it is typed correctly"); return; }
       const cred = await fbRegister(cleanPartnerEmail, pPass);
       justCreated = true;
       const uid = cred.user.uid;
@@ -2313,9 +2266,9 @@ function Login({ onLogin }) {
         partnerUid: uid,
         partnerName: nameB.trim() || "?",
       });
-      const ownerRaw = (claimed?.names || codeData.names || "").split("&")[0].trim() || "Nosotros";
-      const names = ownerRaw + " & " + (nameB.trim() || "Pareja");
-      const since = claimed?.since || codeData.since || "Juntos desde hoy";
+      const ownerRaw = (claimed?.names || codeData.names || "").split("&")[0].trim() || "Us";
+      const names = ownerRaw + " & " + (nameB.trim() || "Partner");
+      const since = claimed?.since || codeData.since || "Together from today";
       const ownerUid = claimed?.ownerUid || codeData?.ownerUid || null;
       await fbSaveUser(uid, { email: cleanPartnerEmail, names, code: resolvedCode, since, isOwner: false });
       if (ownerUid) {
@@ -2330,12 +2283,12 @@ function Login({ onLogin }) {
           const uid2 = cred2.user.uid;
           const cleanCode2 = pCode.trim().toUpperCase();
           if (!/^MO[A-Z0-9]{4}$/.test(cleanCode2)) {
-            setErr("Código inválido — usa el formato MO1234");
+            setErr("Invalid code — use format MO1234");
             return;
           }
           const resolved2 = await resolveExistingCode(cleanCode2);
           if (!resolved2.data) {
-            setErr("Código no encontrado — revisa que esté bien escrito");
+            setErr("Code not found — check that it is typed correctly");
             return;
           }
           const claimed2 = await fbClaimPartnerCode(resolved2.code, {
@@ -2343,9 +2296,9 @@ function Login({ onLogin }) {
             partnerUid: uid2,
             partnerName: nameB.trim() || "?",
           });
-          const ownerRaw2 = (claimed2.names || "").split("&")[0].trim() || "Nosotros";
-          const names2 = ownerRaw2 + " & " + (nameB.trim() || "Pareja");
-          const since2 = claimed2.since || "Juntos";
+          const ownerRaw2 = (claimed2.names || "").split("&")[0].trim() || "Us";
+          const names2 = ownerRaw2 + " & " + (nameB.trim() || "Partner");
+          const since2 = claimed2.since || "Together";
           const ownerUid2 = claimed2?.ownerUid || resolved2?.data?.ownerUid || null;
           await fbSaveUser(uid2, { email: cleanPartnerEmail, names: names2, code: resolved2.code, since: since2, isOwner: false }).catch(()=>{});
           if (ownerUid2) {
@@ -2354,30 +2307,30 @@ function Login({ onLogin }) {
           onLogin({ uid: uid2, email: cleanPartnerEmail, names: names2, code: resolved2.code, since: since2, isOwner: false, isGuest: false }, false);
           return;
         } catch(e2) {
-          setErr("Este correo ya tiene cuenta — verifica tu contraseña");
+          setErr("This email already has an account — verify your password");
           return;
         }
       } else if (e.code === "auth/invalid-email") {
         if (justCreated) await fbDeleteCurrentUser().catch(() => {});
-        setErr("Correo inválido");
+        setErr("Invalid email");
       } else if (e.code === "auth/weak-password") {
         if (justCreated) await fbDeleteCurrentUser().catch(() => {});
-        setErr("La contraseña debe tener al menos 6 caracteres");
+        setErr("Password must be at least 6 characters");
       } else if (e.message === "CODE_ALREADY_LINKED") {
         if (justCreated) await fbDeleteCurrentUser().catch(() => {});
-        setErr("Ese código ya está vinculado a otra cuenta");
+        setErr("That code is already linked to another account");
       } else if (e.message === "CODE_NOT_FOUND") {
         if (justCreated) await fbDeleteCurrentUser().catch(() => {});
-        setErr("Código no encontrado — revisa que esté bien escrito");
+        setErr("Code not found — check that it is typed correctly");
       } else if (e.code === "auth/network-request-failed") {
         if (justCreated) await fbDeleteCurrentUser().catch(() => {});
-        setErr("Sin conexión o red bloqueada. Intenta de nuevo.");
+        setErr("No connection or network blocked. Try again.");
       } else if (e.code === "permission-denied" || e.message?.includes("permission") || e.message?.includes("Missing")) {
         if (justCreated) await fbDeleteCurrentUser().catch(() => {});
-        setErr("Firebase bloqueó el acceso al código de pareja. Revisa Firestore Rules para la colección codes.");
+        setErr("Firebase blocked access to the couple code. Check Firestore Rules for the codes collection.");
       } else {
         if (justCreated) await fbDeleteCurrentUser().catch(() => {});
-        setErr("Error al unirse: " + (e.message || e.code || "desconocido"));
+        setErr("Join error: " + (e.message || e.code || "unknown"));
       }
     } finally {
       _pendingLocalAuth = false;
@@ -2387,15 +2340,15 @@ function Login({ onLogin }) {
 
   const LBL = { fontSize: "0.72rem", fontWeight: 800, color: C.inkM, marginBottom: 5, display: "block", letterSpacing: "0.6px", textTransform: "uppercase" };
   const TABS = [
-    { id: "login", label: "🔑 Entrar", hint: "Ya tengo cuenta" },
-    { id: "register", label: "🌱 Crear", hint: "Cuenta nueva" },
-    { id: "pair", label: "🔗 Unirme", hint: "Tengo un código" }
+    { id: "login", label: "🔑 Login", hint: "I already have an account" },
+    { id: "register", label: "🌱 Create", hint: "New account" },
+    { id: "pair", label: "🔗 Join", hint: "I have a code" }
   ];
 
   return (
     <div style={{ minHeight: "100vh", background: C.sandL, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "28px 20px", fontFamily: "'Nunito',sans-serif" }}>
       <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "3rem", color: C.dark, letterSpacing: "2px" }}>mochi</div>
-      <div style={{ color: C.inkL, fontWeight: 700, marginBottom: 12, fontSize: "0.85rem", letterSpacing: "0.6px" }}>TU JARDÍN DE PAREJA 🌿</div>
+      <div style={{ color: C.inkL, fontWeight: 700, marginBottom: 12, fontSize: "0.85rem", letterSpacing: "0.6px" }}>YOUR COUPLE GARDEN 🌿</div>
       <div style={{ marginBottom: 18, animation: "float 3s ease-in-out infinite" }}>
         <CouplePandaSVG size={160} happy={true} />
       </div>
@@ -2410,54 +2363,54 @@ function Login({ onLogin }) {
         </div>
         {tab === "register" && (
           <div style={{ background: "#f0f7e8", borderRadius: 10, padding: "8px 14px", marginBottom: 10, border: "1px solid #c8ddb0", textAlign: "center", fontSize: "0.76rem", color: "#4a6a30", fontWeight: 700 }}>
-            Crea la cuenta y comparte tu código con tu pareja para conectarse.
+            Create your account and share your code so your partner can connect.
           </div>
         )}
         {tab === "pair" && (
           <div style={{ background: "#f0f0ff", borderRadius: 10, padding: "8px 14px", marginBottom: 10, border: "1px solid #b8b8e0", textAlign: "center", fontSize: "0.76rem", color: "#404090", fontWeight: 700 }}>
-            Ingresa el código que te compartió tu pareja para conectarse.
+            Enter the code your partner shared to connect.
           </div>
         )}
         {err && <div style={{ background: "#fce4e4", color: "#c04040", fontSize: "0.82rem", fontWeight: 700, padding: "9px 13px", borderRadius: 10, marginBottom: 12, textAlign: "center" }}>{err}</div>}
         {tab === "login" && <>
-          <label style={LBL}>Correo</label><Inp value={email} onChange={setEmail} placeholder="tu@correo.com" type="email" style={{ marginBottom: 10 }} />
-          <label style={LBL}>Contraseña</label><Inp value={pass} onChange={setPass} placeholder="••••••••" type="password" style={{ marginBottom: 16 }} />
-          <Btn onClick={doLogin} style={{ width: "100%", marginBottom: 8 }} disabled={loading}>{loading ? "Entrando..." : "Entrar 🐼"}</Btn>
-          <Btn onClick={() => onLogin({ isGuest: true, names: "Nosotros", since: "Siempre juntos" }, false)} variant="ghost" style={{ width: "100%" }}>Continuar sin cuenta</Btn>
+          <label style={LBL}>Email</label><Inp value={email} onChange={setEmail} placeholder="you@email.com" type="email" style={{ marginBottom: 10 }} />
+          <label style={LBL}>Password</label><Inp value={pass} onChange={setPass} placeholder="••••••••" type="password" style={{ marginBottom: 16 }} />
+          <Btn onClick={doLogin} style={{ width: "100%", marginBottom: 8 }} disabled={loading}>{loading ? "Logging in..." : "Login 🐼"}</Btn>
+          <Btn onClick={() => onLogin({ isGuest: true, names: "Us", since: "Always together" }, false)} variant="ghost" style={{ width: "100%" }}>Continue as guest</Btn>
         </>}
         {tab === "register" && <>
           <div style={{ marginBottom:10 }}>
-              <label style={LBL}>🐼 Tu nombre</label>
+              <label style={LBL}>🐼 Your name</label>
               <Inp value={nameA} onChange={setNameA} placeholder="Johana" type="text"/>
           </div>
-          {[["Correo", email, setEmail, "tu@correo.com", "email"], ["Contraseña", pass, setPass, "Mínimo 6 caracteres", "password"]].map(([l, v, fn, ph, t]) => (
+          {[["Email", email, setEmail, "you@email.com", "email"], ["Password", pass, setPass, "Minimum 6 characters", "password"]].map(([l, v, fn, ph, t]) => (
             <div key={l}><label style={LBL}>{l}</label><Inp value={v} onChange={fn} placeholder={ph} type={t} style={{ marginBottom: 10 }} /></div>
           ))}
-          <label style={LBL}>¿Cuánto tiempo llevan juntos?</label>
+          <label style={LBL}>How long have you been together?</label>
           <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-            <input type="number" placeholder="Ej: 2" value={durN} onChange={e => setDurN(e.target.value)} style={{ flex: 1, border: `2px solid ${C.border}`, borderRadius: 12, padding: "10px", fontFamily: "'Nunito',sans-serif", fontSize: "0.9rem", outline: "none", color: C.ink, background: C.cream2 }} />
+            <input type="number" placeholder="Ex: 2" value={durN} onChange={e => setDurN(e.target.value)} style={{ flex: 1, border: `2px solid ${C.border}`, borderRadius: 12, padding: "10px", fontFamily: "'Nunito',sans-serif", fontSize: "0.9rem", outline: "none", color: C.ink, background: C.cream2 }} />
             <select value={durU} onChange={e => setDurU(e.target.value)} style={{ flex: 1.3, border: `2px solid ${C.border}`, borderRadius: 12, padding: "10px", fontFamily: "'Nunito',sans-serif", fontSize: "0.88rem", outline: "none", color: C.ink, background: C.cream2 }}>
-              {["días", "semanas", "meses", "años"].map(u => <option key={u}>{u}</option>)}
+              {["days", "weeks", "months", "years"].map(u => <option key={u}>{u}</option>)}
             </select>
           </div>
-          <Btn onClick={doReg} style={{ width: "100%", marginBottom: 14 }} disabled={loading}>{loading ? "Creando..." : "Crear cuenta 🌱"}</Btn>
+          <Btn onClick={doReg} style={{ width: "100%", marginBottom: 14 }} disabled={loading}>{loading ? "Creating..." : "Create account 🌱"}</Btn>
           <div style={{ background: C.cream, borderRadius: 16, padding: 14, textAlign: "center", border: `1.5px solid ${C.border}` }}>
-            <div style={{ fontSize: "0.7rem", fontWeight: 800, color: C.inkL, letterSpacing: "0.6px", marginBottom: 7 }}>TU CÓDIGO DE PAREJA</div>
+            <div style={{ fontSize: "0.7rem", fontWeight: 800, color: C.inkL, letterSpacing: "0.6px", marginBottom: 7 }}>YOUR COUPLE CODE</div>
             <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "2.2rem", letterSpacing: 9, color: C.dark, background: C.white, borderRadius: 10, padding: "10px", marginBottom: 6, border: `1.5px solid ${C.border}` }}>{code}</div>
-            <div style={{ fontSize: "0.7rem", color: C.inkL, fontWeight: 700 }}>Compártelo para que tu pareja se una</div>
+            <div style={{ fontSize: "0.7rem", color: C.inkL, fontWeight: 700 }}>Share it so your partner can join</div>
           </div>
         </>}
         {tab === "pair" && <>
-          <div style={{ textAlign: "center", marginBottom: 16 }}><div style={{ fontSize: "1.8rem", marginBottom: 4 }}>🔗</div><div style={{ fontFamily: "'Fredoka One',cursive", color: C.dark, fontSize: "1.1rem" }}>Únete al jardín de tu pareja</div></div>
+          <div style={{ textAlign: "center", marginBottom: 16 }}><div style={{ fontSize: "1.8rem", marginBottom: 4 }}>🔗</div><div style={{ fontFamily: "'Fredoka One',cursive", color: C.dark, fontSize: "1.1rem" }}>Join your partner's garden</div></div>
           <div style={{ marginBottom:10 }}>
-            <label style={LBL}>🐾 Tu nombre</label>
+            <label style={LBL}>🐾 Your name</label>
             <Inp value={nameB} onChange={setNameB} placeholder="Rodrigo" type="text"/>
           </div>
-          <input value={pCode} onChange={e => setPCode(e.target.value.toUpperCase())} maxLength={6} placeholder="CÓDIGO" style={{ width: "100%", border: `2px solid ${C.border}`, borderRadius: 12, padding: "10px", fontFamily: "'Fredoka One',cursive", fontSize: "1.8rem", letterSpacing: 9, textAlign: "center", outline: "none", marginBottom: 12, color: C.dark, background: C.cream2, boxSizing: "border-box" }} />
-          {[["Tu correo", pEmail, setPEmail, "tu@correo.com", "email"], ["Contraseña", pPass, setPPass, "Mínimo 6 caracteres", "password"]].map(([l, v, fn, ph, t]) => (
+          <input value={pCode} onChange={e => setPCode(e.target.value.toUpperCase())} maxLength={6} placeholder="CODE" style={{ width: "100%", border: `2px solid ${C.border}`, borderRadius: 12, padding: "10px", fontFamily: "'Fredoka One',cursive", fontSize: "1.8rem", letterSpacing: 9, textAlign: "center", outline: "none", marginBottom: 12, color: C.dark, background: C.cream2, boxSizing: "border-box" }} />
+          {[["Your email", pEmail, setPEmail, "you@email.com", "email"], ["Password", pPass, setPPass, "Minimum 6 characters", "password"]].map(([l, v, fn, ph, t]) => (
             <div key={l}><label style={LBL}>{l}</label><Inp value={v} onChange={fn} placeholder={ph} type={t} style={{ marginBottom: 10 }} /></div>
           ))}
-          <Btn onClick={doJoin} style={{ width: "100%", marginTop: 4 }} disabled={loading}>{loading ? "Uniendo..." : "Unirme al jardín 🌿"}</Btn>
+          <Btn onClick={doJoin} style={{ width: "100%", marginTop: 4 }} disabled={loading}>{loading ? "Joining..." : "Join the garden 🌿"}</Btn>
         </>}
       </div>
     </div>
@@ -2751,12 +2704,12 @@ function TimerEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user })
         <TA
           value={val || mine?.text || ""}
           onChange={setVal}
-          placeholder={ex?.afterPrompts?.[myRole]?.ph || `${myRole === 0 ? nameA : nameB}: ¿qué notaste en ti y en tu pareja?`}
+          placeholder={ex?.afterPrompts?.[myRole]?.ph || `${myRole === 0 ? nameA : nameB}: ¿qué notaste en ti y en your partner?`}
           rows={4}
           style={{ marginBottom: 10 }}
         />
         <Btn onClick={submit} disabled={saving || !(val || mine?.text || "").trim()} variant="olive" style={{ width: "100%" }}>
-          {saving ? "Guardando..." : "Guardar y compartir"}
+          {saving ? "Saving..." : "Save and share"}
         </Btn>
       </div>
 
@@ -2830,9 +2783,9 @@ function WritingEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user 
   return (
     <div style={{ background: C.sandL, borderRadius: 14, padding: 14, border: `1.5px solid ${C.border}` }}>
       <div style={{ fontSize: "0.82rem", color: C.inkM, lineHeight: 1.55, marginBottom: 8 }}>{ex.instruccion}</div>
-      <TA value={val || mine?.text || ""} onChange={setVal} placeholder="Escribe aqui dentro de Mochi y compartelo con tu pareja..." rows={8} style={{ marginBottom: 8 }} />
+      <TA value={val || mine?.text || ""} onChange={setVal} placeholder="Escribe aqui dentro de Mochi y compartelo con your partner..." rows={8} style={{ marginBottom: 8 }} />
       {syncErr && <div style={{ marginBottom: 8, fontSize: "0.74rem", color: "#a04040", fontWeight: 800 }}>{syncErr}</div>}
-      <Btn onClick={submit} style={{ width: "100%" }} disabled={saving}>{saving ? "Guardando..." : "Guardar y compartir"}</Btn>
+      <Btn onClick={submit} style={{ width: "100%" }} disabled={saving}>{saving ? "Saving..." : "Save and share"}</Btn>
       {partner && (
         <div style={{ marginTop: 10, background: C.white, borderRadius: 10, padding: 10, border: `1px solid ${C.border}` }}>
           <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.inkL, marginBottom: 4 }}>{myRole === 0 ? nameB : nameA} compartio:</div>
@@ -3165,7 +3118,7 @@ function Conocete({ conoce, onSave, onQuizComplete, user }) {
 
   if (cat) return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
-      <ScreenTop title="Conócete" sub="Preguntas para descubrirse" />
+      <ScreenTop title="Know Yourself" sub="Questions to discover each other" />
       <div style={{ margin: 14 }}>
         <div style={{ background: C.white, borderRadius: 20, padding: 18, boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
@@ -3176,7 +3129,7 @@ function Conocete({ conoce, onSave, onQuizComplete, user }) {
             const done = !!conoce[`${cat}-${i}`];
             return <div key={i} onClick={() => openQ(cat, i)} style={{ background: done ? C.cream : C.sandL, borderRadius: 12, padding: 13, marginBottom: 8, cursor: "pointer", borderLeft: `4px solid ${done ? C.olive : C.border}`, transition: "all 0.13s" }}>
               <div style={{ fontSize: "0.88rem", fontWeight: 700, color: C.ink }}>{q}</div>
-              {done && <div style={{ fontSize: "0.72rem", color: C.olive, fontWeight: 800, marginTop: 3 }}>✓ RESPONDIDA · +15 bambú</div>}
+              {done && <div style={{ fontSize: "0.72rem", color: C.olive, fontWeight: 800, marginTop: 3 }}>✓ ANSWERED · +15 bamboo</div>}
             </div>;
           })}
         </div>
@@ -3186,13 +3139,13 @@ function Conocete({ conoce, onSave, onQuizComplete, user }) {
 
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
-      <ScreenTop title="Conócete" sub="Preguntas para descubrirse" />
+      <ScreenTop title="Know Yourself" sub="Questions to discover each other" />
       <div style={{ margin: "10px 14px 0", background: C.white, borderRadius: 16, padding: 14, border: `1.5px solid ${C.border}`, boxShadow: `0 2px 0 ${C.border}` }}>
-        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark, marginBottom: 6 }}>🧪 Resultado de tests + Mochi recomienda</div>
-        <div style={{ fontSize: "0.8rem", color: C.inkL, fontWeight: 700, marginBottom: 6 }}>{quizAdvice.progress.answered}/{quizAdvice.progress.total} completados</div>
+        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark, marginBottom: 6 }}>🧪 Test results + Mochi recommendations</div>
+        <div style={{ fontSize: "0.8rem", color: C.inkL, fontWeight: 700, marginBottom: 6 }}>{quizAdvice.progress.answered}/{quizAdvice.progress.total} completed</div>
         {quizAdvice.complete ? (
           <div>
-            <div style={{ fontSize: "0.75rem", color: C.olive, fontWeight: 800, marginBottom: 8 }}>✓ Tests completados · tus recomendaciones personalizadas:</div>
+            <div style={{ fontSize: "0.75rem", color: C.olive, fontWeight: 800, marginBottom: 8 }}>✓ Tests completed · your personalized recommendations:</div>
             {quizAdvice.tips.map((tip, i) => (
               <div key={i} style={{ background: C.sandL, borderRadius: 10, padding: "8px 11px", marginBottom: 7, border: `1px solid ${C.border}`, fontSize: "0.78rem", color: C.inkM, lineHeight: 1.6 }}>
                 💡 {tip}
@@ -3200,13 +3153,13 @@ function Conocete({ conoce, onSave, onQuizComplete, user }) {
             ))}
           </div>
         ) : (
-          <div style={{ fontSize: "0.75rem", color: C.inkM, lineHeight: 1.55 }}>Completen los tests para desbloquear recomendaciones personalizadas.</div>
+          <div style={{ fontSize: "0.75rem", color: C.inkM, lineHeight: 1.55 }}>Complete the tests to unlock personalized recommendations.</div>
         )}
       </div>
       <div style={{ margin: "10px 14px 0" }}>
         <Cuestionarios conoce={conoce} onSave={onSave} onQuizComplete={onQuizComplete} user={user} />
       </div>
-      <div style={{ padding: "8px 14px 0", fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark }}>Elige una categoría</div>
+      <div style={{ padding: "8px 14px 0", fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark }}>Choose a category</div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 11, padding: "10px 14px" }}>
         {Object.entries(CONOCE_CATS).map(([key, data]) => {
           const done = data.preguntas.filter((_, i) => conoce[`${key}-${i}`]).length;
@@ -3310,12 +3263,12 @@ function Burbuja({ burbuja, onSave, user }) {
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
       <div style={{ background: C.olive, padding: "48px 20px 24px", textAlign: "center" }}>
-        <h1 style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.9rem", color: C.cream2, margin: 0 }}>La Burbuja</h1>
-        <p style={{ color: `${C.cream}88`, fontSize: "0.86rem", fontWeight: 600, margin: "4px 0 0" }}>Sus reglas, acuerdos y mundo compartido · +10 bambú c/u</p>
+        <h1 style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.9rem", color: C.cream2, margin: 0 }}>The Bubble</h1>
+        <p style={{ color: `${C.cream}88`, fontSize: "0.86rem", fontWeight: 600, margin: "4px 0 0" }}>Your shared rules and world · +10 bamboo each</p>
       </div>
       <div style={{ background: C.cream, borderRadius: 18, margin: "14px 14px 8px", padding: 16, border: `1.5px solid ${C.border}`, boxShadow: `0 3px 0 ${C.border}` }}>
-        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.05rem", color: C.dark, marginBottom: 5 }}>¿Qué es la burbuja?</div>
-        <div style={{ fontSize: "0.85rem", color: C.inkM, lineHeight: 1.7 }}>Su relación tiene sus propias reglas — únicas para ustedes. Este es el espacio para definirlas juntos, sin juicios.</div>
+        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.05rem", color: C.dark, marginBottom: 5 }}>What is the bubble?</div>
+        <div style={{ fontSize: "0.85rem", color: C.inkM, lineHeight: 1.7 }}>Your relationship has unique rules. This is the place to define them together without judgment.</div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
           <ProgBar value={savedCount} max={total} color={C.olive} height={7} style={{ flex: 1 }} />
           <div style={{ fontSize: "0.76rem", fontWeight: 800, color: C.olive, whiteSpace: "nowrap" }}>{savedCount} / {total}</div>
@@ -3323,7 +3276,7 @@ function Burbuja({ burbuja, onSave, user }) {
       </div>
 
       <div style={{ margin: "0 14px 10px", background: C.white, borderRadius: 14, padding: 4, border: `1.5px solid ${C.border}`, display: "flex", gap: 4 }}>
-        {[{ id: "negociacion", label: "🫧 Zona de negociación" }, { id: "acuerdos", label: "✅ Acuerdos" }].map(t => (
+        {[{ id: "negociacion", label: "🫧 Negotiation zone" }, { id: "acuerdos", label: "✅ Agreements" }].map(t => (
           <div key={t.id} onClick={() => setBurTab(t.id)}
             style={{ flex: 1, padding: "9px 8px", borderRadius: 10, textAlign: "center", fontWeight: 800, fontSize: "0.76rem", cursor: "pointer", background: burTab === t.id ? C.dark : "transparent", color: burTab === t.id ? C.cream2 : C.inkL }}>
             {t.label}
@@ -3353,14 +3306,14 @@ function Burbuja({ burbuja, onSave, user }) {
                 <div style={{ fontSize: "0.88rem", fontWeight: 700, color: C.ink, marginBottom: 10 }}>{item.q}</div>
                 {item.note && <div style={{ background: C.white, borderRadius: 9, padding: "9px 11px", marginBottom: 10, fontSize: "0.78rem", color: C.inkM, lineHeight: 1.6, border: `1px solid ${C.border}` }}>{item.note}</div>}
                 {approved && <div style={{ background: C.white, borderRadius: 10, padding: 10, marginBottom: 8, border: `1.5px solid ${C.olive}` }}>
-                  <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.olive, marginBottom: 3, letterSpacing: "0.4px" }}>✓ NUESTRO ACUERDO</div>
+                  <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.olive, marginBottom: 3, letterSpacing: "0.4px" }}>✓ OUR AGREEMENT</div>
                   <div style={{ fontSize: "0.85rem", fontWeight: 700, color: C.ink }}>{mainText}</div>
                 </div>}
 
                 {!rec && (
                   <>
-                    <TA value={draft[item.id] || ""} onChange={v => setDraft(p => ({ ...p, [item.id]: v }))} placeholder="Escribe tu propuesta de acuerdo..." rows={2} style={{ marginBottom: 8 }} />
-                    <Btn onClick={() => sendProposal(item.id, draft[item.id] || "")} style={{ width:"100%", fontSize:"0.84rem" }}>Enviar propuesta</Btn>
+                    <TA value={draft[item.id] || ""} onChange={v => setDraft(p => ({ ...p, [item.id]: v }))} placeholder="Write your agreement proposal..." rows={2} style={{ marginBottom: 8 }} />
+                    <Btn onClick={() => sendProposal(item.id, draft[item.id] || "")} style={{ width:"100%", fontSize:"0.84rem" }}>Send proposal</Btn>
                   </>
                 )}
 
@@ -3368,31 +3321,31 @@ function Burbuja({ burbuja, onSave, user }) {
                   <>
                     <div style={{ background:C.white, borderRadius:10, border:`1px solid ${C.border}`, padding:"8px 10px", marginBottom:8 }}>
                       <div style={{ fontSize:"0.66rem", fontWeight:800, color:C.inkL, marginBottom:4 }}>
-                        Propuesta de {roleLabel(rec.proposedBy || otherRole)}
+                        Proposal from {roleLabel(rec.proposedBy || otherRole)}
                       </div>
                       <div style={{ fontSize:"0.82rem", color:C.inkM, lineHeight:1.5 }}>{mainText}</div>
                     </div>
 
                     {waitingOther && (
                       <div style={{ background:C.cream, border:`1px solid ${C.border}`, borderRadius:10, padding:"8px 10px", fontSize:"0.76rem", fontWeight:700, color:C.inkL, marginBottom:8 }}>
-                        Tu pareja aún no ha respondido.
+                        Your partner has not replied yet.
                       </div>
                     )}
 
                     {pendingForMe && (
                       <>
                         <div style={{ background: C.cream, borderRadius: 10, padding: "8px 10px", marginBottom: 8, fontSize: "0.76rem", fontWeight: 700, color: C.olive }}>
-                          💡 Puedes agregar tu perspectiva al aprobar (opcional)
+                          💡 You can add your perspective when approving (optional)
                         </div>
-                        <TA value={approvalText[item.id] || ""} onChange={v => setApprovalText(p => ({ ...p, [item.id]: v }))} placeholder="Tu aporte (opcional)..." rows={2} style={{ marginBottom: 8 }} />
+                        <TA value={approvalText[item.id] || ""} onChange={v => setApprovalText(p => ({ ...p, [item.id]: v }))} placeholder="Your input (optional)..." rows={2} style={{ marginBottom: 8 }} />
                         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:8 }}>
-                          <Btn onClick={() => approveProposal(item.id, approvalText[item.id] || "")} variant="olive" style={{ fontSize:"0.8rem", padding:"10px 8px" }}>✅ Aprobar</Btn>
-                          <Btn onClick={() => setShowCounter(p => ({ ...p, [item.id]: !p[item.id] }))} variant="sand" style={{ fontSize:"0.8rem", padding:"10px 8px" }}>✏️ Negociar</Btn>
+                          <Btn onClick={() => approveProposal(item.id, approvalText[item.id] || "")} variant="olive" style={{ fontSize:"0.8rem", padding:"10px 8px" }}>✅ Approve</Btn>
+                          <Btn onClick={() => setShowCounter(p => ({ ...p, [item.id]: !p[item.id] }))} variant="sand" style={{ fontSize:"0.8rem", padding:"10px 8px" }}>✏️ Negotiate</Btn>
                         </div>
                         {showCounter[item.id] && (
                           <>
-                            <TA value={counterDraft[item.id] || ""} onChange={v => setCounterDraft(p => ({ ...p, [item.id]: v }))} placeholder="Escribe tu contrapropuesta..." rows={2} style={{ marginBottom:8 }} />
-                            <Btn onClick={() => sendProposal(item.id, counterDraft[item.id] || "", true)} style={{ width:"100%", fontSize:"0.82rem" }}>Enviar contrapropuesta</Btn>
+                            <TA value={counterDraft[item.id] || ""} onChange={v => setCounterDraft(p => ({ ...p, [item.id]: v }))} placeholder="Write your counter-proposal..." rows={2} style={{ marginBottom:8 }} />
+                            <Btn onClick={() => sendProposal(item.id, counterDraft[item.id] || "", true)} style={{ width:"100%", fontSize:"0.82rem" }}>Send counter-proposal</Btn>
                           </>
                         )}
                       </>
@@ -3409,14 +3362,14 @@ function Burbuja({ burbuja, onSave, user }) {
         <div style={{ margin: "0 14px 10px" }}>
           {savedItems.length === 0 ? (
             <div style={{ background: C.white, borderRadius: 16, padding: 18, border: `1.5px solid ${C.border}`, boxShadow: `0 3px 0 ${C.border}`, textAlign: "center", color: C.inkL, fontWeight: 700 }}>
-              Aún no tienen acuerdos guardados.
+              You do not have saved agreements yet.
             </div>
           ) : savedItems.map(item => (
             <div key={item.id} style={{ background: C.white, borderRadius: 16, padding: 14, marginBottom: 9, border: `1.5px solid ${C.border}`, boxShadow: `0 2px 0 ${C.border}` }}>
               <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.inkL, marginBottom: 6 }}>{item.icon} {item.section}</div>
               <div style={{ fontSize: "0.82rem", fontWeight: 800, color: C.ink, marginBottom: 7 }}>{item.q}</div>
               <div style={{ background: C.cream, borderRadius: 10, padding: "9px 11px", fontSize: "0.84rem", fontWeight: 700, color: C.dark }}>
-                {burbuja[item.id]?.c || burbuja[item.id]?.proposalText || burbuja[item.id]?.a || "Sin texto"}
+                {burbuja[item.id]?.c || burbuja[item.id]?.proposalText || burbuja[item.id]?.a || "No text"}
               </div>
             </div>
           ))
@@ -3533,7 +3486,7 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
   const ACHS = [
     { icon: "🌱", name: "Primer ejercicio", desc: "Completa 1 ejercicio", done: totalEx >= 1 },
     { icon: "⭐", name: "10 ejercicios", desc: "Completa 10 ejercicios", done: totalEx >= 10 },
-    { icon: "🔗", name: "Pareja conectada", desc: "Ambos unidos por código", done: connected },
+    { icon: "🔗", name: "Partner conectada", desc: "Ambos unidos por código", done: connected },
     { icon: "💌", name: "5 mensajitos", desc: "Enviar o recibir 5 mensajes", done: myMsgs + inboxMsgs >= 5 },
     { icon: "🌸", name: "5 acuerdos", desc: "Guardar 5 acuerdos de burbuja", done: burbujaSavedCount >= 5 },
     { icon: "🌿", name: "100 bambú", desc: "Llegar a 100 bambú", done: bamboo >= 100 },
@@ -3567,7 +3520,7 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
     if (tipRewarded) return;
     ls.set(tipRewardKey, true);
     setTipRewarded(true);
-    onAddBamboo?.(15, "+15 bambu por leer su consejo del dia 🌿");
+    onAddBamboo?.(15, "+15 bamboo for reading today's tip 🌿");
   };
 
   return (
@@ -3580,7 +3533,7 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
         <div style={{ color: `${C.cream}88`, fontSize: "0.85rem", fontWeight: 700, marginTop: 3 }}>{user?.since || ""}</div>
         {!user?.isGuest && coupleCode && (
           <div style={{ marginTop: 8, display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 10, padding: "6px 12px" }}>
-            <span style={{ fontSize: "0.68rem", color: `${C.cream}CC`, fontWeight: 800, letterSpacing: "0.5px" }}>TU CÓDIGO</span>
+            <span style={{ fontSize: "0.68rem", color: `${C.cream}CC`, fontWeight: 800, letterSpacing: "0.5px" }}>YOUR CODE</span>
             <span style={{ fontFamily: "'Fredoka One',cursive", color: C.cream2, fontSize: "0.95rem", letterSpacing: 2 }}>{coupleCode}</span>
           </div>
         )}
@@ -3588,9 +3541,9 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
       </div>
 
       <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:16, padding:12, border:`1.5px solid ${C.border}`, boxShadow:`0 2px 0 ${C.border}` }}>
-        <div style={{ fontSize:"0.72rem", fontWeight:800, color:C.inkL, marginBottom:8, letterSpacing:"0.6px" }}>ANALÍTICAS RÁPIDAS</div>
+        <div style={{ fontSize:"0.72rem", fontWeight:800, color:C.inkL, marginBottom:8, letterSpacing:"0.6px" }}>QUICK ANALYTICS</div>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8 }}>
-          {[["🌿", bamboo, "Bambú"], ["💌", myMsgs, "Mensajes"], ["🔥", streakDays, "Racha"]].map(([i,v,l]) => (
+          {[["🌿", bamboo, "Bamboo"], ["💌", myMsgs, "Messages"], ["🔥", streakDays, "Streak"]].map(([i,v,l]) => (
             <div key={l} style={{ background:C.sandL, borderRadius:10, border:`1px solid ${C.border}`, textAlign:"center", padding:"8px 6px" }}>
               <div style={{ fontSize:"0.95rem" }}>{i}</div>
               <div style={{ fontFamily:"'Fredoka One',cursive", color:C.dark, fontSize:"1rem" }}>{v}</div>
@@ -3661,9 +3614,9 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
 
       {/* 3. Consejo del día */}
       <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:16, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
-        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:10 }}>📖 Consejo del dia</div>
+        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:10 }}>📖 Daily tip</div>
         <Btn onClick={openTip} variant="sand" style={{ width:"100%", fontSize:"0.86rem" }}>
-          {tipRewarded ? "Ver consejo del dia" : "Ver consejo del dia +15 bambu 🌿"}
+          {tipRewarded ? "View today's tip" : "View today's tip +15 bamboo 🌿"}
         </Btn>
         <div style={{ fontSize:"0.72rem", color:C.inkL, fontWeight:700, marginTop:8 }}>
           {tipRewarded ? "Recompensa de hoy reclamada." : "Recompensa disponible hoy al abrir el consejo."}
@@ -3703,7 +3656,7 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
         <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.45)", zIndex:6000, display:"flex", alignItems:"center", justifyContent:"center", padding:"16px" }} onClick={() => setShowTipModal(false)}>
           <div onClick={(e)=>e.stopPropagation()} style={{ width:"100%", maxWidth:420, background:C.white, borderRadius:24, padding:"16px 14px 16px", border:`1.5px solid ${C.border}`, boxShadow:"0 14px 36px rgba(0,0,0,0.25)", maxHeight:"78vh", overflowY:"auto" }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
-              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.02rem", color:C.dark }}>📖 Consejo del dia</div>
+              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.02rem", color:C.dark }}>📖 Daily tip</div>
               <button onClick={() => setShowTipModal(false)} style={{ width:36, height:36, borderRadius:"50%", border:"none", background:C.cream, color:C.inkM, fontWeight:900, fontSize:"1rem", cursor:"pointer" }}>✕</button>
             </div>
             <div style={{ background:C.cream, border:`1.5px solid ${C.border}`, borderRadius:12, padding:"10px 12px", fontSize:"0.88rem", color:C.dark, fontWeight:800, lineHeight:1.45, marginBottom:10 }}>
@@ -3799,7 +3752,7 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
                 style={{ flex:2 }}
                 disabled={sendingLove || !(loveText || "").trim()}
               >
-                {sendingLove ? "Guardando..." : "Guardar y enviar"}
+                {sendingLove ? "Saving..." : "Guardar y enviar"}
               </Btn>
             </div>
           </div>
@@ -3824,7 +3777,7 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
         </div>
       )}
 
-      {/* 11. Diagnóstico */}
+      {/* 11. Diagnostic */}
       {testScores && (() => {
         const avgs = TEST_INSTRUMENTS.map(a => {
           const s = testScores[a.id] || {};
@@ -3835,7 +3788,7 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
         return (
           <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:18, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
-              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.05rem", color:C.dark }}>📊 Diagnóstico de pareja</div>
+              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.05rem", color:C.dark }}>📊 Relationship diagnostic</div>
               <div style={{ background:C.olive, color:C.cream2, borderRadius:8, padding:"4px 12px", fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem" }}>{total}/5</div>
             </div>
             {avgs.map(a => (
@@ -3847,7 +3800,7 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
                 ))}</div>
               </div>
             ))}
-            <Btn onClick={onRetakeTest} variant="sand" style={{ width:"100%", marginTop:10, fontSize:"0.82rem" }}>Repetir diagnóstico 🔄</Btn>
+            <Btn onClick={onRetakeTest} variant="sand" style={{ width:"100%", marginTop:10, fontSize:"0.82rem" }}>Retake diagnostic 🔄</Btn>
           </div>
         );
       })()}
@@ -3857,28 +3810,28 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
         {/* Couple code — discrete, at bottom */}
         {!user?.isGuest && <div style={{ background: C.white, borderRadius: 16, padding: "14px 16px", marginBottom: 12, border: `1.5px solid ${C.border}` }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-            <div style={{ fontSize: "0.72rem", fontWeight: 800, color: C.inkL, letterSpacing: "0.6px" }}>CÓDIGO DE PAREJA</div>
+            <div style={{ fontSize: "0.72rem", fontWeight: 800, color: C.inkL, letterSpacing: "0.6px" }}>COUPLE CODE</div>
             <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
               <div style={{ width: 8, height: 8, borderRadius: "50%", background: connected ? C.olive : C.sand }} />
-              <div style={{ fontSize: "0.7rem", fontWeight: 700, color: connected ? C.olive : C.inkL }}>{connected ? "Conectados ✓" : "Esperando pareja"}</div>
+              <div style={{ fontSize: "0.7rem", fontWeight: 700, color: connected ? C.olive : C.inkL }}>{connected ? "Connected ✓" : "Waiting for partner"}</div>
             </div>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.4rem", letterSpacing: 6, color: C.dark, background: C.cream, borderRadius: 10, padding: "8px 14px", flex: 1, textAlign: "center", border: `1.5px solid ${C.border}` }}>{coupleCode || "----"}</div>
             <Btn onClick={() => { 
               const c = coupleCode;
-              if(navigator.clipboard) { navigator.clipboard.writeText(c).then(()=>alert("Código copiado: "+c)).catch(()=>alert("Tu código: "+c)); }
-              else { alert("Tu código: "+c); }
-            }} variant="sand" style={{ padding: "10px 14px", fontSize: "0.8rem" }}>Copiar</Btn>
+              if(navigator.clipboard) { navigator.clipboard.writeText(c).then(()=>alert("Code copied: "+c)).catch(()=>alert("Your code: "+c)); }
+              else { alert("Your code: "+c); }
+            }} variant="sand" style={{ padding: "10px 14px", fontSize: "0.8rem" }}>Copy</Btn>
           </div>
         </div>}
 
-        {/* ── CAMBIAR NOMBRE ── */}
+        {/* -- CHANGE NAME -- */}
         <div style={{ background: C.white, borderRadius: 16, padding: "16px", border: `1.5px solid ${C.border}`, marginBottom: 12, boxShadow: `0 2px 0 ${C.border}` }}>
-          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark, marginBottom: 10 }}>✏️ Nombre de la pareja</div>
+          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark, marginBottom: 10 }}>✏️ Couple name</div>
           {editingName ? (
             <div>
-              <div style={{ fontSize: "0.72rem", color: C.inkL, marginBottom: 6, fontWeight: 700 }}>Escribe ambos nombres separados por &</div>
+              <div style={{ fontSize: "0.72rem", color: C.inkL, marginBottom: 6, fontWeight: 700 }}>Write both names separated by &</div>
               <input
                 value={nameInput}
                 onChange={e => setNameInput(e.target.value)}
@@ -3888,7 +3841,7 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
                   marginBottom: 10, boxSizing: "border-box" }}
               />
               <div style={{ display: "flex", gap: 8 }}>
-                <Btn onClick={() => { onSaveNames(nameInput); setEditingName(false); }} style={{ flex: 1 }}>Guardar ✓</Btn>
+                <Btn onClick={() => { onSaveNames(nameInput); setEditingName(false); }} style={{ flex: 1 }}>Save ✓</Btn>
                 <Btn onClick={() => { setNameInput(user?.names || ""); setEditingName(false); }} variant="ghost" style={{ padding: "10px 14px" }}>✕</Btn>
               </div>
             </div>
@@ -3898,26 +3851,26 @@ function Perfil({ user, bamboo, exDone, messages, burbuja, coupleInfo, onSaveCou
                 {user?.names || "Sin nombre"}
               </div>
               <Btn onClick={() => { setNameInput(user?.names || ""); setEditingName(true); }} variant="sand" style={{ fontSize: "0.8rem", padding: "7px 14px" }}>
-                Cambiar
+                Change
               </Btn>
             </div>
           )}
         </div>
 
-        <Btn onClick={onLogout} variant="ghost" style={{ width: "100%", color: "#c04040", borderColor: "#f0d0d0", marginBottom: 8 }}>Cerrar sesión</Btn>
-        {onDeleteAccount && <Btn onClick={onDeleteAccount} variant="ghost" style={{ width: "100%", color: "#a02020", borderColor: "#f0c0c0", fontSize: "0.82rem", marginBottom: 16 }}>Eliminar cuenta 🗑️</Btn>}
+        <Btn onClick={onLogout} variant="ghost" style={{ width: "100%", color: "#c04040", borderColor: "#f0d0d0", marginBottom: 8 }}>Log out</Btn>
+        {onDeleteAccount && <Btn onClick={onDeleteAccount} variant="ghost" style={{ width: "100%", color: "#a02020", borderColor: "#f0c0c0", fontSize: "0.82rem", marginBottom: 16 }}>Delete account 🗑️</Btn>}
 
         {/* Legal & Privacy */}
         <div style={{ background: C.cream, borderRadius: 16, padding: "14px 16px", border: `1.5px solid ${C.border}`, marginBottom: 8 }}>
-          <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.inkL, letterSpacing: "0.6px", marginBottom: 8 }}>AVISO LEGAL Y PRIVACIDAD</div>
+          <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.inkL, letterSpacing: "0.6px", marginBottom: 8 }}>LEGAL NOTICE & PRIVACY</div>
           <div style={{ fontSize: "0.72rem", color: C.inkM, lineHeight: 1.65 }}>
-            <b>Mochi</b> es una aplicación de bienestar para parejas desarrollada por Johana Fragoso. Todos los derechos reservados © {new Date().getFullYear()}. El nombre, diseño, concepto, personajes y contenido de Mochi están protegidos por las leyes de propiedad intelectual. Queda prohibida su reproducción, distribución o uso comercial sin autorización expresa por escrito.
+            <b>Mochi</b> is a wellness app for couples developed by Johana Fragoso. All rights reserved © {new Date().getFullYear()}. The name, design, concept, characters, and content of Mochi are protected by intellectual property laws. Reproduction, distribution, or commercial use without written permission is prohibited.
           </div>
           <div style={{ fontSize: "0.72rem", color: C.inkM, lineHeight: 1.65, marginTop: 8 }}>
-            <b>Privacidad de datos:</b> Tu información personal (correo, nombre y progreso) se almacena de forma segura y cifrada. No se vende ni comparte con terceros. Puedes eliminar tu cuenta y todos tus datos en cualquier momento usando el botón de arriba. Al usar Mochi, aceptas estos términos.
+            <b>Data privacy:</b> Your personal information (email, name, and progress) is stored securely and encrypted. It is not sold or shared with third parties. You can delete your account and all your data at any time using the button above. By using Mochi, you accept these terms.
           </div>
         </div>
-        <div style={{ fontSize: "0.65rem", color: C.inkL, textAlign: "center", paddingBottom: 4 }}>Mochi v1.0 · Hecho con 🐼 amor</div>
+        <div style={{ fontSize: "0.65rem", color: C.inkL, textAlign: "center", paddingBottom: 4 }}>Mochi v1.0 · Made with 🐼 love</div>
       </div>
     </div>
   );
@@ -3941,9 +3894,9 @@ select { appearance: none; }
 `;
 
 const OB = [
-  { title: "Bienvenidos a Mochi", body: "Una app para que su amor florezca — basada en terapia real." },
-  { title: "Su jardín crece con amor", body: "Completen ejercicios, envíen mensajes y respondan preguntas juntos para ganar bambú 🌿 y plantar cosas en el jardín." },
-  { title: "¡Listos para empezar!", body: "Hagan su primer ejercicio y siembren la primera semilla." },
+  { title: "Welcome to Mochi", body: "An app to help your love grow, inspired by real relationship therapy." },
+  { title: "Your garden grows with love", body: "Complete exercises, send messages, and answer questions together to earn bamboo 🌿 and plant your garden." },
+  { title: "Ready to begin!", body: "Do your first exercise and plant your first seed." },
 ];
 
 // ═══════════════════════════════════════════════
@@ -3952,28 +3905,28 @@ const OB = [
 const TEST_INSTRUMENTS = [
   {
     id: "kms",
-    label: "Chequeo de conexión diaria",
+    label: "Daily connection check",
     emoji: "💍",
     scaleMax: 5,
-    labels: ["Muy bajo", "Bajo", "Medio", "Alto", "Muy alto"],
-    sub: "Diagnóstico breve para tomar temperatura del vínculo",
+    labels: ["Very low", "Low", "Medium", "High", "Very high"],
+    sub: "Quick diagnostic to check relationship climate",
     questions: [
-      "¿Qué tan conectados se sintieron esta semana?",
-      "¿Qué tan escuchado/a te sentiste por tu pareja?",
-      "¿Qué tan satisfecho/a estás con la relación hoy?",
+      "How connected did you feel this week?",
+      "How heard did you feel by your partner?",
+      "How satisfied are you with your relationship today?",
     ],
   },
   {
     id: "via_pareja",
-    label: "Hábitos que sostienen la relación",
+    label: "Habits that sustain the relationship",
     emoji: "🧠",
     scaleMax: 5,
-    labels: ["Casi nunca", "Pocas veces", "A veces", "Frecuente", "Muy frecuente"],
-    sub: "Micro-hábitos de cuidado mutuo",
+    labels: ["Almost never", "Rarely", "Sometimes", "Often", "Very often"],
+    sub: "Micro-habits of mutual care",
     questions: [
-      "Reparamos rápido cuando hay un malentendido.",
-      "Podemos hablar difícil sin atacarnos.",
-      "Nos sentimos equipo frente a los problemas.",
+      "We repair quickly after misunderstandings.",
+      "We can discuss hard topics without attacking each other.",
+      "We feel like a team when facing problems.",
     ],
   },
 ];
@@ -4008,15 +3961,15 @@ const buildCombinedTestScores = (testData) => {
 const DAILY_LESSONS = [
   { id:"love_languages", emoji:"💝", title:"Los 5 Lenguajes del Amor",
     tag:"Gary Chapman",
-    intro:"Cada persona siente y expresa el amor de manera diferente. Cuando no hablas el idioma de tu pareja, el amor no llega aunque lo intentes mucho.",
+    intro:"Cada persona siente y expresa el amor de manera diferente. Cuando no hablas el idioma de your partner, el amor no llega aunque lo intentes mucho.",
     sections:[
       { title:"1. Palabras de Afirmación", icon:"💬", body:"Decir 'te amo', 'estás increíble hoy', 'gracias por existir'. Para esta persona, las palabras construyen o destruyen la relación entera." },
       { title:"2. Tiempo de Calidad", icon:"⏱", body:"Atención 100% sin teléfono, actividades juntos, conversaciones profundas. No es cantidad — es presencia real." },
       { title:"3. Regalos", icon:"🎁", body:"No es materialismo — es el simbolismo de 'pensé en ti'. Un café, una flor, un meme. El detalle importa más que el precio." },
       { title:"4. Actos de Servicio", icon:"🛠", body:"Hacer algo sin que te pidan: lavar los platos, preparar el desayuno, resolver algo que les preocupa. 'Te ayudo' es su 'te amo'." },
-      { title:"5. Contacto Físico", icon:"🤝", body:"Abrazos, tomarse de la mano, un beso de buenos días. El cuerpo dice lo que las palabras no alcanzan." },
+      { title:"5. Contacto Físico", icon:"🤝", body:"Abrazos, tomarse de la mano, un beso de buenos days. El cuerpo dice lo que las palabras no alcanzan." },
     ],
-    reflect:"¿Cuál es tu lenguaje principal? ¿Y el de tu pareja? ¿Los han hablado?" },
+    reflect:"¿Cuál es tu lenguaje principal? ¿Y el de your partner? ¿Los han hablado?" },
 
   { id:"four_horsemen", emoji:"🌩", title:"Los 4 Jinetes del Apocalipsis",
     tag:"John Gottman",
@@ -4073,14 +4026,14 @@ const DAILY_LESSONS = [
     ],
     reflect:"¿Se reconocen en alguno? ¿Cómo interactúan sus estilos de apego entre sí?" },
 
-  { id:"positive_sentiment", emoji:"☀️", title:"El Banco Emocional de la Pareja",
+  { id:"positive_sentiment", emoji:"☀️", title:"El Banco Emocional de la Partner",
     tag:"Gottman",
     intro:"Gottman descubrió que para que una relación sea estable, necesita una proporción de 5:1 — 5 interacciones positivas por cada negativa.",
     sections:[
       { title:"El banco emocional", icon:"🏦", body:"Cada interacción positiva deposita. Cada negativa retira. Una pelea, una crítica, un comentario frío — todo retira. La pregunta no es 'pelean', sino '¿cuánto han depositado antes?'" },
       { title:"La proporción mágica", icon:"✨", body:"5 positivas por cada 1 negativa. No significa evitar conflictos — significa mantener el saldo positivo para que cuando llegue la tormenta, tengan reservas." },
-      { title:"Cómo depositar", icon:"💰", body:"Pequeños momentos: agradecer, notar algo bonito, reír juntos, un mensaje de buenos días, recordar algo que dijeron. No tiene que ser grandioso." },
-      { title:"El interés genuino", icon:"🔍", body:"Gottman llama a esto 'mapas del amor' — conocer el mundo interno de tu pareja: sus miedos, sueños, el nombre de su jefa, lo que le da ansiedad esta semana." },
+      { title:"Cómo depositar", icon:"💰", body:"Pequeños momentos: agradecer, notar algo bonito, reír juntos, un mensaje de buenos days, recordar algo que dijeron. No tiene que ser grandioso." },
+      { title:"El interés genuino", icon:"🔍", body:"Gottman llama a esto 'mapas del amor' — conocer el mundo interno de your partner: sus miedos, sueños, el nombre de su jefa, lo que le da ansiedad esta semana." },
     ],
     reflect:"¿Cómo está su banco emocional ahora? ¿Están depositando o retirando más?" },
   { id:"lesson8", emoji:"🌻", title:"La Regla de Oro: 5 actos al día",
@@ -4107,7 +4060,7 @@ function RelTest({ user, onDone }) {
   const otherKey = isOwner ? "partner" : "owner";
   const myName = isOwner ? nameA : nameB;
   const otherName = isOwner ? nameB : nameA;
-  const otherLabel = (!otherName || otherName === "?" || otherName === "Persona A" || otherName === "Persona B") ? "tu pareja" : otherName;
+  const otherLabel = (!otherName || otherName === "?" || otherName === "Persona A" || otherName === "Persona B") ? "your partner" : otherName;
   const isGuest = user?.isGuest || !user?.code;
 
   const [step, setStep] = useState(0);
@@ -4199,9 +4152,9 @@ function RelTest({ user, onDone }) {
       }
       setMyScores(averaged);
       setLocalMyDone(true);
-      if (!candidateCodes.length) setSubmitErr("No encontramos tu codigo de pareja. Tus respuestas quedaron guardadas localmente.");
-      else if ((lastError?.code || "") === "permission-denied") setSubmitErr("Firebase bloqueo la sincronizacion por permisos. Tus respuestas quedaron guardadas localmente.");
-      else setSubmitErr("No se pudo sincronizar con Firebase. Tus respuestas quedaron guardadas localmente.");
+      if (!candidateCodes.length) setSubmitErr("We could not find your couple code. Your answers were saved locally.");
+      else if ((lastError?.code || "") === "permission-denied") setSubmitErr("Firebase blocked sync due to permissions. Your answers were saved locally.");
+      else setSubmitErr("Could not sync with Firebase. Your answers were saved locally.");
     } finally {
       setSaving(false);
     }
@@ -4240,19 +4193,19 @@ function RelTest({ user, onDone }) {
     const weakest = [...rows].sort((a, b) => a.avg - b.avg)[0] || null;
 
     const strengthText = (row) => {
-      if (!row) return "Están construyendo una base útil para crecer juntos.";
+      if (!row) return "You are building a useful foundation to grow together.";
       if (row.id === "kms") {
-        return "Conectan bien en lo cotidiano: están sosteniendo presencia y escucha en su día a día.";
+        return "You connect well in daily life: you are maintaining presence and listening every day.";
       }
-      return "Tienen hábitos de cuidado que sí funcionan: vale la pena protegerlos y repetirlos esta semana.";
+      return "You have care habits that work: protect them and repeat them this week.";
     };
 
     const opportunityText = (row) => {
-      if (!row) return "Elijan una micro-acción diaria para cuidarse mejor.";
+      if (!row) return "Choose one daily micro-action to care for each other better.";
       if (row.id === "kms") {
-        return "Meta de la semana: 10 minutos diarios de check-in emocional sin pantallas.";
+        return "Weekly goal: 10 minutes of daily emotional check-in without screens.";
       }
-      return "Meta de la semana: acuerden una acción pequeña diaria (gratitud + reparación breve).";
+      return "Weekly goal: agree on one small daily action (gratitude + brief repair).";
     };
 
     const combinedScores = {};
@@ -4260,27 +4213,27 @@ function RelTest({ user, onDone }) {
 
     const interpretation = (instId, val) => {
       if (instId === "kms") {
-        if (val >= 4.3) return "Conexión alta: sigan cuidando sus rituales diarios.";
-        if (val >= 3.3) return "Base buena: una conversación semanal de check-in puede subir mucho.";
-        return "Conviene priorizar escucha y presencia antes de resolver temas complejos.";
+        if (val >= 4.3) return "High connection: keep taking care of your daily rituals.";
+        if (val >= 3.3) return "Solid base: a weekly check-in conversation can improve a lot.";
+        return "Prioritize listening and presence before solving complex topics.";
       }
-      if (val >= 4.2) return "Fortalezas compartidas visibles: sigan reforzando gratitud y trabajo en equipo.";
-      if (val >= 3.3) return "Tienen recursos; conviertan fortalezas en habitos semanales.";
-      return "Recomendado empezar por micro-acuerdos de amabilidad, autorregulacion y honestidad.";
+      if (val >= 4.2) return "Visible shared strengths: keep reinforcing gratitude and teamwork.";
+      if (val >= 3.3) return "You have resources; turn strengths into weekly habits.";
+      return "Recommended start: micro-agreements on kindness, self-regulation, and honesty.";
     };
 
     return (
       <div style={{ minHeight:"100vh", background:C.sandL, padding:"32px 20px 80px", fontFamily:"'Nunito',sans-serif" }}>
         <div style={{ textAlign:"center", marginBottom:22 }}>
           <div style={{ fontSize:"2.6rem", marginBottom:8 }}>📊</div>
-          <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.45rem", color:C.dark, marginBottom:6 }}>Diagnostico de pareja</div>
+          <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.45rem", color:C.dark, marginBottom:6 }}>Relationship diagnostic</div>
           <div style={{ background:C.olive, color:"white", borderRadius:50, padding:"6px 20px", display:"inline-block", fontFamily:"'Fredoka One',cursive", fontSize:"1.02rem" }}>
             {total.toFixed(1)} / 5
           </div>
         </div>
 
         <div style={{ background:C.white, borderRadius:20, padding:16, marginBottom:16, border:`1.5px solid ${C.border}` }}>
-          <div style={{ fontSize:"0.7rem", fontWeight:800, color:C.inkL, letterSpacing:"0.6px", marginBottom:12 }}>RESULTADO POR INSTRUMENTO</div>
+          <div style={{ fontSize:"0.7rem", fontWeight:800, color:C.inkL, letterSpacing:"0.6px", marginBottom:12 }}>RESULT BY INSTRUMENT</div>
           {rows.map(r => (
             <div key={r.id} style={{ marginBottom:12 }}>
               <div style={{ display:"flex", justifyContent:"space-between", gap:8, marginBottom:4 }}>
@@ -4298,23 +4251,23 @@ function RelTest({ user, onDone }) {
         </div>
 
         <div style={{ background:C.white, borderRadius:20, padding:16, marginBottom:16, border:`1.5px solid ${C.border}` }}>
-          <div style={{ fontSize:"0.7rem", fontWeight:800, color:C.inkL, letterSpacing:"0.6px", marginBottom:10 }}>CONCLUSIONES DE ESTA SEMANA</div>
+          <div style={{ fontSize:"0.7rem", fontWeight:800, color:C.inkL, letterSpacing:"0.6px", marginBottom:10 }}>THIS WEEK'S CONCLUSIONS</div>
 
           <div style={{ background:"#eaf7e8", border:`1px solid ${C.olive}55`, borderRadius:12, padding:"10px 12px", marginBottom:9 }}>
-            <div style={{ fontSize:"0.72rem", fontWeight:800, color:C.olive, marginBottom:4 }}>✅ Fortaleza principal</div>
+            <div style={{ fontSize:"0.72rem", fontWeight:800, color:C.olive, marginBottom:4 }}>✅ Main strength</div>
             <div style={{ fontSize:"0.82rem", color:C.ink, fontWeight:800, marginBottom:4 }}>{strongest?.emoji} {strongest?.label}</div>
             <div style={{ fontSize:"0.78rem", color:C.inkM, lineHeight:1.5 }}>{strengthText(strongest)}</div>
           </div>
 
           <div style={{ background:"#fff6e8", border:"1px solid #e8c788", borderRadius:12, padding:"10px 12px" }}>
-            <div style={{ fontSize:"0.72rem", fontWeight:800, color:"#9a7020", marginBottom:4 }}>🛠 Área de oportunidad de la semana</div>
+            <div style={{ fontSize:"0.72rem", fontWeight:800, color:"#9a7020", marginBottom:4 }}>🛠 Opportunity area this week</div>
             <div style={{ fontSize:"0.82rem", color:C.ink, fontWeight:800, marginBottom:4 }}>{weakest?.emoji} {weakest?.label}</div>
             <div style={{ fontSize:"0.78rem", color:C.inkM, lineHeight:1.5 }}>{opportunityText(weakest)}</div>
           </div>
         </div>
 
         <button onClick={() => onDone(combinedScores)} style={{ width:"100%", background:C.dark, color:C.cream2, border:"none", borderRadius:14, padding:16, fontFamily:"'Fredoka One',cursive", fontSize:"1.05rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.2)" }}>
-          Entrar a Mochi 🐼
+          Enter Mochi 🐼
         </button>
       </div>
     );
@@ -4324,17 +4277,17 @@ function RelTest({ user, onDone }) {
     return (
       <div style={{ minHeight:"100vh", background:C.sandL, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"32px 20px", fontFamily:"'Nunito',sans-serif" }}>
         <div style={{ fontSize:"3.4rem", marginBottom:14 }}>🐼</div>
-        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.4rem", color:C.dark, marginBottom:8, textAlign:"center" }}>Ya contestaste</div>
+        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.4rem", color:C.dark, marginBottom:8, textAlign:"center" }}>You already answered</div>
         <div style={{ fontSize:"0.9rem", color:C.inkM, textAlign:"center", lineHeight:1.6, marginBottom:20, maxWidth:320 }}>
-          Esperando a que <strong>{otherLabel}</strong> complete su parte.
+          Waiting for <strong>{otherLabel}</strong> to complete their part.
         </div>
         {!!submitErr && <div style={{ background:"#fff1dd", color:"#8a5a00", border:"1px solid #e8c788", borderRadius:10, padding:"8px 10px", marginBottom:10, fontSize:"0.78rem", fontWeight:700, textAlign:"center", maxWidth:330 }}>{submitErr}</div>}
         {!!visibleCode && (
           <div style={{ width:"100%", maxWidth:330, background:C.white, borderRadius:12, border:`1.5px solid ${C.border}`, padding:10 }}>
-            <div style={{ fontSize:"0.66rem", color:C.inkL, fontWeight:800, letterSpacing:"0.6px", marginBottom:6, textAlign:"center" }}>COMPARTE ESTE CODIGO</div>
+            <div style={{ fontSize:"0.66rem", color:C.inkL, fontWeight:800, letterSpacing:"0.6px", marginBottom:6, textAlign:"center" }}>SHARE THIS CODE</div>
             <div style={{ display:"flex", alignItems:"center", gap:8 }}>
               <div style={{ flex:1, background:C.cream2, border:`1.5px solid ${C.border}`, borderRadius:10, padding:"8px 10px", fontFamily:"'Fredoka One',cursive", letterSpacing:3, color:C.dark, textAlign:"center" }}>{visibleCode}</div>
-              <button onClick={copyPairCode} style={{ border:`1.5px solid ${C.border}`, background:C.white, color:C.dark, borderRadius:10, padding:"8px 10px", fontWeight:800, cursor:"pointer" }}>{copiedCode ? "Copiado" : "Copiar"}</button>
+              <button onClick={copyPairCode} style={{ border:`1.5px solid ${C.border}`, background:C.white, color:C.dark, borderRadius:10, padding:"8px 10px", fontWeight:800, cursor:"pointer" }}>{copiedCode ? "Copied" : "Copy"}</button>
             </div>
           </div>
         )}
@@ -4351,7 +4304,7 @@ function RelTest({ user, onDone }) {
           ))}
         </div>
         <div style={{ fontSize:"0.72rem", color:`${C.cream}88`, fontWeight:800, letterSpacing:"0.6px" }}>
-          TEST {step + 1} DE {TEST_INSTRUMENTS.length} · {myName.toUpperCase()}
+          TEST {step + 1} OF {TEST_INSTRUMENTS.length} · {myName.toUpperCase()}
         </div>
       </div>
 
@@ -4379,7 +4332,7 @@ function RelTest({ user, onDone }) {
         {!!submitErr && <div style={{ background:"#fde9e9", color:"#b33", border:"1px solid #e7baba", borderRadius:10, padding:"8px 10px", marginBottom:10, fontSize:"0.78rem", fontWeight:700 }}>{submitErr}</div>}
         <button onClick={next} disabled={!canNext || saving}
           style={{ width:"100%", background: canNext ? C.dark : C.sand, color: canNext ? C.cream2 : C.inkL, border:"none", borderRadius:14, padding:14, fontFamily:"'Fredoka One',cursive", fontSize:"1rem", cursor: canNext ? "pointer" : "default", boxShadow: canNext ? "0 4px 0 rgba(0,0,0,0.2)" : "none" }}>
-          {saving ? "Guardando..." : step < TEST_INSTRUMENTS.length - 1 ? "Siguiente test →" : "Enviar respuestas"}
+          {saving ? "Saving..." : step < TEST_INSTRUMENTS.length - 1 ? "Next test →" : "Submit answers"}
         </button>
       </div>
     </div>
@@ -5149,7 +5102,7 @@ export default function App() {
     setBusyAccessoryId(null);
   };
 
-  const showGardenMessages = (fallbackTextB = "Aquí aparecerán los mensajes que te envíe tu pareja 💌") => {
+  const showGardenMessages = (fallbackTextB = "Aquí aparecerán los mensajes que te envíe your partner 💌") => {
     const parsedNames = parseCoupleNames(user?.names);
     const nameA = parsedNames.a || "Panda A";
     const nameB = parsedNames.b || "Panda B";
@@ -5303,7 +5256,7 @@ export default function App() {
       } else if (isNew) {
         // I answered first — notify partner
         trigHappy();
-        toast("Guardado ✓ Esperando a tu pareja para completar esta pregunta.");
+        toast("Guardado ✓ Esperando a your partner para completar esta pregunta.");
         fbSendNotif(user.code, { type:"conoce", msg:`${myName} respondió una pregunta — ¡tu turno! 🌿`, forUid:"partner", fromUid: user.uid }).catch(()=>{});
       }
     } else {
@@ -5598,7 +5551,7 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onEditGratitud, 
             {!showGForm
               ? <button onClick={() => setShowGForm(true)} style={{ width:"100%", background:C.dark, color:C.cream2, border:"none", borderRadius:12, padding:"11px 0", fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", cursor:"pointer", boxShadow:"0 3px 0 rgba(0,0,0,0.18)", marginBottom:12 }}>+ Agradecer un acto de bondad</button>
               : <div style={{ background:C.sandL, borderRadius:14, padding:14, marginBottom:12, border:`1.5px solid ${C.border}` }}>
-                  <TA value={gText} onChange={setGText} placeholder="¿Qué le agradeces a tu pareja hoy?" rows={2} style={{ marginBottom:10 }}/>
+                  <TA value={gText} onChange={setGText} placeholder="¿Qué le agradeces a your partner hoy?" rows={2} style={{ marginBottom:10 }}/>
                   <div style={{ display:"flex", gap:8 }}><Btn onClick={submitG} style={{ flex:1 }}>Guardar 💛</Btn><Btn onClick={() => { setShowGForm(false); setGText(""); }} variant="ghost" style={{ padding:"10px 12px" }}>✕</Btn></div>
                 </div>}
             {gratitud.length === 0
@@ -5755,7 +5708,7 @@ function Baul({ user, gratitud, momentos, onAddGratitud, onAddMomento }) {
           <>
             <div style={{ background:"#fffde8", borderRadius:16, padding:14, marginBottom:14, border:`1.5px solid #e8d840` }}>
               <div style={{ fontSize:"0.84rem", color:"#7a7020", lineHeight:1.6 }}>
-                💡 Anota algo lindo que tu pareja hizo hoy por ti. Ambos pueden verlo y agregar entradas.
+                💡 Anota algo lindo que your partner hizo hoy por ti. Ambos pueden verlo y agregar entradas.
               </div>
             </div>
 
@@ -5796,7 +5749,7 @@ function Baul({ user, gratitud, momentos, onAddGratitud, onAddMomento }) {
               <div style={{ textAlign:"center", padding:"40px 20px", color:C.inkL }}>
                 <div style={{ fontSize:"2.5rem", marginBottom:8 }}>💛</div>
                 <div style={{ fontFamily:"'Fredoka One',cursive", color:C.inkM }}>Todavía no hay entradas</div>
-                <div style={{ fontSize:"0.82rem", marginTop:6 }}>Empieza anotando algo lindo que hizo tu pareja hoy</div>
+                <div style={{ fontSize:"0.82rem", marginTop:6 }}>Empieza anotando algo lindo que hizo your partner hoy</div>
               </div>
             ) : gratitud.map((g, i) => (
               <div key={g.id || i} style={{ background:C.white, borderRadius:16, padding:"14px 16px", marginBottom:10,
