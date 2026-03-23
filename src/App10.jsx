@@ -5556,43 +5556,60 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onEditGratitud, 
                 </div>}
             {gratitud.length === 0
               ? <div style={{ textAlign:"center", padding:"20px 0", color:C.inkL, fontSize:"0.84rem" }}>💛 Todavía no hay entradas</div>
-              : gratitud.slice(0,5).map((g,i) => (
-                <div key={g.id||i} style={{ background:"#fffde8", borderRadius:12, padding:"10px 14px", marginBottom:8, border:"1px solid #e8d84030" }}>
-                  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
-                    <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.8rem", color:C.dark }}>🐼 {g.authorName || g.name || "Tú"}</div>
-                    <div style={{ fontSize:"0.68rem", color:C.inkL, fontWeight:700 }}>{g.date}</div>
-                  </div>
-                  {editingGratitudId === g.id ? (
-                    <>
-                      <TA value={editingGratitudText} onChange={setEditingGratitudText} rows={2} style={{ marginBottom:8 }} />
-                      <div style={{ display:"flex", gap:8 }}>
-                        <Btn
-                          onClick={() => {
-                            const clean = (editingGratitudText || "").trim();
-                            if (!clean) return;
-                            onEditGratitud?.(g.id, clean);
-                            setEditingGratitudId(null);
-                            setEditingGratitudText("");
-                          }}
-                          style={{ flex:1, fontSize:"0.8rem", padding:"9px 10px" }}
-                        >Guardar</Btn>
-                        <Btn onClick={() => { setEditingGratitudId(null); setEditingGratitudText(""); }} variant="ghost" style={{ padding:"9px 10px" }}>Cancelar</Btn>
+              : <>
+                  {gratitud.slice(0,3).map((g,i) => (
+                    <div key={g.id||i} style={{ background:"#fffde8", borderRadius:12, padding:"10px 14px", marginBottom:8, border:"1px solid #e8d84030" }}>
+                      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
+                        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.8rem", color:C.dark }}>🐼 {g.authorName || g.name || "Tú"}</div>
+                        <div style={{ fontSize:"0.68rem", color:C.inkL, fontWeight:700 }}>{g.date}</div>
                       </div>
-                    </>
-                  ) : (
-                    <>
-                      <div style={{ fontSize:"0.86rem", color:C.inkM, lineHeight:1.6, marginBottom:6 }}>{g.text}</div>
-                      {(g.authorUid === user?.uid || user?.isGuest) && !!g.id && (
-                        <button
-                          onClick={() => { setEditingGratitudId(g.id); setEditingGratitudText(g.text || ""); }}
-                          style={{ border:`1px solid ${C.border}`, background:C.white, color:C.inkM, borderRadius:8, padding:"4px 10px", fontSize:"0.72rem", fontWeight:800, cursor:"pointer" }}
-                        >Editar</button>
+                      {editingGratitudId === g.id ? (
+                        <>
+                          <TA value={editingGratitudText} onChange={setEditingGratitudText} rows={2} style={{ marginBottom:8 }} />
+                          <div style={{ display:"flex", gap:8 }}>
+                            <Btn
+                              onClick={() => {
+                                const clean = (editingGratitudText || "").trim();
+                                if (!clean) return;
+                                onEditGratitud?.(g.id, clean);
+                                setEditingGratitudId(null);
+                                setEditingGratitudText("");
+                              }}
+                              style={{ flex:1, fontSize:"0.8rem", padding:"9px 10px" }}
+                            >Guardar</Btn>
+                            <Btn onClick={() => { setEditingGratitudId(null); setEditingGratitudText(""); }} variant="ghost" style={{ padding:"9px 10px" }}>Cancelar</Btn>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div style={{ fontSize:"0.86rem", color:C.inkM, lineHeight:1.6, marginBottom:6 }}>{g.text}</div>
+                          {(g.authorUid === user?.uid || user?.isGuest) && !!g.id && (
+                            <button
+                              onClick={() => { setEditingGratitudId(g.id); setEditingGratitudText(g.text || ""); }}
+                              style={{ border:`1px solid ${C.border}`, background:C.white, color:C.inkM, borderRadius:8, padding:"4px 10px", fontSize:"0.72rem", fontWeight:800, cursor:"pointer" }}
+                            >Editar</button>
+                          )}
+                        </>
                       )}
-                    </>
+                    </div>
+                  ))}
+                  {gratitud.length > 3 && <button onClick={() => setShowAllGratitud(true)} style={{ width:"100%", background:C.olive, color:C.cream2, border:"none", borderRadius:10, padding:"7px 0", fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", cursor:"pointer", marginTop:6 }}>Ver historial de gratitud</button>}
+                  {showAllGratitud && (
+                    <div style={{ marginTop:10 }}>
+                      <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.inkL, marginBottom: 6 }}>Historial de gratitud</div>
+                      {gratitud.map((g, i) => (
+                        <div key={g.id || i} style={{ background:"#fffde8", borderRadius:12, padding:"10px 14px", marginBottom:8, border:"1px solid #e8d84030" }}>
+                          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
+                            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.8rem", color:C.dark }}>🐼 {g.authorName || g.name || "Tú"}</div>
+                            <div style={{ fontSize:"0.68rem", color:C.inkL, fontWeight:700 }}>{g.date}</div>
+                          </div>
+                          <div style={{ fontSize:"0.86rem", color:C.inkM, lineHeight:1.6, marginBottom:6 }}>{g.text}</div>
+                        </div>
+                      ))}
+                      <button onClick={() => setShowAllGratitud(false)} style={{ width:"100%", background:C.rose, color:C.cream2, border:"none", borderRadius:10, padding:"7px 0", fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", cursor:"pointer", marginTop:6 }}>Cerrar historial</button>
+                    </div>
                   )}
-                </div>
-              ))}
-            {gratitud.length > 5 && <div style={{ textAlign:"center", fontSize:"0.78rem", color:C.inkL, fontWeight:700, marginTop:4 }}>+{gratitud.length-5} más</div>}
+                </>}
           </>
         )}
 
@@ -5607,44 +5624,62 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onEditGratitud, 
                 </div>}
             {momentos.length === 0
               ? <div style={{ textAlign:"center", padding:"20px 0", color:C.inkL, fontSize:"0.84rem" }}>✨ Todavía no hay momentos guardados</div>
-              : momentos.slice(0,5).map((m,i) => (
-                <div key={m.id||i} style={{ background:"#f8f0ff", borderRadius:12, padding:"10px 14px", marginBottom:8, border:`1px solid #c8a8f830` }}>
-                  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
-                    <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.88rem", color:C.dark }}>✨ {m.title}</div>
-                    <div style={{ fontSize:"0.68rem", color:C.inkL, fontWeight:700 }}>{m.date}</div>
-                  </div>
-                  <div style={{ fontSize:"0.7rem", fontWeight:800, color:C.inkL, marginBottom:4 }}>Agregado por {m.authorName || "Tu pareja"}</div>
-                  {editingMomentoId === m.id ? (
-                    <>
-                      <TA value={editingMomentoText} onChange={setEditingMomentoText} rows={3} style={{ marginBottom:8 }} />
-                      <div style={{ display:"flex", gap:8 }}>
-                        <Btn
-                          onClick={() => {
-                            const clean = (editingMomentoText || "").trim();
-                            if (!clean) return;
-                            onEditMomento?.(m.id, clean);
-                            setEditingMomentoId(null);
-                            setEditingMomentoText("");
-                          }}
-                          style={{ flex:1, fontSize:"0.8rem", padding:"9px 10px" }}
-                        >Guardar</Btn>
-                        <Btn onClick={() => { setEditingMomentoId(null); setEditingMomentoText(""); }} variant="ghost" style={{ padding:"9px 10px" }}>Cancelar</Btn>
+              : <>
+                  {momentos.slice(0,3).map((m,i) => (
+                    <div key={m.id||i} style={{ background:"#f8f0ff", borderRadius:12, padding:"10px 14px", marginBottom:8, border:`1px solid #c8a8f830` }}>
+                      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
+                        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.88rem", color:C.dark }}>✨ {m.title}</div>
+                        <div style={{ fontSize:"0.68rem", color:C.inkL, fontWeight:700 }}>{m.date}</div>
                       </div>
-                    </>
-                  ) : (
-                    <>
-                      <div style={{ fontSize:"0.85rem", color:C.inkM, lineHeight:1.65 }}>{m.text}</div>
-                      {(m.authorUid === user?.uid || user?.isGuest) && !!m.id && (
-                        <button
-                          onClick={() => { setEditingMomentoId(m.id); setEditingMomentoText(m.text || ""); }}
-                          style={{ border:`1px solid ${C.border}`, background:C.white, color:C.inkM, borderRadius:8, padding:"4px 10px", fontSize:"0.72rem", fontWeight:800, cursor:"pointer", marginTop:6 }}
-                        >Editar</button>
+                      <div style={{ fontSize:"0.7rem", fontWeight:800, color:C.inkL, marginBottom:4 }}>Agregado por {m.authorName || "Tu pareja"}</div>
+                      {editingMomentoId === m.id ? (
+                        <>
+                          <TA value={editingMomentoText} onChange={setEditingMomentoText} rows={3} style={{ marginBottom:8 }} />
+                          <div style={{ display:"flex", gap:8 }}>
+                            <Btn
+                              onClick={() => {
+                                const clean = (editingMomentoText || "").trim();
+                                if (!clean) return;
+                                onEditMomento?.(m.id, clean);
+                                setEditingMomentoId(null);
+                                setEditingMomentoText("");
+                              }}
+                              style={{ flex:1, fontSize:"0.8rem", padding:"9px 10px" }}
+                            >Guardar</Btn>
+                            <Btn onClick={() => { setEditingMomentoId(null); setEditingMomentoText(""); }} variant="ghost" style={{ padding:"9px 10px" }}>Cancelar</Btn>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div style={{ fontSize:"0.85rem", color:C.inkM, lineHeight:1.65 }}>{m.text}</div>
+                          {(m.authorUid === user?.uid || user?.isGuest) && !!m.id && (
+                            <button
+                              onClick={() => { setEditingMomentoId(m.id); setEditingMomentoText(m.text || ""); }}
+                              style={{ border:`1px solid ${C.border}`, background:C.white, color:C.inkM, borderRadius:8, padding:"4px 10px", fontSize:"0.72rem", fontWeight:800, cursor:"pointer", marginTop:6 }}
+                            >Editar</button>
+                          )}
+                        </>
                       )}
-                    </>
+                    </div>
+                  ))}
+                  {momentos.length > 3 && <button onClick={() => setShowAllMomentos(true)} style={{ width:"100%", background:C.olive, color:C.cream2, border:"none", borderRadius:10, padding:"7px 0", fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", cursor:"pointer", marginTop:6 }}>Más momentos</button>}
+                  {showAllMomentos && (
+                    <div style={{ marginTop:10 }}>
+                      <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.inkL, marginBottom: 6 }}>Historial de momentos</div>
+                      {momentos.map((m,i) => (
+                        <div key={m.id||i} style={{ background:"#f8f0ff", borderRadius:12, padding:"10px 14px", marginBottom:8, border:`1px solid #c8a8f830` }}>
+                          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
+                            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.88rem", color:C.dark }}>✨ {m.title}</div>
+                            <div style={{ fontSize:"0.68rem", color:C.inkL, fontWeight:700 }}>{m.date}</div>
+                          </div>
+                          <div style={{ fontSize:"0.7rem", fontWeight:800, color:C.inkL, marginBottom:4 }}>Agregado por {m.authorName || "Tu pareja"}</div>
+                          <div style={{ fontSize:"0.85rem", color:C.inkM, lineHeight:1.65 }}>{m.text}</div>
+                        </div>
+                      ))}
+                      <button onClick={() => setShowAllMomentos(false)} style={{ width:"100%", background:C.rose, color:C.cream2, border:"none", borderRadius:10, padding:"7px 0", fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", cursor:"pointer", marginTop:6 }}>Cerrar historial</button>
+                    </div>
                   )}
-                </div>
-              ))}
-            {momentos.length > 5 && <div style={{ textAlign:"center", fontSize:"0.78rem", color:C.inkL, fontWeight:700, marginTop:4 }}>+{momentos.length-5} más</div>}
+                </>}
           </>
         )}
       </div>
