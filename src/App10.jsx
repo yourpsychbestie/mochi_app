@@ -62,72 +62,72 @@ const getUserDisplayName = (user, fallback = "Yo") => {
 // GARDEN ITEMS — multiple quantities, koi/lotus aesthetic
 // ═══════════════════════════════════════════════
 const GARDEN_ITEMS = [
-  // Plants
-  {id:"bamboo1",  cat:"plantas", name:"Bamboo",         cost:20,  desc:"Brings serenity"},
-  {id:"bamboo2",  cat:"plantas", name:"Bamboo Grove",   cost:35,  desc:"A tiny bamboo forest"},
-  {id:"lotus1",   cat:"plantas", name:"Pink Lotus",     cost:25,  desc:"Flower of pure love"},
-  {id:"lotus2",   cat:"plantas", name:"White Lotus",    cost:30,  desc:"Purity and peace"},
-  {id:"willow",   cat:"plantas", name:"Weeping Willow", cost:45,  desc:"Serene elegance"},
-  {id:"peony",    cat:"plantas", name:"Peony",          cost:15,  desc:"Spring blossoms"},
-  {id:"cherry",   cat:"plantas", name:"Cherry Tree",    cost:80,  desc:"Fleeting beauty"},
-  {id:"lily",     cat:"plantas", name:"Blue Lily",      cost:20,  desc:"Calm and clarity"},
-  // Water
-  {id:"pond",     cat:"agua",    name:"Pond",           cost:60,  desc:"Mirror of the sky"},
-  {id:"koi1",     cat:"agua",    name:"Red Koi",        cost:40,  desc:"Good fortune"},
-  {id:"koi2",     cat:"agua",    name:"Golden Koi",     cost:55,  desc:"Prosperity"},
-  {id:"lotus_pad",cat:"agua",    name:"Lotus Leaf",     cost:20,  desc:"Floating peace"},
-  // Sky
-  {id:"sun",      cat:"cielo",   name:"Sun",            cost:30,  desc:"Warms the garden"},
-  {id:"rainbow",  cat:"cielo",   name:"Rainbow",        cost:100, desc:"Magic after the rain"},
-  {id:"swallow1", cat:"cielo",   name:"Swallow",        cost:35,  desc:"Messenger of love"},
-  {id:"swallow2", cat:"cielo",   name:"Swallow Pair",   cost:55,  desc:"Flying together"},
-  {id:"clouds",   cat:"cielo",   name:"Clouds",         cost:25,  desc:"Floating dreams"},
-  // Decoration
-  {id:"lantern",  cat:"deco",    name:"Lantern",        cost:25,  desc:"Warm light"},
-  {id:"lantern2", cat:"deco",    name:"Lanterns",       cost:40,  desc:"Romantic night"},
-  {id:"heart",    cat:"deco",    name:"Heart",          cost:50,  desc:"Visible love"},
-  {id:"bridge",   cat:"deco",    name:"Bridge",         cost:70,  desc:"A path together"},
-  {id:"pagoda",   cat:"deco",    name:"Pagoda",         cost:90,  desc:"Sacred shelter"},
-  // Specials
-  {id:"firefly",  cat:"especial",name:"Fireflies",      cost:65,  desc:"Night magic"},
-  {id:"moongate", cat:"especial",name:"Full Moon",      cost:120, desc:"Romance under the moon"},
+  // Plantas
+  {id:"bamboo1",  cat:"plantas", name:"Bambú",         cost:20,  desc:"Trae serenidad"},
+  {id:"bamboo2",  cat:"plantas", name:"Bambusal",      cost:35,  desc:"Bosquecito de bambú"},
+  {id:"lotus1",   cat:"plantas", name:"Loto Rosa",     cost:25,  desc:"Flor del amor puro"},
+  {id:"lotus2",   cat:"plantas", name:"Loto Blanco",   cost:30,  desc:"Pureza y paz"},
+  {id:"willow",   cat:"plantas", name:"Sauce Llorón",  cost:45,  desc:"Elegancia serena"},
+  {id:"peony",    cat:"plantas", name:"Peonía",        cost:15,  desc:"Flores de primavera"},
+  {id:"cherry",   cat:"plantas", name:"Cerezo",        cost:80,  desc:"Belleza efímera"},
+  {id:"lily",     cat:"plantas", name:"Lirio Azul",    cost:20,  desc:"Calma y claridad"},
+  // Agua
+  {id:"pond",     cat:"agua",    name:"Estanque",      cost:60,  desc:"Espejo del cielo"},
+  {id:"koi1",     cat:"agua",    name:"Pez Koi Rojo",  cost:40,  desc:"Buena fortuna"},
+  {id:"koi2",     cat:"agua",    name:"Pez Koi Dorado",cost:55,  desc:"Prosperidad"},
+  {id:"lotus_pad",cat:"agua",    name:"Hoja de Loto",  cost:20,  desc:"Reposa en el agua"},
+  // Cielo
+  {id:"sun",      cat:"cielo",   name:"Sol",           cost:30,  desc:"Calienta el jardín"},
+  {id:"rainbow",  cat:"cielo",   name:"Arcoíris",      cost:100, desc:"Magia después de la lluvia"},
+  {id:"swallow1", cat:"cielo",   name:"Golondrina",    cost:35,  desc:"Mensajera del amor"},
+  {id:"swallow2", cat:"cielo",   name:"Par de Golondrinas",cost:55,desc:"Vuelo juntos"},
+  {id:"clouds",   cat:"cielo",   name:"Nubes",         cost:25,  desc:"Sueños flotantes"},
+  // Decoración
+  {id:"lantern",  cat:"deco",    name:"Farolito",      cost:25,  desc:"Luz cálida"},
+  {id:"lantern2", cat:"deco",    name:"Farolitos",     cost:40,  desc:"Noche romántica"},
+  {id:"heart",    cat:"deco",    name:"Corazón",       cost:50,  desc:"Amor visible"},
+  {id:"bridge",   cat:"deco",    name:"Puente",        cost:70,  desc:"Un camino juntos"},
+  {id:"pagoda",   cat:"deco",    name:"Pagoda",        cost:90,  desc:"Refugio sagrado"},
+  // Especiales
+  {id:"firefly",  cat:"especial",name:"Luciérnagas",   cost:65,  desc:"Magia nocturna"},
+  {id:"moongate", cat:"especial",name:"Luna Llena",    cost:120, desc:"Romance bajo la luna"},
 ];
 
-// Watering remains a special action
-const WATER_ACTION = {id:"water", name:"Water", cost:5};
+// Regar sigue siendo acción especial
+const WATER_ACTION = {id:"water", name:"Regar", cost:5};
 
 // ═══════════════════════════════════════════════
 // PANDA ACCESSORIES
 // ═══════════════════════════════════════════════
 const PANDA_ACCESSORIES = [
-  {id:"hat_flower", cat:"sombrero", name:"Flower Crown",     cost:40,  emoji:"🌸", desc:"Super romantic"},
-  {id:"hat_crown",  cat:"sombrero", name:"Royal Crown",      cost:70,  emoji:"👑", desc:"King and queen"},
-  {id:"hat_straw",  cat:"sombrero", name:"Straw Hat",        cost:25,  emoji:"🎋", desc:"Garden style"},
-  {id:"glasses_heart", cat:"lentes", name:"Heart Glasses",   cost:30,  emoji:"💝", desc:"See with love"},
-  {id:"glasses_sun",   cat:"lentes", name:"Sunglasses",      cost:25,  emoji:"😎", desc:"Cool and fresh"},
-  {id:"acc_bow",    cat:"accesorio", name:"Pink Bow",         cost:20,  emoji:"🎀", desc:"Kawaii"},
-  {id:"acc_scarf",  cat:"accesorio", name:"Scarf",            cost:25,  emoji:"🧣", desc:"For cold days"},
-  {id:"outfit_kimono",  cat:"traje", name:"Kimono",          cost:60,  emoji:"👘", desc:"Japanese elegance"},
-  {id:"outfit_sailor",  cat:"traje", name:"Sailor",           cost:55,  emoji:"⚓", desc:"Sea adventure"},
-  {id:"outfit_witch",   cat:"traje", name:"Witch",            cost:65,  emoji:"🧙", desc:"Magic and mystery"},
-  {id:"outfit_angel",   cat:"traje", name:"Little Angels",    cost:80,  emoji:"👼", desc:"Pure sweetness"},
+  {id:"hat_flower", cat:"sombrero", name:"Corona de Flores", cost:40,  emoji:"🌸", desc:"Romanticísima"},
+  {id:"hat_crown",  cat:"sombrero", name:"Corona Real",      cost:70,  emoji:"👑", desc:"Son reyes"},
+  {id:"hat_straw",  cat:"sombrero", name:"Sombrero de Paja", cost:25,  emoji:"🎋", desc:"Para el jardín"},
+  {id:"glasses_heart", cat:"lentes", name:"Lentes Corazón", cost:30,  emoji:"💝", desc:"Ver con amor"},
+  {id:"glasses_sun",   cat:"lentes", name:"Lentes de Sol",  cost:25,  emoji:"😎", desc:"Fresquísimos"},
+  {id:"acc_bow",    cat:"accesorio", name:"Moño Rosa",       cost:20,  emoji:"🎀", desc:"Kawaii"},
+  {id:"acc_scarf",  cat:"accesorio", name:"Bufanda",         cost:25,  emoji:"🧣", desc:"Para el frío"},
+  {id:"outfit_kimono",  cat:"traje", name:"Kimono",          cost:60,  emoji:"👘", desc:"Elegancia japonesa"},
+  {id:"outfit_sailor",  cat:"traje", name:"Marinero",         cost:55,  emoji:"⚓", desc:"Aventureros del mar"},
+  {id:"outfit_witch",   cat:"traje", name:"Brujita",          cost:65,  emoji:"🧙", desc:"Magia y misterio"},
+  {id:"outfit_angel",   cat:"traje", name:"Angelitos",        cost:80,  emoji:"👼", desc:"Purísimos"},
 ];
 
 
 const EXERCISES = [
-  {id:"validacion",emoji:"💬",title:"The Validation Dance",tags:"DBT · Sistémica",bamboo:40,time:"15 min",mode:"remote",
-    desc:"Learn to validate your partner's emotions without defending or over-explaining. Validation is not agreement; it means saying 'it makes sense you felt that way'.",
-    instructions:["Open Mochi on both phones at the same time","Person A writes something that bothered them recently","Person B responds with validation, without defending or explaining","Switch roles in the next turn","At the end, close with a caring phrase: 'Thank you for listening to me'"],
+  {id:"validacion",emoji:"💬",title:"El Baile de la Validación",tags:"DBT · Sistémica",bamboo:40,time:"15 min",mode:"remote",
+    desc:"Aprende a validar las emociones de tu pareja sin defenderte ni justificarte. Validar no es estar de acuerdo; es decir 'tiene sentido que te sintieras así'.",
+    instructions:["Abran Mochi al mismo tiempo en sus celulares","Persona A escribe algo que le molestó recientemente","Persona B responde validando, sin defenderse ni explicar","Cambien de rol en la siguiente ronda","Al final, cierren con una frase de cuidado: 'Gracias por escucharme'"],
     phases:[
-      {role:0,q:"Person A: Share something that bothered you this week (it does not have to be about your partner).",ph:"This week I felt... when...",hint:"Speak from 'I'. Example: 'I felt ignored when...'"},
-      {role:1,q:"Person B: Validate with 'It makes sense because...'",ph:"It makes sense because...",hint:"Validation is not agreement. It is recognition."},
-      {role:0,q:"Person A: Did you feel understood?",ph:"I felt understood when..."},
-      {role:1,q:"Person B: Your turn - share something you felt.",ph:"This week I felt..."},
-      {role:0,q:"Person A: Validate your partner.",ph:"It makes sense because..."},
-      {role:1,q:"Person B: How was it to receive that validation?",ph:"That made me feel..."},
+      {role:0,q:"Persona A: Comparte algo que te molestó esta semana (no tiene que ser sobre tu pareja).",ph:"Esta semana sentí... cuando...",hint:"Habla desde el 'yo'. Ejemplo: 'Me sentí ignorado/a cuando...'"},
+      {role:1,q:"Persona B: Valida con 'Tiene sentido porque...'",ph:"Tiene sentido porque...",hint:"Validar no es estar de acuerdo. Es reconocer."},
+      {role:0,q:"Persona A: ¿Te sentiste comprendido/a?",ph:"Me sentí comprendido/a cuando..."},
+      {role:1,q:"Persona B: Ahora tú comparte algo que sentiste.",ph:"Esta semana sentí..."},
+      {role:0,q:"Persona A: Valida a tu pareja.",ph:"Tiene sentido porque..."},
+      {role:1,q:"Persona B: ¿Cómo fue recibir esa validación?",ph:"Eso me hizo sentir..."},
     ]},
-  {id:"ojos",emoji:"👁",title:"4 Minutes of Eye Contact",tags:"ACT · Arthur Aron",bamboo:30,time:"5 min",mode:"in-person",
-    desc:"Look into each other's eyes for 4 minutes without speaking. Arthur Aron's studies show this can create deep love, even between strangers - imagine what it can do for couples.",
+  {id:"ojos",emoji:"👁",title:"4 Minutos de Mirada",tags:"ACT · Arthur Aron",bamboo:30,time:"5 min",mode:"in-person",
+    desc:"Mírense a los ojos durante 4 minutos sin hablar. Estudios de Arthur Aron muestran que esto puede crear un vínculo profundo, incluso entre desconocidos — imagina lo que puede hacer por una pareja.",
     instructions:["Abran Mochi al mismo tiempo en sus celulares","Este ejercicio es de presencia — sin hablar, solo escribir","Escriban lo que sienten al pensar en el otro en este momento","Lean la respuesta del otro en silencio","Compartan una palabra de cómo se sintieron al final"],
     timer:240,timerLabel:"Mírense a los ojos en silencio",
     beforeTimer:["Siéntense frente a frente, muy cerca.","Pongan el teléfono entre los dos.","Está permitido sonreír — no hablar.","Presionen INICIAR cuando estén listos."],
@@ -136,10 +136,10 @@ const EXERCISES = [
     desc:"El espejo confirma que el mensaje fue recibido antes de responder. Basada en terapia Imago de Harville Hendrix.",
     instructions:["Persona A escribe algo importante que quiera compartir","Persona B refleja con sus palabras lo que entendió","A confirma si fue bien capturado o aclara","B valida la experiencia de A sin dar consejos","Intercambien roles en la siguiente ronda"],
     phases:[
-      {role:0,q:"Persona A: Algo que quieras que your partner entienda mejor.",ph:"Quiero que entiendas que…"},
+      {role:0,q:"Persona A: Algo que quieras que tu pareja entienda mejor.",ph:"Quiero que entiendas que…"},
       {role:1,q:"Persona B: Refleja lo que escuchaste.",ph:"Lo que escucho es… ¿Lo capté bien?",hint:"No interpretes — solo refleja. Usa sus mismas palabras."},
       {role:0,q:"Persona A: ¿Te sentiste reflejado/a?",ph:"Sí captaste… / Lo que faltó fue…"},
-      {role:1,q:"Persona B: Valida.",ph:"It makes sense because..."},
+      {role:1,q:"Persona B: Valida.",ph:"Tiene sentido porque..."},
       {role:1,q:"Persona B: Ahora comparte tú.",ph:"Quiero que entiendas que…"},
       {role:0,q:"Persona A: Refleja.",ph:"Lo que escucho es…"},
       {role:1,q:"¿Cómo fue sentirte reflejado/a?",ph:"De este ejercicio me llevo…"},
@@ -149,9 +149,9 @@ const EXERCISES = [
     instructions:["Cada persona piensa en 3 cosas específicas que aprecia del otro","Compartan una a la vez por turno","Quien recibe, solo responde gracias y cómo le hizo sentir","No minimicen ni desvíen los halagos","Dejen que el amor entre ✨"],
     phases:[
       {role:0,q:"Persona A: Una apreciación MUY específica.",ph:"Aprecio cuando hiciste…",hint:"Específico: 'me preparaste café el martes', no 'eres atento/a'"},
-      {role:1,q:"Persona B: Recibe. Di 'Gracias' y cómo te hizo sentir.",ph:"Gracias. That made me feel..."},
+      {role:1,q:"Persona B: Recibe. Di 'Gracias' y cómo te hizo sentir.",ph:"Gracias. Eso me hizo sentir..."},
       {role:1,q:"Persona B: Tu apreciación específica.",ph:"Aprecio cuando tú…"},
-      {role:0,q:"Persona A: Recibe.",ph:"Gracias. That made me feel..."},
+      {role:0,q:"Persona A: Recibe.",ph:"Gracias. Eso me hizo sentir..."},
       {role:0,q:"Persona A: Algo que admiras profundamente.",ph:"Lo que más admiro de cómo enfrentas la vida es…"},
       {role:1,q:"¿Cómo se sienten después?",ph:"Hacer esto juntos me hace sentir que nuestra relación…"},
     ]},
@@ -191,13 +191,13 @@ const EXERCISES = [
       {role:0,q:"¿Cómo se sienten ahora?",ph:"Después de este ejercicio, me siento…"},
     ]},
   {id:"amor_idiomas",emoji:"💞",title:"Idiomas del Amor",tags:"Chapman · ACT",bamboo:30,time:"12 min",mode:"remote",
-    desc:"Gary Chapman identificó 5 idiomas del amor. Conocer el idioma de your partner evita que el amor se pierda en traducción.",
+    desc:"Gary Chapman identificó 5 idiomas del amor. Conocer el idioma de tu pareja evita que el amor se pierda en la traducción.",
     instructions:["Lean los 5 idiomas juntos","Cada quien elige su TOP 2","Compartan sin juzgar","Hablen de cómo pueden 'hablar' el idioma del otro","Hagan un pequeño compromiso"],
     phases:[
       {role:0,q:"De estos 5, ¿cuál es tu idioma principal? (Palabras de afirmación / Tiempo de calidad / Regalos / Actos de servicio / Contacto físico)",ph:"Mi idioma del amor principal es…",hint:"El que más te hace sentir amado/a cuando lo recibes."},
       {role:1,q:"Persona B: ¿Cuál es tu idioma?",ph:"Mi idioma del amor es…"},
-      {role:0,q:"¿Cómo podrías hablar mejor el idioma de your partner?",ph:"Podría hablar tu idioma cuando…"},
-      {role:1,q:"Persona B: ¿Cómo podrías hablar el idioma de your partner?",ph:"Podría hablar tu idioma cuando…"},
+      {role:0,q:"¿Cómo podrías hablar mejor el idioma de tu pareja?",ph:"Podría hablar tu idioma cuando…"},
+      {role:1,q:"Persona B: ¿Cómo podrías hablar el idioma de tu pareja?",ph:"Podría hablar tu idioma cuando…"},
       {role:0,q:"Un pequeño compromiso para esta semana.",ph:"Esta semana voy a…"},
       {role:1,q:"¿Cómo se sienten con este compromiso?",ph:"Este compromiso me hace sentir…"},
     ]},
