@@ -1,51 +1,50 @@
 import React from "react";
 
-// Panda1: Panda feliz con la mano levantada (referencia: esquina superior izquierda)
-export default function Panda1({ size = 180 }) {
+// Panda1: Panda sentado, estilo kawaii (referencia: imagen adjunta)
+export default function Panda1({ size = 200 }) {
   return (
     <svg
       width={size}
       height={size}
-      viewBox="0 0 256 256"
+      viewBox="0 0 300 320"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      {/* Cuerpo */}
-      <ellipse cx="128" cy="160" rx="80" ry="70" fill="#FFF6E9" />
-      {/* Pierna izquierda */}
-      <ellipse cx="60" cy="220" rx="28" ry="22" fill="#3B2C25" />
-      {/* Pierna derecha */}
-      <ellipse cx="196" cy="220" rx="28" ry="22" fill="#3B2C25" />
-      {/* Barriga */}
-      <ellipse cx="128" cy="180" rx="50" ry="40" fill="#FFF6E9" />
-      {/* Brazo izquierdo (levantado) */}
-      <ellipse cx="40" cy="70" rx="24" ry="38" fill="#3B2C25" transform="rotate(-20 40 70)" />
-      {/* Brazo derecho */}
-      <ellipse cx="200" cy="140" rx="22" ry="36" fill="#3B2C25" transform="rotate(20 200 140)" />
       {/* Cabeza */}
-      <ellipse cx="110" cy="80" rx="70" ry="60" fill="#FFF6E9" />
-      {/* Oreja izquierda */}
-      <ellipse cx="50" cy="30" rx="22" ry="22" fill="#3B2C25" />
-      {/* Oreja derecha */}
-      <ellipse cx="170" cy="30" rx="22" ry="22" fill="#3B2C25" />
-      {/* Ojo izquierdo */}
-      <ellipse cx="80" cy="80" rx="18" ry="16" fill="#3B2C25" />
-      <ellipse cx="80" cy="90" rx="6" ry="7" fill="#222" />
-      {/* Ojo derecho */}
-      <ellipse cx="140" cy="80" rx="18" ry="16" fill="#3B2C25" />
-      <ellipse cx="140" cy="90" rx="6" ry="7" fill="#222" />
-      {/* Mejilla izquierda */}
-      <ellipse cx="70" cy="110" rx="10" ry="8" fill="#FFD1C1" />
-      {/* Mejilla derecha */}
-      <ellipse cx="150" cy="110" rx="10" ry="8" fill="#FFD1C1" />
+      <ellipse cx="150" cy="90" rx="100" ry="90" fill="#fff" stroke="#222" strokeWidth="4" />
+      {/* Orejas */}
+      <ellipse cx="65" cy="30" rx="35" ry="35" fill="#222" />
+      <ellipse cx="235" cy="30" rx="35" ry="35" fill="#222" />
+      {/* Ojos */}
+      <ellipse cx="105" cy="90" rx="32" ry="38" fill="#222" />
+      <ellipse cx="195" cy="90" rx="32" ry="38" fill="#222" />
+      {/* Pupilas */}
+      <ellipse cx="105" cy="100" rx="10" ry="14" fill="#fff" />
+      <ellipse cx="195" cy="100" rx="10" ry="14" fill="#fff" />
       {/* Nariz */}
-      <ellipse cx="110" cy="105" rx="8" ry="5" fill="#222" />
-      {/* Boca (sonriente) */}
-      <path d="M95 120 Q110 130 125 120" stroke="#222" strokeWidth="3" fill="none" />
-      {/* Dedo pie izquierdo */}
-      <ellipse cx="60" cy="235" rx="6" ry="4" fill="#FFD1C1" />
-      {/* Dedo pie derecho */}
-      <ellipse cx="196" cy="235" rx="6" ry="4" fill="#FFD1C1" />
+      <ellipse cx="150" cy="120" rx="18" ry="12" fill="#222" />
+      {/* Boca y lengua */}
+      <path d="M130 140 Q150 160 170 140" stroke="#222" strokeWidth="4" fill="none" />
+      <path d="M140 145 Q150 160 160 145 Q150 155 140 145" fill="#F9A9B8" stroke="#222" strokeWidth="2" />
+      {/* Mejillas */}
+      <ellipse cx="110" cy="130" rx="18" ry="7" fill="#F9A9B8" fillOpacity="0.5" />
+      <ellipse cx="190" cy="130" rx="18" ry="7" fill="#F9A9B8" fillOpacity="0.5" />
+      {/* Cuerpo */}
+      <ellipse cx="150" cy="220" rx="90" ry="80" fill="#fff" stroke="#222" strokeWidth="4" />
+      {/* Brazos */}
+      <ellipse cx="60" cy="200" rx="40" ry="30" fill="#222" />
+      <ellipse cx="240" cy="200" rx="40" ry="30" fill="#222" />
+      {/* Piernas */}
+      <ellipse cx="100" cy="290" rx="45" ry="50" fill="#222" />
+      <ellipse cx="200" cy="290" rx="45" ry="50" fill="#222" />
+      {/* Dedos pie izquierdo */}
+      <ellipse cx="100" cy="305" rx="10" ry="8" fill="#444" />
+      <ellipse cx="85" cy="295" rx="8" ry="7" fill="#444" />
+      <ellipse cx="115" cy="295" rx="8" ry="7" fill="#444" />
+      {/* Dedos pie derecho */}
+      <ellipse cx="200" cy="305" rx="10" ry="8" fill="#444" />
+      <ellipse cx="185" cy="295" rx="8" ry="7" fill="#444" />
+      <ellipse cx="215" cy="295" rx="8" ry="7" fill="#444" />
     </svg>
   );
 }
