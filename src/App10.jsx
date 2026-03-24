@@ -1981,6 +1981,7 @@ function Mensajes({ user, messages, onSend }) {
   const [text, setText] = useState("");
   const [quick, setQuick] = useState(null);
   const [view, setView] = useState("inbox"); // "inbox" | "sent" | "compose"
+  const [showAllMessages, setShowAllMessages] = useState(false);
   const myEmail = user?.email || "guest";
 
   const inbox = messages.filter(m => m.senderEmail !== myEmail);
@@ -2000,6 +2001,7 @@ function Mensajes({ user, messages, onSend }) {
 
   const todayStr = new Date().toDateString();
   const todayFromPartner = inbox.find(m => new Date(m.time).toDateString() === todayStr);
+  const lastMessage = inbox.length > 0 ? inbox[0] : null;
 
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
@@ -2023,21 +2025,42 @@ function Mensajes({ user, messages, onSend }) {
         ))}
       </div>
 
-      {/* Today's message highlight */}
+      {/* Love message highlight, collapsible history */}
       {view === "inbox" && (
         <div style={{ margin:"14px 14px 0" }}>
           <div style={{ background:C.white, borderRadius:20, padding:18, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
-            <div style={{ fontSize:"0.7rem", fontWeight:800, color:"#c05068", marginBottom:10, letterSpacing:"0.5px" }}>💌 TODAY</div>
-            {todayFromPartner
-              ? <div style={{ background:C.dark, color:C.cream2, borderRadius:"16px 16px 16px 4px", padding:"13px 16px", fontSize:"0.92rem", lineHeight:1.6 }}>
-                  <div style={{ fontSize:"1.5rem", marginBottom:4 }}>💝</div>
-                  {todayFromPartner.text}
-                  <div style={{ fontSize:"0.7rem", opacity:0.65, marginTop:4 }}>From {todayFromPartner.sender} · {new Date(todayFromPartner.time).toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"})}</div>
-                </div>
-              : <div style={{ textAlign:"center", padding:"14px 0", fontSize:"0.86rem", color:C.inkL }}>
+            <div style={{ fontSize:"0.7rem", fontWeight:800, color:"#c05068", marginBottom:10, letterSpacing:"0.5px" }}>💌 MENSAJE DE AMOR</div>
+            {!showAllMessages ? (
+              lastMessage ? (
+                <>
+                  <div style={{ background:C.dark, color:C.cream2, borderRadius:"16px 16px 16px 4px", padding:"13px 16px", fontSize:"0.92rem", lineHeight:1.6, marginBottom:8 }}>
+                    <div style={{ fontSize:"1.5rem", marginBottom:4 }}>💝</div>
+                    {lastMessage.text}
+                    <div style={{ fontSize:"0.7rem", opacity:0.65, marginTop:4 }}>De {lastMessage.sender} · {new Date(lastMessage.time).toLocaleDateString("es-MX",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</div>
+                  </div>
+                  {inbox.length > 1 && (
+                    <button onClick={()=>setShowAllMessages(true)} style={{ width:"100%", background:C.olive, color:C.cream2, border:"none", borderRadius:10, padding:"7px 0", fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", cursor:"pointer", marginTop:6 }}>Ver historial de mensajes</button>
+                  )}
+                </>
+              ) : (
+                <div style={{ textAlign:"center", padding:"14px 0", fontSize:"0.86rem", color:C.inkL }}>
                   <div style={{ fontSize:"2.8rem", marginBottom:8 }}>🕊</div>
-                  Your partner has not sent a message yet today
-                </div>}
+                  Tu pareja aún no ha enviado mensajes
+                </div>
+              )
+            ) : (
+              <>
+                <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.inkL, marginBottom: 6 }}>Historial de mensajes de amor</div>
+                {inbox.map((m, i) => (
+                  <div key={m.id || i} style={{ background:C.cream, color:C.ink, borderRadius:"16px 16px 16px 4px", padding:"13px 16px", fontSize:"0.92rem", lineHeight:1.6, marginBottom:8 }}>
+                    <div style={{ fontSize:"1.1rem", marginBottom:4 }}>💝</div>
+                    {m.text}
+                    <div style={{ fontSize:"0.7rem", opacity:0.65, marginTop:4 }}>De {m.sender} · {new Date(m.time).toLocaleDateString("es-MX",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</div>
+                  </div>
+                ))}
+                <button onClick={()=>setShowAllMessages(false)} style={{ width:"100%", background:C.rose, color:C.cream2, border:"none", borderRadius:10, padding:"7px 0", fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", cursor:"pointer", marginTop:6 }}>Cerrar historial</button>
+              </>
+            )}
           </div>
         </div>
       )}
