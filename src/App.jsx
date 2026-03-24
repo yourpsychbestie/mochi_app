@@ -1625,6 +1625,8 @@ function GardenScene({ garden, waterLevel }) {
 // ═══════════════════════════════════════════════
 function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pandaBubble, onPet, onBuy, onWater, onBuyAccessory }) {
   const [shopTab, setShopTab] = useState("plantas");
+  const [audioMuted, setAudioMuted] = useState(false);
+  const audioRef = React.useRef(null);
   const cats = [{id:"plantas",label:"🌿 Plantas"},{id:"agua",label:"🐟 Agua"},{id:"cielo",label:"☁️ Cielo"},{id:"deco",label:"🏮 Deco"},{id:"especial",label:"✨ Especiales"},{id:"accesorios",label:"🐼 Pandas"}];
   const shopItems = (shopTab === "accesorios"
     ? PANDA_ACCESSORIES
@@ -1633,8 +1635,29 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
   const dry = water < 20;
   const withering = water < 40;
 
+  React.useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.muted = audioMuted;
+      if (!audioMuted) {
+        audioRef.current.play().catch(()=>{});
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  }, [audioMuted]);
+
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
+      {/* Audio player y botón mute */}
+      <div style={{ position: "absolute", top: 18, right: 18, zIndex: 20 }}>
+        <button
+          onClick={() => setAudioMuted(m => !m)}
+          style={{ background: audioMuted ? "#e8a030" : "#4a6e30", color: "white", border: "none", borderRadius: 18, padding: "7px 16px", fontWeight: 700, fontSize: 15, cursor: "pointer", boxShadow: "0 2px 0 #c8a870" }}
+        >
+          {audioMuted ? "🔇 Activar música" : "🔊 Mute"}
+        </button>
+        <audio ref={audioRef} src="/0323.m4a" loop autoPlay style={{ display: "none" }} />
+      </div>
       {/* Header */}
       <div style={{ background: C.dark, padding: "44px 18px 14px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
