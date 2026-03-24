@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import IntroModal from "./IntroModal";
 import Ejercicios from "./Ejercicios";
 import Conocete from "./Conocete";
 import Burbuja from "./Burbuja";
@@ -15,13 +16,17 @@ export default function CultivarRelacion({
   conoce, onSaveConoce, burbuja, onSaveMine, onPropose, onApprove
 }) {
   const [subtab, setSubtab] = useState("ejerc");
+  const [showIntro, setShowIntro] = useState(false);
   return (
     <div style={{ minHeight: "100vh", background: "#f8f2e4", paddingBottom: 90 }}>
       <div style={{ display: "flex", justifyContent: "center", gap: 8, padding: "18px 0 10px" }}>
         {SUBTABS.map(t => (
           <button
             key={t.id}
-            onClick={() => setSubtab(t.id)}
+            onClick={() => {
+              setSubtab(t.id);
+              if (t.id === "burbuja") setShowIntro(true);
+            }}
             style={{
               background: subtab === t.id ? "#4a6e30" : "#ede4cc",
               color: subtab === t.id ? "#fff" : "#4a6e30",
@@ -46,7 +51,15 @@ export default function CultivarRelacion({
           <Ejercicios exDone={exDone} onComplete={onCompleteEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={onCompleteLesson} showLessonsOnly />
         )}
         {subtab === "burbuja" && (
-          <Burbuja burbuja={burbuja} onSaveMine={onSaveMine} onPropose={onPropose} onApprove={onApprove} user={user} />
+          <>
+            <IntroModal
+              open={showIntro}
+              onClose={() => setShowIntro(false)}
+              title="Acuerdos de pareja"
+              description="Esta sección es para crear acuerdos y límites claros en pareja. Aquí pueden definir reglas, expectativas y compromisos para fortalecer su relación."
+            />
+            <Burbuja burbuja={burbuja} onSaveMine={onSaveMine} onPropose={onPropose} onApprove={onApprove} user={user} />
+          </>
         )}
         {subtab === "conocete" && (
           <Conocete conoce={conoce} onSave={onSaveConoce} user={user} />
