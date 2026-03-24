@@ -1,0 +1,112 @@
+.juegos-container {
+  background: #c8dfa0;
+  font-family: 'Courier New', monospace;
+  min-height: 100vh;
+}
+.game-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.38);
+  border-bottom: 2px solid rgba(160,130,80,0.25);
+  overflow-x: auto;
+}
+.game-tab {
+  background: rgba(255,255,255,0.55);
+  border: 2px solid #c8a870;
+  color: #7a5530;
+  font-size: 10px;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-radius: 16px;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.game-tab.active,
+.game-tab:hover {
+  background: #ecdfa0;
+  color: #5a3010;
+  border-color: #a08040;
+}
+.game-area {
+  padding: 14px;
+  background: #d4e8a8;
+  min-height: calc(100vh - 56px);
+}
+.memoria-panel .game-title {
+  color: #7a5530;
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-align: center;
+  margin: 4px 0 14px;
+  font-weight: bold;
+}
+.scores {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+  margin: 6px 0 10px;
+}
+.score-box {
+  text-align: center;
+  color: #7a5530;
+  font-size: 10px;
+  font-weight: bold;
+}
+.score-box .score-val {
+  font-size: 22px;
+  display: block;
+  color: #c07830;
+}
+.status {
+  text-align: center;
+  color: #7a5530;
+  font-size: 11px;
+  margin: 6px 0;
+  min-height: 20px;
+  letter-spacing: 0.5px;
+}
+.mem-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 68px);
+  gap: 8px;
+  justify-content: center;
+  margin: 10px auto;
+}
+.mem-card {
+  width: 68px;
+  height: 68px;
+  background: rgba(255,255,255,0.45);
+  border: 2.5px solid #c8a870;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  user-select: none;
+  transition: transform 0.13s;
+}
+.mem-card:hover { transform: scale(1.06); }
+.mem-card.flipped { background: #fffde0; border-color: #e8b830; }
+.mem-card.matched { background: #d0f0a8; border-color: #80c050; opacity: 0.72; }
+.btn {
+  background: #e8c870;
+  border: 2px solid #c8a040;
+  color: #5a3010;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  padding: 8px 20px;
+  cursor: pointer;
+  border-radius: 20px;
+  font-weight: bold;
+  transition: background 0.15s;
+}
+.btn:hover { background: #f0d888; }
+.btn-block {
+  display: block;
+  margin: 10px auto;
+}
