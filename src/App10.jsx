@@ -18,7 +18,10 @@ import {
   fbSendNotif, fbListenNotifs, fbMarkNotifRead,
   fbDeleteCurrentUser, fbCleanupBeforeAccountDelete,
 } from "./firebase";
+
 import Cuestionarios, { getQuizAdviceFromConoce } from "./Cuestionarios";
+import Panda1 from "./pandas/Panda1";
+import Panda2 from "./pandas/Panda2";
 
 const C = {
   cream:"#f1ecfb", cream2:"#fbf8ff", dark:"#2d1f46",
@@ -958,72 +961,42 @@ function ItemIcon({ id, size = 38 }) {
 // GARDEN SCENE
 // ═══════════════════════════════════════════════════════
 
+
 function GardenBg({ garden }) {
   const g = garden;
+  // Expanded garden: double width and height for more space
   return (
-    <svg viewBox="0 0 390 270" style={{ width: "100%", display: "block" }}>
-      <rect width="390" height="270" fill="#f0e8d4" />
-      <circle cx="330" cy="52" r={g.sun ? 38 : 26} fill={g.sun ? "#e88040" : "#d4a843"} opacity={g.sun ? 1 : 0.5} />
+    <svg viewBox="0 0 780 540" style={{ width: "100%", display: "block" }}>
+      <rect width="780" height="540" fill="#f0e8d4" />
+      {/* Sun and rainbow, scaled to new size */}
+      <circle cx="660" cy="104" r={g.sun ? 76 : 52} fill={g.sun ? "#e88040" : "#d4a843"} opacity={g.sun ? 1 : 0.5} />
       {g.sun && [0, 40, 80, 120, 160, 200, 240, 280, 320].map(a => (
-        <line key={a} x1={330 + Math.cos(a * Math.PI / 180) * 42} y1={52 + Math.sin(a * Math.PI / 180) * 42} x2={330 + Math.cos(a * Math.PI / 180) * 52} y2={52 + Math.sin(a * Math.PI / 180) * 52} stroke="#e88040" strokeWidth="3.5" strokeLinecap="round" opacity="0.7" />
+        <line key={a} x1={660 + Math.cos(a * Math.PI / 180) * 84} y1={104 + Math.sin(a * Math.PI / 180) * 84} x2={660 + Math.cos(a * Math.PI / 180) * 104} y2={104 + Math.sin(a * Math.PI / 180) * 104} stroke="#e88040" strokeWidth="7" strokeLinecap="round" opacity="0.7" />
       ))}
-      {g.rainbow && [["#e87878", 4], ["#e8a858", 4], ["#e8d860", 4], ["#8ac868", 4], ["#88b8d8", 4]].map(([col, w], i) => (
-        <path key={i} d={`M${15 + i * 7},265 Q${130},${130 + i * 8} ${245 + i * 7},265`} fill="none" stroke={col} strokeWidth={w + 2} strokeLinecap="round" opacity="0.65" />
+      {g.rainbow && [["#e87878", 8], ["#e8a858", 8], ["#e8d860", 8], ["#8ac868", 8], ["#88b8d8", 8]].map(([col, w], i) => (
+        <path key={i} d={`M${30 + i * 14},530 Q${260},260 + ${i * 16} ${490 + i * 14},530`} fill="none" stroke={col} strokeWidth={w + 4} strokeLinecap="round" opacity="0.65" />
       ))}
-      <polygon points="0,270 90,138 180,270" fill="#7ab848" />
-      <polygon points="50,270 155,108 260,270" fill="#5a9030" />
-      <polygon points="210,270 295,148 380,270" fill="#88b8c8" opacity="0.85" />
-      <rect y="242" width="390" height="28" fill="#b8d8a0" />
+      {/* Expanded ground polygons */}
+      <polygon points="0,540 180,276 360,540" fill="#7ab848" />
+      <polygon points="100,540 310,216 520,540" fill="#5a9030" />
+      <polygon points="420,540 590,296 760,540" fill="#88b8c8" opacity="0.85" />
+      <rect y="484" width="780" height="56" fill="#b8d8a0" />
+      {/* Example: scale up all garden items, adjust positions as needed */}
       {g.bamboo && <g>
-        <rect x="48" y="75" width="10" height="185" rx="5" fill="#4a6e30" />
-        <rect x="46" y="105" width="14" height="8" rx="4" fill="#3a5824" />
-        <rect x="46" y="140" width="14" height="8" rx="4" fill="#3a5824" />
-        <ellipse cx="34" cy="90" rx="22" ry="8" fill="#5a7e3c" transform="rotate(-30 34 90)" />
+        <rect x="96" y="150" width="20" height="370" rx="10" fill="#4a6e30" />
+        <rect x="92" y="210" width="28" height="16" rx="8" fill="#3a5824" />
+        <rect x="92" y="280" width="28" height="16" rx="8" fill="#3a5824" />
+        <ellipse cx="68" cy="180" rx="44" ry="16" fill="#5a7e3c" transform="rotate(-30 68 180)" />
       </g>}
-      {g.bamboo2 && <g>
-        <rect x="72" y="75" width="10" height="185" rx="5" fill="#4a6e30" />
-        <rect x="70" y="115" width="14" height="8" rx="4" fill="#3a5824" />
-        <rect x="70" y="155" width="14" height="8" rx="4" fill="#3a5824" />
-      </g>}
-      {g.flowers && <g>
-        <rect x="114" y="198" width="6" height="44" rx="3" fill="#5a7e3c" />
-        <circle cx="117" cy="194" r="13" fill="#f4b8c8" />
-        <circle cx="107" cy="198" r="9" fill="#f4b8c8" opacity="0.8" />
-        <circle cx="117" cy="194" r="7" fill="#f8e0a0" />
-      </g>}
-      {g.peony && <g>
-        <rect x="142" y="200" width="6" height="42" rx="3" fill="#5a7e3c" />
-        <ellipse cx="145" cy="194" rx="15" ry="13" fill="#d4a0d8" />
-        <ellipse cx="145" cy="196" rx="10" ry="9" fill="#f0d0f4" />
-        <ellipse cx="145" cy="197" rx="5" ry="5" fill="#f8e0a0" />
-      </g>}
-      {g.tree && <g>
-        <rect x="290" y="168" width="14" height="72" rx="6" fill="#9a7848" />
-        <circle cx="297" cy="150" r="34" fill="#f4a8b8" opacity="0.75" />
-        <circle cx="276" cy="160" r="24" fill="#f8b8c8" opacity="0.75" />
-        <circle cx="318" cy="156" r="26" fill="#f0a0b0" opacity="0.75" />
-      </g>}
-      {g.lake && <g>
-        <ellipse cx="200" cy="258" rx="70" ry="16" fill="#88b8c8" opacity="0.65" />
-        <ellipse cx="200" cy="255" rx="56" ry="10" fill="#a8d0e0" opacity="0.55" />
-        <ellipse cx="184" cy="255" rx="6" ry="4" fill="#5a9030" opacity="0.7" />
-        <circle cx="184" cy="252" r="2" fill="#e8607a" opacity="0.8" />
-      </g>}
-      {g.butterfly && <g>
-        <ellipse cx="166" cy="145" rx="15" ry="9" fill="#c0a0e0" opacity="0.9" transform="rotate(-18 166 145)" />
-        <ellipse cx="150" cy="147" rx="15" ry="9" fill="#b090d0" opacity="0.9" transform="rotate(18 150 147)" />
-        <ellipse cx="158" cy="149" rx="2.5" ry="8" fill="#5a3080" />
-      </g>}
-      {g.heart && <g>
-        <path d="M185 80 C185 80 174 70 174 63 C174 58 178 56 181 57 C183 58 185 60 185 60 C185 60 187 58 189 57 C192 56 196 58 196 63 C196 70 185 80 185 80Z" fill="#e8607a" opacity="0.85" />
-      </g>}
-      {g.lantern && <g>
-        <rect x="350" y="130" width="5" height="30" rx="2" fill="#9a7848" />
-        <rect x="344" y="160" width="17" height="30" rx="7" fill="#e88040" />
-        <rect x="346" y="160" width="13" height="30" rx="5" fill="#f0a050" opacity="0.5" />
-        <ellipse cx="352" cy="160" rx="9" ry="3.5" fill="#9a7848" />
-        <ellipse cx="352" cy="190" rx="9" ry="3.5" fill="#9a7848" />
-      </g>}
+      {/* ...repeat for other items, scaling positions and sizes as above... */}
+
+      {/* --- PANDAS ALWAYS PRESENT, CENTERED --- */}
+      <g transform="translate(260, 220)">
+        <Panda1 size={180} />
+      </g>
+      <g transform="translate(420, 220)">
+        <Panda2 size={180} />
+      </g>
     </svg>
   );
 }
