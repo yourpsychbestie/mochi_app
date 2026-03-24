@@ -4019,11 +4019,9 @@ function Onboarding({ onDone }) {
 
 const NAV = [
   { id: "jardin", emoji: "🌿", label: "Jardín" },
-  { id: "ejerc", emoji: "⭐", label: "Ejerc." },
-  { id: "juegos", emoji: "🎮", label: "Juegos" },
-  { id: "conocete", emoji: "💬", label: "Conócete" },
-  { id: "burbuja", emoji: "🫧", label: "Burbuja" },
   { id: "perfil", emoji: "👤", label: "Nosotros" },
+  { id: "cultivar", emoji: "🌱", label: "Cultivar" },
+  { id: "juegos", emoji: "🎮", label: "Juegos" },
 ];
 
 // ═══════════════════════════════════════════════
@@ -4917,11 +4915,21 @@ export default function App() {
       <style>{STYLES}</style>
       <div style={{ paddingBottom:72 }}>
         {tab==="jardin" && <Jardin bamboo={bamboo} happiness={happiness} water={water} garden={garden} accessories={accessories} mochiHappy={mochiHappy} pandaBubble={pandaBubble} onPet={petMochi} onBuy={buyItem} onWater={waterGarden} onBuyAccessory={buyAccessory}/>}
-        {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson}/>}
-        {tab==="juegos" && <Juegos onBambuEarned={fbIncrementBamboo}/>} 
-        {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user}/>}
-        {tab==="burbuja" && <Burbuja burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} user={user}/>}
         {tab==="perfil" && <Perfil user={user} bamboo={bamboo} garden={garden} accessories={accessories} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} lessonsDone={lessonsDone} coupleInfo={coupleInfo} streakInfo={streakData} streakAnalytics={streakAnalytics} onUpdateStreakSettings={updateStreakSettings} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} onSendMessage={sendMsg}/>} 
+        {tab==="cultivar" && <CultivarRelacion
+          exDone={exDone}
+          onCompleteEx={completeEx}
+          user={user}
+          lessonsDone={lessonsDone}
+          onCompleteLesson={completeLesson}
+          conoce={conoce}
+          onSaveConoce={saveConoce}
+          burbuja={burbuja}
+          onSaveMine={saveBurbujaMine}
+          onPropose={proposeBurbuja}
+          onApprove={approveBurbuja}
+        />}
+        {tab==="juegos" && <Juegos onBambuEarned={fbIncrementBamboo}/>}
       </div>
       <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:480, background:C.white, borderTop:`1.5px solid ${C.border}`, display:"flex", zIndex:1000, boxShadow:`0 -3px 0 ${C.line}` }}>
         {NAV.map(n => {
