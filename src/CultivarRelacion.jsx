@@ -11,6 +11,21 @@ const SUBTABS = [
   { id: "conocete", label: "💬 Conocernos más" },
 ];
 
+const INTRO_TEXTS = {
+  ejerc: {
+    title: "Ejercicios en pareja",
+    description: "Aquí encontrarás ejercicios prácticos para fortalecer la conexión, la comunicación y el crecimiento en pareja. Hazlos juntos y comparte lo que sientes." },
+  lecciones: {
+    title: "Aprender algo nuevo",
+    description: "Explora lecciones y recursos para entender mejor el amor, la convivencia y el bienestar en pareja. Aprende y reflexiona en conjunto." },
+  burbuja: {
+    title: "Acuerdos de pareja",
+    description: "Esta sección es para crear acuerdos y límites claros en pareja. Aquí pueden definir reglas, expectativas y compromisos para fortalecer su relación." },
+  conocete: {
+    title: "Conocernos más",
+    description: "Responde preguntas profundas y divertidas para descubrir más sobre ti y tu pareja. Ideal para conversaciones significativas y autoconocimiento." },
+};
+
 export default function CultivarRelacion({
   exDone, onCompleteEx, user, lessonsDone, onCompleteLesson,
   conoce, onSaveConoce, burbuja, onSaveMine, onPropose, onApprove
@@ -25,7 +40,7 @@ export default function CultivarRelacion({
             key={t.id}
             onClick={() => {
               setSubtab(t.id);
-              if (t.id === "burbuja") setShowIntro(true);
+              setShowIntro(true);
             }}
             style={{
               background: subtab === t.id ? "#4a6e30" : "#ede4cc",
@@ -44,6 +59,12 @@ export default function CultivarRelacion({
         ))}
       </div>
       <div style={{ marginTop: 10 }}>
+        <IntroModal
+          open={showIntro}
+          onClose={() => setShowIntro(false)}
+          title={INTRO_TEXTS[subtab].title}
+          description={INTRO_TEXTS[subtab].description}
+        />
         {subtab === "ejerc" && (
           <Ejercicios exDone={exDone} onComplete={onCompleteEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={onCompleteLesson} />
         )}
@@ -51,15 +72,7 @@ export default function CultivarRelacion({
           <Ejercicios exDone={exDone} onComplete={onCompleteEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={onCompleteLesson} showLessonsOnly />
         )}
         {subtab === "burbuja" && (
-          <>
-            <IntroModal
-              open={showIntro}
-              onClose={() => setShowIntro(false)}
-              title="Acuerdos de pareja"
-              description="Esta sección es para crear acuerdos y límites claros en pareja. Aquí pueden definir reglas, expectativas y compromisos para fortalecer su relación."
-            />
-            <Burbuja burbuja={burbuja} onSaveMine={onSaveMine} onPropose={onPropose} onApprove={onApprove} user={user} />
-          </>
+          <Burbuja burbuja={burbuja} onSaveMine={onSaveMine} onPropose={onPropose} onApprove={onApprove} user={user} />
         )}
         {subtab === "conocete" && (
           <Conocete conoce={conoce} onSave={onSaveConoce} user={user} />

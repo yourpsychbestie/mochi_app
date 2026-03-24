@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import Juegos from './games/Juegos';
 import {
   fbRegister, fbLogin, fbLogout, fbOnAuthChange,
   fbDeleteCurrentUser,
@@ -22,10 +21,6 @@ import {
   fbSaveStreakProfile, fbListenStreakProfile,
 } from "./firebase";
 import Cuestionarios, { getQuizAdviceFromConoce } from "./Cuestionarios";
-
-// Prevents the fbOnAuthChange listener from calling afterLogin while doReg/doJoin
-// is actively handling a fresh registration (avoids race conditions on new sign-ups).
-let _pendingLocalAuth = false;
 
 const C = {
   cream:"#f5edda", cream2:"#fdf8ef", dark:"#1e2b1e",
@@ -1894,7 +1889,6 @@ function Login({ onLogin }) {
     const cleanEmail = normalizeEmail(email);
     if (!nameA || !cleanEmail || pass.length < 6) { setErr("Completa tu nombre, correo y contraseña (mín. 6 caracteres)"); return; }
     setLoading(true); setErr("");
-    _pendingLocalAuth = true;
     let createdAuthUser = false;
     try {
       const since = durN ? `Juntos ${durN} ${durU}` : "Juntos desde hoy";
@@ -1920,7 +1914,6 @@ function Login({ onLogin }) {
       if (!created) {
         await fbDeleteCurrentUser().catch(() => {});
         setErr("No se pudo generar un código único. Intenta de nuevo.");
-        _pendingLocalAuth = false;
         setLoading(false);
         return;
       }
@@ -1940,7 +1933,6 @@ function Login({ onLogin }) {
         setErr(authErrMsg(e, "Error al crear cuenta"));
       }
     }
-    _pendingLocalAuth = false;
     setLoading(false);
   };
 
@@ -1950,7 +1942,6 @@ function Login({ onLogin }) {
     const cleanPartnerName = nameB.trim() || "?";
     if (!cleanPartnerName || !cleanCode || !cleanPartnerEmail || pPass.length < 6) { setErr("Completa tu nombre, código, correo y contraseña"); return; }
     setLoading(true); setErr("");
-    _pendingLocalAuth = true;
     let justCreated = false;
     try {
       const cred = await fbRegister(cleanPartnerEmail, pPass);
@@ -1984,7 +1975,6 @@ function Login({ onLogin }) {
           await retryFirestore(() => fbSaveUser(uid2, { email: cleanPartnerEmail, names: names2, code: cleanCode, isOwner: false }));
           if (claim2.ownerUid) await retryFirestore(() => fbSaveUser(claim2.ownerUid, { names: names2 }));
           onLogin({ uid: uid2, email: cleanPartnerEmail, names: names2, code: cleanCode, since: claim2.since || "Juntos", isOwner: false, isGuest: false }, false);
-          _pendingLocalAuth = false;
           setLoading(false); return;
         } catch(e2) {
           const code2 = e2?.code || "";
@@ -2000,7 +1990,6 @@ function Login({ onLogin }) {
           } else {
             setErr(authErrMsg(e2, "No se pudo iniciar y vincular esta cuenta. Revisa correo, contraseña y código."));
           }
-          _pendingLocalAuth = false;
           setLoading(false); return;
         }
       } else if (e.code === "auth/invalid-email") {
@@ -2022,7 +2011,6 @@ function Login({ onLogin }) {
         }
       }
     }
-    _pendingLocalAuth = false;
     setLoading(false);
   };
 
@@ -4019,9 +4007,10 @@ function Onboarding({ onDone }) {
 
 const NAV = [
   { id: "jardin", emoji: "🌿", label: "Jardín" },
+  { id: "ejerc", emoji: "⭐", label: "Ejerc." },
+  { id: "conocete", emoji: "💬", label: "Conócete" },
+  { id: "burbuja", emoji: "🫧", label: "Burbuja" },
   { id: "perfil", emoji: "👤", label: "Nosotros" },
-  { id: "cultivar", emoji: "🌱", label: "Cultivar" },
-  { id: "juegos", emoji: "🎮", label: "Juegos" },
 ];
 
 // ═══════════════════════════════════════════════
@@ -4280,9 +4269,6 @@ export default function App() {
     // Use Firebase Auth state to keep session alive
     const unsub = fbOnAuthChange(async (firebaseUser) => {
       if (firebaseUser) {
-        // If doReg/doJoin is actively handling a fresh registration, skip —
-        // they will call afterLogin themselves once all Firestore writes are done.
-        if (_pendingLocalAuth) return;
         try {
           let userData = await fbGetUser(firebaseUser.uid);
           if (!userData) {
@@ -4915,21 +4901,10 @@ export default function App() {
       <style>{STYLES}</style>
       <div style={{ paddingBottom:72 }}>
         {tab==="jardin" && <Jardin bamboo={bamboo} happiness={happiness} water={water} garden={garden} accessories={accessories} mochiHappy={mochiHappy} pandaBubble={pandaBubble} onPet={petMochi} onBuy={buyItem} onWater={waterGarden} onBuyAccessory={buyAccessory}/>}
+        {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson}/>}
+        {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user}/>}
+        {tab==="burbuja" && <Burbuja burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} user={user}/>}
         {tab==="perfil" && <Perfil user={user} bamboo={bamboo} garden={garden} accessories={accessories} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} lessonsDone={lessonsDone} coupleInfo={coupleInfo} streakInfo={streakData} streakAnalytics={streakAnalytics} onUpdateStreakSettings={updateStreakSettings} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} onSendMessage={sendMsg}/>} 
-        {tab==="cultivar" && <CultivarRelacion
-          exDone={exDone}
-          onCompleteEx={completeEx}
-          user={user}
-          lessonsDone={lessonsDone}
-          onCompleteLesson={completeLesson}
-          conoce={conoce}
-          onSaveConoce={saveConoce}
-          burbuja={burbuja}
-          onSaveMine={saveBurbujaMine}
-          onPropose={proposeBurbuja}
-          onApprove={approveBurbuja}
-        />}
-        {tab==="juegos" && <Juegos onBambuEarned={fbIncrementBamboo}/>}
       </div>
       <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:480, background:C.white, borderTop:`1.5px solid ${C.border}`, display:"flex", zIndex:1000, boxShadow:`0 -3px 0 ${C.line}` }}>
         {NAV.map(n => {

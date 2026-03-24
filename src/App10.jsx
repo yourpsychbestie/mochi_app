@@ -886,7 +886,7 @@ function Btn({ children, onClick, disabled, variant = "dark", style = {} }) {
     sand: { bg: C.sand, fg: C.ink },
     salmon: { bg: C.salmon, fg: C.white },
     rose: { bg: C.rose, fg: C.white },
-    ghost: { bg: "transparent", fg: C.inkM, border: `2px solid ${C.border}` }
+    ghost: { bg: "transparent", fg: C.inkM, border: "2px solid " + C.border }
   };
   const v = V[variant] || V.dark;
   return (
@@ -901,12 +901,12 @@ function Btn({ children, onClick, disabled, variant = "dark", style = {} }) {
 
 function TA({ value, onChange, placeholder, rows = 2, style = {} }) {
   return <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={rows}
-    style={{ width: "100%", border: `2px solid ${C.border}`, borderRadius: 12, padding: "10px 13px", fontFamily: "'Nunito',sans-serif", fontSize: "0.9rem", resize: "none", outline: "none", color: C.ink, background: C.cream2, boxSizing: "border-box", lineHeight: 1.5, ...style }} />;
+    style={{ width: "100%", border: "2px solid " + C.border, borderRadius: 12, padding: "10px 13px", fontFamily: "'Nunito',sans-serif", fontSize: "0.9rem", resize: "none", outline: "none", color: C.ink, background: C.cream2, boxSizing: "border-box", lineHeight: 1.5, ...style }} />;
 }
 
 function Inp({ value, onChange, placeholder, type = "text", style = {} }) {
   return <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-    style={{ width: "100%", border: `2px solid ${C.border}`, borderRadius: 12, padding: "11px 14px", fontFamily: "'Nunito',sans-serif", fontSize: "0.9rem", outline: "none", color: C.ink, background: C.cream2, boxSizing: "border-box", ...style }} />;
+    style={{ width: "100%", border: "2px solid " + C.border, borderRadius: 12, padding: "11px 14px", fontFamily: "'Nunito',sans-serif", fontSize: "0.9rem", outline: "none", color: C.ink, background: C.cream2, boxSizing: "border-box", ...style }} />;
 }
 
 function Tag({ children, bg = C.sand, color = C.inkM }) {
@@ -2348,7 +2348,7 @@ function Login({ onLogin }) {
       <div style={{ marginBottom: 18, animation: "float 3s ease-in-out infinite" }}>
         <CouplePandaSVG size={160} happy={true} />
       </div>
-      <div style={{ background: C.white, borderRadius: 24, padding: "22px 20px", width: "100%", maxWidth: 380, boxShadow: `0 4px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
+      <div style={{ background: C.white, borderRadius: 24, padding: "22px 20px", width: "100%", maxWidth: 380, boxShadow: "0 4px 0 " + C.border, border: "1.5px solid " + C.border }}>
         <div style={{ display: "flex", background: C.sand, borderRadius: 12, padding: 3, marginBottom: 18, gap: 3 }}>
           {TABS.map(t => (
             <div key={t.id} onClick={() => { setTab(t.id); setErr(""); }} style={{ flex: 1, padding: "10px 4px", textAlign: "center", borderRadius: 9, cursor: "pointer", background: tab === t.id ? C.white : "transparent", color: tab === t.id ? C.dark : C.inkL, boxShadow: tab === t.id ? `0 2px 0 ${C.border}` : "none", border: tab === t.id ? `1.5px solid ${C.border}` : "1.5px solid transparent", transition: "all 0.18s" }}>
