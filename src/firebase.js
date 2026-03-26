@@ -79,6 +79,7 @@ export const fbCleanupBeforeAccountDelete = async ({ uid, code, isOwner }) => {
       "burbuja",
       "notifs",
       "streakInteractions",
+      "games",
     ];
 
     for (const name of coupleCollections) {

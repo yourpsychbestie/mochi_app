@@ -173,6 +173,12 @@ service cloud.firestore {
       allow update: if canAccessStoredCoupleScoped() && keepsCoupleCodeStable();
     }
 
+    match /games/{docId} {
+      allow create: if canCreateCoupleScoped();
+      allow read, delete: if canAccessStoredCoupleScoped();
+      allow update: if canAccessStoredCoupleScoped() && keepsCoupleCodeStable();
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
