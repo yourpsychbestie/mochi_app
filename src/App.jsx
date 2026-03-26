@@ -626,81 +626,136 @@ const WYR_QS = [
 
 function CouplePandaSVG({ happy = false, size = 160 }) {
   const s = size;
+  const G = "#5c5c5c";
+  const GD = "#4a4a4a";
+  const W = "#f9f9f9";
+  const WW = "#ffffff";
   return (
     <svg viewBox="0 0 260 220" width={s} height={s * 0.846} style={{ display: "block" }}>
       <defs>
-        <radialGradient id="bodyL" cx="45%" cy="35%" r="60%"><stop offset="0%" stopColor="#fdf9f0"/><stop offset="100%" stopColor="#ede4d0"/></radialGradient>
-        <radialGradient id="bodyR" cx="55%" cy="35%" r="60%"><stop offset="0%" stopColor="#fdf9f0"/><stop offset="100%" stopColor="#ede4d0"/></radialGradient>
-        <radialGradient id="patchL" cx="40%" cy="30%" r="65%"><stop offset="0%" stopColor="#2d3d2d"/><stop offset="100%" stopColor="#1a261a"/></radialGradient>
-        <radialGradient id="patchR" cx="60%" cy="30%" r="65%"><stop offset="0%" stopColor="#2d3d2d"/><stop offset="100%" stopColor="#1a261a"/></radialGradient>
-        <radialGradient id="tummy" cx="50%" cy="40%" r="55%"><stop offset="0%" stopColor="#fefcf6"/><stop offset="100%" stopColor="#f5eede"/></radialGradient>
-        <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="#1a261a" floodOpacity="0.12"/></filter>
-        <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#f8d0e8" floodOpacity="0.6"/></filter>
+        <filter id="kShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="3" stdDeviation="3" floodColor="#3a3a3a" floodOpacity="0.13"/></filter>
+        <filter id="kGlow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#f8d0e8" floodOpacity="0.7"/></filter>
       </defs>
 
-      <ellipse cx="82" cy="208" rx="42" ry="7" fill="#1a261a" opacity="0.08"/>
-      <path d="M52 205 C35 205 28 185 30 165 C32 145 42 132 62 128 C72 126 82 126 92 128 C112 132 122 145 122 165 C124 185 117 205 100 205 Z" fill="url(#bodyL)" filter="url(#softShadow)"/>
-      <ellipse cx="76" cy="168" rx="18" ry="22" fill="url(#tummy)" opacity="0.9"/>
-      <path d="M116 150 C128 142 142 140 150 145 C155 148 152 158 145 158 C138 158 130 155 120 158" fill="none" stroke="#1a261a" strokeWidth="16" strokeLinecap="round"/>
-      <path d="M116 150 C128 142 142 140 150 145 C155 148 152 158 145 158" fill="none" stroke="#2d3d2d" strokeWidth="13" strokeLinecap="round"/>
-      <path d="M38 158 C28 165 24 178 28 188" fill="none" stroke="#1a261a" strokeWidth="15" strokeLinecap="round"/>
-      <path d="M38 158 C28 165 24 178 28 188" fill="none" stroke="#2d3d2d" strokeWidth="12" strokeLinecap="round"/>
-      <ellipse cx="57" cy="198" rx="20" ry="12" fill="#1a261a"/>
-      <ellipse cx="57" cy="196" rx="17" ry="10" fill="#2d3d2d"/>
-      <ellipse cx="98" cy="198" rx="20" ry="12" fill="#1a261a"/>
-      <ellipse cx="98" cy="196" rx="17" ry="10" fill="#2d3d2d"/>
-      <ellipse cx="57" cy="205" rx="11" ry="6" fill="#f0e8d8" opacity="0.6"/>
-      <ellipse cx="98" cy="205" rx="11" ry="6" fill="#f0e8d8" opacity="0.6"/>
+      {/* ── LEFT PANDA ── */}
+      <ellipse cx="76" cy="213" rx="40" ry="6" fill="#3a3a3a" opacity="0.09"/>
+      {/* Body */}
+      <path d="M46 210 C30 210 24 188 26 166 C28 146 40 132 62 128 C70 126 82 126 90 128 C112 132 124 146 124 166 C126 188 120 210 104 210 Z" fill={W} stroke={GD} strokeWidth="2" filter="url(#kShadow)"/>
+      {/* Tummy */}
+      <ellipse cx="76" cy="172" rx="19" ry="24" fill={WW} opacity="0.7"/>
+      {/* Left arm */}
+      <path d="M30 158 C18 165 14 180 18 192" fill="none" stroke={GD} strokeWidth="17" strokeLinecap="round"/>
+      <path d="M30 158 C18 165 14 180 18 192" fill="none" stroke={G} strokeWidth="13" strokeLinecap="round"/>
+      {/* Right arm */}
+      <path d="M122 152 C135 144 148 142 154 147 C158 150 156 162 148 162" fill="none" stroke={GD} strokeWidth="17" strokeLinecap="round"/>
+      <path d="M122 152 C135 144 148 142 154 147 C158 150 156 162 148 162" fill="none" stroke={G} strokeWidth="13" strokeLinecap="round"/>
+      {/* Feet */}
+      <ellipse cx="56" cy="202" rx="20" ry="11" fill={GD}/>
+      <ellipse cx="56" cy="200" rx="17" ry="9" fill={G}/>
+      <ellipse cx="96" cy="202" rx="20" ry="11" fill={GD}/>
+      <ellipse cx="96" cy="200" rx="17" ry="9" fill={G}/>
+      <ellipse cx="56" cy="208" rx="11" ry="5" fill="#f0ece8" opacity="0.55"/>
+      <ellipse cx="96" cy="208" rx="11" ry="5" fill="#f0ece8" opacity="0.55"/>
+      {/* Head */}
+      <circle cx="76" cy="85" r="44" fill={W} stroke={GD} strokeWidth="2" filter="url(#kShadow)"/>
+      {/* Ears */}
+      <circle cx="40" cy="50" r="16" fill={GD}/>
+      <circle cx="40" cy="50" r="10" fill={G}/>
+      <circle cx="112" cy="50" r="16" fill={GD}/>
+      <circle cx="112" cy="50" r="10" fill={G}/>
+      {/* Eye patches */}
+      <ellipse cx="61" cy="84" rx="14" ry="12" fill={G} transform="rotate(-12 61 84)"/>
+      <ellipse cx="91" cy="84" rx="14" ry="12" fill={G} transform="rotate(12 91 84)"/>
+      {/* Eyes */}
+      {happy ? (
+        <>
+          <path d="M55 83 Q61 90 67 83" fill="none" stroke={WW} strokeWidth="2.8" strokeLinecap="round"/>
+          <path d="M85 83 Q91 90 97 83" fill="none" stroke={WW} strokeWidth="2.8" strokeLinecap="round"/>
+        </>
+      ) : (
+        <>
+          <circle cx="62" cy="85" r="8" fill={WW}/>
+          <circle cx="90" cy="85" r="8" fill={WW}/>
+          <circle cx="63" cy="86" r="5" fill="#2a2a2a"/>
+          <circle cx="91" cy="86" r="5" fill="#2a2a2a"/>
+          <circle cx="65" cy="84" r="2" fill={WW}/>
+          <circle cx="93" cy="84" r="2" fill={WW}/>
+        </>
+      )}
+      {/* Nose */}
+      <ellipse cx="76" cy="96" rx="4" ry="3" fill="#3a3a3a" opacity="0.85"/>
+      {/* Mouth */}
+      {happy
+        ? <path d="M68 103 Q76 111 84 103" fill="none" stroke="#3a3a3a" strokeWidth="2.2" strokeLinecap="round"/>
+        : <path d="M70 101 Q76 107 82 101" fill="none" stroke="#3a3a3a" strokeWidth="2" strokeLinecap="round"/>}
+      {/* Cheeks */}
+      <ellipse cx="44" cy="98" rx="12" ry="7" fill="#f4a896" opacity={happy ? "0.65" : "0.42"}/>
+      <ellipse cx="108" cy="98" rx="12" ry="7" fill="#f4a896" opacity={happy ? "0.65" : "0.42"}/>
 
-      <g transform="rotate(6, 76, 95)">
-        <ellipse cx="76" cy="88" rx="44" ry="42" fill="url(#bodyL)" filter="url(#softShadow)"/>
-        <circle cx="42" cy="54" r="16" fill="#1a261a"/>
-        <circle cx="42" cy="54" r="10" fill="#2d3d2d"/>
-        <circle cx="110" cy="54" r="16" fill="#1a261a"/>
-        <circle cx="110" cy="54" r="10" fill="#2d3d2d"/>
-        <circle cx="42" cy="54" r="6" fill="#d87888" opacity="0.25"/>
-        <circle cx="110" cy="54" r="6" fill="#d87888" opacity="0.25"/>
-        <ellipse cx="60" cy="85" rx="13" ry="11" fill="url(#patchL)" transform="rotate(-10 60 85)"/>
-        <ellipse cx="92" cy="85" rx="13" ry="11" fill="url(#patchR)" transform="rotate(10 92 85)"/>
-        {happy ? <><path d="M53 85 Q60 92 67 85" fill="none" stroke="#fdf9f0" strokeWidth="3" strokeLinecap="round"/><path d="M85 85 Q92 92 99 85" fill="none" stroke="#fdf9f0" strokeWidth="3" strokeLinecap="round"/></> : <><ellipse cx="60" cy="86" rx="7" ry="6" fill="#fdf9f0"/><ellipse cx="92" cy="86" rx="7" ry="6" fill="#fdf9f0"/><ellipse cx="61" cy="87" rx="4.5" ry="4" fill="#1a1a2a"/><ellipse cx="93" cy="87" rx="4.5" ry="4" fill="#1a1a2a"/><circle cx="63" cy="85" r="1.6" fill="white"/><circle cx="95" cy="85" r="1.6" fill="white"/></>}
-        <ellipse cx="76" cy="97" rx="4" ry="2.8" fill="#1a261a" opacity="0.7"/>
-        {happy ? <path d="M68 104 Q72 110 76 106 Q80 110 84 104" fill="none" stroke="#1a261a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/> : <path d="M70 103 Q73 107 76 104 Q79 107 82 103" fill="none" stroke="#1a261a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>}
-        <ellipse cx="44" cy="98" rx="10" ry="6" fill="#f0907a" opacity={happy ? "0.4" : "0.15"}/>
-        <ellipse cx="108" cy="98" rx="10" ry="6" fill="#f0907a" opacity={happy ? "0.4" : "0.15"}/>
-      </g>
-
-      <ellipse cx="182" cy="208" rx="44" ry="7" fill="#1a261a" opacity="0.08"/>
-      <path d="M148 205 C131 205 124 185 126 165 C128 144 138 131 160 128 C170 126 182 126 194 128 C214 131 224 145 224 165 C226 185 219 205 202 205 Z" fill="url(#bodyR)" filter="url(#softShadow)"/>
-      <ellipse cx="176" cy="168" rx="19" ry="23" fill="url(#tummy)" opacity="0.9"/>
-      <path d="M134 148 C126 140 118 138 112 142 C108 145 110 155 116 156" fill="none" stroke="#1a261a" strokeWidth="16" strokeLinecap="round"/>
-      <path d="M134 148 C126 140 118 138 112 142 C108 145 110 155 116 156" fill="none" stroke="#2d3d2d" strokeWidth="13" strokeLinecap="round"/>
-      <path d="M218 158 C228 165 232 178 228 188" fill="none" stroke="#1a261a" strokeWidth="15" strokeLinecap="round"/>
-      <path d="M218 158 C228 165 232 178 228 188" fill="none" stroke="#2d3d2d" strokeWidth="12" strokeLinecap="round"/>
-      <ellipse cx="157" cy="198" rx="21" ry="12" fill="#1a261a"/>
-      <ellipse cx="157" cy="196" rx="18" ry="10" fill="#2d3d2d"/>
-      <ellipse cx="198" cy="198" rx="21" ry="12" fill="#1a261a"/>
-      <ellipse cx="198" cy="196" rx="18" ry="10" fill="#2d3d2d"/>
-      <ellipse cx="157" cy="205" rx="12" ry="6" fill="#f0e8d8" opacity="0.6"/>
-      <ellipse cx="198" cy="205" rx="12" ry="6" fill="#f0e8d8" opacity="0.6"/>
-
-      <g transform="rotate(-4, 176, 90)">
-        <ellipse cx="176" cy="88" rx="46" ry="44" fill="url(#bodyR)" filter="url(#softShadow)"/>
-        <circle cx="140" cy="52" r="17" fill="#1a261a"/>
-        <circle cx="140" cy="52" r="11" fill="#2d3d2d"/>
-        <circle cx="212" cy="52" r="17" fill="#1a261a"/>
-        <circle cx="212" cy="52" r="11" fill="#2d3d2d"/>
-        <ellipse cx="162" cy="87" rx="14" ry="12" fill="url(#patchL)" transform="rotate(-8 162 87)"/>
-        <ellipse cx="190" cy="87" rx="14" ry="12" fill="url(#patchR)" transform="rotate(8 190 87)"/>
-        {happy ? <><path d="M155 87 Q162 94 169 87" fill="none" stroke="#fdf9f0" strokeWidth="3" strokeLinecap="round"/><path d="M183 87 Q190 94 197 87" fill="none" stroke="#fdf9f0" strokeWidth="3" strokeLinecap="round"/></> : <><ellipse cx="162" cy="88" rx="7" ry="6" fill="#fdf9f0"/><ellipse cx="190" cy="88" rx="7" ry="6" fill="#fdf9f0"/><ellipse cx="163" cy="89" rx="4.5" ry="4" fill="#1a1a2a"/><ellipse cx="191" cy="89" rx="4.5" ry="4" fill="#1a1a2a"/><circle cx="165" cy="87" r="1.6" fill="white"/><circle cx="193" cy="87" r="1.6" fill="white"/></>}
-        <ellipse cx="176" cy="100" rx="4" ry="2.8" fill="#1a261a" opacity="0.7"/>
-        {happy ? <path d="M168 107 Q172 113 176 109 Q180 113 184 107" fill="none" stroke="#1a261a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/> : <path d="M170 106 Q173 110 176 107 Q179 110 182 106" fill="none" stroke="#1a261a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>}
+      {/* ── RIGHT PANDA (slightly turned) ── */}
+      <ellipse cx="184" cy="213" rx="42" ry="6" fill="#3a3a3a" opacity="0.09"/>
+      {/* Body */}
+      <path d="M148 208 C132 208 126 186 128 164 C130 144 142 130 164 126 C174 124 186 124 196 126 C218 130 228 144 228 164 C230 186 224 208 208 208 Z" fill={W} stroke={GD} strokeWidth="2" filter="url(#kShadow)"/>
+      {/* Tummy */}
+      <ellipse cx="178" cy="170" rx="20" ry="25" fill={WW} opacity="0.7"/>
+      {/* Left arm */}
+      <path d="M138 150 C128 142 120 140 114 144 C110 148 112 160 118 160" fill="none" stroke={GD} strokeWidth="17" strokeLinecap="round"/>
+      <path d="M138 150 C128 142 120 140 114 144 C110 148 112 160 118 160" fill="none" stroke={G} strokeWidth="13" strokeLinecap="round"/>
+      {/* Right arm — raised slightly */}
+      <path d="M222 156 C234 148 240 160 236 174 C234 182 226 184 220 180" fill="none" stroke={GD} strokeWidth="17" strokeLinecap="round"/>
+      <path d="M222 156 C234 148 240 160 236 174 C234 182 226 184 220 180" fill="none" stroke={G} strokeWidth="13" strokeLinecap="round"/>
+      {/* Feet */}
+      <ellipse cx="158" cy="200" rx="21" ry="11" fill={GD}/>
+      <ellipse cx="158" cy="198" rx="18" ry="9" fill={G}/>
+      <ellipse cx="200" cy="200" rx="21" ry="11" fill={GD}/>
+      <ellipse cx="200" cy="198" rx="18" ry="9" fill={G}/>
+      <ellipse cx="158" cy="207" rx="12" ry="5" fill="#f0ece8" opacity="0.55"/>
+      <ellipse cx="200" cy="207" rx="12" ry="5" fill="#f0ece8" opacity="0.55"/>
+      {/* Head — slightly tilted */}
+      <g transform="rotate(-5, 182, 84)">
+        <circle cx="182" cy="84" r="46" fill={W} stroke={GD} strokeWidth="2" filter="url(#kShadow)"/>
+        {/* Ears */}
+        <circle cx="144" cy="48" r="17" fill={GD}/>
+        <circle cx="144" cy="48" r="11" fill={G}/>
+        <circle cx="220" cy="48" r="17" fill={GD}/>
+        <circle cx="220" cy="48" r="11" fill={G}/>
+        {/* Eye patches */}
+        <ellipse cx="167" cy="83" rx="15" ry="13" fill={G} transform="rotate(-10 167 83)"/>
+        <ellipse cx="197" cy="83" rx="15" ry="13" fill={G} transform="rotate(10 197 83)"/>
+        {/* Eyes */}
+        {happy ? (
+          <>
+            <path d="M161 82 Q167 89 173 82" fill="none" stroke={WW} strokeWidth="2.8" strokeLinecap="round"/>
+            <path d="M191 82 Q197 89 203 82" fill="none" stroke={WW} strokeWidth="2.8" strokeLinecap="round"/>
+          </>
+        ) : (
+          <>
+            <circle cx="168" cy="84" r="8.5" fill={WW}/>
+            <circle cx="196" cy="84" r="8.5" fill={WW}/>
+            <circle cx="169" cy="85" r="5.5" fill="#2a2a2a"/>
+            <circle cx="197" cy="85" r="5.5" fill="#2a2a2a"/>
+            <circle cx="171" cy="83" r="2.2" fill={WW}/>
+            <circle cx="199" cy="83" r="2.2" fill={WW}/>
+          </>
+        )}
+        {/* Nose */}
+        <ellipse cx="182" cy="95" rx="4" ry="3" fill="#3a3a3a" opacity="0.85"/>
+        {/* Mouth */}
+        {happy
+          ? <path d="M174 102 Q182 110 190 102" fill="none" stroke="#3a3a3a" strokeWidth="2.2" strokeLinecap="round"/>
+          : <path d="M176 100 Q182 106 188 100" fill="none" stroke="#3a3a3a" strokeWidth="2" strokeLinecap="round"/>}
+        {/* Cheeks */}
+        <ellipse cx="150" cy="97" rx="12" ry="7" fill="#f4a896" opacity={happy ? "0.65" : "0.42"}/>
+        <ellipse cx="214" cy="97" rx="12" ry="7" fill="#f4a896" opacity={happy ? "0.65" : "0.42"}/>
       </g>
 
       {happy && (
         <>
-          <g filter="url(#softGlow)"><path d="M122 100 C122 95 126 93 130 97 C134 93 138 95 138 100 C138 106 130 115 130 115 C130 115 122 106 122 100Z" fill="#e8607a" opacity="0.95"/></g>
-          <path d="M106 78 C106 75 108 74 110 76 C112 74 114 75 114 78 C114 81 110 85 110 85 C110 85 106 81 106 78Z" fill="#f4a0b8" opacity="0.7"/>
-          <path d="M144 72 C144 70 145.5 69 147 71 C148.5 69 150 70 150 72 C150 74.5 147 78 147 78 C147 78 144 74.5 144 72Z" fill="#f4a0b8" opacity="0.6"/>
+          <g filter="url(#kGlow)">
+            <path d="M126 96 C126 91 130 89 134 93 C138 89 142 91 142 96 C142 102 134 111 134 111 C134 111 126 102 126 96Z" fill="#e8607a" opacity="0.95"/>
+          </g>
+          <path d="M110 74 C110 71 112 70 114 72 C116 70 118 71 118 74 C118 77 114 81 114 81 C114 81 110 77 110 74Z" fill="#f4a0b8" opacity="0.7"/>
+          <path d="M150 68 C150 66 151.5 65 153 67 C154.5 65 156 66 156 68 C156 70.5 153 74 153 74 C153 74 150 70.5 150 68Z" fill="#f4a0b8" opacity="0.6"/>
         </>
       )}
     </svg>
@@ -1722,7 +1777,7 @@ function GardenScene({ garden, waterLevel, bgImage }) {
 // ═══════════════════════════════════════════════
 // JARDIN SCREEN — updated with accessories + multiple items + decay
 // ═══════════════════════════════════════════════
-function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pandaBubble, onPet, onBuy, onWater, onBuyAccessory, user }) {
+function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pandaBubble, onPetA, onPetB, onBuy, onWater, onBuyAccessory, user }) {
   const [indoor, setIndoor] = useState(false);
   const [showGames, setShowGames] = useState(false);
   const [shopTab, setShopTab] = useState("plantas");
@@ -1769,26 +1824,27 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
         </button>
         <SectionErrorBoundary fallback={<div style={{ background:C.white, border:`1.5px solid ${C.border}`, borderRadius:16, margin:12, padding:12, textAlign:"center", color:C.inkM, fontWeight:700 }}>No se pudo cargar esta vista del jardín. Cambia de pestaña y vuelve a intentar.</div>}>
           <GardenScene garden={garden} waterLevel={water} bgImage={indoor ? "/bg_indoor.png" : "/bg_garden.png"}/>
-          <div onClick={onPet} style={{ position:"absolute", bottom:-5, left:"50%", transform:"translateX(-50%)", cursor:"pointer",
+          <div onClick={onPetA} style={{ position:"absolute", bottom:-5, left:"50%", transform:"translateX(-50%)", cursor:"pointer",
             animation: mochiHappy ? "floatHappy 1.6s ease-in-out infinite" : "float 3s ease-in-out infinite" }}>
             <div style={{ position:"relative", display:"inline-block" }}>
-              {/* Speech bubbles */}
+              {/* Speech bubble A — left panda, messages received by me */}
               {pandaBubble?.textA && (
-                <div style={{ position:"absolute", bottom:"90%", left:"-18px", maxWidth:108, background:"white",
-                  border:"2px solid #4a6e30", borderRadius:"14px 14px 4px 14px", padding:"6px 10px",
-                  fontSize:"0.7rem", color:"#1e2b1e", fontWeight:700, lineHeight:1.4,
+                <div style={{ position:"absolute", bottom:"90%", left:"-18px", maxWidth:112, background:"white",
+                  border:`2px solid ${C.olive}`, borderRadius:"14px 14px 4px 14px", padding:"7px 10px",
+                  fontSize:"0.7rem", color:C.ink, fontWeight:700, lineHeight:1.4,
                   boxShadow:"0 2px 8px rgba(0,0,0,0.15)", zIndex:10, animation:"fadeIn 0.3s ease" }}>
-                  {pandaBubble.nameA && <div style={{ fontSize:"0.6rem", color:"#4a6e30", fontWeight:800, marginBottom:2 }}>{pandaBubble.nameA}</div>}
+                  {pandaBubble.nameA && <div style={{ fontSize:"0.6rem", color:C.olive, fontWeight:800, marginBottom:2 }}>{pandaBubble.nameA}</div>}
                   {pandaBubble.textA}
                   <div style={{ position:"absolute", bottom:-8, left:10, width:0, height:0,
                     borderLeft:"8px solid transparent", borderRight:"0 solid transparent",
-                    borderTop:"8px solid #4a6e30" }}/>
+                    borderTop:`8px solid ${C.olive}` }}/>
                 </div>
               )}
+              {/* Speech bubble B — right panda, messages received by partner */}
               {pandaBubble?.textB && (
-                <div style={{ position:"absolute", bottom:"84%", right:"-16px", maxWidth:108, background:"white",
-                  border:"2px solid #e8907a", borderRadius:"14px 14px 14px 4px", padding:"6px 10px",
-                  fontSize:"0.7rem", color:"#1e2b1e", fontWeight:700, lineHeight:1.4,
+                <div style={{ position:"absolute", bottom:"84%", right:"-16px", maxWidth:112, background:"white",
+                  border:"2px solid #e8907a", borderRadius:"14px 14px 14px 4px", padding:"7px 10px",
+                  fontSize:"0.7rem", color:C.ink, fontWeight:700, lineHeight:1.4,
                   boxShadow:"0 2px 8px rgba(0,0,0,0.15)", zIndex:10, animation:"fadeIn 0.3s ease" }}>
                   {pandaBubble.nameB && <div style={{ fontSize:"0.6rem", color:"#e8907a", fontWeight:800, marginBottom:2 }}>{pandaBubble.nameB}</div>}
                   {pandaBubble.textB}
@@ -1799,6 +1855,9 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
               )}
               <CouplePandaSVG happy={mochiHappy} size={140}/>
               <PandaAccessoryLayer accessories={accessories} pandaSize={140}/>
+              {/* Invisible split click zones */}
+              <div onClick={e => { e.stopPropagation(); onPetA(); }} style={{ position:"absolute", top:0, left:0, width:"50%", height:"100%", cursor:"pointer" }}/>
+              <div onClick={e => { e.stopPropagation(); onPetB(); }} style={{ position:"absolute", top:0, right:0, width:"50%", height:"100%", cursor:"pointer" }}/>
             </div>
           </div>
         </SectionErrorBoundary>
@@ -5221,19 +5280,31 @@ export default function App() {
     save(null, { bamboo, happiness:nh, water:nw, garden, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit:nv, testScores, lessonsDone, gratitud, momentos });
   };
 
-  const petMochi = () => {
+  const petMochiA = () => {
     trigHappy();
-    const nameA = user?.names ? user.names.split("&")[0].trim() : "Panda A";
-    const nameB = user?.names ? user.names.split("&")[1]?.trim() || "Panda B" : "Panda B";
+    const nameA = user?.names ? user.names.split("&")[0].trim() : "yo";
     const myEmail = user?.email || "guest";
-    const pandaAMsgs = [...messages].filter(m => user?.isOwner !== false ? m.senderEmail === myEmail : m.senderEmail !== myEmail);
-    const pandaBMsgs = [...messages].filter(m => user?.isOwner !== false ? m.senderEmail !== myEmail : m.senderEmail === myEmail);
-    const msgA = pandaAMsgs[0];
-    const msgB = pandaBMsgs[0];
-    const textA = msgA ? msgA.text.slice(0, BUBBLE_PREVIEW_LENGTH) + (msgA.text.length > BUBBLE_PREVIEW_LENGTH ? "..." : "") : null;
-    const textB = msgB ? msgB.text.slice(0, BUBBLE_PREVIEW_LENGTH) + (msgB.text.length > BUBBLE_PREVIEW_LENGTH ? "..." : "") : "¡Los quiero mucho! 🐼";
-    // Show speech bubbles over pandas for 5 seconds
-    setPandaBubble({ nameA: msgA ? nameA : null, textA, nameB, textB });
+    const received = [...messages].filter(m => m.senderEmail !== myEmail);
+    const msg = received[0];
+    const text = msg
+      ? msg.text.slice(0, BUBBLE_PREVIEW_LENGTH) + (msg.text.length > BUBBLE_PREVIEW_LENGTH ? "..." : "")
+      : "Aquí se verán los mensajes de amor que te manden 💌";
+    setPandaBubble({ nameA: msg ? nameA : null, textA: text, textB: null, nameB: null });
+    setTimeout(() => setPandaBubble(null), 5000);
+    const nh = Math.min(100, happiness + 2);
+    setHappiness(nh);
+  };
+
+  const petMochiB = () => {
+    trigHappy();
+    const nameB = user?.names ? (user.names.split("&")[1]?.trim() || "pareja") : "pareja";
+    const myEmail = user?.email || "guest";
+    const sent = [...messages].filter(m => m.senderEmail === myEmail);
+    const msg = sent[0];
+    const text = msg
+      ? msg.text.slice(0, BUBBLE_PREVIEW_LENGTH) + (msg.text.length > BUBBLE_PREVIEW_LENGTH ? "..." : "")
+      : "Aquí se verán los mensajes de amor que manden 💌";
+    setPandaBubble({ nameB: msg ? nameB : null, textB: text, textA: null, nameA: null });
     setTimeout(() => setPandaBubble(null), 5000);
     const nh = Math.min(100, happiness + 2);
     setHappiness(nh);
@@ -5601,7 +5672,7 @@ export default function App() {
     <div style={{ fontFamily:"'Nunito',sans-serif", maxWidth:480, margin:"0 auto", minHeight:"100vh", background:C.sandL, position:"relative" }}>
       <style>{STYLES}</style>
       <div style={{ paddingBottom:72 }}>
-        {tab==="jardin" && <Jardin bamboo={bamboo} happiness={happiness} water={water} garden={garden} accessories={accessories} mochiHappy={mochiHappy} pandaBubble={pandaBubble} onPet={petMochi} onBuy={buyItem} onWater={waterGarden} onBuyAccessory={buyAccessory} user={user}/>}
+        {tab==="jardin" && <Jardin bamboo={bamboo} happiness={happiness} water={water} garden={garden} accessories={accessories} mochiHappy={mochiHappy} pandaBubble={pandaBubble} onPetA={petMochiA} onPetB={petMochiB} onBuy={buyItem} onWater={waterGarden} onBuyAccessory={buyAccessory} user={user}/>}
         {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson}/>}
         {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user}/>}
         {tab==="burbuja" && <Burbuja burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} user={user}/>}
