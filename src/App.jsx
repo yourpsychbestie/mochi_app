@@ -326,6 +326,13 @@ const GARDEN_ITEMS = [
   // Especiales
   {id:"firefly",   cat:"especial",name:"Luciérnagas",       cost:65,  desc:"Magia nocturna"},
   {id:"moongate",  cat:"especial",name:"Luna Llena",        cost:120, desc:"Romance bajo la luna"},
+  // Cuarto (indoor)
+  {id:"lamp",        cat:"cuarto", name:"Lámpara Cozy",      cost:30, desc:"Calidez de hogar"},
+  {id:"rug",         cat:"cuarto", name:"Alfombra Suave",    cost:25, desc:"Pisada suave"},
+  {id:"cushions",    cat:"cuarto", name:"Cojines",            cost:20, desc:"Para acurrucarse"},
+  {id:"shelf",       cat:"cuarto", name:"Librero",            cost:45, desc:"Historias compartidas"},
+  {id:"fairy_lights",cat:"cuarto", name:"Luces de Hada",     cost:40, desc:"Noche mágica"},
+  {id:"indoor_plant",cat:"cuarto", name:"Plantita Interior", cost:15, desc:"Vida en el cuarto"},
 ];
 
 // Regar sigue siendo acción especial
@@ -1456,8 +1463,16 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
 // ═══════════════════════════════════════════════
 // NEW GARDEN SCENE — koi/lotus watercolor aesthetic
 // ═══════════════════════════════════════════════
-function GardenScene({ garden, waterLevel, bgImage }) {
+function GardenScene({ garden, waterLevel, bgImage, isIndoor }) {
   const g = garden || {};
+  // showIn: returns true if item should render in current view
+  // stored as "garden"|"indoor" (or true for backward compat = "garden")
+  const showIn = id => {
+    const v = g[id];
+    if (!v) return false;
+    const loc = v === true || v === "garden" ? "garden" : "indoor";
+    return isIndoor ? loc === "indoor" : loc === "garden";
+  };
   const w = waterLevel || 0;
   // 5 watercolor levels: 0-20 drought, 20-40 dry, 40-60 ok, 60-80 lush, 80-100 thriving
   const lvl = w < 20 ? 0 : w < 40 ? 1 : w < 60 ? 2 : w < 80 ? 3 : 4;
@@ -1511,20 +1526,20 @@ function GardenScene({ garden, waterLevel, bgImage }) {
       {lvl >= 3 && <ellipse cx="195" cy="260" rx="195" ry="50" fill={MIST[lvl]} opacity="0.15" filter="url(#watercolor)"/>}
 
       {/* Clouds */}
-      {g.clouds && <g>
+      {showIn("clouds") && <g>
         <ellipse cx="80" cy="45" rx="40" ry="20" fill="white" opacity="0.85"/>
         <ellipse cx="100" cy="38" rx="28" ry="18" fill="white" opacity="0.9"/>
         <ellipse cx="60" cy="42" rx="22" ry="14" fill="white" opacity="0.8"/>
         <ellipse cx="280" cy="55" rx="34" ry="16" fill="white" opacity="0.75"/>
         <ellipse cx="300" cy="48" rx="22" ry="14" fill="white" opacity="0.8"/>
       </g>}
-      {!g.clouds && <g>
+      {!showIn("clouds") && <g>
         <ellipse cx="90" cy="50" rx="28" ry="12" fill="white" opacity="0.5"/>
         <ellipse cx="280" cy="42" rx="20" ry="9" fill="white" opacity="0.4"/>
       </g>}
 
       {/* Sun / Moon */}
-      {g.sun ? <>
+      {showIn("sun") ? <>
         <circle cx="330" cy="55" r="28" fill="#f0b030" opacity="0.95"/>
         {[0,30,60,90,120,150,180,210,240,270,300,330].map(a=>(
           <line key={a} x1={330+Math.cos(a*Math.PI/180)*32} y1={55+Math.sin(a*Math.PI/180)*32}
@@ -1534,7 +1549,7 @@ function GardenScene({ garden, waterLevel, bgImage }) {
       </> : <circle cx="330" cy="55" r="18" fill="#e8c860" opacity="0.5"/>}
 
       {/* Rainbow */}
-      {g.rainbow && [["#e87878",0],["#e8a858",7],["#e8d860",14],["#8ac868",21],["#5ab8c8",28]].map(([c,o],i)=>(
+      {showIn("rainbow") && [["#e87878",0],["#e8a858",7],["#e8d860",14],["#8ac868",21],["#5ab8c8",28]].map(([c,o],i)=>(
         <path key={i} d={`M${10+o/2} 280 Q200 ${80+o} ${380-o/2} 280`} fill="none" stroke={c} strokeWidth="5" strokeLinecap="round" opacity="0.6"/>
       ))}
 
@@ -1588,7 +1603,7 @@ function GardenScene({ garden, waterLevel, bgImage }) {
       </>)}
 
       {/* Willow tree */}
-      {g.willow && <g>
+      {showIn("willow") && <g>
         <rect x="340" y="100" width="8" height="130" rx="4" fill="#9a8048"/>
         {[[-25,0],[-20,10],[-15,5],[-10,12],[-5,8],[0,15],[5,10],[10,14],[15,8],[20,5]].map(([dx,dy],i)=>(
           <path key={i} d={`M344 ${108+i*8} Q${344+dx} ${130+i*8+dy} ${344+dx*1.4} ${155+i*8+dy*1.5}`}
@@ -1598,21 +1613,20 @@ function GardenScene({ garden, waterLevel, bgImage }) {
       </g>}
 
       {/* Bamboo */}
-      {g.bamboo1 && <g>
+      {showIn("bamboo1") && <g>
         <rect x="22" y="80" width="10" height="150" rx="5" fill={withering?"#8a9030":"#4a7a30"}/>
         {[98,122,148,172].map((y,i)=><rect key={i} x="19" y={y} width="16" height="6" rx="3" fill={withering?"#7a8028":"#3a6020"}/>)}
         <ellipse cx="10" cy="95" rx="20" ry="7" fill={withering?"#8a9830":"#5a8a3c"} transform="rotate(-32 10 95)" opacity="0.9"/>
         <ellipse cx="36" cy="86" rx="16" ry="6" fill={withering?"#909838":"#6a9a48"} transform="rotate(22 36 86)" opacity="0.9"/>
       </g>}
-      {g.bamboo2 && <g>
-        <rect x="50" y="85" width="9" height="145" rx="4.5" fill={withering?"#8a9030":"#4a7a30"}/>
+      {showIn("bamboo2") && <g>
         {[105,132,158].map((y,i)=><rect key={i} x="47" y={y} width="15" height="6" rx="3" fill={withering?"#7a8028":"#3a6020"}/>)}
         <rect x="66" y="90" width="9" height="140" rx="4.5" fill={withering?"#909838":"#5a8a35"}/>
         {[112,140,166].map((y,i)=><rect key={i} x="63" y={y} width="14" height="6" rx="3" fill={withering?"#7a8028":"#3a6520"}/>)}
       </g>}
 
       {/* Cherry tree */}
-      {g.cherry && <g>
+      {showIn("cherry") && <g>
         <rect x="278" y="148" width="12" height="82" rx="5" fill="#9a7848"/>
         <circle cx="284" cy="135" r="32" fill={dry?"#d4b070":"#f4a8b8"} opacity={dry?0.6:0.8}/>
         <circle cx="266" cy="148" r="22" fill={dry?"#ccaa60":"#f8b8c8"} opacity={dry?0.5:0.75}/>
@@ -1620,35 +1634,32 @@ function GardenScene({ garden, waterLevel, bgImage }) {
       </g>}
 
       {/* Pond */}
-      {g.pond && <g>
+      {showIn("pond") && <g>
         <ellipse cx="200" cy="262" rx="90" ry="22" fill={waterCol} opacity="0.55"/>
         <ellipse cx="200" cy="259" rx="74" ry="15" fill={waterCol} opacity={dry?0.3:0.5}/>
-        {/* Koi fish */}
-        {g.koi1 && <g>
+        {showIn("koi1") && <g>
           <ellipse cx="185" cy="260" rx="18" ry="7" fill="#e86040" opacity="0.8"/>
           <path d="M167 260 Q163 254 160 260 Q163 266 167 260Z" fill="#e05030" opacity="0.8"/>
           <circle cx="196" cy="258" r="2" fill="white" opacity="0.9"/>
         </g>}
-        {g.koi2 && <g>
+        {showIn("koi2") && <g>
           <ellipse cx="215" cy="264" rx="16" ry="6" fill="#d4a843" opacity="0.8"/>
           <path d="M231 264 Q235 258 238 264 Q235 270 231 264Z" fill="#c89030" opacity="0.8"/>
         </g>}
-        {/* Lotus pads */}
-        {g.lotus_pad && <g>
+        {showIn("lotus_pad") && <g>
           <ellipse cx="175" cy="255" rx="18" ry="10" fill="#5a9840" opacity="0.8"/>
           <ellipse cx="222" cy="260" rx="14" ry="8" fill="#5a9840" opacity="0.7"/>
         </g>}
       </g>}
 
       {/* Lotus flowers */}
-      {g.lotus1 && <g>
-        <rect x="108" y="210" width="5" height="20" rx="2.5" fill="#5a9060"/>
+      {showIn("lotus1") && <g>
         <ellipse cx="110" cy="208" rx="14" ry="12" fill={dry?"#d4a060":"#f4a8b8"}/>
         <ellipse cx="110" cy="210" rx="9" ry="8" fill={dry?"#e0b070":"#f8c0cc"}/>
         <ellipse cx="100" cy="215" rx="8" ry="10" fill={dry?"#cc9848":"#f4a8b8"} transform="rotate(25 100 215)" opacity="0.75"/>
         <ellipse cx="120" cy="215" rx="8" ry="10" fill={dry?"#cc9848":"#f0a0b4"} transform="rotate(-25 120 215)" opacity="0.75"/>
       </g>}
-      {g.lotus2 && <g>
+      {showIn("lotus2") && <g>
         <rect x="140" y="215" width="5" height="18" rx="2.5" fill="#5a9060"/>
         <ellipse cx="142" cy="213" rx="13" ry="11" fill={dry?"#d8d0b0":"#f8f8f8"}/>
         <ellipse cx="134" cy="218" rx="7" ry="9" fill={dry?"#c8c0a0":"#f0f0f0"} transform="rotate(25 134 218)" opacity="0.8"/>
@@ -1657,7 +1668,7 @@ function GardenScene({ garden, waterLevel, bgImage }) {
       </g>}
 
       {/* Lily */}
-      {g.lily && <g>
+      {showIn("lily") && <g>
         <rect x="165" y="218" width="5" height="16" rx="2.5" fill="#5a7e3c"/>
         {[0,60,120,180,240,300].map((a,i)=>(
           <ellipse key={i} cx={168+Math.cos(a*Math.PI/180)*10} cy={216+Math.sin(a*Math.PI/180)*8}
@@ -1668,8 +1679,7 @@ function GardenScene({ garden, waterLevel, bgImage }) {
       </g>}
 
       {/* Peony */}
-      {g.peony && <g>
-        <rect x="248" y="215" width="5" height="18" rx="2.5" fill="#5a7e3c"/>
+      {showIn("peony") && <g>
         <ellipse cx="250" cy="208" rx="14" ry="12" fill={dry?"#c8a8a0":"#d4a0d8"}/>
         <ellipse cx="250" cy="210" rx="10" ry="9" fill={dry?"#d0b0a8":"#e0b8e8"}/>
         <ellipse cx="250" cy="212" rx="6" ry="6" fill={dry?"#d8b8b0":"#f0d0f4"}/>
@@ -1679,13 +1689,13 @@ function GardenScene({ garden, waterLevel, bgImage }) {
       </g>}
 
       {/* Swallows */}
-      {g.swallow1 && <g transform="translate(164,68)">
+      {showIn("swallow1") && <g transform="translate(164,68)">
         <path d="M0 -2 C-8 -14 -22 -18 -34 -13 C-24 -9 -16 -3 -10 3 C-18 1 -26 5 -32 11 C-20 11 -10 8 -1 2" fill="#263247" opacity="0.95"/>
         <path d="M0 -2 C8 -14 22 -18 34 -13 C24 -9 16 -3 10 3 C18 1 26 5 32 11 C20 11 10 8 1 2" fill="#263247" opacity="0.95"/>
         <ellipse cx="0" cy="2" rx="6.5" ry="3.6" fill="#1b2432"/>
         <path d="M-1 4 L-9 14 L-3 12 L0 17 L3 12 L9 14 L1 4" fill="#1b2432"/>
       </g>}
-      {g.swallow2 && <g>
+      {showIn("swallow2") && <g>
         <g transform="translate(130,54) scale(0.88)">
           <path d="M0 -2 C-8 -14 -22 -18 -34 -13 C-24 -9 -16 -3 -10 3 C-18 1 -26 5 -32 11 C-20 11 -10 8 -1 2" fill="#263247" opacity="0.95"/>
           <path d="M0 -2 C8 -14 22 -18 34 -13 C24 -9 16 -3 10 3 C18 1 26 5 32 11 C20 11 10 8 1 2" fill="#263247" opacity="0.95"/>
@@ -1701,10 +1711,10 @@ function GardenScene({ garden, waterLevel, bgImage }) {
       </g>}
 
       {/* Heart */}
-      {g.heart && <path d="M195 90 C195 90 182 78 182 69 C182 63 187 60 191 62 C194 63 195 66 195 66 C195 66 196 63 199 62 C203 60 208 63 208 69 C208 78 195 90 195 90Z" fill="#e8607a" opacity="0.9"/>}
+      {showIn("heart") && <path d="M195 90 C195 90 182 78 182 69 C182 63 187 60 191 62 C194 63 195 66 195 66 C195 66 196 63 199 62 C203 60 208 63 208 69 C208 78 195 90 195 90Z" fill="#e8607a" opacity="0.9"/>}
 
       {/* Bridge */}
-      {g.bridge && <g>
+      {showIn("bridge") && <g>
         <path d="M100 265 Q195 235 290 265" fill="none" stroke="#9a7848" strokeWidth="6" strokeLinecap="round"/>
         {[120,148,176,204,232,260].map((x,i)=>(
           <line key={i} x1={x} y1={248+(x-195)**2/1200} x2={x} y2={268} stroke="#8a6838" strokeWidth="3" opacity="0.9"/>
@@ -1713,7 +1723,7 @@ function GardenScene({ garden, waterLevel, bgImage }) {
       </g>}
 
       {/* Pagoda */}
-      {g.pagoda && <g>
+      {showIn("pagoda") && <g>
         <rect x="310" y="218" width="36" height="16" rx="2" fill={dry?"#c07840":"#d08848"}/>
         <path d="M302 218 L328 200 L354 218Z" fill={dry?"#b06830":"#c07040"}/>
         <rect x="314" y="200" width="28" height="19" rx="2" fill={dry?"#c07840":"#d08848"}/>
@@ -1724,7 +1734,7 @@ function GardenScene({ garden, waterLevel, bgImage }) {
       </g>}
 
       {/* Lanterns */}
-      {g.lantern && <g>
+      {showIn("lantern") && <g>
         <rect x="22" y="185" width="6" height="40" rx="3" fill="#9a7848"/>
         <rect x="16" y="225" width="18" height="28" rx="8" fill="#e86030"/>
         <rect x="18" y="225" width="14" height="28" rx="6" fill="#f08050" opacity="0.6"/>
@@ -1732,7 +1742,7 @@ function GardenScene({ garden, waterLevel, bgImage }) {
         <ellipse cx="25" cy="253" rx="10" ry="4" fill="#9a7848"/>
         <circle cx="25" cy="239" r="6" fill="#f8e060" opacity="0.5"/>
       </g>}
-      {g.lantern2 && <g>
+      {showIn("lantern2") && <g>
         <line x1="20" y1="175" x2="100" y2="175" stroke="#9a7848" strokeWidth="2"/>
         {[30,55,80].map((x,i)=><g>
           <line key={i} x1={x} y1="175" x2={x} y2="188" stroke="#9a7848" strokeWidth="1.5"/>
@@ -1744,7 +1754,7 @@ function GardenScene({ garden, waterLevel, bgImage }) {
       </g>}
 
       {/* Fireflies */}
-      {g.firefly && <g>
+      {showIn("firefly") && <g>
         {[[45,190],[380,140],[200,185],[350,200],[80,160],[170,170],[310,185],[240,195],[130,180]].map(([x,y],i)=>(
           <g key={i}>
             <circle cx={x} cy={y} r="2.5" fill="#f8e840" opacity="0.95"/>
@@ -1754,12 +1764,62 @@ function GardenScene({ garden, waterLevel, bgImage }) {
       </g>}
 
       {/* Moon gate */}
-      {g.moongate && <g>
+      {showIn("moongate") && <g>
         <circle cx="195" cy="160" r="50" fill="none" stroke="#f8e0a0" strokeWidth="6" opacity="0.8"/>
         <path d="M145 195 L145 230 L245 230 L245 195" fill="#b8d8a0" opacity="0.7"/>
         <circle cx="187" cy="152" r="7" fill="#f8e0a0" opacity="0.5"/>
         <circle cx="192" cy="148" r="5" fill="#f8e0a0" opacity="0.4"/>
         <circle cx="197" cy="152" r="4" fill="#f8e0a0" opacity="0.35"/>
+      </g>}
+
+      {/* ── INDOOR ITEMS ── only visible in cuarto view */}
+      {showIn("rug") && <g>
+        <ellipse cx="195" cy="262" rx="110" ry="22" fill="#c8a8d8" opacity="0.65"/>
+        <ellipse cx="195" cy="262" rx="95" ry="16" fill="#d4b8e4" opacity="0.5"/>
+        {[0,1,2,3].map(i=><ellipse key={i} cx={130+i*44} cy="262" rx="8" ry="6" fill="#e8d0f0" opacity="0.5"/>)}
+      </g>}
+      {showIn("fairy_lights") && <g>
+        <path d="M0 28 Q50 36 100 28 Q150 36 200 28 Q250 36 300 28 Q350 36 390 28" fill="none" stroke="#c8a840" strokeWidth="1.2" opacity="0.7"/>
+        {[15,42,68,95,122,148,175,202,228,255,280,308,335,362].map((x,i)=>(
+          <g key={i}>
+            <circle cx={x} cy={28+Math.sin(i)*3} r="5" fill={["#f8e840","#f8a0b0","#a0d8f8","#c0f0b0"][i%4]} opacity="0.9"/>
+            <circle cx={x} cy={28+Math.sin(i)*3} r="9" fill={["#f8e840","#f8a0b0","#a0d8f8","#c0f0b0"][i%4]} opacity="0.2"/>
+          </g>
+        ))}
+      </g>}
+      {showIn("shelf") && <g>
+        <rect x="8" y="100" width="68" height="90" rx="4" fill="#c8a878" opacity="0.9"/>
+        <rect x="8" y="100" width="68" height="8" rx="2" fill="#a07848"/>
+        <rect x="8" y="143" width="68" height="6" rx="2" fill="#a07848"/>
+        <rect x="8" y="180" width="68" height="6" rx="2" fill="#a07848"/>
+        {[{x:12,h:28,c:"#e87878"},{x:22,h:22,c:"#78a8e8"},{x:32,h:30,c:"#88c878"},{x:43,h:25,c:"#f8e060"},{x:53,h:28,c:"#d878e8"}].map((b,i)=>(
+          <rect key={i} x={b.x} y={141-b.h} width="7" height={b.h} rx="2" fill={b.c} opacity="0.85"/>
+        ))}
+        {[{x:12,h:20,c:"#e8a030"},{x:22,h:24,c:"#8888e8"},{x:34,h:18,c:"#e87060"},{x:46,h:22,c:"#50c8a0"},{x:56,h:20,c:"#f0a0c0"}].map((b,i)=>(
+          <rect key={i} x={b.x} y={178-b.h} width="7" height={b.h} rx="2" fill={b.c} opacity="0.85"/>
+        ))}
+      </g>}
+      {showIn("lamp") && <g>
+        <rect x="318" y="170" width="8" height="100" rx="4" fill="#b09060"/>
+        <ellipse cx="322" cy="274" rx="22" ry="8" fill="#9a7848" opacity="0.7"/>
+        <path d="M300 170 Q322 140 344 170Z" fill="#f8e8c0" opacity="0.9"/>
+        <path d="M300 170 Q322 140 344 170Z" fill="none" stroke="#d4b070" strokeWidth="2"/>
+        <circle cx="322" cy="165" r="8" fill="#f8e060" opacity="0.7"/>
+        <ellipse cx="322" cy="190" rx="35" ry="18" fill="#f8e860" opacity="0.15"/>
+      </g>}
+      {showIn("cushions") && <g>
+        <ellipse cx="155" cy="255" rx="32" ry="18" fill="#f0b8c8" opacity="0.85"/>
+        <ellipse cx="155" cy="252" rx="28" ry="14" fill="#f8c8d4" opacity="0.7"/>
+        <ellipse cx="225" cy="252" rx="28" ry="16" fill="#c8d8f8" opacity="0.85"/>
+        <ellipse cx="225" cy="249" rx="24" ry="12" fill="#d8e4fc" opacity="0.7"/>
+        <circle cx="155" cy="251" r="4" fill="#f8d8e0" opacity="0.6"/>
+        <circle cx="225" cy="248" r="4" fill="#dce8fc" opacity="0.6"/>
+      </g>}
+      {showIn("indoor_plant") && <g>
+        <ellipse cx="362" cy="270" rx="22" ry="12" fill="#9a7040" opacity="0.9"/>
+        <path d="M362 268 C362 268 350 248 345 230 C352 238 358 248 362 255 C366 248 372 238 379 230 C374 248 362 268 362 268Z" fill="#5a9840" opacity="0.9"/>
+        <path d="M362 260 C362 260 354 244 358 228 C362 242 362 260 362 260Z" fill="#6aaa48" opacity="0.6"/>
+        <ellipse cx="362" cy="268" rx="12" ry="7" fill="#b08848" opacity="0.7"/>
       </g>}
 
       {/* Dryness crack overlay */}
@@ -1781,7 +1841,7 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
   const [indoor, setIndoor] = useState(false);
   const [showGames, setShowGames] = useState(false);
   const [shopTab, setShopTab] = useState("plantas");
-  const cats = [{id:"plantas",label:"🌿 Plantas"},{id:"agua",label:"🐟 Agua"},{id:"cielo",label:"☁️ Cielo"},{id:"deco",label:"🏮 Deco"},{id:"especial",label:"✨ Especiales"},{id:"accesorios",label:"🐼 Pandas"}];
+  const cats = [{id:"plantas",label:"🌿 Plantas"},{id:"agua",label:"🐟 Agua"},{id:"cielo",label:"☁️ Cielo"},{id:"deco",label:"🏮 Deco"},{id:"especial",label:"✨ Especiales"},{id:"cuarto",label:"🛋️ Cuarto"},{id:"accesorios",label:"🐼 Pandas"}];
   const shopItems = (shopTab === "accesorios"
     ? PANDA_ACCESSORIES
     : GARDEN_ITEMS.filter(i => i.cat === shopTab)).filter(i => i && i.id && typeof i.cost === "number");
@@ -1823,7 +1883,7 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
           {indoor ? "🌿 Jardín" : "🏠 Cuarto"}
         </button>
         <SectionErrorBoundary fallback={<div style={{ background:C.white, border:`1.5px solid ${C.border}`, borderRadius:16, margin:12, padding:12, textAlign:"center", color:C.inkM, fontWeight:700 }}>No se pudo cargar esta vista del jardín. Cambia de pestaña y vuelve a intentar.</div>}>
-          <GardenScene garden={garden} waterLevel={water} bgImage={indoor ? "/bg_indoor.png" : "/bg_garden.png"}/>
+          <GardenScene garden={garden} waterLevel={water} bgImage={indoor ? "/bg_indoor.png" : "/bg_garden.png"} isIndoor={indoor}/>
           <div onClick={onPetA} style={{ position:"absolute", bottom:-5, left:"50%", transform:"translateX(-50%)", cursor:"pointer",
             animation: mochiHappy ? "floatHappy 1.6s ease-in-out infinite" : "float 3s ease-in-out infinite" }}>
             <div style={{ position:"relative", display:"inline-block" }}>
@@ -1895,7 +1955,7 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
             const POND_DEPS = ["koi1", "koi2", "lotus_pad"];
             const locked = shopTab !== "accesorios" && POND_DEPS.includes(item.id) && !garden?.pond && !owned;
             return (
-              <div key={item.id} onClick={() => shopTab==="accesorios" ? onBuyAccessory(item) : onBuy(item)}
+              <div key={item.id} onClick={() => shopTab==="accesorios" ? onBuyAccessory(item) : onBuy({...item, location: indoor ? "indoor" : "garden"})}
                 style={{ background:owned===true?"#d4e8c4":owned==="owned"?C.cream:locked?"#f0ede8":C.sandL,
                   border:`2px solid ${owned===true?C.olive:owned==="owned"?"#c8b060":locked?C.sand:C.border}`,
                   borderRadius:16, padding:"12px 10px", textAlign:"center", cursor:locked?"default":"pointer",
@@ -5175,7 +5235,7 @@ export default function App() {
         return;
       }
       if (bamboo < item.cost) { toast("Necesitas más bambú — completa ejercicios"); return; }
-      const nb = bamboo - item.cost, ng = { ...safeGarden, [item.id]: true }, nh = Math.min(100, happiness + 10);
+      const nb = bamboo - item.cost, ng = { ...safeGarden, [item.id]: item.location || "garden" }, nh = Math.min(100, happiness + 10);
       const nv = new Date().toISOString();
       if (user?.code && !user?.isGuest) {
         fbPurchaseGardenUpdate(user.code, item.cost, { garden: ng, accessories, water, happiness: nh })
