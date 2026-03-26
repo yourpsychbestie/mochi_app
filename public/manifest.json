@@ -1,0 +1,38 @@
+{
+  "name": "Mochi — Tu jardín de amor",
+  "short_name": "Mochi",
+  "description": "Una app para que su amor florezca 🐼",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#2d3d2d",
+  "theme_color": "#2d3d2d",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "form_factor": "narrow"
+    }
+  ]
+}
