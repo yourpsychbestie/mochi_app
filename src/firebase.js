@@ -439,6 +439,22 @@ export const fbListenStreakInteractions = (coupleCode, cb) => {
   }, () => cb([]));
 };
 
+// ─── GAMES (real-time 2-player mini-games) ───────────
+export const fbSaveGameState = (coupleCode, gameId, data) =>
+  setDoc(doc(db, "games", `${coupleCode}_${gameId}`), {
+    ...data, coupleCode, gameId, updatedAt: serverTimestamp()
+  }, { merge: true });
+
+export const fbListenGameState = (coupleCode, gameId, cb) =>
+  onSnapshot(doc(db, "games", `${coupleCode}_${gameId}`), snap => {
+    cb(snap.exists() ? snap.data() : null);
+  }, () => cb(null));
+
+export const fbResetGame = (coupleCode, gameId) =>
+  setDoc(doc(db, "games", `${coupleCode}_${gameId}`), {
+    coupleCode, gameId, phase: "idle", updatedAt: serverTimestamp()
+  }, { merge: false });
+
 export const fbSaveStreakProfile = (coupleCode, data) =>
   setDoc(doc(db, "streaks", coupleCode), {
     ...data,

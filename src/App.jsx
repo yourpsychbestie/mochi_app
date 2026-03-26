@@ -16,6 +16,7 @@ import {
   fbSaveConoce, fbListenConoce,
   fbSaveLessonRead, fbListenLessons,
   fbSaveBurbuja, fbListenBurbuja,
+  fbSaveGameState, fbListenGameState, fbResetGame,
   fbSendNotif, fbListenNotifs, fbMarkNotifRead,
   fbSaveStreakInteraction, fbListenStreakInteractions,
   fbSaveStreakProfile, fbListenStreakProfile,
@@ -583,6 +584,43 @@ const CONSEJOS_DIARIOS = [
   { id: 28, fuente:"TCC", titulo:"Conducta vs. personalidad", texto:"Critica la conducta, no a la persona. 'No me gustó que llegaras tarde' es muy diferente a 'eres irresponsable'. La primera invita al cambio; la segunda activa la defensa." },
   { id: 29, fuente:"Sistémica", titulo:"Límites sanos", texto:"Los límites no separan a las personas; las conectan de forma segura. Un límite sano dice: 'esto me lastima y lo que necesito es...' No es un ultimátum, es un puente." },
   { id: 30, fuente:"Centrado en la persona", titulo:"Crecimiento mutuo", texto:"La mejor relación no es la que te hace cómodo/a, sino la que te ayuda a crecer. ¿Tu relación te invita a ser tu mejor versión? ¿Tú invitas a tu pareja a serlo?" },
+];
+
+// ════════════════════ GAME CONSTANTS ════════════════════
+const QUIZ_QS = [
+  "¿Cuál es la comida favorita de tu pareja?",
+  "¿Cuál es su canción o artista favorito en este momento?",
+  "Cuando tiene un mal día, ¿qué hace primero?",
+  "¿Cuál es su mayor miedo?",
+  "¿Qué sueño o meta tiene para los próximos años?",
+  "¿Cómo prefiere que lo/la consueles cuando está triste?",
+  "¿Qué le da vergüenza pero le encanta en secreto?",
+  "¿Cuál es el recuerdo favorito que tienen juntos?",
+  "¿Qué cualidad de tu pareja te enamora más?",
+  "¿Cuál es su frase o expresión más repetida?",
+];
+
+const WYR_QS = [
+  { a:"Viajar siempre sin casa fija", b:"Casa perfecta sin viajar" },
+  { a:"Saber lo que tu pareja piensa en todo momento", b:"Que nunca sepa lo que tú piensas" },
+  { a:"Vivir en la playa para siempre", b:"Vivir en la montaña para siempre" },
+  { a:"Cenar solos en casa con música", b:"Salir a un restaurante especial" },
+  { a:"Que tu pareja te sorprenda siempre", b:"Planear los planes tú mismo/a" },
+  { a:"Ver películas toda la noche", b:"Charlar hasta el amanecer" },
+  { a:"Cocinar juntos siempre", b:"Que alguien siempre cocine para los dos" },
+  { a:"Tener un perro juntos", b:"Tener un gato juntos" },
+  { a:"Que te digan 'te amo' cada día", b:"Que lo demuestren con acciones" },
+  { a:"Tarde de librería", b:"Tarde en café sin hacer nada" },
+  { a:"Ciudad grande y activa", b:"Pueblo pequeño y tranquilo" },
+  { a:"Bailar juntos en la sala", b:"Caminar juntos bajo la lluvia" },
+  { a:"Dormir temprano juntos", b:"Trasnochar haciendo algo especial" },
+  { a:"Cita perfecta en casa", b:"Aventura espontánea afuera" },
+  { a:"Conocer el país del otro", b:"Viajar a un lugar nuevo juntos" },
+  { a:"Desayuno perfecto cada mañana", b:"Noche especial cada semana" },
+  { a:"Recordar todos sus mensajes de amor", b:"Recordar perfectamente cada abrazo" },
+  { a:"Ser honestos aunque duela", b:"Protegerse de la verdad dolorosa" },
+  { a:"Leer el mismo libro a la vez", b:"Ver la misma serie a la vez" },
+  { a:"Que tu pareja sea tu mejor amigo/a", b:"Que tu pareja sea tu aventura constante" },
 ];
 
 function CouplePandaSVG({ happy = false, size = 160 }) {
@@ -1683,8 +1721,9 @@ function GardenScene({ garden, waterLevel, bgImage }) {
 // ═══════════════════════════════════════════════
 // JARDIN SCREEN — updated with accessories + multiple items + decay
 // ═══════════════════════════════════════════════
-function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pandaBubble, onPet, onBuy, onWater, onBuyAccessory }) {
+function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pandaBubble, onPet, onBuy, onWater, onBuyAccessory, user }) {
   const [indoor, setIndoor] = useState(false);
+  const [showGames, setShowGames] = useState(false);
   const [shopTab, setShopTab] = useState("plantas");
   const cats = [{id:"plantas",label:"🌿 Plantas"},{id:"agua",label:"🐟 Agua"},{id:"cielo",label:"☁️ Cielo"},{id:"deco",label:"🏮 Deco"},{id:"especial",label:"✨ Especiales"},{id:"accesorios",label:"🐼 Pandas"}];
   const shopItems = (shopTab === "accesorios"
@@ -1764,12 +1803,13 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
         </SectionErrorBoundary>
       </div>
 
-      {/* Water button */}
-      <div style={{ textAlign:"center", padding:"22px 14px 6px" }}>
-        <button onClick={onWater} style={{ background: dry?"#e86030":C.sky, color:C.white, border:"none", borderRadius:12,
-          padding:"10px 22px", fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", cursor:"pointer",
-          boxShadow:"0 3px 0 rgba(0,0,0,0.18)" }}>💧 Regar el jardín</button>
+      {/* Water + Games buttons */}
+      <div style={{ display:"flex", gap:10, padding:"22px 14px 6px", justifyContent:"center" }}>
+        <button onClick={onWater} style={{ background: dry?"#e86030":C.sky, color:C.white, border:"none", borderRadius:12, padding:"10px 22px", fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", cursor:"pointer", boxShadow:"0 3px 0 rgba(0,0,0,0.18)" }}>💧 Regar</button>
+        <button onClick={() => setShowGames(true)} style={{ background:"linear-gradient(135deg, #6a3cbf 0%, #9c5cbf 100%)", color:"#fff", border:"none", borderRadius:12, padding:"10px 22px", fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", cursor:"pointer", boxShadow:"0 3px 0 rgba(100,60,180,0.3)" }}>🎮 Jugar</button>
       </div>
+
+      {showGames && <GamesHub user={user} onClose={() => setShowGames(false)}/>}
 
       {/* Shop */}
       <div style={{ background:C.white, borderRadius:"22px 22px 0 0", border:`1.5px solid ${C.border}`, boxShadow:`0 -3px 0 ${C.border}`, marginTop:10 }}>
@@ -4075,6 +4115,324 @@ function Onboarding({ onDone }) {
   );
 }
 
+// ════════════════════════════════════════════════════════════
+// GAMES HUB
+// ════════════════════════════════════════════════════════════
+
+function HangmanSVG({ wrong }) {
+  return (
+    <svg viewBox="0 0 110 130" width="110" height="130">
+      <line x1="10" y1="120" x2="90" y2="120" stroke="#9e8dc2" strokeWidth="4" strokeLinecap="round"/>
+      <line x1="30" y1="120" x2="30" y2="10"  stroke="#9e8dc2" strokeWidth="4" strokeLinecap="round"/>
+      <line x1="30" y1="10"  x2="70" y2="10"  stroke="#9e8dc2" strokeWidth="4" strokeLinecap="round"/>
+      <line x1="70" y1="10"  x2="70" y2="28"  stroke="#9e8dc2" strokeWidth="3" strokeLinecap="round"/>
+      {wrong>=1 && <circle cx="70" cy="39" r="11" fill="none" stroke="#c05068" strokeWidth="3"/>}
+      {wrong>=2 && <line x1="70" y1="50" x2="70" y2="82" stroke="#c05068" strokeWidth="3" strokeLinecap="round"/>}
+      {wrong>=3 && <line x1="70" y1="60" x2="50" y2="74" stroke="#c05068" strokeWidth="3" strokeLinecap="round"/>}
+      {wrong>=4 && <line x1="70" y1="60" x2="90" y2="74" stroke="#c05068" strokeWidth="3" strokeLinecap="round"/>}
+      {wrong>=5 && <line x1="70" y1="82" x2="55" y2="100" stroke="#c05068" strokeWidth="3" strokeLinecap="round"/>}
+      {wrong>=6 && <line x1="70" y1="82" x2="85" y2="100" stroke="#c05068" strokeWidth="3" strokeLinecap="round"/>}
+    </svg>
+  );
+}
+
+function GameQuiz({ user, onBack }) {
+  const myRole = user?.isOwner !== false ? "owner" : "partner";
+  const code = user?.code;
+  const { nameA, nameB } = getCoupleNames(user);
+  const myName = myRole === "owner" ? nameA : nameB;
+  const partnerRole = myRole === "owner" ? "partner" : "owner";
+  const partnerName = myRole === "owner" ? nameB : nameA;
+  const [gs, setGs] = useState(null);
+  const [answers, setAnswers] = useState(Array(QUIZ_QS.length).fill(""));
+  const [step, setStep] = useState(0);
+  useEffect(() => { if (!code) return; return fbListenGameState(code, "quiz", setGs); }, [code]);
+  const myDone = gs?.[`${myRole}Done`];
+  const bothDone = gs?.ownerDone && gs?.partnerDone;
+  const submit = () => { if (!code) return; fbSaveGameState(code, "quiz", { [`${myRole}Answers`]: answers, [`${myRole}Done`]: true }); };
+  const reset = () => { fbSaveGameState(code, "quiz", { ownerDone: false, partnerDone: false, ownerAnswers: [], partnerAnswers: [], phase: "idle" }); setAnswers(Array(QUIZ_QS.length).fill("")); setStep(0); };
+  const hdr = { padding:"56px 18px 20px", display:"flex", alignItems:"center", gap:12, flexShrink:0 };
+  const backBtn = { background:"rgba(255,255,255,0.15)", border:"none", borderRadius:10, padding:"8px 14px", color:"#fff", cursor:"pointer", fontWeight:800, fontSize:"0.88rem" };
+  return (
+    <div style={{ position:"fixed", inset:0, background:"linear-gradient(135deg, #2d1b4e 0%, #4a2c8a 100%)", zIndex:8000, overflowY:"auto", paddingBottom:40 }}>
+      <div style={hdr}><button onClick={onBack} style={backBtn}>← Volver</button><div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.4rem", color:"#fff" }}>💭 ¿Cuánto me conoces?</div></div>
+      <div style={{ padding:"0 16px" }}>
+        {!myDone ? (
+          <div style={{ background:C.white, borderRadius:20, padding:18 }}>
+            <div style={{ fontSize:"0.68rem", fontWeight:800, color:C.olive, marginBottom:6, letterSpacing:"0.5px" }}>PREGUNTA {step+1} / {QUIZ_QS.length}</div>
+            <ProgBar value={step} max={QUIZ_QS.length-1} color="#6a3cbf" height={6} style={{ marginBottom:14 }}/>
+            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.05rem", color:C.dark, marginBottom:14, lineHeight:1.45 }}>🤔 {QUIZ_QS[step]}</div>
+            <div style={{ fontSize:"0.74rem", color:C.inkL, marginBottom:8 }}>¿Cómo crees que responde {partnerName}?</div>
+            <TA value={answers[step]} onChange={v => setAnswers(p => { const a=[...p]; a[step]=v; return a; })} placeholder="Tu respuesta..." rows={2} style={{ marginBottom:12 }}/>
+            <div style={{ display:"flex", gap:8 }}>
+              {step > 0 && <Btn onClick={() => setStep(s=>s-1)} variant="ghost" style={{ padding:"11px 14px" }}>← Ant.</Btn>}
+              {step < QUIZ_QS.length-1
+                ? <Btn onClick={() => setStep(s=>s+1)} style={{ flex:1 }}>Siguiente →</Btn>
+                : <Btn onClick={submit} style={{ flex:1, background:"#6a3cbf", color:"#fff" }}>Enviar respuestas ✓</Btn>}
+            </div>
+          </div>
+        ) : !bothDone ? (
+          <div style={{ background:C.white, borderRadius:20, padding:28, textAlign:"center" }}>
+            <div style={{ fontSize:"2.5rem", marginBottom:12 }}>⏳</div>
+            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.15rem", color:C.dark, marginBottom:8 }}>Esperando a {partnerName}...</div>
+            <div style={{ fontSize:"0.84rem", color:C.inkM, lineHeight:1.6 }}>Ya enviaste tus respuestas. Cuando {partnerName} termine, verán los resultados juntos 💜</div>
+          </div>
+        ) : (
+          <>
+            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.15rem", color:"#fff", marginBottom:14, textAlign:"center" }}>✨ ¡Resultados! ✨</div>
+            {QUIZ_QS.map((q, i) => (
+              <div key={i} style={{ background:C.white, borderRadius:16, padding:14, marginBottom:10 }}>
+                <div style={{ fontSize:"0.72rem", fontWeight:800, color:C.olive, marginBottom:8 }}>Pregunta {i+1}: {q}</div>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+                  <div style={{ background:"#f0ebff", borderRadius:10, padding:"8px 10px" }}>
+                    <div style={{ fontSize:"0.62rem", fontWeight:800, color:"#6a3cbf", marginBottom:4 }}>{myName} pensó:</div>
+                    <div style={{ fontSize:"0.82rem", color:C.ink, lineHeight:1.5 }}>{gs?.[`${myRole}Answers`]?.[i] || "—"}</div>
+                  </div>
+                  <div style={{ background:"#ede5ff", borderRadius:10, padding:"8px 10px" }}>
+                    <div style={{ fontSize:"0.62rem", fontWeight:800, color:"#9c5cbf", marginBottom:4 }}>{partnerName} pensó:</div>
+                    <div style={{ fontSize:"0.82rem", color:C.ink, lineHeight:1.5 }}>{gs?.[`${partnerRole}Answers`]?.[i] || "—"}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+            <Btn onClick={reset} style={{ width:"100%", background:"rgba(255,255,255,0.15)", color:"#fff", border:"1.5px solid rgba(255,255,255,0.3)", marginTop:4 }}>Jugar de nuevo 🔄</Btn>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function GameAhorcado({ user, onBack }) {
+  const myRole = user?.isOwner !== false ? "owner" : "partner";
+  const code = user?.code;
+  const { nameA, nameB } = getCoupleNames(user);
+  const partnerRole = myRole === "owner" ? "partner" : "owner";
+  const partnerName = myRole === "owner" ? nameB : nameA;
+  const [gs, setGs] = useState(null);
+  const [wordInput, setWordInput] = useState(""); const [hintInput, setHintInput] = useState("");
+  useEffect(() => { if (!code) return; return fbListenGameState(code, "ahorcado", setGs); }, [code]);
+  const phase = gs?.phase || "idle";
+  const isSetter = gs?.setterRole === myRole;
+  const isGuesser = gs?.setterRole && gs.setterRole !== myRole;
+  const word = gs?.word || ""; const guessed = gs?.guessedLetters || []; const wrong = gs?.wrongCount || 0;
+  const masked = word.split("").map(l => guessed.includes(l) ? l : "_").join(" ");
+  const startGame = async () => { const w = wordInput.trim().toUpperCase(); if (!w||w.length<2) return; await fbSaveGameState(code, "ahorcado", { phase:"guessing", setterRole:myRole, word:w, hint:hintInput.trim(), guessedLetters:[], wrongCount:0, result:null }); setWordInput(""); setHintInput(""); };
+  const guess = async (letter) => { if (guessed.includes(letter)) return; const ng=[...guessed,letter]; const nw=(wrong)+(word.includes(letter)?0:1); const won=word.split("").every(l=>ng.includes(l)); const res=nw>=6?"lose":won?"win":null; await fbSaveGameState(code, "ahorcado", { guessedLetters:ng, wrongCount:nw, result:res, phase:res?"done":"guessing" }); };
+  const reset = () => fbSaveGameState(code, "ahorcado", { phase:"idle", word:null, hint:null, guessedLetters:[], wrongCount:0, result:null, setterRole:null });
+  const hdr = { padding:"56px 18px 20px", display:"flex", alignItems:"center", gap:12 };
+  const backBtn = { background:"rgba(255,255,255,0.15)", border:"none", borderRadius:10, padding:"8px 14px", color:"#fff", cursor:"pointer", fontWeight:800, fontSize:"0.88rem" };
+  return (
+    <div style={{ position:"fixed", inset:0, background:"linear-gradient(135deg, #2d1b4e 0%, #4a2c8a 100%)", zIndex:8000, overflowY:"auto", paddingBottom:40 }}>
+      <div style={hdr}><button onClick={onBack} style={backBtn}>← Volver</button><div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.4rem", color:"#fff" }}>🔤 Adivina la Palabra</div></div>
+      <div style={{ padding:"0 16px" }}>
+        {phase==="idle" && (
+          <div style={{ background:C.white, borderRadius:20, padding:18 }}>
+            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.05rem", color:C.dark, marginBottom:14 }}>Escoge una palabra para que {partnerName} adivine 🕵️</div>
+            <input value={wordInput} onChange={e=>setWordInput(e.target.value.toUpperCase())} placeholder="LA PALABRA (solo tú la verás)" style={{ width:"100%", border:`2px solid ${C.border}`, borderRadius:12, padding:"12px 14px", fontFamily:"'Fredoka One',cursive", fontSize:"1.1rem", letterSpacing:5, outline:"none", color:C.ink, background:C.cream2, marginBottom:10, boxSizing:"border-box" }}/>
+            <input value={hintInput} onChange={e=>setHintInput(e.target.value)} placeholder="Pista opcional: ej. 'Un lugar especial'" style={{ width:"100%", border:`2px solid ${C.border}`, borderRadius:12, padding:"11px 14px", outline:"none", color:C.ink, background:C.cream2, marginBottom:14, boxSizing:"border-box", fontFamily:"'Nunito',sans-serif", fontSize:"0.9rem" }}/>
+            <Btn onClick={startGame} style={{ width:"100%", background:"#6a3cbf", color:"#fff" }}>Enviar a {partnerName} 🚀</Btn>
+          </div>
+        )}
+        {phase==="guessing" && isSetter && (
+          <div style={{ background:C.white, borderRadius:20, padding:24, textAlign:"center" }}>
+            <div style={{ fontSize:"2rem", marginBottom:10 }}>⏳</div>
+            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.1rem", color:C.dark, marginBottom:10 }}>¡{partnerName} está adivinando!</div>
+            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.8rem", color:C.olive, letterSpacing:8, margin:"16px 0" }}>{masked}</div>
+            <div style={{ fontSize:"0.82rem", color: wrong>=4?"#c05068":C.inkL, fontWeight:800 }}>Intentos fallados: {wrong}/6</div>
+          </div>
+        )}
+        {phase==="guessing" && isGuesser && (
+          <>
+            <div style={{ background:C.white, borderRadius:20, padding:18, marginBottom:12, textAlign:"center" }}>
+              {gs?.hint && <div style={{ background:"#f0ebff", borderRadius:10, padding:"8px 14px", display:"inline-block", fontSize:"0.84rem", fontWeight:700, color:"#6a3cbf", marginBottom:14 }}>💡 Pista: {gs.hint}</div>}
+              <HangmanSVG wrong={wrong}/>
+              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.8rem", color:C.dark, letterSpacing:10, margin:"14px 0", wordBreak:"break-all" }}>{masked}</div>
+              <div style={{ fontSize:"0.78rem", fontWeight:800, color:wrong>=5?"#c05068":C.inkL }}>Intentos fallados: {wrong}/6</div>
+            </div>
+            <div style={{ background:C.white, borderRadius:20, padding:14 }}>
+              <div style={{ display:"flex", flexWrap:"wrap", gap:5, justifyContent:"center" }}>
+                {"ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map(l => (
+                  <button key={l} onClick={() => guess(l)} disabled={guessed.includes(l)} style={{ width:33, height:33, border:"none", borderRadius:8, cursor:guessed.includes(l)?"default":"pointer", fontFamily:"'Fredoka One',cursive", fontSize:"0.85rem", background:guessed.includes(l)?(word.includes(l)?"#6a3cbf":"#f0e8f8"):"#ede5ff", color:guessed.includes(l)?(word.includes(l)?"#fff":"#c8b8f0"):C.dark }}>{l}</button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+        {phase==="done" && (
+          <div style={{ background:C.white, borderRadius:20, padding:28, textAlign:"center" }}>
+            <div style={{ fontSize:"3rem", marginBottom:12 }}>{gs?.result==="win"?"🎉":"😅"}</div>
+            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.4rem", color:C.dark, marginBottom:14 }}>{gs?.result==="win"?"¡Adivinaste!":"¡Se acabaron los intentos!"}</div>
+            <div style={{ background:"#f0ebff", borderRadius:14, padding:"14px 18px", marginBottom:16 }}>
+              <div style={{ fontSize:"0.7rem", fontWeight:800, color:"#6a3cbf", marginBottom:6 }}>LA PALABRA ERA</div>
+              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"2rem", color:C.dark, letterSpacing:8 }}>{word}</div>
+            </div>
+            <Btn onClick={reset} style={{ width:"100%", background:"#6a3cbf", color:"#fff" }}>Jugar de nuevo 🔄</Btn>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function GameWYR({ user, onBack }) {
+  const myRole = user?.isOwner !== false ? "owner" : "partner";
+  const code = user?.code;
+  const { nameA, nameB } = getCoupleNames(user);
+  const partnerRole = myRole === "owner" ? "partner" : "owner";
+  const partnerName = myRole === "owner" ? nameB : nameA;
+  const [gs, setGs] = useState(null);
+  useEffect(() => { if (!code) return; return fbListenGameState(code, "wyr", setGs); }, [code]);
+  const qIdx = gs?.questionIndex ?? 0; const q = WYR_QS[qIdx % WYR_QS.length];
+  const myChoice = gs?.[`${myRole}Choice`]; const partnerChoice = gs?.[`${partnerRole}Choice`];
+  const bothAnswered = !!myChoice && !!partnerChoice; const match = myChoice === partnerChoice;
+  const score = (gs?.history||[]).filter(h=>h.match).length; const total = (gs?.history||[]).length;
+  const choose = (choice) => fbSaveGameState(code, "wyr", { [`${myRole}Choice`]: choice });
+  const next = () => {
+    const h = [...(gs?.history||[]), { q:qIdx, ownerChoice:gs?.ownerChoice, partnerChoice:gs?.partnerChoice, match:gs?.ownerChoice===gs?.partnerChoice }];
+    fbSaveGameState(code, "wyr", { questionIndex:(qIdx+1)%WYR_QS.length, ownerChoice:null, partnerChoice:null, history:h.slice(-10) });
+  };
+  const hdr = { padding:"56px 18px 20px", display:"flex", alignItems:"center", gap:12 };
+  const backBtn = { background:"rgba(255,255,255,0.15)", border:"none", borderRadius:10, padding:"8px 14px", color:"#fff", cursor:"pointer", fontWeight:800, fontSize:"0.88rem" };
+  return (
+    <div style={{ position:"fixed", inset:0, background:"linear-gradient(135deg, #2d1b4e 0%, #4a2c8a 100%)", zIndex:8000, overflowY:"auto", paddingBottom:40 }}>
+      <div style={hdr}>
+        <button onClick={onBack} style={backBtn}>← Volver</button>
+        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.4rem", color:"#fff" }}>🤔 ¿Qué preferirías?</div>
+        {total > 0 && <div style={{ marginLeft:"auto", background:"rgba(255,255,255,0.2)", borderRadius:10, padding:"4px 10px", fontSize:"0.74rem", fontWeight:800, color:"#fff" }}>{score}/{total} iguales 💜</div>}
+      </div>
+      <div style={{ padding:"0 16px" }}>
+        <div style={{ background:C.white, borderRadius:20, padding:18, marginBottom:12 }}>
+          <div style={{ fontSize:"0.68rem", fontWeight:800, color:C.olive, letterSpacing:"0.5px", marginBottom:12 }}>¿QUÉ PREFERIRÍAS?</div>
+          {["A","B"].map(opt => {
+            const text = opt==="A" ? q.a : q.b;
+            const isChosen = myChoice===opt; const partnerChose = bothAnswered && partnerChoice===opt;
+            return (
+              <div key={opt} onClick={() => !myChoice && choose(opt)} style={{ background:isChosen?"#6a3cbf":"#f5f0ff", border:isChosen?"none":`2px solid #c8b8f0`, borderRadius:16, padding:"16px 18px", cursor:myChoice?"default":"pointer", marginBottom:10, transition:"all 0.15s", position:"relative" }}>
+                <div style={{ fontSize:"0.7rem", fontWeight:800, color:isChosen?"rgba(255,255,255,0.6)":C.olive, marginBottom:4 }}>Opción {opt}</div>
+                <div style={{ fontSize:"0.96rem", fontWeight:700, color:isChosen?"#fff":C.dark, lineHeight:1.4 }}>{text}</div>
+                {bothAnswered && partnerChose && <div style={{ position:"absolute", top:8, right:10, background:match?"#ffd700":"rgba(106,60,191,0.2)", borderRadius:8, padding:"2px 8px", fontSize:"0.64rem", fontWeight:800, color:match?"#5a4000":"#6a3cbf" }}>{partnerName} ✓</div>}
+              </div>
+            );
+          })}
+        </div>
+        {myChoice && !bothAnswered && <div style={{ background:"rgba(255,255,255,0.1)", borderRadius:14, padding:14, textAlign:"center", color:"rgba(255,255,255,0.7)", fontSize:"0.84rem", fontWeight:700 }}>⏳ Esperando a {partnerName}...</div>}
+        {bothAnswered && (
+          <div style={{ background:match?"rgba(255,215,0,0.15)":"rgba(255,255,255,0.08)", borderRadius:16, padding:16, textAlign:"center", marginBottom:12 }}>
+            <div style={{ fontSize:"2rem", marginBottom:6 }}>{match?"🎉":"🤷"}</div>
+            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.1rem", color:"#fff", marginBottom:12 }}>{match?"¡Coincidieron! 💜":"¡Opciones distintas! Interesante..."}</div>
+            <Btn onClick={next} style={{ background:"#6a3cbf", color:"#fff", width:"100%" }}>Siguiente pregunta →</Btn>
+          </div>
+        )}
+        {(gs?.history||[]).length > 0 && (
+          <div style={{ background:"rgba(255,255,255,0.07)", borderRadius:16, padding:14 }}>
+            <div style={{ fontSize:"0.66rem", fontWeight:800, color:"rgba(255,255,255,0.45)", marginBottom:8, letterSpacing:"0.5px" }}>HISTORIAL</div>
+            {[...(gs.history)].reverse().slice(0,5).map((h,i) => {
+              const hq = WYR_QS[h.q % WYR_QS.length];
+              return <div key={i} style={{ display:"flex", gap:8, alignItems:"center", marginBottom:5 }}>
+                <div style={{ fontSize:"0.8rem" }}>{h.match?"🟣":"⚪"}</div>
+                <div style={{ fontSize:"0.71rem", color:"rgba(255,255,255,0.55)", flex:1, lineHeight:1.4 }}>{h.ownerChoice==="A"?hq?.a:hq?.b} · {h.partnerChoice==="A"?hq?.a:hq?.b}</div>
+              </div>;
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function GameCadena({ user, onBack }) {
+  const myRole = user?.isOwner !== false ? "owner" : "partner";
+  const code = user?.code;
+  const { nameA, nameB } = getCoupleNames(user);
+  const myName = myRole==="owner" ? nameA : nameB;
+  const partnerRole = myRole==="owner" ? "partner" : "owner";
+  const [gs, setGs] = useState(null);
+  const [word, setWord] = useState("");
+  const chainEndRef = useRef(null);
+  useEffect(() => { if (!code) return; return fbListenGameState(code, "cadena", setGs); }, [code]);
+  useEffect(() => { chainEndRef.current?.scrollIntoView({ behavior:"smooth" }); }, [gs?.chain?.length]);
+  const chain = gs?.chain || [];
+  const isMyTurn = chain.length===0 || chain[chain.length-1].role!==myRole;
+  const addWord = async () => {
+    const w = word.trim().toLowerCase(); if (!w) return;
+    await fbSaveGameState(code, "cadena", { chain:[...chain,{word:w,role:myRole,name:myName}], active:true });
+    setWord("");
+  };
+  const reset = () => fbSaveGameState(code, "cadena", { chain:[], active:true });
+  const hdr = { padding:"56px 18px 16px", display:"flex", alignItems:"center", gap:12, flexShrink:0 };
+  const backBtn = { background:"rgba(255,255,255,0.15)", border:"none", borderRadius:10, padding:"8px 14px", color:"#fff", cursor:"pointer", fontWeight:800, fontSize:"0.88rem" };
+  return (
+    <div style={{ position:"fixed", inset:0, background:"linear-gradient(135deg, #2d1b4e 0%, #4a2c8a 100%)", zIndex:8000, display:"flex", flexDirection:"column" }}>
+      <div style={hdr}>
+        <button onClick={onBack} style={backBtn}>← Volver</button>
+        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.4rem", color:"#fff" }}>🔗 Cadena de Palabras</div>
+        {chain.length>0 && <div style={{ marginLeft:"auto", background:"rgba(255,255,255,0.18)", borderRadius:8, padding:"3px 10px", fontSize:"0.72rem", fontWeight:800, color:"#fff" }}>{chain.length} palabras</div>}
+      </div>
+      <div style={{ flex:1, overflowY:"auto", padding:"4px 16px 8px" }}>
+        {chain.length===0
+          ? <div style={{ textAlign:"center", padding:"40px 0", color:"rgba(255,255,255,0.45)" }}><div style={{ fontSize:"2.5rem", marginBottom:10 }}>🔗</div>{isMyTurn?"Escribe la primera palabra...":"Esperando que empiece tu pareja..."}</div>
+          : <div style={{ display:"flex", flexWrap:"wrap", gap:8, paddingBottom:8, alignItems:"center" }}>
+              {chain.map((item,i) => (
+                <React.Fragment key={i}>
+                  <div style={{ background:item.role===myRole?"#6a3cbf":"rgba(255,255,255,0.18)", borderRadius:12, padding:"8px 14px" }}>
+                    <div style={{ fontSize:"0.6rem", fontWeight:800, color:item.role===myRole?"rgba(255,255,255,0.55)":"rgba(255,255,255,0.4)", marginBottom:2 }}>{item.name}</div>
+                    <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:"#fff" }}>{item.word}</div>
+                  </div>
+                  {i < chain.length-1 && <div style={{ color:"rgba(255,255,255,0.25)", fontSize:"0.9rem" }}>→</div>}
+                </React.Fragment>
+              ))}
+              <div ref={chainEndRef}/>
+            </div>}
+      </div>
+      <div style={{ padding:"12px 16px 36px", background:"rgba(0,0,0,0.22)", flexShrink:0 }}>
+        {isMyTurn
+          ? <div style={{ display:"flex", gap:10 }}>
+              <input value={word} onChange={e=>setWord(e.target.value.toLowerCase())} onKeyDown={e=>e.key==="Enter"&&addWord()} placeholder={chain.length===0?"Primera palabra...":` Relacionada con "${chain[chain.length-1]?.word}"...`} style={{ flex:1, border:"2px solid rgba(255,255,255,0.2)", borderRadius:14, padding:"13px 16px", fontFamily:"'Fredoka One',cursive", fontSize:"1rem", outline:"none", color:"#fff", background:"rgba(255,255,255,0.12)", caretColor:"#fff" }} autoComplete="off"/>
+              <button onClick={addWord} style={{ background:"#6a3cbf", border:"none", borderRadius:14, padding:"0 20px", color:"#fff", fontSize:"1.4rem", cursor:"pointer" }}>→</button>
+            </div>
+          : <div style={{ textAlign:"center", color:"rgba(255,255,255,0.5)", fontSize:"0.84rem", padding:"10px 0" }}>⏳ Turno de tu pareja...</div>}
+        {chain.length>=5 && <button onClick={reset} style={{ marginTop:10, width:"100%", background:"transparent", border:"1.5px solid rgba(255,255,255,0.18)", borderRadius:10, padding:"9px 0", color:"rgba(255,255,255,0.45)", fontSize:"0.78rem", cursor:"pointer", fontWeight:700 }}>Empezar cadena nueva 🔄</button>}
+      </div>
+    </div>
+  );
+}
+
+function GamesHub({ user, onClose }) {
+  const [activeGame, setActiveGame] = useState(null);
+  const GAMES = [
+    { id:"quiz",     emoji:"💭", name:"¿Cuánto me conoces?",  desc:"Respondan sobre el otro y comparen" },
+    { id:"ahorcado", emoji:"🔤", name:"Adivina la Palabra",   desc:"Uno elige, el otro adivina letra a letra" },
+    { id:"wyr",      emoji:"🤔", name:"¿Qué preferirías?",    desc:"¿Coinciden en sus elecciones?" },
+    { id:"cadena",   emoji:"🔗", name:"Cadena de Palabras",   desc:"Construyan una cadena asociada" },
+  ];
+  if (activeGame==="quiz")     return <GameQuiz    user={user} onBack={() => setActiveGame(null)}/>;
+  if (activeGame==="ahorcado") return <GameAhorcado user={user} onBack={() => setActiveGame(null)}/>;
+  if (activeGame==="wyr")      return <GameWYR     user={user} onBack={() => setActiveGame(null)}/>;
+  if (activeGame==="cadena")   return <GameCadena  user={user} onBack={() => setActiveGame(null)}/>;
+  return (
+    <div style={{ position:"fixed", inset:0, background:"rgba(20,10,40,0.88)", zIndex:8000, display:"flex", alignItems:"flex-end" }} onClick={e => { if(e.target===e.currentTarget) onClose(); }}>
+      <div style={{ background:C.white, borderRadius:"24px 24px 0 0", width:"100%", maxWidth:480, margin:"0 auto", maxHeight:"88vh", overflowY:"auto" }}>
+        <div style={{ background:"linear-gradient(135deg, #4a2c8a 0%, #7a4cbf 100%)", padding:"20px 18px 24px", borderRadius:"24px 24px 0 0", position:"relative" }}>
+          <div style={{ width:34, height:5, background:"rgba(255,255,255,0.3)", borderRadius:50, margin:"0 auto 14px" }}/>
+          <button onClick={onClose} style={{ position:"absolute", right:16, top:16, background:"rgba(255,255,255,0.2)", border:"none", borderRadius:9, width:30, height:30, cursor:"pointer", color:"#fff", fontSize:"0.9rem" }}>✕</button>
+          <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.6rem", color:"#fff" }}>🎮 Juegos para dos</div>
+          <div style={{ fontSize:"0.78rem", color:"rgba(255,255,255,0.65)", fontWeight:700, marginTop:4 }}>Jueguen juntos, cada quien desde su teléfono</div>
+        </div>
+        <div style={{ padding:"16px 16px 36px", display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+          {GAMES.map(g => (
+            <div key={g.id} onClick={() => setActiveGame(g.id)} style={{ background:"linear-gradient(135deg, #f5f0ff 0%, #ede5ff 100%)", borderRadius:18, padding:"18px 14px 16px", cursor:"pointer", border:"2px solid #c8b8f0", textAlign:"center", transition:"transform 0.12s", userSelect:"none" }} onTouchStart={e=>e.currentTarget.style.transform="scale(0.95)"} onTouchEnd={e=>e.currentTarget.style.transform="scale(1)"} onMouseDown={e=>e.currentTarget.style.transform="scale(0.96)"} onMouseUp={e=>e.currentTarget.style.transform="scale(1)"}>
+              <div style={{ fontSize:"2.2rem", marginBottom:8 }}>{g.emoji}</div>
+              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", color:"#2d1b4e", marginBottom:6, lineHeight:1.3 }}>{g.name}</div>
+              <div style={{ fontSize:"0.72rem", color:"#6b5a8a", lineHeight:1.5 }}>{g.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const NAV = [
   { id: "jardin", emoji: "🌿", label: "Jardín" },
   { id: "ejerc", emoji: "⭐", label: "Ejerc." },
@@ -4979,7 +5337,7 @@ export default function App() {
     <div style={{ fontFamily:"'Nunito',sans-serif", maxWidth:480, margin:"0 auto", minHeight:"100vh", background:C.sandL, position:"relative" }}>
       <style>{STYLES}</style>
       <div style={{ paddingBottom:72 }}>
-        {tab==="jardin" && <Jardin bamboo={bamboo} happiness={happiness} water={water} garden={garden} accessories={accessories} mochiHappy={mochiHappy} pandaBubble={pandaBubble} onPet={petMochi} onBuy={buyItem} onWater={waterGarden} onBuyAccessory={buyAccessory}/>}
+        {tab==="jardin" && <Jardin bamboo={bamboo} happiness={happiness} water={water} garden={garden} accessories={accessories} mochiHappy={mochiHappy} pandaBubble={pandaBubble} onPet={petMochi} onBuy={buyItem} onWater={waterGarden} onBuyAccessory={buyAccessory} user={user}/>}
         {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson}/>}
         {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user}/>}
         {tab==="burbuja" && <Burbuja burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} user={user}/>}
