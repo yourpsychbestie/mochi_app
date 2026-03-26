@@ -285,34 +285,45 @@ const getCoupleNames = (user) => {
 // ═══════════════════════════════════════════════
 const GARDEN_ITEMS = [
   // Plantas
-  {id:"bamboo1",  cat:"plantas", name:"Bambú",        cost:20,  desc:"Trae serenidad"},
-  {id:"bamboo2",  cat:"plantas", name:"Bambusal",      cost:35,  desc:"Bosquecito de bambú"},
-  {id:"lotus1",   cat:"plantas", name:"Loto Rosa",     cost:25,  desc:"Flor del amor puro"},
-  {id:"lotus2",   cat:"plantas", name:"Loto Blanco",   cost:30,  desc:"Pureza y paz"},
-  {id:"willow",   cat:"plantas", name:"Sauce Llorón",  cost:45,  desc:"Elegancia serena"},
-  {id:"peony",    cat:"plantas", name:"Peonía",        cost:15,  desc:"Flores de primavera"},
-  {id:"cherry",   cat:"plantas", name:"Cerezo",        cost:80,  desc:"Belleza efímera"},
-  {id:"lily",     cat:"plantas", name:"Lirio Azul",    cost:20,  desc:"Calma y claridad"},
+  {id:"bamboo1",   cat:"plantas", name:"Bambú",           cost:20,  desc:"Trae serenidad al jardín"},
+  {id:"bamboo2",   cat:"plantas", name:"Bambusal",         cost:35,  desc:"Bosquecito de bambú"},
+  {id:"bonsai",    cat:"plantas", name:"Bonsái",           cost:90,  desc:"Paciencia y belleza cultivada"},
+  {id:"lotus1",    cat:"plantas", name:"Loto Rosa",        cost:25,  desc:"Flor del amor puro"},
+  {id:"lotus2",    cat:"plantas", name:"Loto Blanco",      cost:30,  desc:"Pureza y paz"},
+  {id:"willow",    cat:"plantas", name:"Sauce Llorón",     cost:45,  desc:"Elegancia serena"},
+  {id:"peony",     cat:"plantas", name:"Peonía",           cost:15,  desc:"Flores de primavera"},
+  {id:"cherry",    cat:"plantas", name:"Cerezo",           cost:80,  desc:"Belleza efímera"},
+  {id:"lily",      cat:"plantas", name:"Lirio Azul",       cost:20,  desc:"Calma y claridad"},
+  {id:"flower_pot",cat:"plantas", name:"Maceta con Flor",  cost:18,  desc:"Tierna y colorida"},
+  {id:"herb_pot",  cat:"plantas", name:"Hierbitas",        cost:22,  desc:"Un jardín pequeñito"},
+  {id:"seeds",     cat:"plantas", name:"Bolsita de Semillas",cost:12, desc:"Todo empieza con una semilla"},
   // Agua
-  {id:"pond",     cat:"agua",    name:"Estanque",      cost:60,  desc:"Espejo del cielo"},
-  {id:"koi1",     cat:"agua",    name:"Pez Koi Rojo",  cost:40,  desc:"Buena fortuna"},
-  {id:"koi2",     cat:"agua",    name:"Pez Koi Dorado",cost:55,  desc:"Prosperidad"},
-  {id:"lotus_pad",cat:"agua",    name:"Hoja de Loto",  cost:20,  desc:"Reposa en el agua"},
-  // Cielo
-  {id:"sun",      cat:"cielo",   name:"Sol",           cost:30,  desc:"Calienta el jardín"},
-  {id:"rainbow",  cat:"cielo",   name:"Arcoíris",      cost:100, desc:"Magia después de la lluvia"},
-  {id:"swallow1", cat:"cielo",   name:"Golondrina",    cost:35,  desc:"Mensajera del amor"},
-  {id:"swallow2", cat:"cielo",   name:"Par de Golondrinas",cost:55,desc:"Vuelo juntos"},
-  {id:"clouds",   cat:"cielo",   name:"Nubes",         cost:25,  desc:"Sueños flotantes"},
+  {id:"pond",      cat:"agua",    name:"Estanque",         cost:60,  desc:"Espejo del cielo"},
+  {id:"koi1",      cat:"agua",    name:"Pez Koi Rojo",     cost:40,  desc:"Buena fortuna"},
+  {id:"koi2",      cat:"agua",    name:"Pez Koi Dorado",   cost:55,  desc:"Prosperidad"},
+  {id:"lotus_pad", cat:"agua",    name:"Hoja de Loto",     cost:20,  desc:"Reposa en el agua"},
+  {id:"wateringcan",cat:"agua",   name:"Regadera",         cost:28,  desc:"Con amor se riega todo"},
+  {id:"hose",      cat:"agua",    name:"Manguera",         cost:32,  desc:"Para el jardín grande"},
+  // Cielo & Pájaros
+  {id:"sun",       cat:"cielo",   name:"Sol",              cost:30,  desc:"Calienta el jardín"},
+  {id:"rainbow",   cat:"cielo",   name:"Arcoíris",         cost:100, desc:"Magia después de la lluvia"},
+  {id:"swallow1",  cat:"cielo",   name:"Gorrión",          cost:35,  desc:"Mensajero del amor"},
+  {id:"swallow2",  cat:"cielo",   name:"Par de Gorriones", cost:55,  desc:"Vuelan juntos siempre"},
+  {id:"clouds",    cat:"cielo",   name:"Nubecitas",        cost:25,  desc:"Sueños flotantes"},
+  {id:"birds_fly", cat:"cielo",   name:"Bandada",          cost:65,  desc:"Libertad compartida"},
   // Decoración
-  {id:"lantern",  cat:"deco",    name:"Farolito",      cost:25,  desc:"Luz cálida"},
-  {id:"lantern2", cat:"deco",    name:"Farolitos",     cost:40,  desc:"Noche romántica"},
-  {id:"heart",    cat:"deco",    name:"Corazón",       cost:50,  desc:"Amor visible"},
-  {id:"bridge",   cat:"deco",    name:"Puente",        cost:70,  desc:"Un camino juntos"},
-  {id:"pagoda",   cat:"deco",    name:"Pagoda",        cost:90,  desc:"Refugio sagrado"},
+  {id:"arch",      cat:"deco",    name:"Arco de Enredaderas",cost:75, desc:"Entrada a su mundo"},
+  {id:"birdhouse", cat:"deco",    name:"Casita de Pájaro",  cost:40,  desc:"Un hogar dentro del hogar"},
+  {id:"lantern",   cat:"deco",    name:"Farolito",          cost:25,  desc:"Luz cálida"},
+  {id:"lantern2",  cat:"deco",    name:"Farolitos",         cost:40,  desc:"Noche romántica"},
+  {id:"heart",     cat:"deco",    name:"Corazón",           cost:50,  desc:"Amor visible"},
+  {id:"bridge",    cat:"deco",    name:"Puente",            cost:70,  desc:"Un camino juntos"},
+  {id:"pagoda",    cat:"deco",    name:"Pagoda",            cost:90,  desc:"Refugio sagrado"},
+  {id:"tools",     cat:"deco",    name:"Herramientas",      cost:20,  desc:"Los jardineros expertos"},
+  {id:"rocks",     cat:"deco",    name:"Jardín de Rocas",   cost:45,  desc:"Calma zen"},
   // Especiales
-  {id:"firefly",  cat:"especial",name:"Luciérnagas",   cost:65,  desc:"Magia nocturna"},
-  {id:"moongate", cat:"especial",name:"Luna Llena",    cost:120, desc:"Romance bajo la luna"},
+  {id:"firefly",   cat:"especial",name:"Luciérnagas",       cost:65,  desc:"Magia nocturna"},
+  {id:"moongate",  cat:"especial",name:"Luna Llena",        cost:120, desc:"Romance bajo la luna"},
 ];
 
 // Regar sigue siendo acción especial
@@ -322,23 +333,33 @@ const WATER_ACTION = {id:"water", name:"Regar", cost:5};
 // PANDA ACCESSORIES
 // ═══════════════════════════════════════════════
 const PANDA_ACCESSORIES = [
-  {id:"hat_flower", cat:"sombrero", name:"Corona de Flores", cost:40,  emoji:"🌸", desc:"Romanticísima"},
-  {id:"hat_crown",  cat:"sombrero", name:"Corona Real",      cost:70,  emoji:"👑", desc:"Son reyes"},
-  {id:"hat_straw",  cat:"sombrero", name:"Sombrero de Paja", cost:25,  emoji:"🎋", desc:"Para el jardín"},
-  {id:"hat_beret",  cat:"sombrero", name:"Boina Chic",       cost:32,  emoji:"🧢", desc:"Cute y elegante"},
-  {id:"hat_beanie", cat:"sombrero", name:"Gorrito Nube",     cost:36,  emoji:"🧶", desc:"Suave y cozy"},
-  {id:"hat_frog",   cat:"sombrero", name:"Sombrero Ranita",  cost:45,  emoji:"🐸", desc:"Demasiado tierno"},
-  {id:"glasses_heart", cat:"lentes", name:"Lentes Corazón", cost:30,  emoji:"💝", desc:"Ver con amor"},
-  {id:"glasses_sun",   cat:"lentes", name:"Lentes de Sol",  cost:25,  emoji:"😎", desc:"Fresquísimos"},
-  {id:"glasses_round", cat:"lentes", name:"Lentes Redondos", cost:28,  emoji:"🕶️", desc:"Estilo clásico"},
-  {id:"glasses_clear", cat:"lentes", name:"Lentes Cristal",  cost:24,  emoji:"🤓", desc:"Suavecitos"},
-  {id:"glasses_star",  cat:"lentes", name:"Lentes Estrella", cost:42,  emoji:"⭐", desc:"Brillo total"},
-  {id:"acc_bow",    cat:"accesorio", name:"Moño Rosa",       cost:20,  emoji:"🎀", desc:"Kawaii"},
-  {id:"acc_scarf",  cat:"accesorio", name:"Bufanda",         cost:25,  emoji:"🧣", desc:"Para el frío"},
-  {id:"outfit_kimono",  cat:"traje", name:"Kimono",          cost:60,  emoji:"👘", desc:"Elegancia japonesa"},
-  {id:"outfit_sailor",  cat:"traje", name:"Marinero",         cost:55,  emoji:"⚓", desc:"Aventureros del mar"},
-  {id:"outfit_witch",   cat:"traje", name:"Brujita",          cost:65,  emoji:"🧙", desc:"Magia y misterio"},
-  {id:"outfit_angel",   cat:"traje", name:"Angelitos",        cost:80,  emoji:"👼", desc:"Purísimos"},
+  // Sombreros
+  {id:"hat_flower",   cat:"sombrero", name:"Corona de Flores",   cost:40, emoji:"🌸", desc:"Romanticísima"},
+  {id:"hat_crown",    cat:"sombrero", name:"Corona Real",         cost:70, emoji:"👑", desc:"Son reyes"},
+  {id:"hat_straw",    cat:"sombrero", name:"Sombrero de Paja",   cost:25, emoji:"🌾", desc:"Del jardín"},
+  {id:"hat_beret",    cat:"sombrero", name:"Boina Chic",          cost:32, emoji:"🧢", desc:"Cute y elegante"},
+  {id:"hat_beanie",   cat:"sombrero", name:"Gorrito Nube",        cost:36, emoji:"🧶", desc:"Suave y cozy"},
+  {id:"hat_frog",     cat:"sombrero", name:"Sombrero Ranita",     cost:45, emoji:"🐸", desc:"Demasiado tierno"},
+  {id:"hat_garden",   cat:"sombrero", name:"Gorro Jardinero",     cost:30, emoji:"🪴", desc:"El experto del jardín"},
+  // Lentes
+  {id:"glasses_heart",cat:"lentes",  name:"Lentes Corazón",      cost:30, emoji:"💝", desc:"Ver con amor"},
+  {id:"glasses_sun",  cat:"lentes",  name:"Lentes de Sol",       cost:25, emoji:"😎", desc:"Fresquísimos"},
+  {id:"glasses_round",cat:"lentes",  name:"Lentes Redondos",     cost:28, emoji:"🕶️", desc:"Estilo clásico"},
+  {id:"glasses_star", cat:"lentes",  name:"Lentes Estrella",     cost:42, emoji:"⭐", desc:"Brillo total"},
+  // Accesorios
+  {id:"acc_bow",      cat:"accesorio",name:"Moño Rosa",           cost:20, emoji:"🎀", desc:"Kawaii"},
+  {id:"acc_scarf",    cat:"accesorio",name:"Bufanda",             cost:25, emoji:"🧣", desc:"Para el frío"},
+  {id:"acc_apron",    cat:"accesorio",name:"Delantal de Jardín",  cost:28, emoji:"🌿", desc:"El/la chef del jardín"},
+  {id:"acc_gloves",   cat:"accesorio",name:"Guantes de Jardín",   cost:22, emoji:"🧤", desc:"Manos protegidas"},
+  {id:"acc_basket",   cat:"accesorio",name:"Cesta de Flores",     cost:35, emoji:"🧺", desc:"Recolector/a de amor"},
+  // Trajes
+  {id:"outfit_kimono",  cat:"traje", name:"Kimono",               cost:60, emoji:"👘", desc:"Elegancia japonesa"},
+  {id:"outfit_sailor",  cat:"traje", name:"Marinero",             cost:55, emoji:"⚓", desc:"Aventureros del mar"},
+  {id:"outfit_witch",   cat:"traje", name:"Brujita",              cost:65, emoji:"🧙", desc:"Magia y misterio"},
+  {id:"outfit_angel",   cat:"traje", name:"Angelitos",            cost:80, emoji:"👼", desc:"Purísimos"},
+  {id:"outfit_cottage", cat:"traje", name:"Cottagecore",          cost:70, emoji:"🌻", desc:"Encanto rural"},
+  {id:"outfit_overalls",cat:"traje", name:"Overol de Jardín",     cost:55, emoji:"🌱", desc:"Jardinero/a en acción"},
+  {id:"outfit_cozy",    cat:"traje", name:"Cozy de Invierno",     cost:75, emoji:"☕", desc:"Calientito y adorable"},
 ];
 
 
@@ -917,7 +938,18 @@ function GardenItemIcon({ id, size = 38 }) {
     heart: (<svg viewBox="0 0 40 36" width={s} height={s*0.9}><path d="M20 32 C20 32 3 20 3 10 C3 4 8 1 13 3.5 C16 4.5 20 8.5 20 8.5 C20 8.5 24 4.5 27 3.5 C32 1 37 4 37 10 C37 20 20 32 20 32Z" fill="#e8607a"/><path d="M20 26 C20 26 8 18 8 13 C8 10 10 8 12 9 C14 10 20 14 20 14" fill="#f4a8c0" opacity="0.5"/></svg>),
     bridge: (<svg viewBox="0 0 52 30" width={s} height={s*0.58}><path d="M2 22 Q26 4 50 22" fill="none" stroke="#9a7848" strokeWidth="4" strokeLinecap="round"/><line x1="2" y1="22" x2="2" y2="28" stroke="#8a6838" strokeWidth="3"/><line x1="50" y1="22" x2="50" y2="28" stroke="#8a6838" strokeWidth="3"/>{[10,18,26,34,42].map(x=><line key={x} x1={x} y1={16+(x-26)**2/200} x2={x} y2={28} stroke="#8a6838" strokeWidth="2"/>)}<path d="M0 28 L52 28" stroke="#8a6838" strokeWidth="3"/></svg>),
     pagoda: (<svg viewBox="0 0 44 52" width={s} height={s}><rect x="16" y="46" width="12" height="5" rx="1" fill="#c07840"/><rect x="12" y="38" width="20" height="9" rx="1" fill="#d08848"/><path d="M6 38 L22 28 L38 38Z" fill="#c07040"/><rect x="14" y="28" width="16" height="11" rx="1" fill="#d08848"/><path d="M10 28 L22 18 L34 28Z" fill="#c07040"/><rect x="16" y="18" width="12" height="11" rx="1" fill="#d08848"/><path d="M14 18 L22 8 L30 18Z" fill="#c07040"/><rect x="20" y="2" width="4" height="8" rx="1" fill="#e8a030"/></svg>),
-    // Especiales
+    // Nuevos ítems kawaii
+    bonsai: (<svg viewBox="0 0 52 56" width={s} height={s}><rect x="16" y="42" width="20" height="8" rx="4" fill="#8a7060"/><rect x="10" y="38" width="32" height="6" rx="3" fill="#9a8070"/><rect x="23" y="20" width="6" height="20" rx="3" fill="#7a6050"/><rect x="20" y="12" width="4" height="12" rx="2" fill="#8a7060" transform="rotate(-20 22 18)"/><rect x="28" y="14" width="4" height="10" rx="2" fill="#8a7060" transform="rotate(15 30 19)"/><circle cx="26" cy="14" r="14" fill="#5a8840" opacity="0.9"/><circle cx="16" cy="18" r="10" fill="#6a9848" opacity="0.85"/><circle cx="36" cy="17" r="11" fill="#5a8840" opacity="0.85"/><circle cx="26" cy="8" r="8" fill="#7aac50" opacity="0.8"/></svg>),
+    flower_pot: (<svg viewBox="0 0 40 48" width={s} height={s}><path d="M8 24 L6 44 L34 44 L32 24Z" fill="#c07848"/><path d="M6 22 L34 22 L36 26 L4 26Z" fill="#b06838"/><rect x="17" y="10" width="6" height="14" rx="3" fill="#5a8840"/><circle cx="20" cy="9" r="9" fill="#f4a0b0"/><circle cx="20" cy="9" r="6" fill="#f8c0cc"/><circle cx="20" cy="9" r="3" fill="#f8e080"/><circle cx="14" cy="13" r="5" fill="#f4a0b0" opacity="0.8"/><circle cx="26" cy="13" r="5" fill="#e89090" opacity="0.8"/></svg>),
+    herb_pot: (<svg viewBox="0 0 40 48" width={s} height={s}><path d="M8 24 L6 44 L34 44 L32 24Z" fill="#c07848"/><path d="M6 22 L34 22 L36 26 L4 26Z" fill="#b06838"/>{[[14,8],[20,6],[26,9]].map(([x,y],i)=><g key={i}><rect x={x} y={y} width="4" height="16" rx="2" fill="#5a8840"/><ellipse cx={x+2} cy={y} rx="5" ry="4" fill={["#6ab848","#5a9838","#78c048"][i]}/></g>)}</svg>),
+    seeds: (<svg viewBox="0 0 36 44" width={s} height={s}><path d="M4 16 L4 36 Q4 42 10 42 L26 42 Q32 42 32 36 L32 16Z" fill="#d4a860"/><path d="M4 16 L8 8 L28 8 L32 16Z" fill="#c49850"/><line x1="18" y1="8" x2="18" y2="2" stroke="#5a8840" strokeWidth="2"/><circle cx="18" cy="2" r="3" fill="#6ab848"/><circle cx="14" cy="1" r="2" fill="#5a9838"/><circle cx="22" cy="1" r="2" fill="#78c048"/><circle cx="14" cy="24" r="3" fill="#5a8840"/><circle cx="18" cy="30" r="2.5" fill="#6ab848"/><circle cx="22" cy="24" r="3" fill="#5a9838"/></svg>),
+    wateringcan: (<svg viewBox="0 0 52 42" width={s} height={s}><ellipse cx="22" cy="24" rx="16" ry="13" fill="#b0b8c0"/><ellipse cx="22" cy="22" rx="14" ry="11" fill="#c8d0d8"/><path d="M38 20 L48 14 L50 18 L40 24Z" fill="#a0a8b0"/><path d="M8 18 Q2 14 2 24 Q2 30 8 30" fill="none" stroke="#a0a8b0" strokeWidth="3" strokeLinecap="round"/><path d="M36 10 L40 4 Q42 2 44 4" fill="none" stroke="#a0a8b0" strokeWidth="2.5" strokeLinecap="round"/>{[44,47,50].map((x,i)=><line key={i} x1={x} y1={4+i*2} x2={x+2} y2={8+i*2} stroke="#88b8d0" strokeWidth="2" strokeLinecap="round"/>)}</svg>),
+    hose: (<svg viewBox="0 0 52 36" width={s} height={s}><path d="M6 30 Q6 6 20 6 Q34 6 34 20 Q34 30 46 30" fill="none" stroke="#5a8840" strokeWidth="8" strokeLinecap="round"/><path d="M6 30 Q6 6 20 6 Q34 6 34 20 Q34 30 46 30" fill="none" stroke="#6aac48" strokeWidth="5" strokeLinecap="round" opacity="0.6"/><rect x="42" y="26" width="10" height="8" rx="3" fill="#c07848"/><path d="M4 28 L0 32 L4 36 L8 32Z" fill="#a06838"/></svg>),
+    arch: (<svg viewBox="0 0 52 56" width={s} height={s}><rect x="4" y="28" width="6" height="28" rx="3" fill="#9a7848"/><rect x="42" y="28" width="6" height="28" rx="3" fill="#9a7848"/><path d="M7 30 Q26 4 45 30" fill="none" stroke="#9a7848" strokeWidth="5" strokeLinecap="round"/>{[[8,38],[12,32],[10,44],[42,36],[44,28],[40,44],[20,8],[26,6],[32,8],[16,20],[36,20]].map(([x,y],i)=><ellipse key={i} cx={x} cy={y} rx="4" ry="3" fill={["#5a8840","#6aac48","#78c050","#5a8840","#6aac48"][i%5]} opacity="0.9" transform={`rotate(${i*37} ${x} ${y})`}/>)}</svg>),
+    birdhouse: (<svg viewBox="0 0 40 48" width={s} height={s}><rect x="6" y="22" width="28" height="22" rx="3" fill="#d4a860"/><rect x="8" y="24" width="24" height="18" rx="2" fill="#e8c080"/><path d="M2 22 L20 6 L38 22Z" fill="#c49040"/><rect x="14" y="30" width="12" height="10" rx="6" fill="#1a1a1a"/><circle cx="20" cy="33" r="4" fill="#2a2a2a"/><rect x="18" y="40" width="4" height="8" rx="2" fill="#a07030"/></svg>),
+    tools: (<svg viewBox="0 0 52 44" width={s} height={s}><rect x="22" y="4" width="5" height="32" rx="2.5" fill="#9a7848"/><path d="M17 4 L27 4 L29 8 L15 8Z" fill="#c0c8c0"/><rect x="30" y="6" width="5" height="30" rx="2.5" fill="#9a7848"/>{[-4,-2,0,2,4].map((d,i)=><rect key={i} x={32+d/2} y={6+i*1} width="4" height="4" rx="1" fill="#b0b8b0" transform={`translate(${d} 0)`}/>)}<path d="M34 6 L30 6 L30 10 L38 10 L38 6Z" fill="#b8c0b8"/><rect x="10" y="8" width="5" height="28" rx="2.5" fill="#9a7848"/><path d="M8 6 L16 6 L16 12 L14 8 L10 8 L8 12Z" fill="#c8c0a8"/></svg>),
+    rocks: (<svg viewBox="0 0 52 32" width={s} height={s*0.62}><ellipse cx="26" cy="22" rx="24" ry="10" fill="#c8d0c8" opacity="0.4"/>{[[10,20,16,10],[24,14,18,12],[38,18,14,9],[6,24,12,8],[44,22,10,7]].map(([x,y,rx,ry],i)=><ellipse key={i} cx={x} cy={y} rx={rx} ry={ry} fill={["#b0b8b0","#c0c8c0","#a8b0a8","#b8c0b8","#c8d0c8"][i]} stroke="#a0a8a0" strokeWidth="1"/>)}<ellipse cx="20" cy="18" rx="8" ry="6" fill="#c0c8c0"/><ellipse cx="34" cy="16" rx="7" ry="5" fill="#b8c0b8"/></svg>),
+    birds_fly: (<svg viewBox="0 0 56 36" width={s} height={s*0.64}><g opacity="0.85">{[[8,12],[18,6],[28,14],[38,8],[48,10],[14,20],[34,18]].map(([x,y],i)=><g key={i} transform={`translate(${x} ${y}) scale(${0.5+i%3*0.1})`}><path d="M0 0 Q-6 -5 -10 0" fill="none" stroke="#4a5060" strokeWidth="2" strokeLinecap="round"/><path d="M0 0 Q6 -5 10 0" fill="none" stroke="#4a5060" strokeWidth="2" strokeLinecap="round"/></g>)}</g></svg>),
     firefly: (<svg viewBox="0 0 48 48" width={s} height={s}><circle cx="24" cy="24" r="20" fill="#1a2a1a" opacity="0.2"/>{[[12,15],[30,10],[8,30],[36,28],[20,36],[38,18],[16,22],[28,34]].map(([x,y],i)=><g key={i}><circle cx={x} cy={y} r="2.5" fill="#f8e840" opacity="0.9"/><circle cx={x} cy={y} r="4" fill="#f8e840" opacity="0.25"/></g>)}</svg>),
     moongate: (<svg viewBox="0 0 52 52" width={s} height={s}><circle cx="26" cy="22" r="20" fill="none" stroke="#f8e0a0" strokeWidth="3"/><path d="M6 40 L6 22 A20 20 0 0 1 46 22 L46 40" fill="#f8e0a0" opacity="0.1" stroke="#f8e0a0" strokeWidth="2"/><circle cx="26" cy="22" r="16" fill="#1a2a3a" opacity="0.5"/><circle cx="26" cy="22" r="15" fill="none"/>{[5,4,3,2].map((r,i)=><circle key={i} cx={26-r} cy={18+r} r={r} fill="#f8e0a0" opacity={0.4-i*0.08}/>)}<path d="M6 42 L6 52 L46 52 L46 42" fill="#7ab848" opacity="0.8"/></svg>),
   };
@@ -1330,7 +1362,7 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
 // ═══════════════════════════════════════════════
 // NEW GARDEN SCENE — koi/lotus watercolor aesthetic
 // ═══════════════════════════════════════════════
-function GardenScene({ garden, waterLevel }) {
+function GardenScene({ garden, waterLevel, bgImage }) {
   const g = garden || {};
   const w = waterLevel || 0;
   // 5 watercolor levels: 0-20 drought, 20-40 dry, 40-60 ok, 60-80 lush, 80-100 thriving
@@ -1358,6 +1390,9 @@ function GardenScene({ garden, waterLevel }) {
 
   return (
     <svg viewBox="0 0 390 290" style={{ width:"100%", display:"block", borderRadius: "0 0 20px 20px" }}>
+      {bgImage ? (
+        <image href={bgImage} x="0" y="0" width="390" height="290" preserveAspectRatio="xMidYMid slice"/>
+      ) : (<>
       <defs>
         <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={SKY[lvl]}/>
@@ -1456,6 +1491,7 @@ function GardenScene({ garden, waterLevel }) {
       {showDew && [30,80,140,200,260,330,370].map((x,i)=>(
         <circle key={i} cx={x} cy={224+(i%3)*6} r="2" fill="white" opacity="0.6"/>
       ))}
+      </>)}
 
       {/* Willow tree */}
       {g.willow && <g>
@@ -1648,6 +1684,7 @@ function GardenScene({ garden, waterLevel }) {
 // JARDIN SCREEN — updated with accessories + multiple items + decay
 // ═══════════════════════════════════════════════
 function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pandaBubble, onPet, onBuy, onWater, onBuyAccessory }) {
+  const [indoor, setIndoor] = useState(false);
   const [shopTab, setShopTab] = useState("plantas");
   const cats = [{id:"plantas",label:"🌿 Plantas"},{id:"agua",label:"🐟 Agua"},{id:"cielo",label:"☁️ Cielo"},{id:"deco",label:"🏮 Deco"},{id:"especial",label:"✨ Especiales"},{id:"accesorios",label:"🐼 Pandas"}];
   const shopItems = (shopTab === "accesorios"
@@ -1686,8 +1723,12 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
 
       {/* Garden scene */}
       <div style={{ position:"relative" }}>
+        {/* Toggle jardín/cuarto */}
+        <button onClick={() => setIndoor(v => !v)} style={{ position:"absolute", top:10, right:10, zIndex:20, background:"rgba(255,255,255,0.85)", backdropFilter:"blur(4px)", border:"1.5px solid rgba(100,70,180,0.25)", borderRadius:12, padding:"7px 13px", fontFamily:"'Fredoka One',cursive", fontSize:"0.82rem", color:"#2d1b4e", cursor:"pointer", boxShadow:"0 2px 8px rgba(0,0,0,0.12)", display:"flex", alignItems:"center", gap:6 }}>
+          {indoor ? "🌿 Jardín" : "🏠 Cuarto"}
+        </button>
         <SectionErrorBoundary fallback={<div style={{ background:C.white, border:`1.5px solid ${C.border}`, borderRadius:16, margin:12, padding:12, textAlign:"center", color:C.inkM, fontWeight:700 }}>No se pudo cargar esta vista del jardín. Cambia de pestaña y vuelve a intentar.</div>}>
-          <GardenScene garden={garden} waterLevel={water}/>
+          <GardenScene garden={garden} waterLevel={water} bgImage={indoor ? "/bg_indoor.png" : "/bg_garden.png"}/>
           <div onClick={onPet} style={{ position:"absolute", bottom:-5, left:"50%", transform:"translateX(-50%)", cursor:"pointer",
             animation: mochiHappy ? "floatHappy 1.6s ease-in-out infinite" : "float 3s ease-in-out infinite" }}>
             <div style={{ position:"relative", display:"inline-block" }}>
