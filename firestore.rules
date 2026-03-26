@@ -179,6 +179,11 @@ service cloud.firestore {
       allow update: if canAccessStoredCoupleScoped() && keepsCoupleCodeStable();
     }
 
+    match /diario/{docId} {
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow read, update, delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

@@ -54,9 +54,22 @@ const deleteByCoupleCode = async (collectionName, coupleCode) => {
 export const fbCleanupBeforeAccountDelete = async ({ uid, code, isOwner }) => {
   if (!uid) return;
 
+  const deleteDiarioByUid = async () => {
+    while (true) {
+      const q = query(collection(db, "diario"), where("uid", "==", uid), limit(200));
+      const snap = await getDocs(q);
+      if (snap.empty) break;
+      const batch = writeBatch(db);
+      snap.docs.forEach(d => batch.delete(d.ref));
+      await batch.commit();
+      if (snap.size < 200) break;
+    }
+  };
+
   await Promise.allSettled([
     deleteDoc(doc(db, "users", uid)),
     deleteDoc(doc(db, "progress", uid)),
+    deleteDiarioByUid(),
   ]);
 
   if (!code) return;
@@ -455,6 +468,25 @@ export const fbResetGame = (coupleCode, gameId) =>
   setDoc(doc(db, "games", `${coupleCode}_${gameId}`), {
     coupleCode, gameId, phase: "idle", updatedAt: serverTimestamp()
   }, { merge: false });
+
+// ─── DIARIO PERSONAL (private per UID) ───────────────
+export const fbSaveDiarioEntry = (uid, entryId, data) =>
+  setDoc(doc(db, "diario", `${uid}_${entryId}`), {
+    ...data, uid, updatedAt: serverTimestamp()
+  }, { merge: true });
+
+export const fbListenDiario = (uid, cb) => {
+  if (!uid) return () => {};
+  const q = query(
+    collection(db, "diario"),
+    where("uid", "==", uid),
+    orderBy("createdAt", "desc"),
+    limit(50)
+  );
+  return onSnapshot(q, snap => {
+    cb(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  }, () => cb([]));
+};
 
 export const fbSaveStreakProfile = (coupleCode, data) =>
   setDoc(doc(db, "streaks", coupleCode), {

@@ -20,6 +20,7 @@ import {
   fbSendNotif, fbListenNotifs, fbMarkNotifRead,
   fbSaveStreakInteraction, fbListenStreakInteractions,
   fbSaveStreakProfile, fbListenStreakProfile,
+  fbSaveDiarioEntry, fbListenDiario,
 } from "./firebase";
 import Cuestionarios, { getQuizAdviceFromConoce } from "./Cuestionarios";
 
@@ -3153,6 +3154,264 @@ function ConsejoDelDiaSection({ user, onEarn }) {
 }
 
 // PROFILE — Enhanced with more info fields
+// ═══════════════════════════════════════════════
+// DIARIO PERSONAL — técnicas ACT/DBT/CNV/TCC
+// ═══════════════════════════════════════════════
+const DIARIO_EJERCICIOS = [
+  {
+    id: "act_defusion",
+    nombre: "Observador interior",
+    subtitulo: "ACT · Defusión cognitiva",
+    icono: "🧘",
+    color: "#e0d4ff",
+    descripcion: "A veces los pensamientos se sienten como hechos. Esta técnica te ayuda a dar un paso atrás y verlos como lo que son: solo pensamientos, no la realidad.",
+    prompts: [
+      "¿Qué pensamiento incómodo está dando vueltas en tu mente ahora mismo?",
+      "Si ese pensamiento fuera una nube en el cielo, ¿cómo se vería? ¿Qué forma tiene?",
+      "Imagina que lo ves pasar desde un banco en el parque. ¿Qué observas?",
+      "¿Qué sientes en el cuerpo cuando estás 'dentro' de ese pensamiento?",
+      "Ahora que lo observas desde afuera, ¿cambia algo? ¿Qué quieres hacer con eso?",
+    ],
+  },
+  {
+    id: "dbt_tipp",
+    nombre: "Calma flash",
+    subtitulo: "DBT · Regulación de emociones",
+    icono: "❄️",
+    color: "#d4eeff",
+    descripcion: "Cuando las emociones se desbordan, tu cuerpo puede ser tu aliado. Esta técnica activa tu sistema nervioso para calmarte rápido.",
+    prompts: [
+      "¿Qué emoción intensa sientes en este momento? ¿Dónde la sientes en tu cuerpo?",
+      "¿Qué tan fuerte está del 1 al 10?",
+      "Hiciste o intentaste alguna de estas cosas: agua fría en la cara, respiración pausada (4-7-8), movimiento físico? ¿Cómo te fue?",
+      "Después de calmarte un poco, ¿qué crees que desencadenó esto?",
+      "¿Qué necesitas para seguir con tu día desde un lugar más tranquilo?",
+    ],
+  },
+  {
+    id: "cnv_4pasos",
+    nombre: "Decirlo sin herir",
+    subtitulo: "CNV · Comunicación No Violenta",
+    icono: "💬",
+    color: "#d4ffe4",
+    descripcion: "Comunicar lo que sientes sin atacar ni guardar silencio. Cuatro pasos sencillos para decir lo que necesitas con claridad y afecto.",
+    prompts: [
+      "¿Qué situación específica pasó con tu pareja? Descríbela sin adjetivos ni juicios (solo los hechos).",
+      "¿Qué sentiste cuando eso pasó? (no lo que 'te hicieron sentir', sino lo que sentiste tú)",
+      "¿Qué necesidad tuya no se estaba cubriendo en ese momento?",
+      "¿Qué le pedirías a tu pareja de forma concreta y amable?",
+      "¿Cómo crees que podrías decirle esto en la próxima conversación?",
+    ],
+  },
+  {
+    id: "act_valores",
+    nombre: "Brújula interna",
+    subtitulo: "ACT · Clarificación de valores",
+    icono: "🧭",
+    color: "#fff4d4",
+    descripcion: "Cuando todo se siente confuso, volver a lo que más te importa te ayuda a decidir cómo quieres actuar. Esto no es sobre lo que 'deberías' hacer, sino sobre lo que de verdad valoras.",
+    prompts: [
+      "¿Qué está pasando en tu relación o en ti que te generó querer reflexionar hoy?",
+      "¿Qué tipo de pareja o persona quieres ser en esta relación?",
+      "¿Cómo actuó la versión tuya que más admiras en situaciones difíciles?",
+      "¿Qué valor (honestidad, presencia, ternura, etc.) quieres honrar esta semana?",
+      "¿Qué pequeña acción concreta podrías hacer hoy que esté alineada con eso?",
+    ],
+  },
+  {
+    id: "dbt_dearman",
+    nombre: "Pedir lo que necesito",
+    subtitulo: "DBT · DEAR MAN",
+    icono: "✋",
+    color: "#ffdde4",
+    descripcion: "Pedir algo importante puede dar miedo. DEAR MAN es una guía para hacerlo con firmeza y respeto, sin caer en el ataque ni en la rendición.",
+    prompts: [
+      "¿Qué es lo que necesitas pedir o plantear? Escríbelo en una frase.",
+      "Describe la situación de forma neutral, sin interpretar intenciones.",
+      "¿Cómo te sientes al respecto? ¿Por qué esto es importante para ti?",
+      "¿Qué le pedirías exactamente? Escribe la petición como si se la dijeras en persona.",
+      "¿Cómo podrías mantener tu postura con calma si hay resistencia? ¿Y qué estarías dispuesto/a a negociar?",
+    ],
+  },
+  {
+    id: "tcc_pensamientos",
+    nombre: "Pensamientos vs. hechos",
+    subtitulo: "TCC · Reestructuración cognitiva",
+    icono: "🔍",
+    color: "#ede5ff",
+    descripcion: "No todo lo que pensamos es verdad. Esta técnica te ayuda a examinar esos pensamientos que duelen o que te frenan y ver qué tan reales son.",
+    prompts: [
+      "¿Qué pensamiento negativo sobre tu relación o sobre ti está apareciendo mucho?",
+      "¿Cuánto crees que es verdad ese pensamiento del 0 al 100%?",
+      "¿Qué evidencia tienes A FAVOR de ese pensamiento?",
+      "¿Qué evidencia tienes EN CONTRA de ese pensamiento?",
+      "Si una amiga te dijera esto de sí misma, ¿qué le responderías? ¿Cambia algo tu porcentaje de creencia?",
+    ],
+  },
+];
+
+function DiarioPersonal({ user }) {
+  const [view, setView] = useState("home");
+  const [entries, setEntries] = useState([]);
+  const [selectedTech, setSelectedTech] = useState(null);
+  const [answers, setAnswers] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState(null);
+  const uid = user?.uid;
+
+  useEffect(() => {
+    if (!uid) return;
+    const unsub = fbListenDiario(uid, setEntries);
+    return unsub;
+  }, [uid]);
+
+  const saveEntry = async () => {
+    if (!uid || !selectedTech) return;
+    setSaving(true);
+    const entryId = Date.now().toString();
+    try {
+      await fbSaveDiarioEntry(uid, entryId, {
+        techId: selectedTech.id,
+        techNombre: selectedTech.nombre,
+        techIcono: selectedTech.icono,
+        answers,
+        createdAt: new Date().toISOString(),
+      });
+      setView("home");
+      setSelectedTech(null);
+      setAnswers({});
+    } catch (e) {
+      console.error("Error saving diario entry:", e);
+    }
+    setSaving(false);
+  };
+
+  const formatDate = (iso) => {
+    if (!iso) return "";
+    try {
+      const d = new Date(iso);
+      return d.toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" });
+    } catch { return ""; }
+  };
+
+  if (view === "selector") {
+    return (
+      <div style={{ padding: "0 0 12px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+          <button onClick={() => setView("home")} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.2rem", color: C.inkM, padding: "2px 6px" }}>←</button>
+          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark }}>¿Qué quieres explorar?</div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+          {DIARIO_EJERCICIOS.map(t => (
+            <div key={t.id} onClick={() => { setSelectedTech(t); setAnswers({}); setView("form"); }}
+              style={{ background: t.color, borderRadius: 14, padding: "12px 14px", cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 12, border: `1.5px solid ${C.border}` }}>
+              <div style={{ fontSize: "1.6rem", flexShrink: 0, marginTop: 2 }}>{t.icono}</div>
+              <div>
+                <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.93rem", color: C.dark }}>{t.nombre}</div>
+                <div style={{ fontSize: "0.7rem", color: C.inkM, marginBottom: 3 }}>{t.subtitulo}</div>
+                <div style={{ fontSize: "0.76rem", color: C.inkM, lineHeight: 1.4 }}>{t.descripcion}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (view === "form" && selectedTech) {
+    const allAnswered = selectedTech.prompts.every((_, i) => (answers[i] || "").trim().length > 0);
+    return (
+      <div style={{ padding: "0 0 12px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+          <button onClick={() => setView("selector")} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.2rem", color: C.inkM, padding: "2px 6px" }}>←</button>
+          <div>
+            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark }}>{selectedTech.icono} {selectedTech.nombre}</div>
+            <div style={{ fontSize: "0.68rem", color: C.inkM }}>{selectedTech.subtitulo}</div>
+          </div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {selectedTech.prompts.map((prompt, i) => (
+            <div key={i}>
+              <div style={{ fontSize: "0.8rem", color: C.dark, fontWeight: 700, marginBottom: 5, lineHeight: 1.4 }}>{i + 1}. {prompt}</div>
+              <textarea
+                value={answers[i] || ""}
+                onChange={e => setAnswers(a => ({ ...a, [i]: e.target.value }))}
+                placeholder="Escribe aquí con honestidad..."
+                rows={3}
+                style={{ width: "100%", borderRadius: 10, border: `1.5px solid ${C.border}`, padding: "8px 10px", fontSize: "0.82rem", fontFamily: "inherit", color: C.ink, background: C.sandL, resize: "none", boxSizing: "border-box", outline: "none" }}
+              />
+            </div>
+          ))}
+        </div>
+        <button
+          onClick={saveEntry}
+          disabled={!allAnswered || saving}
+          style={{ marginTop: 18, width: "100%", background: allAnswered ? C.olive : C.border, color: C.white, border: "none", borderRadius: 12, padding: "11px 0", fontFamily: "'Fredoka One',cursive", fontSize: "1rem", cursor: allAnswered ? "pointer" : "default", opacity: saving ? 0.6 : 1 }}>
+          {saving ? "Guardando..." : "Guardar entrada"}
+        </button>
+      </div>
+    );
+  }
+
+  if (view === "detail" && selectedEntry) {
+    const tech = DIARIO_EJERCICIOS.find(t => t.id === selectedEntry.techId);
+    return (
+      <div style={{ padding: "0 0 12px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+          <button onClick={() => { setView("home"); setSelectedEntry(null); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.2rem", color: C.inkM, padding: "2px 6px" }}>←</button>
+          <div>
+            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark }}>{selectedEntry.techIcono} {selectedEntry.techNombre}</div>
+            <div style={{ fontSize: "0.68rem", color: C.inkM }}>{formatDate(selectedEntry.createdAt)}</div>
+          </div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {(tech?.prompts || []).map((prompt, i) => (
+            <div key={i} style={{ background: C.sandL, borderRadius: 11, padding: "10px 12px", border: `1.5px solid ${C.border}` }}>
+              <div style={{ fontSize: "0.72rem", color: C.inkM, fontWeight: 700, marginBottom: 4 }}>{prompt}</div>
+              <div style={{ fontSize: "0.82rem", color: C.ink, lineHeight: 1.5, whiteSpace: "pre-wrap" }}>{selectedEntry.answers?.[i] || <span style={{ color: C.inkL, fontStyle: "italic" }}>Sin respuesta</span>}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: "0 0 4px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark }}>Mi diario personal</div>
+        <button onClick={() => setView("selector")}
+          style={{ background: C.olive, color: C.white, border: "none", borderRadius: 20, padding: "6px 14px", fontFamily: "'Fredoka One',cursive", fontSize: "0.82rem", cursor: "pointer" }}>
+          + Nueva entrada
+        </button>
+      </div>
+      <div style={{ fontSize: "0.74rem", color: C.inkM, marginBottom: 10, lineHeight: 1.4 }}>
+        Un espacio solo tuyo para explorar lo que sientes, aprender a comunicarlo y cuidarte. Nadie más puede ver esto.
+      </div>
+      {entries.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "28px 0", color: C.inkL, fontSize: "0.82rem" }}>
+          <div style={{ fontSize: "2.2rem", marginBottom: 8 }}>📖</div>
+          Aún no tienes entradas. Escribe tu primera hoy.
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {entries.slice(0, 10).map(e => (
+            <div key={e.id} onClick={() => { setSelectedEntry(e); setView("detail"); }}
+              style={{ background: C.sandL, borderRadius: 12, padding: "10px 13px", cursor: "pointer", display: "flex", alignItems: "center", gap: 10, border: `1.5px solid ${C.border}` }}>
+              <div style={{ fontSize: "1.5rem" }}>{e.techIcono}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.85rem", color: C.dark }}>{e.techNombre}</div>
+                <div style={{ fontSize: "0.68rem", color: C.inkM }}>{formatDate(e.createdAt)}</div>
+              </div>
+              <div style={{ color: C.inkL, fontSize: "0.9rem" }}>›</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, conoce, lessonsDone, coupleInfo, streakInfo, streakAnalytics, onUpdateStreakSettings, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento, onSendMessage, onConsejoEarn }) {
   const [editMode, setEditMode] = useState(false);
   const [editingName, setEditingName] = useState(false);
@@ -3381,6 +3640,11 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
           onAddGratitud={onAddGratitud} onAddMomento={onAddMomento}
           user={user}
         />
+      </div>
+
+      {/* ── DIARIO PERSONAL ── */}
+      <div style={{ margin: "0 14px 16px", background: C.sandL, borderRadius: 16, padding: "14px 14px 10px", border: `1.5px solid ${C.border}` }}>
+        <DiarioPersonal user={user} />
       </div>
 
       {/* Achievements */}
