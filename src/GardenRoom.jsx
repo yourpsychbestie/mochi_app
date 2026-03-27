@@ -84,9 +84,9 @@ export default function GardenRoom() {
           ))}
         </div>
         {/* Jardín/Cuarto */}
-        <div style={{ flex: 2, background: "#f5f0ff", borderRadius: 16, padding: 16, minHeight: 320, position: "relative", boxShadow: "0 2px 8px #0001" }}>
+        <div style={{ flex: 2, background: "#f5f0ff", borderRadius: 16, padding: 16, minHeight: 480, position: "relative", boxShadow: "0 2px 8px #0001" }}>
           <h3>Mi espacio</h3>
-          <div style={{ position: "relative", width: 400, height: 300, background: "#e3d8f8", borderRadius: 12, margin: "0 auto" }}>
+          <div style={{ position: "relative", width: 400, height: 440, background: "#e3d8f8", borderRadius: 12, margin: "0 auto" }}>
             {roomItems.map((item, idx) => (
               <span key={idx} style={{ position: "absolute", left: item.x, top: item.y, fontSize: 32 }}>{item.emoji}</span>
             ))}
