@@ -4539,43 +4539,82 @@ function GameQuiz({ user, onBack }) {
   const partnerRole = myRole === "owner" ? "partner" : "owner";
   const partnerName = myRole === "owner" ? nameB : nameA;
   const [gs, setGs] = useState(null);
-  const [answers, setAnswers] = useState(Array(QUIZ_QS.length).fill(""));
   const [step, setStep] = useState(0);
+  const [newQ, setNewQ] = useState("");
   useEffect(() => { if (!code) return; return fbListenGameState(code, "quiz", setGs); }, [code]);
+
+  const customQs = gs?.customQs || [];
+  const allQs = [...QUIZ_QS, ...customQs];
+  const [answers, setAnswers] = useState(() => Array(allQs.length).fill(""));
+  // Expand answers if questions grow
+  const ensureAnswers = (len) => { if (answers.length < len) setAnswers(a => [...a, ...Array(len - a.length).fill("")]); };
+  useEffect(() => { ensureAnswers(allQs.length); }, [allQs.length]);
+
+  const phase = gs?.phase || "idle";
   const myDone = gs?.[`${myRole}Done`];
   const bothDone = gs?.ownerDone && gs?.partnerDone;
-  const submit = () => { if (!code) return; fbSaveGameState(code, "quiz", { [`${myRole}Answers`]: answers, [`${myRole}Done`]: true }); };
-  const reset = () => { fbSaveGameState(code, "quiz", { ownerDone: false, partnerDone: false, ownerAnswers: [], partnerAnswers: [], phase: "idle" }); setAnswers(Array(QUIZ_QS.length).fill("")); setStep(0); };
+
+  const startPlaying = () => fbSaveGameState(code, "quiz", { phase: "playing", customQs });
+  const addCustomQ = () => {
+    if (!newQ.trim()) return;
+    const nqs = [...customQs, newQ.trim()];
+    fbSaveGameState(code, "quiz", { customQs: nqs });
+    setNewQ("");
+  };
+  const submit = () => { if (!code) return; fbSaveGameState(code, "quiz", { [`${myRole}Answers`]: answers.slice(0, allQs.length), [`${myRole}Done`]: true }); };
+  const reset = () => { fbSaveGameState(code, "quiz", { ownerDone:false, partnerDone:false, ownerAnswers:[], partnerAnswers:[], phase:"idle" }); setAnswers(Array(allQs.length).fill("")); setStep(0); };
+
   const hdr = { padding:"56px 18px 20px", display:"flex", alignItems:"center", gap:12, flexShrink:0 };
   const backBtn = { background:"rgba(255,255,255,0.15)", border:"none", borderRadius:10, padding:"8px 14px", color:"#fff", cursor:"pointer", fontWeight:800, fontSize:"0.88rem" };
   return (
     <div style={{ position:"fixed", inset:0, background:"linear-gradient(135deg, #2d1b4e 0%, #4a2c8a 100%)", zIndex:8000, overflowY:"auto", paddingBottom:40 }}>
       <div style={hdr}><button onClick={onBack} style={backBtn}>← Volver</button><div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.4rem", color:"#fff" }}>💭 ¿Cuánto me conoces?</div></div>
       <div style={{ padding:"0 16px" }}>
-        {!myDone ? (
+        {phase === "idle" && (
           <div style={{ background:C.white, borderRadius:20, padding:18 }}>
-            <div style={{ fontSize:"0.68rem", fontWeight:800, color:C.olive, marginBottom:6, letterSpacing:"0.5px" }}>PREGUNTA {step+1} / {QUIZ_QS.length}</div>
-            <ProgBar value={step} max={QUIZ_QS.length-1} color="#6a3cbf" height={6} style={{ marginBottom:14 }}/>
-            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.05rem", color:C.dark, marginBottom:14, lineHeight:1.45 }}>🤔 {QUIZ_QS[step]}</div>
+            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:6 }}>Preguntas del juego</div>
+            <div style={{ fontSize:"0.74rem", color:C.inkM, marginBottom:12, lineHeight:1.5 }}>Hay {QUIZ_QS.length} preguntas base. Puedes agregar las tuyas antes de empezar.</div>
+            {customQs.length > 0 && (
+              <div style={{ marginBottom:12 }}>
+                <div style={{ fontSize:"0.68rem", fontWeight:800, color:"#6a3cbf", marginBottom:6 }}>TUS PREGUNTAS ({customQs.length})</div>
+                {customQs.map((q, i) => (
+                  <div key={i} style={{ background:"#f0ebff", borderRadius:10, padding:"7px 10px", fontSize:"0.8rem", color:C.dark, marginBottom:5 }}>• {q}</div>
+                ))}
+              </div>
+            )}
+            <div style={{ display:"flex", gap:8, marginBottom:14 }}>
+              <input value={newQ} onChange={e=>setNewQ(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addCustomQ()} placeholder="+ Agregar tu propia pregunta..." style={{ flex:1, border:`1.5px solid ${C.border}`, borderRadius:10, padding:"9px 12px", fontSize:"0.84rem", outline:"none", fontFamily:"inherit", color:C.ink }}/>
+              <button onClick={addCustomQ} disabled={!newQ.trim()} style={{ background:"#6a3cbf", color:"#fff", border:"none", borderRadius:10, padding:"9px 14px", cursor:newQ.trim()?"pointer":"default", fontWeight:800, opacity:newQ.trim()?1:0.5 }}>+</button>
+            </div>
+            <button onClick={startPlaying} style={{ width:"100%", background:"#6a3cbf", color:"#fff", border:"none", borderRadius:14, padding:"13px 0", fontFamily:"'Fredoka One',cursive", fontSize:"1rem", cursor:"pointer" }}>¡Empezar! ({allQs.length} preguntas)</button>
+          </div>
+        )}
+        {phase === "playing" && !myDone && (
+          <div style={{ background:C.white, borderRadius:20, padding:18 }}>
+            <div style={{ fontSize:"0.68rem", fontWeight:800, color:C.olive, marginBottom:6, letterSpacing:"0.5px" }}>PREGUNTA {step+1} / {allQs.length}</div>
+            <ProgBar value={step} max={allQs.length-1} color="#6a3cbf" height={6} style={{ marginBottom:14 }}/>
+            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.05rem", color:C.dark, marginBottom:14, lineHeight:1.45 }}>🤔 {allQs[step]}</div>
             <div style={{ fontSize:"0.74rem", color:C.inkL, marginBottom:8 }}>¿Cómo crees que responde {partnerName}?</div>
-            <TA value={answers[step]} onChange={v => setAnswers(p => { const a=[...p]; a[step]=v; return a; })} placeholder="Tu respuesta..." rows={2} style={{ marginBottom:12 }}/>
+            <TA value={answers[step]||""} onChange={v => setAnswers(p => { const a=[...p]; a[step]=v; return a; })} placeholder="Tu respuesta..." rows={2} style={{ marginBottom:12 }}/>
             <div style={{ display:"flex", gap:8 }}>
               {step > 0 && <Btn onClick={() => setStep(s=>s-1)} variant="ghost" style={{ padding:"11px 14px" }}>← Ant.</Btn>}
-              {step < QUIZ_QS.length-1
+              {step < allQs.length-1
                 ? <Btn onClick={() => setStep(s=>s+1)} style={{ flex:1 }}>Siguiente →</Btn>
                 : <Btn onClick={submit} style={{ flex:1, background:"#6a3cbf", color:"#fff" }}>Enviar respuestas ✓</Btn>}
             </div>
           </div>
-        ) : !bothDone ? (
+        )}
+        {phase === "playing" && myDone && !bothDone && (
           <div style={{ background:C.white, borderRadius:20, padding:28, textAlign:"center" }}>
             <div style={{ fontSize:"2.5rem", marginBottom:12 }}>⏳</div>
             <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.15rem", color:C.dark, marginBottom:8 }}>Esperando a {partnerName}...</div>
             <div style={{ fontSize:"0.84rem", color:C.inkM, lineHeight:1.6 }}>Ya enviaste tus respuestas. Cuando {partnerName} termine, verán los resultados juntos 💜</div>
           </div>
-        ) : (
+        )}
+        {bothDone && (
           <>
             <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.15rem", color:"#fff", marginBottom:14, textAlign:"center" }}>✨ ¡Resultados! ✨</div>
-            {QUIZ_QS.map((q, i) => (
+            {allQs.map((q, i) => (
               <div key={i} style={{ background:C.white, borderRadius:16, padding:14, marginBottom:10 }}>
                 <div style={{ fontSize:"0.72rem", fontWeight:800, color:C.olive, marginBottom:8 }}>Pregunta {i+1}: {q}</div>
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
@@ -4610,6 +4649,9 @@ function GameAhorcado({ user, onBack }) {
   const phase = gs?.phase || "idle";
   const isSetter = gs?.setterRole === myRole;
   const isGuesser = gs?.setterRole && gs.setterRole !== myRole;
+  const isProposer = gs?.proposer === myRole;
+
+  const proposeToSet = () => fbSaveGameState(code, "ahorcado", { phase:"proposing", proposer:myRole, word:null, hint:null, guessedLetters:[], wrongCount:0, result:null, setterRole:null });
   const word = gs?.word || ""; const guessed = gs?.guessedLetters || []; const wrong = gs?.wrongCount || 0;
   const masked = word.split("").map(l => guessed.includes(l) ? l : "_").join(" ");
   const startGame = async () => { const w = wordInput.trim().toUpperCase(); if (!w||w.length<2) return; await fbSaveGameState(code, "ahorcado", { phase:"guessing", setterRole:myRole, word:w, hint:hintInput.trim(), guessedLetters:[], wrongCount:0, result:null }); setWordInput(""); setHintInput(""); };
@@ -4622,6 +4664,21 @@ function GameAhorcado({ user, onBack }) {
       <div style={hdr}><button onClick={onBack} style={backBtn}>← Volver</button><div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.4rem", color:"#fff" }}>🔤 Adivina la Palabra</div></div>
       <div style={{ padding:"0 16px" }}>
         {phase==="idle" && (
+          <div style={{ background:C.white, borderRadius:20, padding:24, textAlign:"center" }}>
+            <div style={{ fontSize:"2.5rem", marginBottom:12 }}>🔤</div>
+            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.1rem", color:C.dark, marginBottom:8 }}>Adivina la Palabra</div>
+            <div style={{ fontSize:"0.84rem", color:C.inkM, marginBottom:20, lineHeight:1.6 }}>Uno elige una palabra secreta, el otro la adivina letra a letra.</div>
+            <button onClick={proposeToSet} style={{ width:"100%", background:"#6a3cbf", color:"#fff", border:"none", borderRadius:14, padding:"13px 0", fontFamily:"'Fredoka One',cursive", fontSize:"1rem", cursor:"pointer" }}>Yo elijo la palabra 🤫</button>
+          </div>
+        )}
+        {phase==="proposing" && !isProposer && (
+          <div style={{ background:C.white, borderRadius:20, padding:28, textAlign:"center" }}>
+            <div style={{ fontSize:"2.5rem", marginBottom:12 }}>⏳</div>
+            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.1rem", color:C.dark, marginBottom:8 }}>{partnerName} está eligiendo una palabra...</div>
+            <div style={{ fontSize:"0.84rem", color:C.inkM }}>Espera — no hagas trampa 👀</div>
+          </div>
+        )}
+        {phase==="proposing" && isProposer && (
           <div style={{ background:C.white, borderRadius:20, padding:18 }}>
             <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.05rem", color:C.dark, marginBottom:14 }}>Escoge una palabra para que {partnerName} adivine 🕵️</div>
             <input value={wordInput} onChange={e=>setWordInput(e.target.value.toUpperCase())} placeholder="LA PALABRA (solo tú la verás)" style={{ width:"100%", border:`2px solid ${C.border}`, borderRadius:12, padding:"12px 14px", fontFamily:"'Fredoka One',cursive", fontSize:"1.1rem", letterSpacing:5, outline:"none", color:C.ink, background:C.cream2, marginBottom:10, boxSizing:"border-box" }}/>
@@ -4793,18 +4850,207 @@ function GameCadena({ user, onBack }) {
   );
 }
 
+function GameMemoria({ user, onBack }) {
+  const myRole = user?.isOwner !== false ? "owner" : "partner";
+  const code = user?.code;
+  const { nameA, nameB } = getCoupleNames(user);
+  const myName = myRole === "owner" ? nameA : nameB;
+  const partnerRole = myRole === "owner" ? "partner" : "owner";
+  const partnerName = myRole === "owner" ? nameB : nameA;
+  const [gs, setGs] = useState(null);
+  useEffect(() => { if (!code) return; return fbListenGameState(code, "memoria", setGs); }, [code]);
+
+  const cards = gs?.cards || [];
+  const matched = gs?.matched || [];
+  const selected = gs?.selected || [];
+  const currentTurn = gs?.currentTurn || "owner";
+  const scores = gs?.scores || { owner: 0, partner: 0 };
+  const isMyTurn = currentTurn === myRole;
+  const allDone = cards.length > 0 && matched.length === cards.length;
+
+  const initGame = async () => {
+    const all = [...MEMORY_EMOJIS, ...MEMORY_EMOJIS];
+    for (let i = all.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [all[i], all[j]] = [all[j], all[i]]; }
+    await fbSaveGameState(code, "memoria", { cards: all, matched: [], selected: [], currentTurn: "owner", scores: { owner: 0, partner: 0 }, phase: "playing" });
+  };
+
+  const flipCard = async (idx) => {
+    if (!isMyTurn) return;
+    if (matched.includes(idx) || selected.includes(idx) || selected.length >= 2) return;
+    const ns = [...selected, idx];
+    if (ns.length < 2) { await fbSaveGameState(code, "memoria", { selected: ns }); return; }
+    await fbSaveGameState(code, "memoria", { selected: ns });
+    setTimeout(async () => {
+      const [a, b] = ns;
+      const hit = cards[a] === cards[b];
+      const nm = hit ? [...matched, a, b] : matched;
+      const sc = { ...scores, [myRole]: (scores[myRole] || 0) + (hit ? 1 : 0) };
+      await fbSaveGameState(code, "memoria", { selected: [], matched: nm, scores: sc, currentTurn: hit ? myRole : partnerRole });
+    }, 1300);
+  };
+
+  const hdr = { padding:"56px 18px 20px", display:"flex", alignItems:"center", gap:12 };
+  const backBtn = { background:"rgba(255,255,255,0.15)", border:"none", borderRadius:10, padding:"8px 14px", color:"#fff", cursor:"pointer", fontWeight:800, fontSize:"0.88rem" };
+  const myColor = myRole === "owner" ? "#6a3cbf" : "#e8607a";
+  const partColor = myRole === "owner" ? "#e8607a" : "#6a3cbf";
+
+  return (
+    <div style={{ position:"fixed", inset:0, background:"linear-gradient(135deg, #2d1b4e 0%, #4a2c8a 100%)", zIndex:8000, overflowY:"auto", paddingBottom:40 }}>
+      <div style={hdr}>
+        <button onClick={onBack} style={backBtn}>← Volver</button>
+        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.4rem", color:"#fff" }}>🃏 Memoria</div>
+        {cards.length > 0 && <div style={{ marginLeft:"auto", display:"flex", gap:8 }}>
+          <div style={{ background:`${myColor}44`, borderRadius:10, padding:"4px 10px", fontSize:"0.74rem", fontWeight:800, color:"#fff" }}>{myName}: {scores[myRole]||0}</div>
+          <div style={{ background:`${partColor}44`, borderRadius:10, padding:"4px 10px", fontSize:"0.74rem", fontWeight:800, color:"#fff" }}>{partnerName}: {scores[partnerRole]||0}</div>
+        </div>}
+      </div>
+      <div style={{ padding:"0 16px" }}>
+        {!gs || gs.phase === "idle" || cards.length === 0 ? (
+          <div style={{ background:C.white, borderRadius:20, padding:28, textAlign:"center" }}>
+            <div style={{ fontSize:"3rem", marginBottom:12 }}>🃏</div>
+            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.1rem", color:C.dark, marginBottom:8 }}>Memoria en pareja</div>
+            <div style={{ fontSize:"0.84rem", color:C.inkM, marginBottom:20, lineHeight:1.6 }}>Voltea tarjetas de a dos. Si hacen pareja, se quedan descubiertas y sigues tú. Si no, vuelven y le toca a tu pareja. ¡El que encuentre más pares gana!</div>
+            <button onClick={initGame} style={{ background:"#6a3cbf", color:"#fff", border:"none", borderRadius:14, padding:"13px 28px", fontFamily:"'Fredoka One',cursive", fontSize:"1rem", cursor:"pointer" }}>¡Jugar!</button>
+          </div>
+        ) : allDone ? (
+          <div style={{ background:C.white, borderRadius:20, padding:28, textAlign:"center" }}>
+            <div style={{ fontSize:"3rem", marginBottom:10 }}>{scores[myRole]>scores[partnerRole]?"🎉":scores[myRole]<scores[partnerRole]?"🥲":"🤝"}</div>
+            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.3rem", color:C.dark, marginBottom:14 }}>
+              {scores[myRole]>scores[partnerRole]? `¡${myName} ganó!` : scores[myRole]<scores[partnerRole]? `¡${partnerName} ganó!` : "¡Empate! 🐼"}
+            </div>
+            <div style={{ display:"flex", gap:12, justifyContent:"center", marginBottom:18 }}>
+              <div style={{ background:"#f0ebff", borderRadius:12, padding:"10px 18px" }}><div style={{ fontFamily:"'Fredoka One',cursive", color:"#6a3cbf" }}>{myName}</div><div style={{ fontSize:"1.8rem", fontWeight:800 }}>{scores[myRole]}</div></div>
+              <div style={{ background:"#fff0f4", borderRadius:12, padding:"10px 18px" }}><div style={{ fontFamily:"'Fredoka One',cursive", color:"#e8607a" }}>{partnerName}</div><div style={{ fontSize:"1.8rem", fontWeight:800 }}>{scores[partnerRole]}</div></div>
+            </div>
+            <button onClick={initGame} style={{ background:"#6a3cbf", color:"#fff", border:"none", borderRadius:14, padding:"12px 26px", fontFamily:"'Fredoka One',cursive", fontSize:"1rem", cursor:"pointer" }}>Jugar de nuevo 🔄</button>
+          </div>
+        ) : (
+          <>
+            <div style={{ background:"rgba(255,255,255,0.12)", borderRadius:14, padding:"8px 12px", marginBottom:12, textAlign:"center", fontSize:"0.84rem", fontWeight:800, color:"#fff" }}>
+              {isMyTurn ? "🎯 Tu turno — voltea dos cartas" : `⏳ Turno de ${partnerName}...`}
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(5, 1fr)", gap:6 }}>
+              {cards.map((emoji, i) => {
+                const isMatched = matched.includes(i);
+                const isSel = selected.includes(i);
+                const show = isMatched || isSel;
+                return (
+                  <div key={i} onClick={() => flipCard(i)} style={{ aspectRatio:"1", borderRadius:12, background: isMatched ? "#d4f0c4" : isSel ? "#f0ebff" : "#4a2c8a", border: isMatched ? "2px solid #6a9840" : isSel ? "2px solid #9a7cbf" : "2px solid #7a5caf", display:"flex", alignItems:"center", justifyContent:"center", fontSize:show?"1.6rem":"1.4rem", cursor:(!isMatched&&!isSel&&isMyTurn&&selected.length<2)?"pointer":"default", transition:"all 0.2s" }}>
+                    {show ? emoji : "🟣"}
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function GameConecta4({ user, onBack }) {
+  const ROWS = 6, COLS = 7;
+  const myRole = user?.isOwner !== false ? "owner" : "partner";
+  const code = user?.code;
+  const { nameA, nameB } = getCoupleNames(user);
+  const myName = myRole === "owner" ? nameA : nameB;
+  const partnerRole = myRole === "owner" ? "partner" : "owner";
+  const partnerName = myRole === "owner" ? nameB : nameA;
+  const [gs, setGs] = useState(null);
+  useEffect(() => { if (!code) return; return fbListenGameState(code, "conecta4", setGs); }, [code]);
+
+  const board = gs?.board || Array(ROWS * COLS).fill(null);
+  const currentTurn = gs?.currentTurn || "owner";
+  const winner = gs?.winner || null;
+  const isDraw = !winner && board.every(Boolean);
+  const isMyTurn = currentTurn === myRole && !winner && !isDraw;
+
+  const initGame = () => fbSaveGameState(code, "conecta4", { board: Array(ROWS * COLS).fill(null), currentTurn: "owner", winner: null, phase: "playing" });
+
+  const dropPiece = async (col) => {
+    if (!isMyTurn) return;
+    let row = -1;
+    for (let r = ROWS - 1; r >= 0; r--) { if (!board[r * COLS + col]) { row = r; break; } }
+    if (row === -1) return;
+    const nb = [...board]; nb[row * COLS + col] = myRole;
+    const win = checkC4Win(nb, row, col, ROWS, COLS, myRole);
+    await fbSaveGameState(code, "conecta4", { board: nb, currentTurn: partnerRole, winner: win ? myRole : null, phase: win ? "done" : "playing" });
+  };
+
+  const myColor = myRole === "owner" ? "#6a3cbf" : "#e8607a";
+  const partColor = myRole === "owner" ? "#e8607a" : "#6a3cbf";
+  const hdr = { padding:"56px 18px 20px", display:"flex", alignItems:"center", gap:12 };
+  const backBtn = { background:"rgba(255,255,255,0.15)", border:"none", borderRadius:10, padding:"8px 14px", color:"#fff", cursor:"pointer", fontWeight:800, fontSize:"0.88rem" };
+
+  return (
+    <div style={{ position:"fixed", inset:0, background:"linear-gradient(135deg, #2d1b4e 0%, #4a2c8a 100%)", zIndex:8000, overflowY:"auto", paddingBottom:40 }}>
+      <div style={hdr}>
+        <button onClick={onBack} style={backBtn}>← Volver</button>
+        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.4rem", color:"#fff" }}>🔴 Conecta Corazones</div>
+      </div>
+      <div style={{ padding:"0 16px" }}>
+        {!gs || !gs.board ? (
+          <div style={{ background:C.white, borderRadius:20, padding:28, textAlign:"center" }}>
+            <div style={{ fontSize:"3rem", marginBottom:12 }}>🔴🟣</div>
+            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.1rem", color:C.dark, marginBottom:8 }}>Conecta Corazones</div>
+            <div style={{ fontSize:"0.84rem", color:C.inkM, marginBottom:20, lineHeight:1.6 }}>Cada uno suelta fichas en el tablero. El primero en conectar 4 seguidas (en cualquier dirección) ¡gana! Alternan turnos automáticamente.</div>
+            <div style={{ display:"flex", gap:10, justifyContent:"center", marginBottom:16 }}>
+              <div style={{ display:"flex", alignItems:"center", gap:6, fontSize:"0.84rem", fontWeight:700, color:C.inkM }}><div style={{ width:18, height:18, borderRadius:"50%", background:"#6a3cbf" }}/>{nameA}</div>
+              <div style={{ display:"flex", alignItems:"center", gap:6, fontSize:"0.84rem", fontWeight:700, color:C.inkM }}><div style={{ width:18, height:18, borderRadius:"50%", background:"#e8607a" }}/>{nameB}</div>
+            </div>
+            <button onClick={initGame} style={{ background:"#6a3cbf", color:"#fff", border:"none", borderRadius:14, padding:"13px 28px", fontFamily:"'Fredoka One',cursive", fontSize:"1rem", cursor:"pointer" }}>¡Jugar!</button>
+          </div>
+        ) : (
+          <>
+            {(winner || isDraw) ? (
+              <div style={{ background:C.white, borderRadius:16, padding:18, textAlign:"center", marginBottom:12 }}>
+                <div style={{ fontSize:"2.5rem", marginBottom:8 }}>{isDraw?"🤝":winner===myRole?"🎉":"🥲"}</div>
+                <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.2rem", color:C.dark, marginBottom:12 }}>
+                  {isDraw ? "¡Empate!" : winner===myRole ? `¡${myName} ganó! 🎉` : `¡${partnerName} ganó!`}
+                </div>
+                <button onClick={initGame} style={{ background:"#6a3cbf", color:"#fff", border:"none", borderRadius:12, padding:"10px 22px", fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", cursor:"pointer" }}>Revancha 🔄</button>
+              </div>
+            ) : (
+              <div style={{ background:"rgba(255,255,255,0.12)", borderRadius:12, padding:"8px 12px", marginBottom:10, textAlign:"center", fontSize:"0.84rem", fontWeight:800, color:"#fff" }}>
+                <span style={{ color: isMyTurn ? "#f8e060" : "rgba(255,255,255,0.7)" }}>{isMyTurn ? `🎯 Tu turno (${myName})` : `⏳ Turno de ${partnerName}...`}</span>
+              </div>
+            )}
+            <div style={{ background:"rgba(255,255,255,0.08)", borderRadius:16, padding:8 }}>
+              <div style={{ display:"grid", gridTemplateColumns:`repeat(${COLS}, 1fr)`, gap:4, marginBottom:6 }}>
+                {Array(COLS).fill(0).map((_, col) => (
+                  <button key={col} onClick={() => dropPiece(col)} disabled={!isMyTurn || !!winner || isDraw}
+                    style={{ background:isMyTurn?"rgba(255,255,255,0.15)":"transparent", border:"none", borderRadius:8, padding:"6px 0", cursor:isMyTurn?"pointer":"default", color:"rgba(255,255,255,0.6)", fontSize:"1rem" }}>▼</button>
+                ))}
+              </div>
+              <div style={{ display:"grid", gridTemplateColumns:`repeat(${COLS}, 1fr)`, gap:4 }}>
+                {board.map((cell, i) => (
+                  <div key={i} style={{ aspectRatio:"1", borderRadius:"50%", background: cell==="owner"?"#6a3cbf" : cell==="partner"?"#e8607a" : "rgba(255,255,255,0.1)", border:"2px solid rgba(255,255,255,0.12)", boxShadow: cell ? `0 2px 6px ${cell==="owner"?"#6a3cbf88":"#e8607a88"}` : "none", transition:"background 0.2s" }}/>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function GamesHub({ user, onClose }) {
   const [activeGame, setActiveGame] = useState(null);
   const GAMES = [
-    { id:"quiz",     emoji:"💭", name:"¿Cuánto me conoces?",  desc:"Respondan sobre el otro y comparen" },
-    { id:"ahorcado", emoji:"🔤", name:"Adivina la Palabra",   desc:"Uno elige, el otro adivina letra a letra" },
-    { id:"wyr",      emoji:"🤔", name:"¿Qué preferirías?",    desc:"¿Coinciden en sus elecciones?" },
-    { id:"cadena",   emoji:"🔗", name:"Cadena de Palabras",   desc:"Construyan una cadena asociada" },
+    { id:"quiz",      emoji:"💭", name:"¿Cuánto me conoces?",  desc:"Respondan sobre el otro y comparen" },
+    { id:"ahorcado",  emoji:"🔤", name:"Adivina la Palabra",   desc:"Uno elige, el otro adivina letra a letra" },
+    { id:"wyr",       emoji:"🤔", name:"¿Qué preferirías?",    desc:"¿Coinciden en sus elecciones?" },
+    { id:"cadena",    emoji:"🔗", name:"Cadena de Palabras",   desc:"Construyan una cadena asociada" },
+    { id:"memoria",   emoji:"🃏", name:"Memoria",              desc:"Voltea pares de cartas por turnos" },
+    { id:"conecta4",  emoji:"🔴", name:"Conecta Corazones",    desc:"Conecta 4 fichas seguidas para ganar" },
   ];
-  if (activeGame==="quiz")     return <GameQuiz    user={user} onBack={() => setActiveGame(null)}/>;
-  if (activeGame==="ahorcado") return <GameAhorcado user={user} onBack={() => setActiveGame(null)}/>;
-  if (activeGame==="wyr")      return <GameWYR     user={user} onBack={() => setActiveGame(null)}/>;
-  if (activeGame==="cadena")   return <GameCadena  user={user} onBack={() => setActiveGame(null)}/>;
+  if (activeGame==="quiz")      return <GameQuiz     user={user} onBack={() => setActiveGame(null)}/>;
+  if (activeGame==="ahorcado")  return <GameAhorcado  user={user} onBack={() => setActiveGame(null)}/>;
+  if (activeGame==="wyr")       return <GameWYR       user={user} onBack={() => setActiveGame(null)}/>;
+  if (activeGame==="cadena")    return <GameCadena    user={user} onBack={() => setActiveGame(null)}/>;
+  if (activeGame==="memoria")   return <GameMemoria   user={user} onBack={() => setActiveGame(null)}/>;
+  if (activeGame==="conecta4")  return <GameConecta4  user={user} onBack={() => setActiveGame(null)}/>;
   return (
     <div style={{ position:"fixed", inset:0, background:"rgba(20,10,40,0.88)", zIndex:8000, display:"flex", alignItems:"flex-end" }} onClick={e => { if(e.target===e.currentTarget) onClose(); }}>
       <div style={{ background:C.white, borderRadius:"24px 24px 0 0", width:"100%", maxWidth:480, margin:"0 auto", maxHeight:"88vh", overflowY:"auto" }}>
