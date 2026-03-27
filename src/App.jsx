@@ -595,6 +595,18 @@ const CONSEJOS_DIARIOS = [
 ];
 
 // ════════════════════ GAME CONSTANTS ════════════════════
+const MEMORY_EMOJIS = ["🌸","🌺","🌻","🌹","🌈","⭐","🦋","🐝","💫","🎀"];
+
+function checkC4Win(board, row, col, ROWS, COLS, role) {
+  const check = (dr, dc) => {
+    let n = 1;
+    for (let d = 1; d < 4; d++) { const r=row+dr*d, c=col+dc*d; if(r<0||r>=ROWS||c<0||c>=COLS||board[r*COLS+c]!==role)break; n++; }
+    for (let d = 1; d < 4; d++) { const r=row-dr*d, c=col-dc*d; if(r<0||r>=ROWS||c<0||c>=COLS||board[r*COLS+c]!==role)break; n++; }
+    return n >= 4;
+  };
+  return check(0,1)||check(1,0)||check(1,1)||check(1,-1);
+}
+
 const QUIZ_QS = [
   "¿Cuál es la comida favorita de tu pareja?",
   "¿Cuál es su canción o artista favorito en este momento?",

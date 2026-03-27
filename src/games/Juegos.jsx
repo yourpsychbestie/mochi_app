@@ -6,10 +6,6 @@ import './Juegos.css';
 
 const TABS = [
   { id: 'memoria', label: '🃏 Memoria' },
-  { id: 'ahorcado', label: '🔤 Ahorcado' },
-  { id: 'trivia', label: '🧠 Trivia' },
-  { id: 'wordle', label: '🟩 Wordle' },
-  { id: 'scrabble', label: '🎲 Scrabble' },
   { id: 'draw', label: '🎨 Dibujo' },
 ];
 
@@ -32,7 +28,6 @@ export default function Juegos({ onBambuEarned }) {
       <div className="game-area">
         {tab === 'memoria' && <Memoria onBambuEarned={onBambuEarned} />}
         {tab === 'draw' && <MochiDraw />}
-        {/* Otros juegos se agregarán aquí */}
       </div>
     </div>
   );
