@@ -1510,7 +1510,7 @@ function GardenScene({ garden, waterLevel, bgImage, isIndoor }) {
   const waterCol = dry ? "#c8b870" : "#88c8c8";
 
   return (
-    <svg viewBox="0 0 390 290" style={{ width:"100%", display:"block", borderRadius: "0 0 20px 20px" }}>
+    <svg viewBox="0 0 390 340" style={{ width:"100%", height:"340px", display:"block", borderRadius: "0 0 20px 20px" }}>
       {bgImage ? (
         <image href={bgImage} x="0" y="0" width="390" height="290" preserveAspectRatio="xMidYMid slice"/>
       ) : (<>
@@ -5239,15 +5239,39 @@ export default function App() {
         return;
       }
       const safeGarden = garden && typeof garden === "object" ? garden : {};
-      if (safeGarden[item.id]) { toast("Ya está en el jardín"); return; }
+      const currentLoc = item.location || "garden";
       // Pond-dependent items require pond first
       const POND_DEPS = ["koi1", "koi2", "lotus_pad"];
-      if (POND_DEPS.includes(item.id) && !safeGarden.pond) {
+      if (POND_DEPS.includes(item.id) && !safeGarden.pond && currentLoc === "garden") {
         toast("Necesitas el Estanque primero 🪷");
         return;
       }
+      // Si el item ya está en el lugar actual, quitarlo
+      if (safeGarden[item.id] === currentLoc) {
+        const ng = { ...safeGarden };
+        delete ng[item.id];
+        if (user?.code && !user?.isGuest) {
+          fbSaveGardenState(user.code, { garden: ng, accessories, water, happiness }).catch(() => {});
+        }
+        setGarden(ng);
+        toast(`${item.name} quitado del ${currentLoc === "indoor" ? "cuarto" : "jardín"}`);
+        save(null, { bamboo, happiness, water, garden: ng, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit: new Date().toISOString(), testScores, lessonsDone, gratitud, momentos });
+        return;
+      }
+      // Si el item está en el otro lugar, moverlo
+      if (safeGarden[item.id] && safeGarden[item.id] !== currentLoc) {
+        const ng = { ...safeGarden, [item.id]: currentLoc };
+        if (user?.code && !user?.isGuest) {
+          fbSaveGardenState(user.code, { garden: ng, accessories, water, happiness }).catch(() => {});
+        }
+        setGarden(ng);
+        toast(`${item.name} movido a ${currentLoc === "indoor" ? "cuarto" : "jardín"}`);
+        save(null, { bamboo, happiness, water, garden: ng, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit: new Date().toISOString(), testScores, lessonsDone, gratitud, momentos });
+        return;
+      }
+      // Si no está, comprarlo
       if (bamboo < item.cost) { toast("Necesitas más bambú — completa ejercicios"); return; }
-      const nb = bamboo - item.cost, ng = { ...safeGarden, [item.id]: item.location || "garden" }, nh = Math.min(100, happiness + 10);
+      const nb = bamboo - item.cost, ng = { ...safeGarden, [item.id]: currentLoc }, nh = Math.min(100, happiness + 10);
       const nv = new Date().toISOString();
       if (user?.code && !user?.isGuest) {
         fbPurchaseGardenUpdate(user.code, item.cost, { garden: ng, accessories, water, happiness: nh })
@@ -5257,7 +5281,7 @@ export default function App() {
             setHappiness(nh);
             setLastVisit(nv);
             trigHappy();
-            toast(`${item.name} plantado 🌿`);
+            toast(`${item.name} puesto en ${currentLoc === "indoor" ? "cuarto" : "jardín"}`);
             save(null, { bamboo:newTotal, happiness:nh, water, garden:ng, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit:nv, testScores, lessonsDone, gratitud, momentos });
           })
           .catch((e) => {
@@ -5271,7 +5295,7 @@ export default function App() {
         return;
       }
       setBamboo(nb); setGarden(ng); setHappiness(nh); setLastVisit(nv); trigHappy();
-      toast(`${item.name} plantado 🌿`);
+      toast(`${item.name} puesto en ${currentLoc === "indoor" ? "cuarto" : "jardín"}`);
       save(null, { bamboo:nb, happiness:nh, water, garden:ng, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit:nv, testScores, lessonsDone, gratitud, momentos });
     } catch (e) {
       console.error("buyItem error:", e);
@@ -5527,11 +5551,27 @@ export default function App() {
       toast("Primero ambos deben escribir su parte");
       return;
     }
-    const history = [...(prev.history || []), { id: Date.now(), type: isCounter ? "counter" : "proposal", by: myRole, text: clean, at: new Date().toISOString() }];
+    // Buscar la pregunta asociada
+    let contextualText = clean;
+    if (BURBUJA_ITEM_MAP && BURBUJA_ITEM_MAP[id] && BURBUJA_ITEM_MAP[id].question) {
+      const q = BURBUJA_ITEM_MAP[id].question.toLowerCase();
+      if (q.includes("prohibid")) {
+        contextualText = `Está prohibido ${clean}`;
+      } else if (q.includes("permitid")) {
+        contextualText = `Está permitido ${clean}`;
+      } else if (q.includes("necesit")) {
+        contextualText = `Necesito ${clean}`;
+      } else if (q.includes("quieres") || q.includes("quiero")) {
+        contextualText = `Quiero ${clean}`;
+      } else if (q.includes("definir") || q.includes("tipo de relación")) {
+        contextualText = `Nuestra relación es ${clean}`;
+      } // Puedes agregar más reglas aquí según las preguntas
+    }
+    const history = [...(prev.history || []), { id: Date.now(), type: isCounter ? "counter" : "proposal", by: myRole, text: contextualText, at: new Date().toISOString() }];
     const next = {
       ...prev,
       status: "pending",
-      proposalText: clean,
+      proposalText: contextualText,
       proposalBy: myRole,
       history,
       approvedText: null,
