@@ -15,7 +15,7 @@ import {
   fbAddMomento, fbListenMomentos,
   fbSaveConoce, fbListenConoce,
   fbSaveLessonRead, fbListenLessons,
-  fbSaveBurbuja, fbListenBurbuja,
+  fbSaveBurbuja, fbDeleteBurbuja, fbListenBurbuja,
   fbSaveGameState, fbListenGameState, fbResetGame,
   fbSendNotif, fbListenNotifs, fbMarkNotifRead,
   fbSaveStreakInteraction, fbListenStreakInteractions,
@@ -643,176 +643,76 @@ const WYR_QS = [
   { a:"Que tu pareja sea tu mejor amigo/a", b:"Que tu pareja sea tu aventura constante" },
 ];
 
-function CouplePandaSVG({ happy = false, size = 160 }) {
-  const s = size;
-  const G = "#5c5c5c";
-  const GD = "#4a4a4a";
-  const W = "#f9f9f9";
-  const WW = "#ffffff";
+function PandaBody({ x = 0, y = 0, scale = 1, flip = false, happy = false }) {
+  const OL = "#3a2010";
+  const GR = "#6a6a6a";
+  const WH = "#ffffff";
+  const PK = "#f4a898";
+  const s = scale;
   return (
-    <svg viewBox="0 0 260 220" width={s} height={s * 0.846} style={{ display: "block" }}>
-      <defs>
-        <filter id="kShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="3" stdDeviation="3" floodColor="#3a3a3a" floodOpacity="0.13"/></filter>
-        <filter id="kGlow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#f8d0e8" floodOpacity="0.7"/></filter>
-      </defs>
-
-      {/* ── LEFT PANDA ── */}
-      <ellipse cx="76" cy="213" rx="40" ry="6" fill="#3a3a3a" opacity="0.09"/>
+    <g transform={`translate(${x},${y}) scale(${flip ? -s : s},${s})`}>
+      {/* Shadow */}
+      <ellipse cx="0" cy="98" rx="28" ry="6" fill={OL} opacity="0.10"/>
+      {/* Legs */}
+      <rect x="-20" y="72" width="17" height="28" rx="8" fill={GR} stroke={OL} strokeWidth="1.8"/>
+      <rect x="3"   y="72" width="17" height="28" rx="8" fill={GR} stroke={OL} strokeWidth="1.8"/>
+      {/* Toe lines */}
+      <path d="M-18 96 Q-14 100 -10 96" fill="none" stroke={OL} strokeWidth="1.2" strokeLinecap="round"/>
+      <path d="M5 96 Q9 100 13 96"       fill="none" stroke={OL} strokeWidth="1.2" strokeLinecap="round"/>
       {/* Body */}
-      <path d="M46 210 C30 210 24 188 26 166 C28 146 40 132 62 128 C70 126 82 126 90 128 C112 132 124 146 124 166 C126 188 120 210 104 210 Z" fill={W} stroke={GD} strokeWidth="2" filter="url(#kShadow)"/>
-      {/* Tummy */}
-      <ellipse cx="76" cy="172" rx="19" ry="24" fill={WW} opacity="0.7"/>
+      <ellipse cx="0" cy="56" rx="30" ry="34" fill={WH} stroke={OL} strokeWidth="2"/>
+      {/* Tummy highlight */}
+      <ellipse cx="0" cy="60" rx="18" ry="22" fill={WH} opacity="0.6"/>
       {/* Left arm */}
-      <path d="M30 158 C18 165 14 180 18 192" fill="none" stroke={GD} strokeWidth="17" strokeLinecap="round"/>
-      <path d="M30 158 C18 165 14 180 18 192" fill="none" stroke={G} strokeWidth="13" strokeLinecap="round"/>
+      <path d="M-30 42 C-44 42 -46 58 -38 66 C-34 70 -28 68 -26 62" fill={GR} stroke={OL} strokeWidth="1.8" strokeLinejoin="round"/>
       {/* Right arm */}
-      <path d="M122 152 C135 144 148 142 154 147 C158 150 156 162 148 162" fill="none" stroke={GD} strokeWidth="17" strokeLinecap="round"/>
-      <path d="M122 152 C135 144 148 142 154 147 C158 150 156 162 148 162" fill="none" stroke={G} strokeWidth="13" strokeLinecap="round"/>
-      {/* Feet */}
-      <ellipse cx="56" cy="202" rx="20" ry="11" fill={GD}/>
-      <ellipse cx="56" cy="200" rx="17" ry="9" fill={G}/>
-      <ellipse cx="96" cy="202" rx="20" ry="11" fill={GD}/>
-      <ellipse cx="96" cy="200" rx="17" ry="9" fill={G}/>
-      <ellipse cx="56" cy="208" rx="11" ry="5" fill="#f0ece8" opacity="0.55"/>
-      <ellipse cx="96" cy="208" rx="11" ry="5" fill="#f0ece8" opacity="0.55"/>
+      <path d="M30 42 C44 42 46 58 38 66 C34 70 28 68 26 62" fill={GR} stroke={OL} strokeWidth="1.8" strokeLinejoin="round"/>
       {/* Head */}
-      <circle cx="76" cy="85" r="44" fill={W} stroke={GD} strokeWidth="2" filter="url(#kShadow)"/>
+      <circle cx="0" cy="-4" r="36" fill={WH} stroke={OL} strokeWidth="2"/>
       {/* Ears */}
-      <circle cx="40" cy="50" r="16" fill={GD}/>
-      <circle cx="40" cy="50" r="10" fill={G}/>
-      <circle cx="112" cy="50" r="16" fill={GD}/>
-      <circle cx="112" cy="50" r="10" fill={G}/>
+      <circle cx="-28" cy="-36" r="13" fill={GR} stroke={OL} strokeWidth="1.8"/>
+      <circle cx=" 28" cy="-36" r="13" fill={GR} stroke={OL} strokeWidth="1.8"/>
       {/* Eye patches */}
-      <ellipse cx="61" cy="84" rx="14" ry="12" fill={G} transform="rotate(-12 61 84)"/>
-      <ellipse cx="91" cy="84" rx="14" ry="12" fill={G} transform="rotate(12 91 84)"/>
+      <ellipse cx="-12" cy="-6" rx="13" ry="12" fill={GR} stroke={OL} strokeWidth="1.2" transform="rotate(-10 -12 -6)"/>
+      <ellipse cx=" 12" cy="-6" rx="13" ry="12" fill={GR} stroke={OL} strokeWidth="1.2" transform="rotate(10 12 -6)"/>
       {/* Eyes */}
       {happy ? (
         <>
-          <path d="M55 83 Q61 90 67 83" fill="none" stroke={WW} strokeWidth="2.8" strokeLinecap="round"/>
-          <path d="M85 83 Q91 90 97 83" fill="none" stroke={WW} strokeWidth="2.8" strokeLinecap="round"/>
+          <path d="M-16 -7 Q-12 -2 -8 -7" fill="none" stroke={OL} strokeWidth="2" strokeLinecap="round"/>
+          <path d="M8 -7 Q12 -2 16 -7"    fill="none" stroke={OL} strokeWidth="2" strokeLinecap="round"/>
         </>
       ) : (
         <>
-          <circle cx="62" cy="85" r="8" fill={WW}/>
-          <circle cx="90" cy="85" r="8" fill={WW}/>
-          <circle cx="63" cy="86" r="5" fill="#2a2a2a"/>
-          <circle cx="91" cy="86" r="5" fill="#2a2a2a"/>
-          <circle cx="65" cy="84" r="2" fill={WW}/>
-          <circle cx="93" cy="84" r="2" fill={WW}/>
+          <circle cx="-12" cy="-6" r="5.5" fill="#4a3a2a" stroke={OL} strokeWidth="0.6"/>
+          <circle cx=" 12" cy="-6" r="5.5" fill="#4a3a2a" stroke={OL} strokeWidth="0.6"/>
+          <circle cx="-10" cy="-8" r="2"   fill={WH} opacity="0.8"/>
+          <circle cx=" 14" cy="-8" r="2"   fill={WH} opacity="0.8"/>
         </>
       )}
       {/* Nose */}
-      <ellipse cx="76" cy="96" rx="4" ry="3" fill="#3a3a3a" opacity="0.85"/>
+      <path d="M-4 4 Q0 7 4 4 Q2 9 0 9 Q-2 9 -4 4Z" fill={OL} opacity="0.85"/>
       {/* Mouth */}
-      {happy
-        ? <path d="M68 103 Q76 111 84 103" fill="none" stroke="#3a3a3a" strokeWidth="2.2" strokeLinecap="round"/>
-        : <path d="M70 101 Q76 107 82 101" fill="none" stroke="#3a3a3a" strokeWidth="2" strokeLinecap="round"/>}
+      <path d={happy ? "M-8 13 Q0 20 8 13" : "M-6 13 Q0 18 6 13"} fill="none" stroke={OL} strokeWidth="1.8" strokeLinecap="round"/>
       {/* Cheeks */}
-      <ellipse cx="44" cy="98" rx="12" ry="7" fill="#f4a896" opacity={happy ? "0.65" : "0.42"}/>
-      <ellipse cx="108" cy="98" rx="12" ry="7" fill="#f4a896" opacity={happy ? "0.65" : "0.42"}/>
+      <ellipse cx="-22" cy="6" rx="10" ry="6" fill={PK} opacity="0.7"/>
+      <ellipse cx=" 22" cy="6" rx="10" ry="6" fill={PK} opacity="0.7"/>
+    </g>
+  );
+}
 
-      {/* ── RIGHT PANDA (slightly turned) ── */}
-      <ellipse cx="184" cy="213" rx="42" ry="6" fill="#3a3a3a" opacity="0.09"/>
-      {/* Body */}
-      <path d="M148 208 C132 208 126 186 128 164 C130 144 142 130 164 126 C174 124 186 124 196 126 C218 130 228 144 228 164 C230 186 224 208 208 208 Z" fill={W} stroke={GD} strokeWidth="2" filter="url(#kShadow)"/>
-      {/* Tummy */}
-      <ellipse cx="178" cy="170" rx="20" ry="25" fill={WW} opacity="0.7"/>
-      {/* Left arm */}
-      <path d="M138 150 C128 142 120 140 114 144 C110 148 112 160 118 160" fill="none" stroke={GD} strokeWidth="17" strokeLinecap="round"/>
-      <path d="M138 150 C128 142 120 140 114 144 C110 148 112 160 118 160" fill="none" stroke={G} strokeWidth="13" strokeLinecap="round"/>
-      {/* Right arm — raised slightly */}
-      <path d="M222 156 C234 148 240 160 236 174 C234 182 226 184 220 180" fill="none" stroke={GD} strokeWidth="17" strokeLinecap="round"/>
-      <path d="M222 156 C234 148 240 160 236 174 C234 182 226 184 220 180" fill="none" stroke={G} strokeWidth="13" strokeLinecap="round"/>
-      {/* Feet */}
-      <ellipse cx="158" cy="200" rx="21" ry="11" fill={GD}/>
-      <ellipse cx="158" cy="198" rx="18" ry="9" fill={G}/>
-      <ellipse cx="200" cy="200" rx="21" ry="11" fill={GD}/>
-      <ellipse cx="200" cy="198" rx="18" ry="9" fill={G}/>
-      <ellipse cx="158" cy="207" rx="12" ry="5" fill="#f0ece8" opacity="0.55"/>
-      <ellipse cx="200" cy="207" rx="12" ry="5" fill="#f0ece8" opacity="0.55"/>
-      {/* Head — slightly tilted */}
-      <g transform="rotate(-5, 182, 84)">
-        <circle cx="182" cy="84" r="46" fill={W} stroke={GD} strokeWidth="2" filter="url(#kShadow)"/>
-        {/* Ears */}
-        <circle cx="144" cy="48" r="17" fill={GD}/>
-        <circle cx="144" cy="48" r="11" fill={G}/>
-        <circle cx="220" cy="48" r="17" fill={GD}/>
-        <circle cx="220" cy="48" r="11" fill={G}/>
-        {/* Eye patches */}
-        <ellipse cx="167" cy="83" rx="15" ry="13" fill={G} transform="rotate(-10 167 83)"/>
-        <ellipse cx="197" cy="83" rx="15" ry="13" fill={G} transform="rotate(10 197 83)"/>
-        {/* Eyes */}
-        {happy ? (
-          <>
-            <path d="M161 82 Q167 89 173 82" fill="none" stroke={WW} strokeWidth="2.8" strokeLinecap="round"/>
-            <path d="M191 82 Q197 89 203 82" fill="none" stroke={WW} strokeWidth="2.8" strokeLinecap="round"/>
-          </>
-        ) : (
-          <>
-            <circle cx="168" cy="84" r="8.5" fill={WW}/>
-            <circle cx="196" cy="84" r="8.5" fill={WW}/>
-            <circle cx="169" cy="85" r="5.5" fill="#2a2a2a"/>
-            <circle cx="197" cy="85" r="5.5" fill="#2a2a2a"/>
-            <circle cx="171" cy="83" r="2.2" fill={WW}/>
-            <circle cx="199" cy="83" r="2.2" fill={WW}/>
-          </>
-        )}
-        {/* Nose */}
-        <ellipse cx="182" cy="95" rx="4" ry="3" fill="#3a3a3a" opacity="0.85"/>
-        {/* Mouth */}
-        {happy
-          ? <path d="M174 102 Q182 110 190 102" fill="none" stroke="#3a3a3a" strokeWidth="2.2" strokeLinecap="round"/>
-          : <path d="M176 100 Q182 106 188 100" fill="none" stroke="#3a3a3a" strokeWidth="2" strokeLinecap="round"/>}
-        {/* Cheeks */}
-        <ellipse cx="150" cy="97" rx="12" ry="7" fill="#f4a896" opacity={happy ? "0.65" : "0.42"}/>
-        <ellipse cx="214" cy="97" rx="12" ry="7" fill="#f4a896" opacity={happy ? "0.65" : "0.42"}/>
-      </g>
-
-      {happy && (
-        <>
-          <g filter="url(#kGlow)">
-            <path d="M126 96 C126 91 130 89 134 93 C138 89 142 91 142 96 C142 102 134 111 134 111 C134 111 126 102 126 96Z" fill="#e8607a" opacity="0.95"/>
-          </g>
-          <path d="M110 74 C110 71 112 70 114 72 C116 70 118 71 118 74 C118 77 114 81 114 81 C114 81 110 77 110 74Z" fill="#f4a0b8" opacity="0.7"/>
-          <path d="M150 68 C150 66 151.5 65 153 67 C154.5 65 156 66 156 68 C156 70.5 153 74 153 74 C153 74 150 70.5 150 68Z" fill="#f4a0b8" opacity="0.6"/>
-        </>
-      )}
+function CouplePandaSVG({ happy = false, size = 160 }) {
+  return (
+    <svg viewBox="-90 -55 250 170" width={size} style={{ display: "block" }}>
+      <PandaBody x="-30" y="0" scale={0.82} happy={happy}/>
+      <PandaBody x=" 78" y="4"  scale={0.80} flip happy={happy}/>
     </svg>
   );
 }
 
 function SinglePandaSVG({ size = 100 }) {
   return (
-    <svg viewBox="0 0 160 200" width={size} height={size * 1.25} style={{ display: "block" }}>
-      <defs><radialGradient id="sb" cx="45%" cy="35%" r="60%"><stop offset="0%" stopColor="#fdf9f0"/><stop offset="100%" stopColor="#ede4d0"/></radialGradient></defs>
-      <ellipse cx="80" cy="196" rx="38" ry="6" fill="#1a261a" opacity="0.1"/>
-      <path d="M42 195 C28 195 22 175 24 155 C26 138 38 126 58 122 C66 120 80 120 94 122 C114 126 126 138 128 155 C130 175 124 195 110 195Z" fill="url(#sb)"/>
-      <ellipse cx="76" cy="162" rx="20" ry="24" fill="#fefcf6" opacity="0.85"/>
-      <ellipse cx="57" cy="190" rx="18" ry="10" fill="#1a261a"/>
-      <ellipse cx="97" cy="190" rx="18" ry="10" fill="#1a261a"/>
-      <ellipse cx="57" cy="196" rx="12" ry="5" fill="#f0e8d8" opacity="0.5"/>
-      <ellipse cx="97" cy="196" rx="12" ry="5" fill="#f0e8d8" opacity="0.5"/>
-      <path d="M34 150 C24 158 20 172 24 180" fill="none" stroke="#1a261a" strokeWidth="13" strokeLinecap="round"/>
-      <path d="M34 150 C24 158 20 172 24 180" fill="none" stroke="#2d3d2d" strokeWidth="10" strokeLinecap="round"/>
-      <path d="M118 150 C128 158 132 172 128 180" fill="none" stroke="#1a261a" strokeWidth="13" strokeLinecap="round"/>
-      <path d="M118 150 C128 158 132 172 128 180" fill="none" stroke="#2d3d2d" strokeWidth="10" strokeLinecap="round"/>
-      <circle cx="80" cy="76" r="50" fill="url(#sb)"/>
-      <circle cx="42" cy="38" r="22" fill="#1a261a"/>
-      <circle cx="42" cy="38" r="14" fill="#2d3d2d"/>
-      <circle cx="118" cy="38" r="22" fill="#1a261a"/>
-      <circle cx="118" cy="38" r="14" fill="#2d3d2d"/>
-      <ellipse cx="62" cy="76" rx="19" ry="18" fill="#1a261a" transform="rotate(-8 62 76)"/>
-      <ellipse cx="98" cy="76" rx="19" ry="18" fill="#1a261a" transform="rotate(8 98 76)"/>
-      <circle cx="62" cy="77" r="11" fill="#fdf9f0"/>
-      <circle cx="98" cy="77" r="11" fill="#fdf9f0"/>
-      <circle cx="64" cy="78" r="7" fill="#1a1a2a"/>
-      <circle cx="100" cy="78" r="7" fill="#1a1a2a"/>
-      <circle cx="66" cy="75" r="2.8" fill="white"/>
-      <circle cx="102" cy="75" r="2.8" fill="white"/>
-      <path d="M76 94 C76 91 78 90 80 92 C82 90 84 91 84 94 C84 97 80 100 80 100 C80 100 76 97 76 94Z" fill="#1a261a" opacity="0.85"/>
-      <path d="M72 103 Q80 112 88 103" fill="none" stroke="#1a261a" strokeWidth="2.5" strokeLinecap="round"/>
-      <ellipse cx="40" cy="92" rx="14" ry="8" fill="#f0907a" opacity="0.3"/>
-      <ellipse cx="120" cy="92" rx="14" ry="8" fill="#f0907a" opacity="0.3"/>
+    <svg viewBox="-44 -55 88 160" width={size} style={{ display: "block" }}>
+      <PandaBody x="0" y="0" scale={0.88}/>
     </svg>
   );
 }
@@ -1072,49 +972,50 @@ function GardenItemIcon({ id, size = 38 }) {
 
 function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
   const owned = accessories || {};
-  // New viewBox: 260x220 matching new CouplePandaSVG
-  // Left panda head center: ~76, 88 (tilted +6deg)
-  // Right panda head center: ~176, 88 (tilted -4deg)
-  // Left panda body center: ~76, 168
-  // Right panda body center: ~176, 168
+  const OL = "#4a4a4a"; // dark gray outline for all accessories
   return (
     <svg viewBox="0 0 260 220" width={pandaSize} height={pandaSize * 0.846}
       style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }}>
       <defs>
-        <radialGradient id="scarf1" cx="50%" cy="40%" r="60%">
-          <stop offset="0%" stopColor="#ff8fa3"/>
-          <stop offset="100%" stopColor="#d4506a"/>
+        <filter id="wc" x="-8%" y="-8%" width="116%" height="116%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.065" numOctaves="2" result="noise"/>
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.8" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+        <radialGradient id="kimonoL" cx="40%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#f5c8d8"/>
+          <stop offset="100%" stopColor="#e8a8c0"/>
         </radialGradient>
-        <radialGradient id="scarf2" cx="50%" cy="40%" r="60%">
-          <stop offset="0%" stopColor="#7ec8e3"/>
-          <stop offset="100%" stopColor="#4a9ab8"/>
+        <radialGradient id="kimonoR" cx="40%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#c8d8f5"/>
+          <stop offset="100%" stopColor="#a8c0e8"/>
         </radialGradient>
-        <radialGradient id="goldGrad" cx="30%" cy="30%" r="70%">
-          <stop offset="0%" stopColor="#f8e878"/>
-          <stop offset="100%" stopColor="#d4a020"/>
+        <radialGradient id="bataL" cx="40%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#e8f0fa"/>
+          <stop offset="100%" stopColor="#d0e4f5"/>
+        </radialGradient>
+        <radialGradient id="bataR" cx="40%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#faf0e8"/>
+          <stop offset="100%" stopColor="#f5e0d0"/>
         </radialGradient>
       </defs>
 
-      {/* ══════════ LEFT PANDA ACCESSORIES ══════════ */}
+      {/* ══ LEFT PANDA ACCESSORIES ══ */}
 
       {/* HAT: FLOWER CROWN */}
       {owned.hat_flower && (
-        <g transform="rotate(6, 76, 88) translate(76, 44)">
-          {/* Vine base */}
-          <path d="M-36 0 C-24 -6 -10 -8 0 -8 C10 -8 24 -6 36 0" fill="none" stroke="#5a8a40" strokeWidth="3.5" strokeLinecap="round"/>
-          {/* Leaves */}
-          <ellipse cx="-22" cy="-4" rx="7" ry="4" fill="#6aaa50" transform="rotate(-30 -22 -4)" opacity="0.9"/>
-          <ellipse cx="22" cy="-4" rx="7" ry="4" fill="#6aaa50" transform="rotate(30 22 -4)" opacity="0.9"/>
-          <ellipse cx="0" cy="-8" rx="6" ry="3.5" fill="#5a9840" opacity="0.9"/>
-          {/* Flowers */}
-          {[[-30,-2], [-10,-9], [12,-10], [32,-2]].map(([x,y],i) => (
+        <g transform="rotate(6, 76, 88) translate(76, 44)" filter="url(#wc)">
+          <path d="M-36 0 C-24 -6 -10 -8 0 -8 C10 -8 24 -6 36 0" fill="none" stroke="#8aaa70" strokeWidth="3" strokeLinecap="round" opacity="0.85"/>
+          <ellipse cx="-22" cy="-4" rx="7" ry="4" fill="#b8d8a0" stroke={OL} strokeWidth="0.8" transform="rotate(-30 -22 -4)" opacity="0.85"/>
+          <ellipse cx="22" cy="-4" rx="7" ry="4" fill="#b8d8a0" stroke={OL} strokeWidth="0.8" transform="rotate(30 22 -4)" opacity="0.85"/>
+          {[[-30,-2],[-10,-9],[12,-10],[32,-2]].map(([x,y],i) => (
             <g key={i} transform={`translate(${x},${y})`}>
               {[0,72,144,216,288].map((a,j) => (
                 <ellipse key={j} cx={Math.cos(a*Math.PI/180)*5} cy={Math.sin(a*Math.PI/180)*5}
-                  rx="4" ry="2.5" fill={[["#ffb8cc","#ffe0ea"],["#f4c860","#ffe898"],["#c8b8f8","#e8d8ff"],["#ffb8cc","#ffe0ea"]][i][j%2]}
-                  transform={`rotate(${a})`} opacity="0.95"/>
+                  rx="4" ry="2.5"
+                  fill={[["#f5c8d8","#fde8f0"],["#fde8c0","#fff5d8"],["#d8c8f5","#ece4ff"],["#f5c8d8","#fde8f0"]][i][j%2]}
+                  stroke={OL} strokeWidth="0.6" transform={`rotate(${a})`} opacity="0.88"/>
               ))}
-              <circle cx="0" cy="0" r="3.5" fill="#fff8d0"/>
+              <circle cx="0" cy="0" r="3.5" fill="#fffaea" stroke={OL} strokeWidth="0.5"/>
             </g>
           ))}
         </g>
@@ -1122,347 +1023,310 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
 
       {/* HAT: CROWN */}
       {owned.hat_crown && (
-        <g transform="rotate(6, 76, 88) translate(76, 46)">
-          {/* Band */}
-          <path d="M-26 6 L-28 -8 L-16 0 L0 -16 L16 0 L28 -8 L26 6 Z" fill="url(#goldGrad)"/>
-          <path d="M-26 6 L26 6" fill="none" stroke="#c89020" strokeWidth="2"/>
-          {/* Gems */}
-          <circle cx="0" cy="-14" r="4" fill="#e8507a"/>
-          <circle cx="-16" cy="-2" r="3" fill="#60c8e8"/>
-          <circle cx="16" cy="-2" r="3" fill="#60c8e8"/>
-          {/* Sparkles on band */}
-          <circle cx="-8" cy="3" r="1.5" fill="#fff8a0"/>
-          <circle cx="8" cy="3" r="1.5" fill="#fff8a0"/>
-          <circle cx="0" cy="4" r="1.5" fill="#fff8a0"/>
+        <g transform="rotate(6, 76, 88) translate(76, 46)" filter="url(#wc)">
+          <path d="M-26 6 L-28 -8 L-16 0 L0 -16 L16 0 L28 -8 L26 6 Z" fill="#faecc8" stroke={OL} strokeWidth="1.5" strokeLinejoin="round" opacity="0.92"/>
+          <path d="M-26 6 L26 6" fill="none" stroke={OL} strokeWidth="1.5" opacity="0.6"/>
+          <circle cx="0" cy="-14" r="4" fill="#f5b8c8" stroke={OL} strokeWidth="0.8"/>
+          <circle cx="-16" cy="-2" r="3" fill="#b8e0f0" stroke={OL} strokeWidth="0.8"/>
+          <circle cx="16" cy="-2" r="3" fill="#b8e0f0" stroke={OL} strokeWidth="0.8"/>
         </g>
       )}
 
       {/* HAT: STRAW HAT */}
       {owned.hat_straw && (
-        <g transform="rotate(6, 76, 88) translate(76, 48)">
-          {/* Brim */}
-          <ellipse cx="0" cy="2" rx="38" ry="9" fill="#d4a840" opacity="0.95"/>
-          <ellipse cx="0" cy="2" rx="38" ry="9" fill="none" stroke="#b88820" strokeWidth="1.5"/>
-          {/* Top */}
-          <path d="M-18 2 C-18 -16 18 -16 18 2" fill="#e8bc50"/>
-          <ellipse cx="0" cy="2" rx="18" ry="4" fill="#d4a840"/>
-          {/* Ribbon */}
-          <path d="M-18 2 C-10 -2 10 -2 18 2" fill="none" stroke="#e86858" strokeWidth="3.5" strokeLinecap="round"/>
-          {/* Weave lines */}
-          {[-10,0,10].map(x => <line key={x} x1={x} y1="-14" x2={x+2} y2="2" stroke="#b88820" strokeWidth="1" opacity="0.4"/>)}
+        <g transform="rotate(6, 76, 88) translate(76, 48)" filter="url(#wc)">
+          <ellipse cx="0" cy="2" rx="38" ry="9" fill="#e8d8a8" stroke={OL} strokeWidth="1.5" opacity="0.9"/>
+          <path d="M-18 2 C-18 -16 18 -16 18 2" fill="#f0e0b8" stroke={OL} strokeWidth="1.5" opacity="0.9"/>
+          <ellipse cx="0" cy="2" rx="18" ry="4" fill="#e8d8a8" opacity="0.9"/>
+          <path d="M-18 2 C-10 -2 10 -2 18 2" fill="none" stroke="#e0a8a0" strokeWidth="3" strokeLinecap="round" opacity="0.8"/>
+          {[-10,0,10].map(x => <line key={x} x1={x} y1="-14" x2={x+2} y2="2" stroke={OL} strokeWidth="0.8" opacity="0.25"/>)}
         </g>
       )}
 
       {owned.hat_beret && (
-        <g transform="rotate(6, 76, 88) translate(76, 46)">
-          <ellipse cx="-6" cy="-4" rx="23" ry="11" fill="#c95b79"/>
-          <ellipse cx="-6" cy="-4" rx="23" ry="11" fill="none" stroke="#7b3146" strokeWidth="2"/>
-          <circle cx="9" cy="-12" r="3" fill="#e98aa2"/>
-          <rect x="-18" y="2" width="24" height="5" rx="2.5" fill="#7b3146" opacity="0.6"/>
+        <g transform="rotate(6, 76, 88) translate(76, 46)" filter="url(#wc)">
+          <ellipse cx="-6" cy="-4" rx="23" ry="11" fill="#e8c0d0" stroke={OL} strokeWidth="1.5" opacity="0.88"/>
+          <circle cx="9" cy="-12" r="3.5" fill="#f5d8e0" stroke={OL} strokeWidth="0.8"/>
+          <rect x="-18" y="2" width="24" height="5" rx="2.5" fill="#d8a8b8" stroke={OL} strokeWidth="0.8" opacity="0.7"/>
         </g>
       )}
 
       {owned.hat_beanie && (
-        <g transform="rotate(6, 76, 88) translate(76, 46)">
-          <path d="M-22 4 C-22 -12 -12 -20 0 -20 C12 -20 22 -12 22 4" fill="#8ac8e8"/>
-          <rect x="-24" y="2" width="48" height="8" rx="4" fill="#4a90b8"/>
-          <circle cx="0" cy="-23" r="5" fill="#d9f2ff"/>
+        <g transform="rotate(6, 76, 88) translate(76, 46)" filter="url(#wc)">
+          <path d="M-22 4 C-22 -12 -12 -20 0 -20 C12 -20 22 -12 22 4" fill="#c8e0f0" stroke={OL} strokeWidth="1.5" opacity="0.88"/>
+          <rect x="-24" y="2" width="48" height="8" rx="4" fill="#a8c8e0" stroke={OL} strokeWidth="1.2" opacity="0.85"/>
+          <circle cx="0" cy="-23" r="5" fill="#e8f4ff" stroke={OL} strokeWidth="0.8"/>
         </g>
       )}
 
       {owned.hat_frog && (
-        <g transform="rotate(6, 76, 88) translate(76, 45)">
-          <ellipse cx="0" cy="0" rx="26" ry="10" fill="#78c85a"/>
-          <ellipse cx="-11" cy="-8" rx="5" ry="5" fill="#8de06f" stroke="#3e8a30" strokeWidth="1.5"/>
-          <ellipse cx="11" cy="-8" rx="5" ry="5" fill="#8de06f" stroke="#3e8a30" strokeWidth="1.5"/>
-          <circle cx="-11" cy="-8" r="1.2" fill="#1f4120"/>
-          <circle cx="11" cy="-8" r="1.2" fill="#1f4120"/>
+        <g transform="rotate(6, 76, 88) translate(76, 45)" filter="url(#wc)">
+          <ellipse cx="0" cy="0" rx="26" ry="10" fill="#b8e0a8" stroke={OL} strokeWidth="1.5" opacity="0.88"/>
+          <ellipse cx="-11" cy="-8" rx="5" ry="5" fill="#c8eebc" stroke={OL} strokeWidth="1.2"/>
+          <ellipse cx="11" cy="-8" rx="5" ry="5" fill="#c8eebc" stroke={OL} strokeWidth="1.2"/>
+          <circle cx="-11" cy="-8" r="1.5" fill={OL} opacity="0.8"/>
+          <circle cx="11" cy="-8" r="1.5" fill={OL} opacity="0.8"/>
         </g>
       )}
 
       {/* GLASSES: HEART */}
       {owned.glasses_heart && (
-        <g transform="rotate(6, 76, 88) translate(76, 84)">
-          <path d="M-20 -1 C-20 -5 -17 -7 -14 -4 C-11 -7 -8 -5 -8 -1 C-8 3 -14 8 -14 8 C-14 8 -20 3 -20 -1Z" fill="#ff84a7" stroke="#b93d62" strokeWidth="1.5"/>
-          <path d="M8 -1 C8 -5 11 -7 14 -4 C17 -7 20 -5 20 -1 C20 3 14 8 14 8 C14 8 8 3 8 -1Z" fill="#ff84a7" stroke="#b93d62" strokeWidth="1.5"/>
-          <line x1="-8" y1="0" x2="8" y2="0" stroke="#b93d62" strokeWidth="2" strokeLinecap="round"/>
-          <line x1="-20" y1="0" x2="-29" y2="-2" stroke="#b93d62" strokeWidth="2" strokeLinecap="round"/>
-          <line x1="20" y1="0" x2="29" y2="-2" stroke="#b93d62" strokeWidth="2" strokeLinecap="round"/>
+        <g transform="rotate(6, 76, 88) translate(76, 84)" filter="url(#wc)">
+          <path d="M-20 -1 C-20 -5 -17 -7 -14 -4 C-11 -7 -8 -5 -8 -1 C-8 3 -14 8 -14 8 C-14 8 -20 3 -20 -1Z" fill="#f5c8d8" stroke={OL} strokeWidth="1.5" opacity="0.88"/>
+          <path d="M8 -1 C8 -5 11 -7 14 -4 C17 -7 20 -5 20 -1 C20 3 14 8 14 8 C14 8 8 3 8 -1Z" fill="#f5c8d8" stroke={OL} strokeWidth="1.5" opacity="0.88"/>
+          <line x1="-8" y1="0" x2="8" y2="0" stroke={OL} strokeWidth="1.8" strokeLinecap="round" opacity="0.7"/>
+          <line x1="-20" y1="0" x2="-29" y2="-2" stroke={OL} strokeWidth="1.8" strokeLinecap="round" opacity="0.7"/>
+          <line x1="20" y1="0" x2="29" y2="-2" stroke={OL} strokeWidth="1.8" strokeLinecap="round" opacity="0.7"/>
         </g>
       )}
 
-      {/* GLASSES: SUNGLASSES */}
+      {/* GLASSES: SUN */}
       {owned.glasses_sun && (
-        <g transform="rotate(6, 76, 88) translate(76, 84)">
-          <rect x="-24" y="-7" width="16" height="11" rx="5.5" fill="#1b2230"/>
-          <rect x="8" y="-7" width="16" height="11" rx="5.5" fill="#1b2230"/>
-          <line x1="-8" y1="-1" x2="8" y2="-1" stroke="#2f3540" strokeWidth="2" strokeLinecap="round"/>
-          <line x1="-24" y1="-2" x2="-32" y2="-3" stroke="#2f3540" strokeWidth="2" strokeLinecap="round"/>
-          <line x1="24" y1="-2" x2="32" y2="-3" stroke="#2f3540" strokeWidth="2" strokeLinecap="round"/>
-          <rect x="-21" y="-5" width="5" height="3" rx="1.5" fill="#ffffff" opacity="0.18"/>
-          <rect x="11" y="-5" width="5" height="3" rx="1.5" fill="#ffffff" opacity="0.18"/>
+        <g transform="rotate(6, 76, 88) translate(76, 84)" filter="url(#wc)">
+          <rect x="-24" y="-7" width="16" height="11" rx="5.5" fill="#c8d8e8" stroke={OL} strokeWidth="1.5" opacity="0.75"/>
+          <rect x="8" y="-7" width="16" height="11" rx="5.5" fill="#c8d8e8" stroke={OL} strokeWidth="1.5" opacity="0.75"/>
+          <line x1="-8" y1="-1" x2="8" y2="-1" stroke={OL} strokeWidth="1.8" strokeLinecap="round" opacity="0.7"/>
+          <line x1="-24" y1="-2" x2="-32" y2="-3" stroke={OL} strokeWidth="1.8" strokeLinecap="round" opacity="0.7"/>
+          <line x1="24" y1="-2" x2="32" y2="-3" stroke={OL} strokeWidth="1.8" strokeLinecap="round" opacity="0.7"/>
+          <rect x="-21" y="-5" width="5" height="3" rx="1.5" fill="#ffffff" opacity="0.3"/>
+          <rect x="11" y="-5" width="5" height="3" rx="1.5" fill="#ffffff" opacity="0.3"/>
         </g>
       )}
 
       {owned.glasses_round && (
-        <g transform="rotate(6, 76, 88) translate(76, 84)">
-          <circle cx="-12" cy="-1" r="7.2" fill="none" stroke="#6a6f78" strokeWidth="2"/>
-          <circle cx="12" cy="-1" r="7.2" fill="none" stroke="#6a6f78" strokeWidth="2"/>
-          <line x1="-4.8" y1="-1" x2="4.8" y2="-1" stroke="#6a6f78" strokeWidth="1.8" strokeLinecap="round"/>
-          <line x1="-19" y1="-2" x2="-27" y2="-3" stroke="#6a6f78" strokeWidth="1.8" strokeLinecap="round"/>
-          <line x1="19" y1="-2" x2="27" y2="-3" stroke="#6a6f78" strokeWidth="1.8" strokeLinecap="round"/>
+        <g transform="rotate(6, 76, 88) translate(76, 84)" filter="url(#wc)">
+          <circle cx="-12" cy="-1" r="7.2" fill="#e8f0f8" stroke={OL} strokeWidth="1.8" opacity="0.7"/>
+          <circle cx="12" cy="-1" r="7.2" fill="#e8f0f8" stroke={OL} strokeWidth="1.8" opacity="0.7"/>
+          <line x1="-4.8" y1="-1" x2="4.8" y2="-1" stroke={OL} strokeWidth="1.6" strokeLinecap="round" opacity="0.7"/>
+          <line x1="-19" y1="-2" x2="-27" y2="-3" stroke={OL} strokeWidth="1.6" strokeLinecap="round" opacity="0.7"/>
+          <line x1="19" y1="-2" x2="27" y2="-3" stroke={OL} strokeWidth="1.6" strokeLinecap="round" opacity="0.7"/>
         </g>
       )}
 
       {owned.glasses_clear && (
-        <g transform="rotate(6, 76, 88) translate(76, 84)">
-          <rect x="-22" y="-7" width="14" height="11" rx="4" fill="#d9eef9" opacity="0.35" stroke="#7891a0" strokeWidth="1.6"/>
-          <rect x="8" y="-7" width="14" height="11" rx="4" fill="#d9eef9" opacity="0.35" stroke="#7891a0" strokeWidth="1.6"/>
-          <line x1="-8" y1="-1" x2="8" y2="-1" stroke="#7891a0" strokeWidth="1.8" strokeLinecap="round"/>
-          <line x1="-22" y1="-2" x2="-30" y2="-3" stroke="#7891a0" strokeWidth="1.8" strokeLinecap="round"/>
-          <line x1="22" y1="-2" x2="30" y2="-3" stroke="#7891a0" strokeWidth="1.8" strokeLinecap="round"/>
+        <g transform="rotate(6, 76, 88) translate(76, 84)" filter="url(#wc)">
+          <rect x="-22" y="-7" width="14" height="11" rx="4" fill="#e0f0f8" stroke={OL} strokeWidth="1.5" opacity="0.55"/>
+          <rect x="8" y="-7" width="14" height="11" rx="4" fill="#e0f0f8" stroke={OL} strokeWidth="1.5" opacity="0.55"/>
+          <line x1="-8" y1="-1" x2="8" y2="-1" stroke={OL} strokeWidth="1.6" strokeLinecap="round" opacity="0.65"/>
+          <line x1="-22" y1="-2" x2="-30" y2="-3" stroke={OL} strokeWidth="1.6" strokeLinecap="round" opacity="0.65"/>
+          <line x1="22" y1="-2" x2="30" y2="-3" stroke={OL} strokeWidth="1.6" strokeLinecap="round" opacity="0.65"/>
         </g>
       )}
 
       {owned.glasses_star && (
-        <g transform="rotate(6, 76, 88) translate(76, 84)">
-          <path d="M-13 -8 L-11 -3 L-6 -3 L-10 -0.5 L-8.5 4.5 L-13 2 L-17.5 4.5 L-16 -0.5 L-20 -3 L-15 -3Z" fill="#ffd76a" stroke="#c28d1f" strokeWidth="1.2"/>
-          <path d="M13 -8 L15 -3 L20 -3 L16 -0.5 L17.5 4.5 L13 2 L8.5 4.5 L10 -0.5 L6 -3 L11 -3Z" fill="#ffd76a" stroke="#c28d1f" strokeWidth="1.2"/>
-          <line x1="-6" y1="-1" x2="6" y2="-1" stroke="#c28d1f" strokeWidth="1.8" strokeLinecap="round"/>
+        <g transform="rotate(6, 76, 88) translate(76, 84)" filter="url(#wc)">
+          <path d="M-13 -8 L-11 -3 L-6 -3 L-10 -0.5 L-8.5 4.5 L-13 2 L-17.5 4.5 L-16 -0.5 L-20 -3 L-15 -3Z" fill="#fdecc8" stroke={OL} strokeWidth="1.2" opacity="0.88"/>
+          <path d="M13 -8 L15 -3 L20 -3 L16 -0.5 L17.5 4.5 L13 2 L8.5 4.5 L10 -0.5 L6 -3 L11 -3Z" fill="#fdecc8" stroke={OL} strokeWidth="1.2" opacity="0.88"/>
+          <line x1="-6" y1="-1" x2="6" y2="-1" stroke={OL} strokeWidth="1.6" strokeLinecap="round" opacity="0.7"/>
         </g>
       )}
 
       {/* ACC: BOW */}
       {owned.acc_bow && (
-        <g transform="rotate(6, 76, 88) translate(106, 60)">
-          <path d="M-12 0 C-18 -8 -24 -10 -20 -2 C-16 6 -6 4 0 0Z" fill="#ffb8d0"/>
-          <path d="M12 0 C18 -8 24 -10 20 -2 C16 6 6 4 0 0Z" fill="#ff90b8"/>
-          <circle cx="0" cy="0" r="5" fill="#ffcce0"/>
-          <circle cx="0" cy="0" r="2.5" fill="#ff80b0"/>
+        <g transform="rotate(6, 76, 88) translate(106, 60)" filter="url(#wc)">
+          <path d="M-12 0 C-18 -8 -24 -10 -20 -2 C-16 6 -6 4 0 0Z" fill="#f5c8d8" stroke={OL} strokeWidth="1.2" opacity="0.88"/>
+          <path d="M12 0 C18 -8 24 -10 20 -2 C16 6 6 4 0 0Z" fill="#edd8f0" stroke={OL} strokeWidth="1.2" opacity="0.88"/>
+          <circle cx="0" cy="0" r="4.5" fill="#fde8f0" stroke={OL} strokeWidth="0.8"/>
         </g>
       )}
 
-      {/* ACC: SCARF — proper wraparound scarf */}
+      {/* ACC: SCARF */}
       {owned.acc_scarf && (
-        <g>
-          {/* Left panda scarf */}
+        <g filter="url(#wc)">
           <path d="M40 135 C46 128 60 124 76 124 C92 124 106 128 112 135 C114 138 112 145 108 146 C104 147 96 144 76 144 C56 144 48 147 44 146 C40 145 38 138 40 135Z"
-            fill="url(#scarf1)" opacity="0.92"/>
-          {/* Knot/tail */}
+            fill="#f5c8d8" stroke={OL} strokeWidth="1.5" opacity="0.85"/>
           <path d="M100 142 C108 148 112 158 106 164 C102 168 96 165 94 158"
-            fill="none" stroke="#ff8fa3" strokeWidth="8" strokeLinecap="round"/>
-          <path d="M108 140 C116 145 118 155 114 162"
-            fill="none" stroke="#d4506a" strokeWidth="5" strokeLinecap="round"/>
-          {/* Stripe detail */}
+            fill="none" stroke="#f0b8c8" strokeWidth="7" strokeLinecap="round" opacity="0.8"/>
           <path d="M44 140 C56 138 66 137 76 137 C86 137 96 138 108 140"
-            fill="none" stroke="white" strokeWidth="1.5" opacity="0.4" strokeLinecap="round"/>
-          {/* Right panda scarf */}
+            fill="none" stroke="white" strokeWidth="1.2" opacity="0.35" strokeLinecap="round"/>
           <path d="M140 135 C146 128 160 124 176 124 C192 124 206 128 212 135 C214 138 212 145 208 146 C204 147 196 144 176 144 C156 144 148 147 144 146 C140 145 138 138 140 135Z"
-            fill="url(#scarf2)" opacity="0.92"/>
+            fill="#c8d8f5" stroke={OL} strokeWidth="1.5" opacity="0.85"/>
           <path d="M148 142 C140 148 136 158 142 164 C146 168 152 165 154 158"
-            fill="none" stroke="#7ec8e3" strokeWidth="8" strokeLinecap="round"/>
-          <path d="M142 140 C134 145 132 155 136 162"
-            fill="none" stroke="#4a9ab8" strokeWidth="5" strokeLinecap="round"/>
+            fill="none" stroke="#b8c8f0" strokeWidth="7" strokeLinecap="round" opacity="0.8"/>
           <path d="M144 140 C156 138 166 137 176 137 C186 137 196 138 208 140"
-            fill="none" stroke="white" strokeWidth="1.5" opacity="0.4" strokeLinecap="round"/>
+            fill="none" stroke="white" strokeWidth="1.2" opacity="0.35" strokeLinecap="round"/>
         </g>
       )}
 
       {/* OUTFIT: KIMONO */}
       {owned.outfit_kimono && (
-        <g>
-          {/* Left panda kimono */}
+        <g filter="url(#wc)">
           <path d="M38 140 C34 150 32 170 34 195 C40 200 70 202 114 195 C116 170 114 150 110 140 C100 132 88 130 76 130 C64 130 52 132 38 140Z"
-            fill="#d4508a" opacity="0.92"/>
-          {/* Collar fold */}
-          <path d="M60 130 L76 155 L92 130" fill="none" stroke="#faeaf4" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
-          {/* Obi (belt) */}
-          <rect x="40" y="160" width="72" height="14" rx="4" fill="#9a3068" opacity="0.9"/>
-          {/* Obi knot */}
-          <ellipse cx="76" cy="167" rx="10" ry="7" fill="#c05080"/>
-          <ellipse cx="76" cy="167" rx="6" ry="4" fill="#d06090"/>
-          {/* Pattern dots */}
-          {[[52,148],[88,148],[60,172],[92,172],[70,142],[82,142]].map(([x,y],i) => (
-            <circle key={i} cx={x} cy={y} r="2.5" fill="#f4a0c8" opacity="0.5"/>
+            fill="url(#kimonoL)" stroke={OL} strokeWidth="1.8" opacity="0.88"/>
+          <path d="M60 130 L76 155 L92 130" fill="none" stroke="#faeef5" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.9"/>
+          <rect x="40" y="160" width="72" height="13" rx="5" fill="#e8a8c0" stroke={OL} strokeWidth="1.2" opacity="0.82"/>
+          <ellipse cx="76" cy="167" rx="10" ry="6.5" fill="#f0c0d4" stroke={OL} strokeWidth="0.8"/>
+          {[[52,148],[88,148],[60,172],[92,172]].map(([x,y],i) => (
+            <circle key={i} cx={x} cy={y} r="2" fill="#fde8f0" stroke={OL} strokeWidth="0.5" opacity="0.6"/>
           ))}
-          {/* Right panda kimono */}
           <path d="M138 140 C134 150 132 170 134 195 C140 200 170 202 214 195 C216 170 214 150 210 140 C200 132 188 130 176 130 C164 130 152 132 138 140Z"
-            fill="#508ad4" opacity="0.92"/>
-          <path d="M160 130 L176 155 L192 130" fill="none" stroke="#eaf0fa" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
-          <rect x="140" y="160" width="72" height="14" rx="4" fill="#3068a0" opacity="0.9"/>
-          <ellipse cx="176" cy="167" rx="10" ry="7" fill="#4080c0"/>
-          <ellipse cx="176" cy="167" rx="6" ry="4" fill="#5090d0"/>
-          {[[152,148],[188,148],[160,172],[192,172],[170,142],[182,142]].map(([x,y],i) => (
-            <circle key={i} cx={x} cy={y} r="2.5" fill="#a0c8f4" opacity="0.5"/>
+            fill="url(#kimonoR)" stroke={OL} strokeWidth="1.8" opacity="0.88"/>
+          <path d="M160 130 L176 155 L192 130" fill="none" stroke="#eef2fa" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.9"/>
+          <rect x="140" y="160" width="72" height="13" rx="5" fill="#a8c0e8" stroke={OL} strokeWidth="1.2" opacity="0.82"/>
+          <ellipse cx="176" cy="167" rx="10" ry="6.5" fill="#c0d4f0" stroke={OL} strokeWidth="0.8"/>
+          {[[152,148],[188,148],[160,172],[192,172]].map(([x,y],i) => (
+            <circle key={i} cx={x} cy={y} r="2" fill="#e8f0fc" stroke={OL} strokeWidth="0.5" opacity="0.6"/>
           ))}
         </g>
       )}
 
+      {/* OUTFIT: SAILOR */}
       {owned.outfit_sailor && (
-        <g>
-          <path d="M45 136 C43 151 43 170 45 192 C56 197 95 197 107 192 C109 170 109 151 107 136 C92 131 61 131 45 136Z" fill="#f5f8ff" opacity="0.96"/>
-          <path d="M59 132 L76 152 L93 132" fill="none" stroke="#5d7bbd" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
-          <rect x="47" y="161" width="58" height="10" rx="5" fill="#5d7bbd" opacity="0.85"/>
-          <circle cx="76" cy="156" r="4" fill="#f4a8c0"/>
-
-          <path d="M145 136 C143 151 143 170 145 192 C156 197 195 197 207 192 C209 170 209 151 207 136 C192 131 161 131 145 136Z" fill="#f5f8ff" opacity="0.96"/>
-          <path d="M159 132 L176 152 L193 132" fill="none" stroke="#3f669f" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
-          <rect x="147" y="161" width="58" height="10" rx="5" fill="#3f669f" opacity="0.9"/>
-          <circle cx="176" cy="156" r="4" fill="#b8d8ff"/>
+        <g filter="url(#wc)">
+          <path d="M45 136 C43 151 43 170 45 192 C56 197 95 197 107 192 C109 170 109 151 107 136 C92 131 61 131 45 136Z" fill="#f0f4fc" stroke={OL} strokeWidth="1.8" opacity="0.92"/>
+          <path d="M59 132 L76 152 L93 132" fill="none" stroke="#a8b8d8" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.85"/>
+          <rect x="47" y="161" width="58" height="9" rx="4.5" fill="#b8c8e0" stroke={OL} strokeWidth="1.2" opacity="0.82"/>
+          <circle cx="76" cy="156" r="3.5" fill="#f5c8d8" stroke={OL} strokeWidth="0.8"/>
+          <path d="M145 136 C143 151 143 170 145 192 C156 197 195 197 207 192 C209 170 209 151 207 136 C192 131 161 131 145 136Z" fill="#f0f4fc" stroke={OL} strokeWidth="1.8" opacity="0.92"/>
+          <path d="M159 132 L176 152 L193 132" fill="none" stroke="#98a8c8" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.85"/>
+          <rect x="147" y="161" width="58" height="9" rx="4.5" fill="#a8b8d8" stroke={OL} strokeWidth="1.2" opacity="0.85"/>
+          <circle cx="176" cy="156" r="3.5" fill="#c8d8f5" stroke={OL} strokeWidth="0.8"/>
         </g>
       )}
 
+      {/* OUTFIT: BATA/WITCH */}
       {owned.outfit_witch && (
-        <g>
-          <path d="M44 138 C40 155 40 176 44 194 C56 201 97 201 108 194 C112 176 112 155 108 138 C92 132 60 132 44 138Z" fill="#7b5bb8" opacity="0.9"/>
-          <path d="M52 138 C60 145 69 149 76 149 C83 149 92 145 100 138" fill="none" stroke="#d6a55a" strokeWidth="2.5"/>
-          <circle cx="76" cy="168" r="6" fill="#2f1d4a" opacity="0.8"/>
-
-          <path d="M144 138 C140 155 140 176 144 194 C156 201 197 201 208 194 C212 176 212 155 208 138 C192 132 160 132 144 138Z" fill="#5f4aa0" opacity="0.9"/>
-          <path d="M152 138 C160 145 169 149 176 149 C183 149 192 145 200 138" fill="none" stroke="#d6a55a" strokeWidth="2.5"/>
-          <circle cx="176" cy="168" r="6" fill="#24163b" opacity="0.85"/>
+        <g filter="url(#wc)">
+          <path d="M44 138 C40 155 40 176 44 194 C56 201 97 201 108 194 C112 176 112 155 108 138 C92 132 60 132 44 138Z" fill="#d8c8f0" stroke={OL} strokeWidth="1.8" opacity="0.85"/>
+          <path d="M52 138 C60 145 69 149 76 149 C83 149 92 145 100 138" fill="none" stroke="#e8d8a8" strokeWidth="2.2" strokeLinecap="round" opacity="0.75"/>
+          <ellipse cx="76" cy="168" rx="6" ry="5" fill="#c8b8e0" stroke={OL} strokeWidth="0.8" opacity="0.7"/>
+          <path d="M144 138 C140 155 140 176 144 194 C156 201 197 201 208 194 C212 176 212 155 208 138 C192 132 160 132 144 138Z" fill="#c8b8e8" stroke={OL} strokeWidth="1.8" opacity="0.85"/>
+          <path d="M152 138 C160 145 169 149 176 149 C183 149 192 145 200 138" fill="none" stroke="#e8d8a8" strokeWidth="2.2" strokeLinecap="round" opacity="0.75"/>
+          <ellipse cx="176" cy="168" rx="6" ry="5" fill="#b8a8d8" stroke={OL} strokeWidth="0.8" opacity="0.7"/>
         </g>
       )}
 
+      {/* OUTFIT: ANGEL */}
       {owned.outfit_angel && (
-        <g>
-          <path d="M44 137 C42 154 42 174 44 192 C56 199 96 199 108 192 C110 174 110 154 108 137 C92 132 60 132 44 137Z" fill="#fff8f0" opacity="0.97"/>
-          <ellipse cx="34" cy="151" rx="10" ry="18" fill="#f6fcff" opacity="0.8"/>
-          <ellipse cx="118" cy="151" rx="10" ry="18" fill="#f6fcff" opacity="0.8"/>
-
-          <path d="M144 137 C142 154 142 174 144 192 C156 199 196 199 208 192 C210 174 210 154 208 137 C192 132 160 132 144 137Z" fill="#fff8f0" opacity="0.97"/>
-          <ellipse cx="134" cy="151" rx="10" ry="18" fill="#f6fcff" opacity="0.8"/>
-          <ellipse cx="218" cy="151" rx="10" ry="18" fill="#f6fcff" opacity="0.8"/>
+        <g filter="url(#wc)">
+          <path d="M44 137 C42 154 42 174 44 192 C56 199 96 199 108 192 C110 174 110 154 108 137 C92 132 60 132 44 137Z" fill="#fdf8f2" stroke={OL} strokeWidth="1.8" opacity="0.92"/>
+          <ellipse cx="34" cy="151" rx="10" ry="18" fill="#f0f8ff" stroke={OL} strokeWidth="1" opacity="0.65"/>
+          <ellipse cx="118" cy="151" rx="10" ry="18" fill="#f0f8ff" stroke={OL} strokeWidth="1" opacity="0.65"/>
+          <path d="M144 137 C142 154 142 174 144 192 C156 199 196 199 208 192 C210 174 210 154 208 137 C192 132 160 132 144 137Z" fill="#fdf8f2" stroke={OL} strokeWidth="1.8" opacity="0.92"/>
+          <ellipse cx="134" cy="151" rx="10" ry="18" fill="#f0f8ff" stroke={OL} strokeWidth="1" opacity="0.65"/>
+          <ellipse cx="218" cy="151" rx="10" ry="18" fill="#f0f8ff" stroke={OL} strokeWidth="1" opacity="0.65"/>
         </g>
       )}
 
-      {/* ══════════ RIGHT PANDA — same accessories mirrored ══════════ */}
+      {/* ══ RIGHT PANDA — same accessories mirrored ══ */}
 
       {owned.hat_flower && (
-        <g transform="rotate(-4, 176, 88) translate(176, 42)">
-          <path d="M-36 0 C-24 -6 -10 -8 0 -8 C10 -8 24 -6 36 0" fill="none" stroke="#5a8a40" strokeWidth="3.5" strokeLinecap="round"/>
-          <ellipse cx="-22" cy="-4" rx="7" ry="4" fill="#6aaa50" transform="rotate(-30 -22 -4)" opacity="0.9"/>
-          <ellipse cx="22" cy="-4" rx="7" ry="4" fill="#6aaa50" transform="rotate(30 22 -4)" opacity="0.9"/>
-          <ellipse cx="0" cy="-8" rx="6" ry="3.5" fill="#5a9840" opacity="0.9"/>
-          {[[-30,-2], [-10,-9], [12,-10], [32,-2]].map(([x,y],i) => (
+        <g transform="rotate(-4, 176, 88) translate(176, 42)" filter="url(#wc)">
+          <path d="M-36 0 C-24 -6 -10 -8 0 -8 C10 -8 24 -6 36 0" fill="none" stroke="#8aaa70" strokeWidth="3" strokeLinecap="round" opacity="0.85"/>
+          <ellipse cx="-22" cy="-4" rx="7" ry="4" fill="#b8d8a0" stroke={OL} strokeWidth="0.8" transform="rotate(-30 -22 -4)" opacity="0.85"/>
+          <ellipse cx="22" cy="-4" rx="7" ry="4" fill="#b8d8a0" stroke={OL} strokeWidth="0.8" transform="rotate(30 22 -4)" opacity="0.85"/>
+          {[[-30,-2],[-10,-9],[12,-10],[32,-2]].map(([x,y],i) => (
             <g key={i} transform={`translate(${x},${y})`}>
               {[0,72,144,216,288].map((a,j) => (
                 <ellipse key={j} cx={Math.cos(a*Math.PI/180)*5} cy={Math.sin(a*Math.PI/180)*5}
-                  rx="4" ry="2.5" fill={[["#b8d8ff","#d8eeff"],["#f4c860","#ffe898"],["#d8f0b8","#eaffd8"],["#b8d8ff","#d8eeff"]][i][j%2]}
-                  transform={`rotate(${a})`} opacity="0.95"/>
+                  rx="4" ry="2.5"
+                  fill={[["#c8e8f8","#e0f4ff"],["#fdecc8","#fff5d8"],["#d8eec8","#eaffd8"],["#c8e8f8","#e0f4ff"]][i][j%2]}
+                  stroke={OL} strokeWidth="0.6" transform={`rotate(${a})`} opacity="0.88"/>
               ))}
-              <circle cx="0" cy="0" r="3.5" fill="#fff8d0"/>
+              <circle cx="0" cy="0" r="3.5" fill="#fffaea" stroke={OL} strokeWidth="0.5"/>
             </g>
           ))}
         </g>
       )}
 
       {owned.hat_crown && (
-        <g transform="rotate(-4, 176, 88) translate(176, 44)">
-          <path d="M-26 6 L-28 -8 L-16 0 L0 -16 L16 0 L28 -8 L26 6 Z" fill="url(#goldGrad)"/>
-          <path d="M-26 6 L26 6" fill="none" stroke="#c89020" strokeWidth="2"/>
-          <circle cx="0" cy="-14" r="4" fill="#e8507a"/>
-          <circle cx="-16" cy="-2" r="3" fill="#60c8e8"/>
-          <circle cx="16" cy="-2" r="3" fill="#60c8e8"/>
-          <circle cx="-8" cy="3" r="1.5" fill="#fff8a0"/>
-          <circle cx="8" cy="3" r="1.5" fill="#fff8a0"/>
-          <circle cx="0" cy="4" r="1.5" fill="#fff8a0"/>
+        <g transform="rotate(-4, 176, 88) translate(176, 44)" filter="url(#wc)">
+          <path d="M-26 6 L-28 -8 L-16 0 L0 -16 L16 0 L28 -8 L26 6 Z" fill="#faecc8" stroke={OL} strokeWidth="1.5" strokeLinejoin="round" opacity="0.92"/>
+          <path d="M-26 6 L26 6" fill="none" stroke={OL} strokeWidth="1.5" opacity="0.6"/>
+          <circle cx="0" cy="-14" r="4" fill="#f5b8c8" stroke={OL} strokeWidth="0.8"/>
+          <circle cx="-16" cy="-2" r="3" fill="#b8e0f0" stroke={OL} strokeWidth="0.8"/>
+          <circle cx="16" cy="-2" r="3" fill="#b8e0f0" stroke={OL} strokeWidth="0.8"/>
         </g>
       )}
 
       {owned.hat_straw && (
-        <g transform="rotate(-4, 176, 88) translate(176, 46)">
-          <ellipse cx="0" cy="2" rx="40" ry="9" fill="#d4a840" opacity="0.95"/>
-          <ellipse cx="0" cy="2" rx="40" ry="9" fill="none" stroke="#b88820" strokeWidth="1.5"/>
-          <path d="M-20 2 C-20 -16 20 -16 20 2" fill="#e8bc50"/>
-          <ellipse cx="0" cy="2" rx="20" ry="4" fill="#d4a840"/>
-          <path d="M-20 2 C-10 -2 10 -2 20 2" fill="none" stroke="#e86858" strokeWidth="3.5" strokeLinecap="round"/>
+        <g transform="rotate(-4, 176, 88) translate(176, 46)" filter="url(#wc)">
+          <ellipse cx="0" cy="2" rx="40" ry="9" fill="#e8d8a8" stroke={OL} strokeWidth="1.5" opacity="0.9"/>
+          <path d="M-20 2 C-20 -16 20 -16 20 2" fill="#f0e0b8" stroke={OL} strokeWidth="1.5" opacity="0.9"/>
+          <ellipse cx="0" cy="2" rx="20" ry="4" fill="#e8d8a8" opacity="0.9"/>
+          <path d="M-20 2 C-10 -2 10 -2 20 2" fill="none" stroke="#e0a8a0" strokeWidth="3" strokeLinecap="round" opacity="0.8"/>
         </g>
       )}
 
       {owned.hat_beret && (
-        <g transform="rotate(-4, 176, 88) translate(176, 46)">
-          <ellipse cx="-6" cy="-4" rx="23" ry="11" fill="#7e8fe0"/>
-          <ellipse cx="-6" cy="-4" rx="23" ry="11" fill="none" stroke="#3e4f96" strokeWidth="2"/>
-          <circle cx="9" cy="-12" r="3" fill="#a8b4ef"/>
-          <rect x="-18" y="2" width="24" height="5" rx="2.5" fill="#3e4f96" opacity="0.6"/>
+        <g transform="rotate(-4, 176, 88) translate(176, 46)" filter="url(#wc)">
+          <ellipse cx="-6" cy="-4" rx="23" ry="11" fill="#c8d8f0" stroke={OL} strokeWidth="1.5" opacity="0.88"/>
+          <circle cx="9" cy="-12" r="3.5" fill="#d8e8f8" stroke={OL} strokeWidth="0.8"/>
+          <rect x="-18" y="2" width="24" height="5" rx="2.5" fill="#a8b8d8" stroke={OL} strokeWidth="0.8" opacity="0.7"/>
         </g>
       )}
 
       {owned.hat_beanie && (
-        <g transform="rotate(-4, 176, 88) translate(176, 46)">
-          <path d="M-22 4 C-22 -12 -12 -20 0 -20 C12 -20 22 -12 22 4" fill="#ffb8d0"/>
-          <rect x="-24" y="2" width="48" height="8" rx="4" fill="#e884ac"/>
-          <circle cx="0" cy="-23" r="5" fill="#ffe4ef"/>
+        <g transform="rotate(-4, 176, 88) translate(176, 46)" filter="url(#wc)">
+          <path d="M-22 4 C-22 -12 -12 -20 0 -20 C12 -20 22 -12 22 4" fill="#f5c8d8" stroke={OL} strokeWidth="1.5" opacity="0.88"/>
+          <rect x="-24" y="2" width="48" height="8" rx="4" fill="#e8a8c0" stroke={OL} strokeWidth="1.2" opacity="0.85"/>
+          <circle cx="0" cy="-23" r="5" fill="#fde8f0" stroke={OL} strokeWidth="0.8"/>
         </g>
       )}
 
       {owned.hat_frog && (
-        <g transform="rotate(-4, 176, 88) translate(176, 45)">
-          <ellipse cx="0" cy="0" rx="26" ry="10" fill="#78c85a"/>
-          <ellipse cx="-11" cy="-8" rx="5" ry="5" fill="#8de06f" stroke="#3e8a30" strokeWidth="1.5"/>
-          <ellipse cx="11" cy="-8" rx="5" ry="5" fill="#8de06f" stroke="#3e8a30" strokeWidth="1.5"/>
-          <circle cx="-11" cy="-8" r="1.2" fill="#1f4120"/>
-          <circle cx="11" cy="-8" r="1.2" fill="#1f4120"/>
+        <g transform="rotate(-4, 176, 88) translate(176, 45)" filter="url(#wc)">
+          <ellipse cx="0" cy="0" rx="26" ry="10" fill="#b8e0a8" stroke={OL} strokeWidth="1.5" opacity="0.88"/>
+          <ellipse cx="-11" cy="-8" rx="5" ry="5" fill="#c8eebc" stroke={OL} strokeWidth="1.2"/>
+          <ellipse cx="11" cy="-8" rx="5" ry="5" fill="#c8eebc" stroke={OL} strokeWidth="1.2"/>
+          <circle cx="-11" cy="-8" r="1.5" fill={OL} opacity="0.8"/>
+          <circle cx="11" cy="-8" r="1.5" fill={OL} opacity="0.8"/>
         </g>
       )}
 
       {owned.glasses_heart && (
-        <g transform="rotate(-4, 176, 88) translate(176, 84)">
-          <path d="M-20 -1 C-20 -5 -17 -7 -14 -4 C-11 -7 -8 -5 -8 -1 C-8 3 -14 8 -14 8 C-14 8 -20 3 -20 -1Z" fill="#ff84a7" stroke="#b93d62" strokeWidth="1.5"/>
-          <path d="M8 -1 C8 -5 11 -7 14 -4 C17 -7 20 -5 20 -1 C20 3 14 8 14 8 C14 8 8 3 8 -1Z" fill="#ff84a7" stroke="#b93d62" strokeWidth="1.5"/>
-          <line x1="-8" y1="0" x2="8" y2="0" stroke="#b93d62" strokeWidth="2" strokeLinecap="round"/>
-          <line x1="-20" y1="0" x2="-29" y2="-2" stroke="#b93d62" strokeWidth="2" strokeLinecap="round"/>
-          <line x1="20" y1="0" x2="29" y2="-2" stroke="#b93d62" strokeWidth="2" strokeLinecap="round"/>
+        <g transform="rotate(-4, 176, 88) translate(176, 84)" filter="url(#wc)">
+          <path d="M-20 -1 C-20 -5 -17 -7 -14 -4 C-11 -7 -8 -5 -8 -1 C-8 3 -14 8 -14 8 C-14 8 -20 3 -20 -1Z" fill="#f5c8d8" stroke={OL} strokeWidth="1.5" opacity="0.88"/>
+          <path d="M8 -1 C8 -5 11 -7 14 -4 C17 -7 20 -5 20 -1 C20 3 14 8 14 8 C14 8 8 3 8 -1Z" fill="#f5c8d8" stroke={OL} strokeWidth="1.5" opacity="0.88"/>
+          <line x1="-8" y1="0" x2="8" y2="0" stroke={OL} strokeWidth="1.8" strokeLinecap="round" opacity="0.7"/>
+          <line x1="-20" y1="0" x2="-29" y2="-2" stroke={OL} strokeWidth="1.8" strokeLinecap="round" opacity="0.7"/>
+          <line x1="20" y1="0" x2="29" y2="-2" stroke={OL} strokeWidth="1.8" strokeLinecap="round" opacity="0.7"/>
         </g>
       )}
 
       {owned.glasses_sun && (
-        <g transform="rotate(-4, 176, 88) translate(176, 84)">
-          <rect x="-24" y="-7" width="16" height="11" rx="5.5" fill="#1b2230"/>
-          <rect x="8" y="-7" width="16" height="11" rx="5.5" fill="#1b2230"/>
-          <line x1="-8" y1="-1" x2="8" y2="-1" stroke="#2f3540" strokeWidth="2" strokeLinecap="round"/>
-          <line x1="-24" y1="-2" x2="-32" y2="-3" stroke="#2f3540" strokeWidth="2" strokeLinecap="round"/>
-          <line x1="24" y1="-2" x2="32" y2="-3" stroke="#2f3540" strokeWidth="2" strokeLinecap="round"/>
-          <rect x="-21" y="-5" width="5" height="3" rx="1.5" fill="#ffffff" opacity="0.18"/>
-          <rect x="11" y="-5" width="5" height="3" rx="1.5" fill="#ffffff" opacity="0.18"/>
+        <g transform="rotate(-4, 176, 88) translate(176, 84)" filter="url(#wc)">
+          <rect x="-24" y="-7" width="16" height="11" rx="5.5" fill="#c8d8e8" stroke={OL} strokeWidth="1.5" opacity="0.75"/>
+          <rect x="8" y="-7" width="16" height="11" rx="5.5" fill="#c8d8e8" stroke={OL} strokeWidth="1.5" opacity="0.75"/>
+          <line x1="-8" y1="-1" x2="8" y2="-1" stroke={OL} strokeWidth="1.8" strokeLinecap="round" opacity="0.7"/>
+          <line x1="-24" y1="-2" x2="-32" y2="-3" stroke={OL} strokeWidth="1.8" strokeLinecap="round" opacity="0.7"/>
+          <line x1="24" y1="-2" x2="32" y2="-3" stroke={OL} strokeWidth="1.8" strokeLinecap="round" opacity="0.7"/>
         </g>
       )}
 
       {owned.glasses_round && (
-        <g transform="rotate(-4, 176, 88) translate(176, 84)">
-          <circle cx="-12" cy="-1" r="7.2" fill="none" stroke="#6a6f78" strokeWidth="2"/>
-          <circle cx="12" cy="-1" r="7.2" fill="none" stroke="#6a6f78" strokeWidth="2"/>
-          <line x1="-4.8" y1="-1" x2="4.8" y2="-1" stroke="#6a6f78" strokeWidth="1.8" strokeLinecap="round"/>
-          <line x1="-19" y1="-2" x2="-27" y2="-3" stroke="#6a6f78" strokeWidth="1.8" strokeLinecap="round"/>
-          <line x1="19" y1="-2" x2="27" y2="-3" stroke="#6a6f78" strokeWidth="1.8" strokeLinecap="round"/>
+        <g transform="rotate(-4, 176, 88) translate(176, 84)" filter="url(#wc)">
+          <circle cx="-12" cy="-1" r="7.2" fill="#e8f0f8" stroke={OL} strokeWidth="1.8" opacity="0.7"/>
+          <circle cx="12" cy="-1" r="7.2" fill="#e8f0f8" stroke={OL} strokeWidth="1.8" opacity="0.7"/>
+          <line x1="-4.8" y1="-1" x2="4.8" y2="-1" stroke={OL} strokeWidth="1.6" strokeLinecap="round" opacity="0.7"/>
+          <line x1="-19" y1="-2" x2="-27" y2="-3" stroke={OL} strokeWidth="1.6" strokeLinecap="round" opacity="0.7"/>
+          <line x1="19" y1="-2" x2="27" y2="-3" stroke={OL} strokeWidth="1.6" strokeLinecap="round" opacity="0.7"/>
         </g>
       )}
 
       {owned.glasses_clear && (
-        <g transform="rotate(-4, 176, 88) translate(176, 84)">
-          <rect x="-22" y="-7" width="14" height="11" rx="4" fill="#d9eef9" opacity="0.35" stroke="#7891a0" strokeWidth="1.6"/>
-          <rect x="8" y="-7" width="14" height="11" rx="4" fill="#d9eef9" opacity="0.35" stroke="#7891a0" strokeWidth="1.6"/>
-          <line x1="-8" y1="-1" x2="8" y2="-1" stroke="#7891a0" strokeWidth="1.8" strokeLinecap="round"/>
-          <line x1="-22" y1="-2" x2="-30" y2="-3" stroke="#7891a0" strokeWidth="1.8" strokeLinecap="round"/>
-          <line x1="22" y1="-2" x2="30" y2="-3" stroke="#7891a0" strokeWidth="1.8" strokeLinecap="round"/>
+        <g transform="rotate(-4, 176, 88) translate(176, 84)" filter="url(#wc)">
+          <rect x="-22" y="-7" width="14" height="11" rx="4" fill="#e0f0f8" stroke={OL} strokeWidth="1.5" opacity="0.55"/>
+          <rect x="8" y="-7" width="14" height="11" rx="4" fill="#e0f0f8" stroke={OL} strokeWidth="1.5" opacity="0.55"/>
+          <line x1="-8" y1="-1" x2="8" y2="-1" stroke={OL} strokeWidth="1.6" strokeLinecap="round" opacity="0.65"/>
+          <line x1="-22" y1="-2" x2="-30" y2="-3" stroke={OL} strokeWidth="1.6" strokeLinecap="round" opacity="0.65"/>
+          <line x1="22" y1="-2" x2="30" y2="-3" stroke={OL} strokeWidth="1.6" strokeLinecap="round" opacity="0.65"/>
         </g>
       )}
 
       {owned.glasses_star && (
-        <g transform="rotate(-4, 176, 88) translate(176, 84)">
-          <path d="M-13 -8 L-11 -3 L-6 -3 L-10 -0.5 L-8.5 4.5 L-13 2 L-17.5 4.5 L-16 -0.5 L-20 -3 L-15 -3Z" fill="#ffd76a" stroke="#c28d1f" strokeWidth="1.2"/>
-          <path d="M13 -8 L15 -3 L20 -3 L16 -0.5 L17.5 4.5 L13 2 L8.5 4.5 L10 -0.5 L6 -3 L11 -3Z" fill="#ffd76a" stroke="#c28d1f" strokeWidth="1.2"/>
-          <line x1="-6" y1="-1" x2="6" y2="-1" stroke="#c28d1f" strokeWidth="1.8" strokeLinecap="round"/>
+        <g transform="rotate(-4, 176, 88) translate(176, 84)" filter="url(#wc)">
+          <path d="M-13 -8 L-11 -3 L-6 -3 L-10 -0.5 L-8.5 4.5 L-13 2 L-17.5 4.5 L-16 -0.5 L-20 -3 L-15 -3Z" fill="#fdecc8" stroke={OL} strokeWidth="1.2" opacity="0.88"/>
+          <path d="M13 -8 L15 -3 L20 -3 L16 -0.5 L17.5 4.5 L13 2 L8.5 4.5 L10 -0.5 L6 -3 L11 -3Z" fill="#fdecc8" stroke={OL} strokeWidth="1.2" opacity="0.88"/>
+          <line x1="-6" y1="-1" x2="6" y2="-1" stroke={OL} strokeWidth="1.6" strokeLinecap="round" opacity="0.7"/>
         </g>
       )}
 
       {owned.acc_bow && (
-        <g transform="rotate(-4, 176, 88) translate(206, 58)">
-          <path d="M-12 0 C-18 -8 -24 -10 -20 -2 C-16 6 -6 4 0 0Z" fill="#a8c8f8"/>
-          <path d="M12 0 C18 -8 24 -10 20 -2 C16 6 6 4 0 0Z" fill="#80aaf4"/>
-          <circle cx="0" cy="0" r="5" fill="#c8dcfc"/>
-          <circle cx="0" cy="0" r="2.5" fill="#80aaf4"/>
+        <g transform="rotate(-4, 176, 88) translate(206, 58)" filter="url(#wc)">
+          <path d="M-12 0 C-18 -8 -24 -10 -20 -2 C-16 6 -6 4 0 0Z" fill="#c8e0f8" stroke={OL} strokeWidth="1.2" opacity="0.88"/>
+          <path d="M12 0 C18 -8 24 -10 20 -2 C16 6 6 4 0 0Z" fill="#d8e8f8" stroke={OL} strokeWidth="1.2" opacity="0.88"/>
+          <circle cx="0" cy="0" r="4.5" fill="#e8f4ff" stroke={OL} strokeWidth="0.8"/>
         </g>
       )}
 
@@ -1481,7 +1345,7 @@ function GardenScene({ garden, waterLevel, bgImage, isIndoor }) {
   // stored as "garden"|"indoor" (or true for backward compat = "garden")
   const showIn = id => {
     const v = g[id];
-    if (!v) return false;
+    if (!v || v === "owned") return false;
     const loc = v === true || v === "garden" ? "garden" : "indoor";
     return isIndoor ? loc === "indoor" : loc === "garden";
   };
@@ -1510,9 +1374,9 @@ function GardenScene({ garden, waterLevel, bgImage, isIndoor }) {
   const waterCol = dry ? "#c8b870" : "#88c8c8";
 
   return (
-    <svg viewBox="0 0 390 340" style={{ width:"100%", height:"340px", display:"block", borderRadius: "0 0 20px 20px" }}>
+    <svg viewBox="0 0 390 420" style={{ width:"100%", height:"420px", display:"block", borderRadius: "0 0 20px 20px" }}>
       {bgImage ? (
-        <image href={bgImage} x="0" y="0" width="390" height="290" preserveAspectRatio="xMidYMid slice"/>
+        <image href={bgImage} x="0" y="0" width="390" height="420" preserveAspectRatio="xMidYMid slice"/>
       ) : (<>
       <defs>
         <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
@@ -1532,7 +1396,7 @@ function GardenScene({ garden, waterLevel, bgImage, isIndoor }) {
           <feDisplacementMap in="SourceGraphic" in2="noise" scale="4" xChannelSelector="R" yChannelSelector="G"/>
         </filter>
       </defs>
-      <rect width="390" height="290" fill="url(#skyGrad)"/>
+      <rect width="390" height="420" fill="url(#skyGrad)"/>
 
       {/* Level indicator — subtle watercolor wash */}
       {lvl >= 3 && <ellipse cx="195" cy="260" rx="195" ry="50" fill={MIST[lvl]} opacity="0.15" filter="url(#watercolor)"/>}
@@ -1570,10 +1434,10 @@ function GardenScene({ garden, waterLevel, bgImage, isIndoor }) {
       <ellipse cx="290" cy="210" rx="140" ry="70" fill={HILL[lvl]} opacity="0.28"/>{/* 78b898"} opacity="0.3"/>
 
       {/* Ground */}
-      <path d="M0 230 Q100 210 200 225 Q300 240 390 218 L390 290 L0 290Z" fill="url(#groundGrad)" filter="url(#watercolor)"/>
+      <path d="M0 310 Q100 290 200 305 Q300 320 390 298 L390 420 L0 420Z" fill="url(#groundGrad)" filter="url(#watercolor)"/>
 
       {/* Watercolor ground texture overlay */}
-      <path d="M0 230 Q100 210 200 225 Q300 240 390 218 L390 290 L0 290Z" fill={MIST[lvl]} opacity="0.08"/>
+      <path d="M0 310 Q100 290 200 305 Q300 320 390 298 L390 420 L0 420Z" fill={MIST[lvl]} opacity="0.08"/>
 
       {/* Crack lines — only when drought */}
       {showCracks && <g opacity="0.5">
@@ -1588,7 +1452,7 @@ function GardenScene({ garden, waterLevel, bgImage, isIndoor }) {
         {[12,28,44,60,76,92,108,124,140,156,172,188,204,220,236,252,268,284,300,316,332,348,364,380].map((x,i) => {
           const h = 8 + (i%3)*5 + lvl*3;
           const lean = (i%2===0?1:-1) * (2+i%3);
-          const y0 = 230 - (i%4)*4 + 8;
+          const y0 = 308 - (i%4)*4 + 8;
           return <path key={x} d={`M${x} ${y0} Q${x+lean} ${y0-h*0.6} ${x+lean*1.4} ${y0-h}`}
             fill="none" stroke={grassC[lvl]} strokeWidth={1.2+lvl*0.3} strokeLinecap="round" opacity={0.6+lvl*0.1}/>;
         })}
@@ -1614,231 +1478,342 @@ function GardenScene({ garden, waterLevel, bgImage, isIndoor }) {
       ))}
       </>)}
 
+      {/* ── STYLE: warm cartoon, dark brown outlines, pastel muted palette ── */}
+
       {/* Willow tree */}
       {showIn("willow") && <g>
-        <rect x="340" y="100" width="8" height="130" rx="4" fill="#9a8048"/>
-        {[[-25,0],[-20,10],[-15,5],[-10,12],[-5,8],[0,15],[5,10],[10,14],[15,8],[20,5]].map(([dx,dy],i)=>(
-          <path key={i} d={`M344 ${108+i*8} Q${344+dx} ${130+i*8+dy} ${344+dx*1.4} ${155+i*8+dy*1.5}`}
-            fill="none" stroke={withering?"#c0b060":"#5a9840"} strokeWidth="2.5" strokeLinecap="round" opacity="0.8"/>
+        <ellipse cx="344" cy="232" rx="18" ry="5" fill="#5a3218" opacity="0.12"/>
+        <path d="M340 232 C340 200 342 170 344 100" fill="none" stroke="#8a6030" strokeWidth="9" strokeLinecap="round"/>
+        <path d="M340 232 C340 200 342 170 344 100" fill="none" stroke="#b08048" strokeWidth="6" strokeLinecap="round"/>
+        {[[-28,8],[-22,16],[-14,10],[-6,18],[4,12],[12,16],[20,9],[26,6]].map(([dx,dy],i)=>(
+          <path key={i} d={`M344 ${110+i*12} Q${344+dx} ${138+i*12+dy} ${344+dx*1.6} ${172+i*12+dy*2}`}
+            fill="none" stroke={withering?"#b0a848":"#7aaa50"} strokeWidth="2.5" strokeLinecap="round" opacity="0.85"/>
         ))}
-        <ellipse cx="344" cy="105" rx="20" ry="12" fill={withering?"#b0b040":"#6aaa40"} opacity="0.9"/>
+        <ellipse cx="344" cy="100" rx="22" ry="14" fill={withering?"#c8b848":"#90b858"} stroke="#5a3218" strokeWidth="1.5" opacity="0.92"/>
+        <ellipse cx="332" cy="108" rx="14" ry="10" fill={withering?"#b8aa40":"#7aaa50"} stroke="#5a3218" strokeWidth="1.2" opacity="0.8"/>
+        <ellipse cx="356" cy="107" rx="13" ry="9" fill={withering?"#beb040":"#88b858"} stroke="#5a3218" strokeWidth="1.2" opacity="0.8"/>
       </g>}
 
       {/* Bamboo */}
       {showIn("bamboo1") && <g>
-        <rect x="22" y="80" width="10" height="150" rx="5" fill={withering?"#8a9030":"#4a7a30"}/>
-        {[98,122,148,172].map((y,i)=><rect key={i} x="19" y={y} width="16" height="6" rx="3" fill={withering?"#7a8028":"#3a6020"}/>)}
-        <ellipse cx="10" cy="95" rx="20" ry="7" fill={withering?"#8a9830":"#5a8a3c"} transform="rotate(-32 10 95)" opacity="0.9"/>
-        <ellipse cx="36" cy="86" rx="16" ry="6" fill={withering?"#909838":"#6a9a48"} transform="rotate(22 36 86)" opacity="0.9"/>
+        <ellipse cx="27" cy="232" rx="16" ry="5" fill="#5a3218" opacity="0.10"/>
+        <rect x="20" y="82" width="11" height="148" rx="5" fill={withering?"#a8a838":"#5a8a38"} stroke="#5a3218" strokeWidth="1.5"/>
+        <rect x="20" y="82" width="5" height="148" rx="3" fill={withering?"#c0be50":"#78a850"} opacity="0.5"/>
+        {[102,128,155,180].map((y,i)=><rect key={i} x="18" y={y} width="15" height="5" rx="2" fill={withering?"#8a8828":"#3a6820"} stroke="#5a3218" strokeWidth="0.8"/>)}
+        <ellipse cx="10" cy="96" rx="18" ry="6" fill={withering?"#a0a830":"#6a9a40"} stroke="#5a3218" strokeWidth="1.2" transform="rotate(-32 10 96)" opacity="0.9"/>
+        <ellipse cx="38" cy="88" rx="15" ry="5" fill={withering?"#a8ae38":"#78aa48"} stroke="#5a3218" strokeWidth="1.2" transform="rotate(25 38 88)" opacity="0.9"/>
+        <ellipse cx="8" cy="138" rx="14" ry="5" fill={withering?"#9ea028":"#609838"} stroke="#5a3218" strokeWidth="1.2" transform="rotate(-28 8 138)" opacity="0.85"/>
       </g>}
       {showIn("bamboo2") && <g>
-        {[105,132,158].map((y,i)=><rect key={i} x="47" y={y} width="15" height="6" rx="3" fill={withering?"#7a8028":"#3a6020"}/>)}
-        <rect x="66" y="90" width="9" height="140" rx="4.5" fill={withering?"#909838":"#5a8a35"}/>
-        {[112,140,166].map((y,i)=><rect key={i} x="63" y={y} width="14" height="6" rx="3" fill={withering?"#7a8028":"#3a6520"}/>)}
+        <rect x="50" y="95" width="10" height="135" rx="5" fill={withering?"#b0b040":"#628c40"} stroke="#5a3218" strokeWidth="1.5"/>
+        <rect x="50" y="95" width="4" height="135" rx="2.5" fill={withering?"#c8c058":"#80a858"} opacity="0.5"/>
+        {[118,145,170].map((y,i)=><rect key={i} x="48" y={y} width="14" height="5" rx="2" fill={withering?"#8a8828":"#3a6820"} stroke="#5a3218" strokeWidth="0.8"/>)}
+        <rect x="65" y="100" width="8" height="130" rx="4" fill={withering?"#a8a838":"#5a8840"} stroke="#5a3218" strokeWidth="1.2"/>
+        {[120,148,174].map((y,i)=><rect key={i} x="63" y={y} width="12" height="4" rx="2" fill={withering?"#888020":"#386020"} stroke="#5a3218" strokeWidth="0.7"/>)}
+        <ellipse cx="74" cy="108" rx="13" ry="5" fill={withering?"#a0a028":"#60982e"} stroke="#5a3218" strokeWidth="1.2" transform="rotate(28 74 108)" opacity="0.88"/>
+        <ellipse cx="42" cy="118" rx="12" ry="4.5" fill={withering?"#a8a830":"#6a9a38"} stroke="#5a3218" strokeWidth="1.2" transform="rotate(-22 42 118)" opacity="0.85"/>
       </g>}
 
       {/* Cherry tree */}
       {showIn("cherry") && <g>
-        <rect x="278" y="148" width="12" height="82" rx="5" fill="#9a7848"/>
-        <circle cx="284" cy="135" r="32" fill={dry?"#d4b070":"#f4a8b8"} opacity={dry?0.6:0.8}/>
-        <circle cx="266" cy="148" r="22" fill={dry?"#ccaa60":"#f8b8c8"} opacity={dry?0.5:0.75}/>
-        <circle cx="302" cy="145" r="24" fill={dry?"#d0a868":"#f0a0b0"} opacity={dry?0.55:0.75}/>
+        <ellipse cx="284" cy="232" rx="20" ry="5" fill="#5a3218" opacity="0.12"/>
+        <path d="M280 230 C280 210 282 185 284 150" fill="none" stroke="#8a6030" strokeWidth="11" strokeLinecap="round"/>
+        <path d="M280 230 C280 210 282 185 284 150" fill="none" stroke="#b08048" strokeWidth="7" strokeLinecap="round"/>
+        <path d="M283 175 Q268 165 260 150" fill="none" stroke="#9a7038" strokeWidth="7" strokeLinecap="round"/>
+        <path d="M283 175 Q268 165 260 150" fill="none" stroke="#b08848" strokeWidth="4" strokeLinecap="round"/>
+        <path d="M283 168 Q298 158 305 145" fill="none" stroke="#9a7038" strokeWidth="6" strokeLinecap="round"/>
+        <circle cx="284" cy="130" r="30" fill={dry?"#d8c080":"#f0b0c0"} stroke="#5a3218" strokeWidth="1.8" opacity="0.88"/>
+        <circle cx="262" cy="142" r="22" fill={dry?"#d0b878":"#f4b8c8"} stroke="#5a3218" strokeWidth="1.5" opacity="0.85"/>
+        <circle cx="306" cy="140" r="24" fill={dry?"#ccc070":"#eaa8b8"} stroke="#5a3218" strokeWidth="1.5" opacity="0.82"/>
+        <circle cx="272" cy="120" r="18" fill={dry?"#d4c878":"#f8c0ce"} stroke="#5a3218" strokeWidth="1.2" opacity="0.8"/>
+        {!dry && [[280,118],[265,132],[298,128],[284,108],[308,138],[260,148]].map(([x,y],i)=>(
+          <circle key={i} cx={x} cy={y} r="3" fill="#fff0f4" opacity="0.7"/>
+        ))}
       </g>}
 
       {/* Pond */}
       {showIn("pond") && <g>
-        <ellipse cx="200" cy="262" rx="90" ry="22" fill={waterCol} opacity="0.55"/>
-        <ellipse cx="200" cy="259" rx="74" ry="15" fill={waterCol} opacity={dry?0.3:0.5}/>
+        {[[120,258,18,10],[145,272,14,8],[168,278,16,9],[195,280,18,9],[222,276,15,8],[248,270,16,9],[268,260,14,8],[258,252,13,8],[235,248,15,8],[210,246,16,8],[185,248,14,8],[160,252,13,8],[138,254,12,8]].map(([cx,cy,rx,ry],i)=>(
+          <ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry} fill="#b8b098" stroke="#5a3218" strokeWidth="1.2" opacity="0.9"/>
+        ))}
+        <ellipse cx="197" cy="262" rx="72" ry="16" fill={dry?"#c8b870":"#a8c8d8"} opacity="0.85"/>
+        <ellipse cx="197" cy="259" rx="58" ry="10" fill={dry?"#d0c070":"#b8d8e8"} opacity="0.7"/>
+        {!dry && [[175,258],[205,255],[220,262]].map(([x,y],i)=>(
+          <ellipse key={i} cx={x} cy={y} rx="8" ry="2.5" fill="white" opacity="0.3"/>
+        ))}
         {showIn("koi1") && <g>
-          <ellipse cx="185" cy="260" rx="18" ry="7" fill="#e86040" opacity="0.8"/>
-          <path d="M167 260 Q163 254 160 260 Q163 266 167 260Z" fill="#e05030" opacity="0.8"/>
-          <circle cx="196" cy="258" r="2" fill="white" opacity="0.9"/>
+          <ellipse cx="183" cy="262" rx="16" ry="6" fill="#d86040" stroke="#5a3218" strokeWidth="1.2" opacity="0.9"/>
+          <path d="M167 262 Q162 256 159 262 Q162 268 167 262Z" fill="#c04828" stroke="#5a3218" strokeWidth="0.8" opacity="0.9"/>
+          <circle cx="194" cy="259" r="2.5" fill="white" opacity="0.9"/>
+          <circle cx="195" cy="259" r="1.2" fill="#2a1808" opacity="0.8"/>
         </g>}
         {showIn("koi2") && <g>
-          <ellipse cx="215" cy="264" rx="16" ry="6" fill="#d4a843" opacity="0.8"/>
-          <path d="M231 264 Q235 258 238 264 Q235 270 231 264Z" fill="#c89030" opacity="0.8"/>
+          <ellipse cx="215" cy="265" rx="14" ry="5.5" fill="#c8a030" stroke="#5a3218" strokeWidth="1.2" opacity="0.9"/>
+          <path d="M229 265 Q234 259 237 265 Q234 271 229 265Z" fill="#b08820" stroke="#5a3218" strokeWidth="0.8" opacity="0.9"/>
+          <circle cx="207" cy="263" r="2" fill="white" opacity="0.9"/>
         </g>}
         {showIn("lotus_pad") && <g>
-          <ellipse cx="175" cy="255" rx="18" ry="10" fill="#5a9840" opacity="0.8"/>
-          <ellipse cx="222" cy="260" rx="14" ry="8" fill="#5a9840" opacity="0.7"/>
+          <ellipse cx="172" cy="256" rx="16" ry="9" fill="#6a9840" stroke="#5a3218" strokeWidth="1.2" opacity="0.88"/>
+          <path d="M172 247 L172 256" fill="none" stroke="#5a3218" strokeWidth="0.8" opacity="0.5"/>
+          <ellipse cx="220" cy="260" rx="13" ry="7" fill="#7aaa48" stroke="#5a3218" strokeWidth="1.2" opacity="0.85"/>
         </g>}
       </g>}
 
       {/* Lotus flowers */}
       {showIn("lotus1") && <g>
-        <ellipse cx="110" cy="208" rx="14" ry="12" fill={dry?"#d4a060":"#f4a8b8"}/>
-        <ellipse cx="110" cy="210" rx="9" ry="8" fill={dry?"#e0b070":"#f8c0cc"}/>
-        <ellipse cx="100" cy="215" rx="8" ry="10" fill={dry?"#cc9848":"#f4a8b8"} transform="rotate(25 100 215)" opacity="0.75"/>
-        <ellipse cx="120" cy="215" rx="8" ry="10" fill={dry?"#cc9848":"#f0a0b4"} transform="rotate(-25 120 215)" opacity="0.75"/>
+        <rect x="107" y="210" width="5" height="15" rx="2.5" fill="#6a9848" stroke="#5a3218" strokeWidth="0.8"/>
+        <ellipse cx="97" cy="214" rx="9" ry="12" fill={dry?"#c8a860":"#f0a8b8"} stroke="#5a3218" strokeWidth="1.2" transform="rotate(20 97 214)" opacity="0.85"/>
+        <ellipse cx="122" cy="214" rx="9" ry="12" fill={dry?"#c8a860":"#ecaab8"} stroke="#5a3218" strokeWidth="1.2" transform="rotate(-20 122 214)" opacity="0.85"/>
+        <ellipse cx="109" cy="206" rx="10" ry="13" fill={dry?"#d8b870":"#f8b8c8"} stroke="#5a3218" strokeWidth="1.2" opacity="0.9"/>
+        <ellipse cx="109" cy="210" rx="7" ry="9" fill={dry?"#e0c080":"#ffd0dc"} stroke="#5a3218" strokeWidth="1" opacity="0.9"/>
+        <circle cx="109" cy="208" r="4" fill={dry?"#f0d090":"#fff0b0"} stroke="#5a3218" strokeWidth="0.8"/>
       </g>}
       {showIn("lotus2") && <g>
-        <rect x="140" y="215" width="5" height="18" rx="2.5" fill="#5a9060"/>
-        <ellipse cx="142" cy="213" rx="13" ry="11" fill={dry?"#d8d0b0":"#f8f8f8"}/>
-        <ellipse cx="134" cy="218" rx="7" ry="9" fill={dry?"#c8c0a0":"#f0f0f0"} transform="rotate(25 134 218)" opacity="0.8"/>
-        <ellipse cx="150" cy="218" rx="7" ry="9" fill={dry?"#c0b898":"#eeeeee"} transform="rotate(-25 150 218)" opacity="0.8"/>
-        <ellipse cx="142" cy="212" rx="4" ry="3" fill="#f8e060"/>
+        <rect x="139" y="212" width="5" height="18" rx="2.5" fill="#6a9848" stroke="#5a3218" strokeWidth="0.8"/>
+        <ellipse cx="131" cy="214" rx="8" ry="11" fill={dry?"#d0c8a0":"#f0f0ee"} stroke="#5a3218" strokeWidth="1.2" transform="rotate(22 131 214)" opacity="0.88"/>
+        <ellipse cx="149" cy="214" rx="8" ry="11" fill={dry?"#ccc898":"#eeeee8"} stroke="#5a3218" strokeWidth="1.2" transform="rotate(-22 149 214)" opacity="0.88"/>
+        <ellipse cx="141" cy="209" rx="10" ry="13" fill={dry?"#d8d0a8":"#f8f8f4"} stroke="#5a3218" strokeWidth="1.2" opacity="0.92"/>
+        <ellipse cx="141" cy="211" rx="6" ry="8" fill={dry?"#e0d8b0":"#fffff8"} opacity="0.9"/>
+        <circle cx="141" cy="209" r="3.5" fill="#f8e060" stroke="#5a3218" strokeWidth="0.6"/>
       </g>}
 
       {/* Lily */}
       {showIn("lily") && <g>
-        <rect x="165" y="218" width="5" height="16" rx="2.5" fill="#5a7e3c"/>
+        <rect x="165" y="216" width="5" height="16" rx="2.5" fill="#6a8840" stroke="#5a3218" strokeWidth="0.8"/>
         {[0,60,120,180,240,300].map((a,i)=>(
-          <ellipse key={i} cx={168+Math.cos(a*Math.PI/180)*10} cy={216+Math.sin(a*Math.PI/180)*8}
-            rx="6" ry="10" fill={dry?"#9898c0":i%2===0?"#8ab8e8":"#a8ccf0"}
-            transform={`rotate(${a} ${168+Math.cos(a*Math.PI/180)*10} ${216+Math.sin(a*Math.PI/180)*8})`} opacity="0.85"/>
+          <ellipse key={i} cx={168+Math.cos(a*Math.PI/180)*10} cy={215+Math.sin(a*Math.PI/180)*8}
+            rx="6" ry="10" fill={dry?"#a0a8c0":i%2===0?"#98c0e0":"#b0d0ee"}
+            stroke="#5a3218" strokeWidth="1"
+            transform={`rotate(${a} ${168+Math.cos(a*Math.PI/180)*10} ${215+Math.sin(a*Math.PI/180)*8})`} opacity="0.88"/>
         ))}
-        <circle cx="168" cy="216" r="4.5" fill="#f8e060"/>
+        <circle cx="168" cy="215" r="5" fill="#f8e060" stroke="#5a3218" strokeWidth="0.8"/>
       </g>}
 
       {/* Peony */}
       {showIn("peony") && <g>
-        <ellipse cx="250" cy="208" rx="14" ry="12" fill={dry?"#c8a8a0":"#d4a0d8"}/>
-        <ellipse cx="250" cy="210" rx="10" ry="9" fill={dry?"#d0b0a8":"#e0b8e8"}/>
-        <ellipse cx="250" cy="212" rx="6" ry="6" fill={dry?"#d8b8b0":"#f0d0f4"}/>
-        <ellipse cx="250" cy="213" rx="3" ry="3" fill="#f8e0a0"/>
-        <ellipse cx="238" cy="216" rx="8" ry="10" fill={dry?"#c0a098":"#c890cc"} transform="rotate(20 238 216)" opacity="0.7"/>
-        <ellipse cx="262" cy="216" rx="8" ry="10" fill={dry?"#c0a098":"#c890cc"} transform="rotate(-20 262 216)" opacity="0.7"/>
+        <rect x="247" y="215" width="5" height="14" rx="2.5" fill="#6a9848" stroke="#5a3218" strokeWidth="0.8"/>
+        <ellipse cx="238" cy="214" rx="8" ry="10" fill={dry?"#c0a098":"#c898cc"} stroke="#5a3218" strokeWidth="1.2" transform="rotate(18 238 214)" opacity="0.82"/>
+        <ellipse cx="262" cy="214" rx="8" ry="10" fill={dry?"#c0a098":"#c090c4"} stroke="#5a3218" strokeWidth="1.2" transform="rotate(-18 262 214)" opacity="0.82"/>
+        <ellipse cx="250" cy="205" rx="13" ry="12" fill={dry?"#c8a8a0":"#d8a8dc"} stroke="#5a3218" strokeWidth="1.5" opacity="0.9"/>
+        <ellipse cx="250" cy="207" rx="9" ry="9" fill={dry?"#d8b8b0":"#e8c0ec"} stroke="#5a3218" strokeWidth="1.2" opacity="0.9"/>
+        <ellipse cx="250" cy="209" rx="5.5" ry="5.5" fill={dry?"#e0c8c0":"#f4d8f8"} opacity="0.9"/>
+        <circle cx="250" cy="209" r="3" fill="#f8e898" stroke="#5a3218" strokeWidth="0.6"/>
       </g>}
 
       {/* Swallows */}
       {showIn("swallow1") && <g transform="translate(164,68)">
-        <path d="M0 -2 C-8 -14 -22 -18 -34 -13 C-24 -9 -16 -3 -10 3 C-18 1 -26 5 -32 11 C-20 11 -10 8 -1 2" fill="#263247" opacity="0.95"/>
-        <path d="M0 -2 C8 -14 22 -18 34 -13 C24 -9 16 -3 10 3 C18 1 26 5 32 11 C20 11 10 8 1 2" fill="#263247" opacity="0.95"/>
-        <ellipse cx="0" cy="2" rx="6.5" ry="3.6" fill="#1b2432"/>
-        <path d="M-1 4 L-9 14 L-3 12 L0 17 L3 12 L9 14 L1 4" fill="#1b2432"/>
+        <path d="M0 0 C-6 -10 -18 -14 -28 -10 C-20 -7 -12 -2 -7 3 C-14 1 -20 4 -26 9 C-16 9 -8 6 0 0Z" fill="#5a6878" stroke="#5a3218" strokeWidth="0.8" opacity="0.9"/>
+        <path d="M0 0 C6 -10 18 -14 28 -10 C20 -7 12 -2 7 3 C14 1 20 4 26 9 C16 9 8 6 0 0Z" fill="#5a6878" stroke="#5a3218" strokeWidth="0.8" opacity="0.9"/>
+        <ellipse cx="0" cy="2" rx="5" ry="3" fill="#4a5868"/>
+        <path d="M-1 5 L-6 12 L-2 10 L0 14 L2 10 L6 12 L1 5Z" fill="#4a5868"/>
       </g>}
       {showIn("swallow2") && <g>
-        <g transform="translate(130,54) scale(0.88)">
-          <path d="M0 -2 C-8 -14 -22 -18 -34 -13 C-24 -9 -16 -3 -10 3 C-18 1 -26 5 -32 11 C-20 11 -10 8 -1 2" fill="#263247" opacity="0.95"/>
-          <path d="M0 -2 C8 -14 22 -18 34 -13 C24 -9 16 -3 10 3 C18 1 26 5 32 11 C20 11 10 8 1 2" fill="#263247" opacity="0.95"/>
-          <ellipse cx="0" cy="2" rx="6.5" ry="3.6" fill="#1b2432"/>
-          <path d="M-1 4 L-9 14 L-3 12 L0 17 L3 12 L9 14 L1 4" fill="#1b2432"/>
+        <g transform="translate(130,54) scale(0.85)">
+          <path d="M0 0 C-6 -10 -18 -14 -28 -10 C-20 -7 -12 -2 -7 3 C-14 1 -20 4 -26 9 C-16 9 -8 6 0 0Z" fill="#5a6878" stroke="#5a3218" strokeWidth="0.9" opacity="0.88"/>
+          <path d="M0 0 C6 -10 18 -14 28 -10 C20 -7 12 -2 7 3 C14 1 20 4 26 9 C16 9 8 6 0 0Z" fill="#5a6878" stroke="#5a3218" strokeWidth="0.9" opacity="0.88"/>
+          <ellipse cx="0" cy="2" rx="5" ry="3" fill="#4a5868"/>
+          <path d="M-1 5 L-6 12 L-2 10 L0 14 L2 10 L6 12 L1 5Z" fill="#4a5868"/>
         </g>
-        <g transform="translate(226,76) scale(0.72) rotate(8)">
-          <path d="M0 -2 C-8 -14 -22 -18 -34 -13 C-24 -9 -16 -3 -10 3 C-18 1 -26 5 -32 11 C-20 11 -10 8 -1 2" fill="#344158" opacity="0.92"/>
-          <path d="M0 -2 C8 -14 22 -18 34 -13 C24 -9 16 -3 10 3 C18 1 26 5 32 11 C20 11 10 8 1 2" fill="#344158" opacity="0.92"/>
-          <ellipse cx="0" cy="2" rx="6.5" ry="3.6" fill="#222c3c"/>
-          <path d="M-1 4 L-9 14 L-3 12 L0 17 L3 12 L9 14 L1 4" fill="#222c3c"/>
+        <g transform="translate(226,76) scale(0.7) rotate(8)">
+          <path d="M0 0 C-6 -10 -18 -14 -28 -10 C-20 -7 -12 -2 -7 3 C-14 1 -20 4 -26 9 C-16 9 -8 6 0 0Z" fill="#707888" opacity="0.85"/>
+          <path d="M0 0 C6 -10 18 -14 28 -10 C20 -7 12 -2 7 3 C14 1 20 4 26 9 C16 9 8 6 0 0Z" fill="#707888" opacity="0.85"/>
+          <ellipse cx="0" cy="2" rx="5" ry="3" fill="#5a6878"/>
+          <path d="M-1 5 L-6 12 L-2 10 L0 14 L2 10 L6 12 L1 5Z" fill="#5a6878"/>
         </g>
       </g>}
 
       {/* Heart */}
-      {showIn("heart") && <path d="M195 90 C195 90 182 78 182 69 C182 63 187 60 191 62 C194 63 195 66 195 66 C195 66 196 63 199 62 C203 60 208 63 208 69 C208 78 195 90 195 90Z" fill="#e8607a" opacity="0.9"/>}
+      {showIn("heart") && <g>
+        <path d="M195 92 C195 92 181 79 181 70 C181 63 186 60 190 62 C193 64 195 67 195 67 C195 67 197 64 200 62 C204 60 209 63 209 70 C209 79 195 92 195 92Z" fill="#f0788a" stroke="#5a3218" strokeWidth="2" opacity="0.9"/>
+        <path d="M189 66 C190 63 192 62 194 63" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
+      </g>}
 
       {/* Bridge */}
       {showIn("bridge") && <g>
-        <path d="M100 265 Q195 235 290 265" fill="none" stroke="#9a7848" strokeWidth="6" strokeLinecap="round"/>
-        {[120,148,176,204,232,260].map((x,i)=>(
-          <line key={i} x1={x} y1={248+(x-195)**2/1200} x2={x} y2={268} stroke="#8a6838" strokeWidth="3" opacity="0.9"/>
+        {[100,118,136,154,172,190,208,226,244,262,280].map((x,i)=>(
+          <rect key={i} x={x} y={248+(x-190)**2/2200} width="20" height="8" rx="3" fill="#c89858" stroke="#5a3218" strokeWidth="1.2" opacity="0.92"/>
         ))}
-        <line x1="100" y1="265" x2="290" y2="265" stroke="#8a6838" strokeWidth="4"/>
+        <path d="M100 248 Q195 222 290 248" fill="none" stroke="#a07840" strokeWidth="5" strokeLinecap="round"/>
+        <path d="M100 248 Q195 222 290 248" fill="none" stroke="#c89858" strokeWidth="3" strokeLinecap="round" opacity="0.6"/>
+        {[108,195,282].map((x,i)=>(
+          <rect key={i} x={x-3} y={244+(x-195)**2/2400} width="6" height="26" rx="3" fill="#a07840" stroke="#5a3218" strokeWidth="1"/>
+        ))}
+        <path d="M100 270 Q195 258 290 270" fill="none" stroke="#a07840" strokeWidth="3.5" strokeLinecap="round"/>
       </g>}
 
       {/* Pagoda */}
       {showIn("pagoda") && <g>
-        <rect x="310" y="218" width="36" height="16" rx="2" fill={dry?"#c07840":"#d08848"}/>
-        <path d="M302 218 L328 200 L354 218Z" fill={dry?"#b06830":"#c07040"}/>
-        <rect x="314" y="200" width="28" height="19" rx="2" fill={dry?"#c07840":"#d08848"}/>
-        <path d="M306 200 L328 184 L350 200Z" fill={dry?"#b06830":"#c07040"}/>
-        <rect x="318" y="184" width="20" height="17" rx="2" fill={dry?"#c07840":"#d08848"}/>
-        <path d="M312 184 L328 168 L344 184Z" fill={dry?"#b06830":"#c07040"}/>
-        <rect x="322" y="162" width="12" height="8" rx="2" fill="#e8a030" opacity="0.9"/>
+        <ellipse cx="328" cy="235" rx="22" ry="5" fill="#5a3218" opacity="0.10"/>
+        <rect x="308" y="220" width="40" height="14" rx="3" fill={dry?"#c8a060":"#d4a870"} stroke="#5a3218" strokeWidth="1.5"/>
+        <path d="M300 220 L328 204 L356 220Z" fill={dry?"#b88848":"#c89848"} stroke="#5a3218" strokeWidth="1.5"/>
+        <path d="M300 220 L356 220" fill="none" stroke="#5a3218" strokeWidth="1" opacity="0.3"/>
+        <path d="M302 220 Q328 218 354 220" fill="none" stroke="#e0c080" strokeWidth="1.5" opacity="0.6"/>
+        <rect x="312" y="204" width="32" height="16" rx="3" fill={dry?"#c8a060":"#d4a870"} stroke="#5a3218" strokeWidth="1.5"/>
+        <path d="M306 204 L328 188 L350 204Z" fill={dry?"#b88848":"#c89848"} stroke="#5a3218" strokeWidth="1.5"/>
+        <path d="M308 204 Q328 202 348 204" fill="none" stroke="#e0c080" strokeWidth="1.5" opacity="0.6"/>
+        <rect x="316" y="188" width="24" height="16" rx="3" fill={dry?"#c8a060":"#d4a870"} stroke="#5a3218" strokeWidth="1.5"/>
+        <path d="M310 188 L328 172 L346 188Z" fill={dry?"#b88848":"#c89848"} stroke="#5a3218" strokeWidth="1.5"/>
+        <path d="M312 188 Q328 186 344 188" fill="none" stroke="#e0c080" strokeWidth="1.5" opacity="0.6"/>
+        <rect x="325" y="164" width="6" height="9" rx="2" fill="#e8b840" stroke="#5a3218" strokeWidth="1"/>
+        <circle cx="328" cy="162" r="4" fill="#f0c848" stroke="#5a3218" strokeWidth="0.8"/>
+        <rect x="320" y="210" width="8" height="8" rx="2" fill="#e8d8a8" stroke="#5a3218" strokeWidth="0.8"/>
+        <rect x="334" y="210" width="8" height="8" rx="2" fill="#e8d8a8" stroke="#5a3218" strokeWidth="0.8"/>
       </g>}
 
       {/* Lanterns */}
       {showIn("lantern") && <g>
-        <rect x="22" y="185" width="6" height="40" rx="3" fill="#9a7848"/>
-        <rect x="16" y="225" width="18" height="28" rx="8" fill="#e86030"/>
-        <rect x="18" y="225" width="14" height="28" rx="6" fill="#f08050" opacity="0.6"/>
-        <ellipse cx="25" cy="225" rx="10" ry="4" fill="#9a7848"/>
-        <ellipse cx="25" cy="253" rx="10" ry="4" fill="#9a7848"/>
-        <circle cx="25" cy="239" r="6" fill="#f8e060" opacity="0.5"/>
+        <rect x="22" y="185" width="7" height="42" rx="3.5" fill="#a07838" stroke="#5a3218" strokeWidth="1.2"/>
+        <rect x="23" y="185" width="2.5" height="42" rx="1.5" fill="#c09850" opacity="0.5"/>
+        <path d="M14 227 Q25.5 222 37 227" fill="#8a6028" stroke="#5a3218" strokeWidth="1.2"/>
+        <ellipse cx="25.5" cy="226" rx="12" ry="4" fill="#a07838" stroke="#5a3218" strokeWidth="1.2"/>
+        <rect x="14" y="226" width="23" height="30" rx="10" fill="#e86830" stroke="#5a3218" strokeWidth="1.5"/>
+        <rect x="16" y="226" width="9" height="30" rx="5" fill="#f08050" opacity="0.35"/>
+        <ellipse cx="25.5" cy="256" rx="12" ry="4" fill="#a07838" stroke="#5a3218" strokeWidth="1.2"/>
+        <circle cx="25.5" cy="241" r="7" fill="#f8e060" opacity="0.45"/>
+        <line x1="25.5" y1="260" x2="25.5" y2="268" stroke="#c8a030" strokeWidth="2" strokeLinecap="round"/>
       </g>}
       {showIn("lantern2") && <g>
-        <line x1="20" y1="175" x2="100" y2="175" stroke="#9a7848" strokeWidth="2"/>
-        {[30,55,80].map((x,i)=><g>
-          <line key={i} x1={x} y1="175" x2={x} y2="188" stroke="#9a7848" strokeWidth="1.5"/>
-          <rect x={x-8} y="188" width="16" height="22" rx="7" fill={["#e86030","#d4408a","#e8c030"][i]}/>
-          <ellipse cx={x} cy="188" rx="9" ry="3.5" fill="#9a7848"/>
-          <ellipse cx={x} cy="210" rx="9" ry="3.5" fill="#9a7848"/>
-          <circle cx={x} cy="199" r="5" fill="#f8e060" opacity="0.45"/>
-        </g>)}
+        <path d="M18 172 Q55 180 98 172" fill="none" stroke="#a07838" strokeWidth="1.8"/>
+        {[28,55,82].map((x,i)=>(
+          <g key={i}>
+            <line x1={x} y1="172" x2={x} y2="185" stroke="#a07838" strokeWidth="1.5"/>
+            <ellipse cx={x} cy="184" rx="9" ry="3.5" fill="#8a6028" stroke="#5a3218" strokeWidth="1"/>
+            <rect x={x-8} y="184" width="16" height="22" rx="7" fill={["#e86830","#d84880","#e8c030"][i]} stroke="#5a3218" strokeWidth="1.5"/>
+            <rect x={x-6} y="184" width="6" height="22" rx="4" fill="white" opacity="0.18"/>
+            <ellipse cx={x} cy="206" rx="9" ry="3.5" fill="#8a6028" stroke="#5a3218" strokeWidth="1"/>
+            <circle cx={x} cy="195" r="5" fill="#f8e060" opacity="0.4"/>
+            <line x1={x} y1="209.5" x2={x} y2="216" stroke="#c8a030" strokeWidth="1.8" strokeLinecap="round"/>
+          </g>
+        ))}
       </g>}
 
       {/* Fireflies */}
       {showIn("firefly") && <g>
         {[[45,190],[380,140],[200,185],[350,200],[80,160],[170,170],[310,185],[240,195],[130,180]].map(([x,y],i)=>(
           <g key={i}>
-            <circle cx={x} cy={y} r="2.5" fill="#f8e840" opacity="0.95"/>
-            <circle cx={x} cy={y} r="5" fill="#f8e840" opacity="0.2"/>
+            <circle cx={x} cy={y} r="3" fill="#f0e848" stroke="#c8b820" strokeWidth="0.6" opacity="0.95"/>
+            <circle cx={x} cy={y} r="7" fill="#f8f060" opacity="0.18"/>
           </g>
         ))}
       </g>}
 
       {/* Moon gate */}
       {showIn("moongate") && <g>
-        <circle cx="195" cy="160" r="50" fill="none" stroke="#f8e0a0" strokeWidth="6" opacity="0.8"/>
-        <path d="M145 195 L145 230 L245 230 L245 195" fill="#b8d8a0" opacity="0.7"/>
-        <circle cx="187" cy="152" r="7" fill="#f8e0a0" opacity="0.5"/>
-        <circle cx="192" cy="148" r="5" fill="#f8e0a0" opacity="0.4"/>
-        <circle cx="197" cy="152" r="4" fill="#f8e0a0" opacity="0.35"/>
+        <rect x="143" y="155" width="10" height="75" rx="4" fill="#9a7848" stroke="#5a3218" strokeWidth="1.5"/>
+        <rect x="237" y="155" width="10" height="75" rx="4" fill="#9a7848" stroke="#5a3218" strokeWidth="1.5"/>
+        <circle cx="195" cy="165" r="52" fill="none" stroke="#c8a860" strokeWidth="7" opacity="0.85"/>
+        <path d="M145 180 Q148 168 152 156" fill="none" stroke="#7a9848" strokeWidth="2" strokeLinecap="round" opacity="0.8"/>
+        <ellipse cx="149" cy="170" rx="8" ry="5" fill="#90aa58" stroke="#5a3218" strokeWidth="0.8" transform="rotate(-30 149 170)" opacity="0.8"/>
+        <path d="M244 178 Q240 166 236 155" fill="none" stroke="#7a9848" strokeWidth="2" strokeLinecap="round" opacity="0.8"/>
+        <ellipse cx="241" cy="168" rx="8" ry="5" fill="#90aa58" stroke="#5a3218" strokeWidth="0.8" transform="rotate(30 241 168)" opacity="0.8"/>
+        <circle cx="188" cy="156" r="8" fill="#f8e8a8" opacity="0.55"/>
+        <circle cx="193" cy="153" r="5" fill="#f8e8a8" opacity="0.4"/>
       </g>}
 
       {/* ── INDOOR ITEMS ── only visible in cuarto view */}
+
+      {/* Rug */}
       {showIn("rug") && <g>
-        <ellipse cx="195" cy="262" rx="110" ry="22" fill="#c8a8d8" opacity="0.65"/>
-        <ellipse cx="195" cy="262" rx="95" ry="16" fill="#d4b8e4" opacity="0.5"/>
-        {[0,1,2,3].map(i=><ellipse key={i} cx={130+i*44} cy="262" rx="8" ry="6" fill="#e8d0f0" opacity="0.5"/>)}
+        <rect x="82" y="242" width="226" height="44" rx="8" fill="#d4b880" stroke="#5a3218" strokeWidth="1.8" opacity="0.92"/>
+        <rect x="88" y="247" width="214" height="34" rx="5" fill="#e8c898" opacity="0.6"/>
+        {[0,1,2,3,4,5,6,7,8,9].map(i=>(
+          <rect key={i} x={90+i*22} y="249" width="10" height="8" rx="2" fill="#c89848" opacity="0.5"/>
+        ))}
+        <path d="M195 250 L210 264 L195 278 L180 264Z" fill="none" stroke="#a07830" strokeWidth="1.5" opacity="0.6"/>
+        <circle cx="195" cy="264" r="6" fill="#c07838" opacity="0.45"/>
+        {[88,106,124,142,160,178,196,214,232,250,268,286,304].map((x,i)=>(
+          <line key={i} x1={x} y1="286" x2={x+2} y2="293" stroke="#a07838" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
+        ))}
+        {[88,106,124,142,160,178,196,214,232,250,268,286,304].map((x,i)=>(
+          <line key={i} x1={x} y1="242" x2={x+2} y2="235" stroke="#a07838" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
+        ))}
       </g>}
+
+      {/* Fairy lights */}
       {showIn("fairy_lights") && <g>
-        <path d="M0 28 Q50 36 100 28 Q150 36 200 28 Q250 36 300 28 Q350 36 390 28" fill="none" stroke="#c8a840" strokeWidth="1.2" opacity="0.7"/>
+        <path d="M0 30 Q50 38 100 30 Q150 38 200 30 Q250 38 300 30 Q350 38 390 30" fill="none" stroke="#c8a840" strokeWidth="1.5" opacity="0.8"/>
         {[15,42,68,95,122,148,175,202,228,255,280,308,335,362].map((x,i)=>(
           <g key={i}>
-            <circle cx={x} cy={28+Math.sin(i)*3} r="5" fill={["#f8e840","#f8a0b0","#a0d8f8","#c0f0b0"][i%4]} opacity="0.9"/>
-            <circle cx={x} cy={28+Math.sin(i)*3} r="9" fill={["#f8e840","#f8a0b0","#a0d8f8","#c0f0b0"][i%4]} opacity="0.2"/>
+            <path d={`M${x} ${30+Math.sin(i)*3} L${x-4} ${38+Math.sin(i)*3} L${x+4} ${38+Math.sin(i)*3}Z`}
+              fill={["#f8e048","#f8a0b0","#98d0f0","#b0e8a8"][i%4]} stroke="#5a3218" strokeWidth="0.8" opacity="0.92"/>
+            <circle cx={x} cy={30+Math.sin(i)*3} r="2.5" fill="#c8a840" stroke="#5a3218" strokeWidth="0.6"/>
+            <circle cx={x} cy={40+Math.sin(i)*3} r="7" fill={["#f8e048","#f8a0b0","#98d0f0","#b0e8a8"][i%4]} opacity="0.15"/>
           </g>
         ))}
       </g>}
+
+      {/* Shelf */}
       {showIn("shelf") && <g>
-        <rect x="8" y="100" width="68" height="90" rx="4" fill="#c8a878" opacity="0.9"/>
-        <rect x="8" y="100" width="68" height="8" rx="2" fill="#a07848"/>
-        <rect x="8" y="143" width="68" height="6" rx="2" fill="#a07848"/>
-        <rect x="8" y="180" width="68" height="6" rx="2" fill="#a07848"/>
-        {[{x:12,h:28,c:"#e87878"},{x:22,h:22,c:"#78a8e8"},{x:32,h:30,c:"#88c878"},{x:43,h:25,c:"#f8e060"},{x:53,h:28,c:"#d878e8"}].map((b,i)=>(
-          <rect key={i} x={b.x} y={141-b.h} width="7" height={b.h} rx="2" fill={b.c} opacity="0.85"/>
+        <rect x="8" y="98" width="70" height="95" rx="5" fill="#c8a070" stroke="#5a3218" strokeWidth="2"/>
+        <rect x="8" y="98" width="24" height="95" rx="3" fill="#b88c58" opacity="0.4"/>
+        {[98,140,178].map((y,i)=>(
+          <rect key={i} x="6" y={y} width="74" height="7" rx="3" fill="#9a7038" stroke="#5a3218" strokeWidth="1.5"/>
         ))}
-        {[{x:12,h:20,c:"#e8a030"},{x:22,h:24,c:"#8888e8"},{x:34,h:18,c:"#e87060"},{x:46,h:22,c:"#50c8a0"},{x:56,h:20,c:"#f0a0c0"}].map((b,i)=>(
-          <rect key={i} x={b.x} y={178-b.h} width="7" height={b.h} rx="2" fill={b.c} opacity="0.85"/>
+        {[{x:12,h:26,w:8,c:"#c87858"},{x:21,h:22,w:7,c:"#8898d0"},{x:29,h:28,w:9,c:"#88b870"},{x:39,h:24,w:8,c:"#e8c060"},{x:48,h:26,w:9,c:"#c080c8"},{x:58,h:20,w:9,c:"#e88060"}].map((b,i)=>(
+          <g key={i}>
+            <rect x={b.x} y={139-b.h} width={b.w} height={b.h} rx="1.5" fill={b.c} stroke="#5a3218" strokeWidth="0.8"/>
+            <rect x={b.x} y={139-b.h} width={b.w} height="4" rx="1" fill="white" opacity="0.25"/>
+          </g>
         ))}
+        {[{x:12,h:20,w:8,c:"#d09050"},{x:21,h:24,w:8,c:"#7888d8"},{x:30,h:18,w:9,c:"#d06858"},{x:40,h:22,w:8,c:"#58c0a0"},{x:49,h:18,w:10,c:"#f0a0b8"}].map((b,i)=>(
+          <g key={i}>
+            <rect x={b.x} y={177-b.h} width={b.w} height={b.h} rx="1.5" fill={b.c} stroke="#5a3218" strokeWidth="0.8"/>
+            <rect x={b.x} y={177-b.h} width={b.w} height="4" rx="1" fill="white" opacity="0.25"/>
+          </g>
+        ))}
+        <rect x="62" y="88" width="10" height="10" rx="3" fill="#e8c878" stroke="#5a3218" strokeWidth="1"/>
+        <circle cx="67" cy="84" r="5" fill="#d8a858" stroke="#5a3218" strokeWidth="1"/>
+        <rect x="6" y="98" width="4" height="95" rx="2" fill="#a07038" stroke="#5a3218" strokeWidth="1"/>
+        <rect x="74" y="98" width="4" height="95" rx="2" fill="#a07038" stroke="#5a3218" strokeWidth="1"/>
       </g>}
+
+      {/* Lamp */}
       {showIn("lamp") && <g>
-        <rect x="318" y="170" width="8" height="100" rx="4" fill="#b09060"/>
-        <ellipse cx="322" cy="274" rx="22" ry="8" fill="#9a7848" opacity="0.7"/>
-        <path d="M300 170 Q322 140 344 170Z" fill="#f8e8c0" opacity="0.9"/>
-        <path d="M300 170 Q322 140 344 170Z" fill="none" stroke="#d4b070" strokeWidth="2"/>
-        <circle cx="322" cy="165" r="8" fill="#f8e060" opacity="0.7"/>
-        <ellipse cx="322" cy="190" rx="35" ry="18" fill="#f8e860" opacity="0.15"/>
+        <ellipse cx="322" cy="274" rx="22" ry="7" fill="#9a7848" stroke="#5a3218" strokeWidth="1.5"/>
+        <ellipse cx="322" cy="271" rx="16" ry="5" fill="#b09060" opacity="0.6"/>
+        <rect x="319" y="170" width="7" height="104" rx="3.5" fill="#b09060" stroke="#5a3218" strokeWidth="1.5"/>
+        <rect x="320" y="170" width="2.5" height="104" rx="1.5" fill="#d0b080" opacity="0.5"/>
+        <path d="M298 172 Q322 142 346 172Z" fill="#f0e8c0" stroke="#5a3218" strokeWidth="1.8"/>
+        <path d="M299 172 L345 172" fill="none" stroke="#5a3218" strokeWidth="1.5"/>
+        <path d="M304 166 Q322 148 340 166" fill="none" stroke="#d4b870" strokeWidth="1" opacity="0.6"/>
+        <circle cx="322" cy="168" r="8" fill="#f8e878" opacity="0.6"/>
+        <ellipse cx="322" cy="190" rx="34" ry="16" fill="#f8e878" opacity="0.12"/>
       </g>}
+
+      {/* Cushions */}
       {showIn("cushions") && <g>
-        <ellipse cx="155" cy="255" rx="32" ry="18" fill="#f0b8c8" opacity="0.85"/>
-        <ellipse cx="155" cy="252" rx="28" ry="14" fill="#f8c8d4" opacity="0.7"/>
-        <ellipse cx="225" cy="252" rx="28" ry="16" fill="#c8d8f8" opacity="0.85"/>
-        <ellipse cx="225" cy="249" rx="24" ry="12" fill="#d8e4fc" opacity="0.7"/>
-        <circle cx="155" cy="251" r="4" fill="#f8d8e0" opacity="0.6"/>
-        <circle cx="225" cy="248" r="4" fill="#dce8fc" opacity="0.6"/>
+        <rect x="122" y="242" width="58" height="36" rx="12" fill="#f0c0c8" stroke="#5a3218" strokeWidth="1.8"/>
+        <rect x="126" y="246" width="50" height="28" rx="9" fill="#f8d0d8" opacity="0.6"/>
+        <circle cx="151" cy="260" r="4" fill="#e0a8b0" stroke="#5a3218" strokeWidth="0.8"/>
+        <rect x="190" y="240" width="62" height="38" rx="12" fill="#b8c898" stroke="#5a3218" strokeWidth="1.8"/>
+        <rect x="194" y="244" width="54" height="30" rx="9" fill="#c8d8a8" opacity="0.6"/>
+        <circle cx="221" cy="259" r="4" fill="#98a878" stroke="#5a3218" strokeWidth="0.8"/>
+        <circle cx="268" cy="258" r="16" fill="#d8b880" stroke="#5a3218" strokeWidth="1.5"/>
+        <circle cx="268" cy="258" r="10" fill="#e8c890" opacity="0.7"/>
+        <circle cx="268" cy="258" r="4" fill="#c8a060" stroke="#5a3218" strokeWidth="0.8"/>
       </g>}
+
+      {/* Indoor plant */}
       {showIn("indoor_plant") && <g>
-        <ellipse cx="362" cy="270" rx="22" ry="12" fill="#9a7040" opacity="0.9"/>
-        <path d="M362 268 C362 268 350 248 345 230 C352 238 358 248 362 255 C366 248 372 238 379 230 C374 248 362 268 362 268Z" fill="#5a9840" opacity="0.9"/>
-        <path d="M362 260 C362 260 354 244 358 228 C362 242 362 260 362 260Z" fill="#6aaa48" opacity="0.6"/>
-        <ellipse cx="362" cy="268" rx="12" ry="7" fill="#b08848" opacity="0.7"/>
+        <ellipse cx="362" cy="278" rx="18" ry="5" fill="#5a3218" opacity="0.10"/>
+        <path d="M346 270 L348 280 Q362 285 376 280 L378 270Z" fill="#c87848" stroke="#5a3218" strokeWidth="1.8"/>
+        <path d="M346 270 L348 280 Q362 285 376 280 L378 270Z" fill="#e89060" opacity="0.4"/>
+        <ellipse cx="362" cy="270" rx="16" ry="6" fill="#d88858" stroke="#5a3218" strokeWidth="1.5"/>
+        <ellipse cx="362" cy="268" rx="12" ry="4" fill="#e89868" opacity="0.6"/>
+        <ellipse cx="362" cy="270" rx="12" ry="3.5" fill="#8a6030" opacity="0.8"/>
+        <rect x="360" y="248" width="4" height="22" rx="2" fill="#7a9840" stroke="#5a3218" strokeWidth="0.8"/>
+        <path d="M362 258 C362 258 345 242 340 228 C348 236 356 248 362 255Z" fill="#6a9840" stroke="#5a3218" strokeWidth="1.2" opacity="0.9"/>
+        <path d="M362 255 C362 255 379 239 384 225 C376 234 368 246 362 253Z" fill="#78aa50" stroke="#5a3218" strokeWidth="1.2" opacity="0.9"/>
+        <path d="M362 264 C362 264 348 252 344 240 C350 246 358 256 362 262Z" fill="#7aaa58" stroke="#5a3218" strokeWidth="1" opacity="0.82"/>
+        <path d="M349 237 L352 243" fill="none" stroke="#5a3218" strokeWidth="0.8" opacity="0.5"/>
+        <path d="M374 234 L371 240" fill="none" stroke="#5a3218" strokeWidth="0.8" opacity="0.5"/>
       </g>}
 
       {/* Dryness crack overlay */}
       {dry && <g>
-        <path d="M50 250 L60 265 L55 275" fill="none" stroke="#a08030" strokeWidth="1.5" opacity="0.5"/>
-        <path d="M180 255 L170 268 L178 278" fill="none" stroke="#a08030" strokeWidth="1.5" opacity="0.4"/>
-        <path d="M300 248 L308 260 L302 270" fill="none" stroke="#a08030" strokeWidth="1.5" opacity="0.5"/>
+        <path d="M50 250 L60 265 L55 275" fill="none" stroke="#a08030" strokeWidth="1.5" opacity="0.4"/>
+        <path d="M180 255 L170 268 L178 278" fill="none" stroke="#a08030" strokeWidth="1.5" opacity="0.35"/>
+        <path d="M300 248 L308 260 L302 270" fill="none" stroke="#a08030" strokeWidth="1.5" opacity="0.4"/>
       </g>}
     </svg>
   );
@@ -1963,16 +1938,21 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
         {/* Items grid */}
         <div style={{ display:"flex", gap:10, overflowX:"auto", padding:"8px 14px 20px" }}>
           {shopItems.map(item => {
-            const owned = shopTab === "accesorios" ? accessories?.[item.id] : garden?.[item.id];
+            const val = shopTab === "accesorios" ? accessories?.[item.id] : garden?.[item.id];
+            const currentLoc = indoor ? "indoor" : "garden";
+            const placedHere = val === currentLoc || val === true;
+            const ownedElsewhere = val && val !== currentLoc && val !== "owned" && val !== true;
+            const ownedNotPlaced = val === "owned";
+            const owned = val && val !== false;
             const POND_DEPS = ["koi1", "koi2", "lotus_pad"];
             const locked = shopTab !== "accesorios" && POND_DEPS.includes(item.id) && !garden?.pond && !owned;
             return (
-              <div key={item.id} onClick={() => shopTab==="accesorios" ? onBuyAccessory(item) : onBuy({...item, location: indoor ? "indoor" : "garden"})}
-                style={{ background:owned===true?"#d4e8c4":owned==="owned"?C.cream:locked?"#f0ede8":C.sandL,
-                  border:`2px solid ${owned===true?C.olive:owned==="owned"?"#c8b060":locked?C.sand:C.border}`,
+              <div key={item.id} onClick={() => shopTab==="accesorios" ? onBuyAccessory(item) : onBuy({...item, location: currentLoc})}
+                style={{ background:placedHere?"#d4e8c4":ownedNotPlaced||ownedElsewhere?"#f0e8f8":locked?"#f0ede8":C.sandL,
+                  border:`2px solid ${placedHere?C.olive:ownedNotPlaced||ownedElsewhere?"#c0a0d8":locked?C.sand:C.border}`,
                   borderRadius:16, padding:"12px 10px", textAlign:"center", cursor:locked?"default":"pointer",
                   minWidth:84, flexShrink:0, opacity:locked?0.6:1,
-                  boxShadow:owned?`0 3px 0 ${C.olive}50`:`0 2px 0 ${C.border}`,
+                  boxShadow:owned?`0 3px 0 ${placedHere?C.olive:"#c0a0d8"}50`:`0 2px 0 ${C.border}`,
                   transition:"all 0.15s" }}>
                 <div style={{ display:"flex", justifyContent:"center", marginBottom:4 }}>
                   {shopTab === "accesorios"
@@ -1981,8 +1961,12 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
                 </div>
                 <div style={{ fontSize:"0.67rem", fontWeight:800, color:C.ink, marginBottom:2, lineHeight:1.2 }}>{item.name}</div>
                 <div style={{ fontSize:"0.62rem", color:C.inkL, marginBottom:5, lineHeight:1.2 }}>{locked ? "🔒 Requiere Estanque" : item.desc}</div>
-                {owned
-                  ? <div style={{ background:C.olive, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>✓</div>
+                {placedHere
+                  ? <div style={{ background:C.olive, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>✓ puesto</div>
+                  : ownedNotPlaced
+                  ? <div style={{ background:"#b080d8", color:"#fff", borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>+ poner</div>
+                  : ownedElsewhere
+                  ? <div style={{ background:"#b080d8", color:"#fff", borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>↗ mover aquí</div>
                   : locked
                   ? <div style={{ background:C.sand, color:C.inkL, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>🔒</div>
                   : <div style={{ background:C.dark, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>{item.cost} 🌿</div>}
@@ -2879,7 +2863,7 @@ function Conocete({ conoce, onSave, user }) {
 }
 
 // BURBUJA
-function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
+function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, onDelete, onEdit, user }) {
   const { nameA, nameB } = getCoupleNames(user);
   const myRole = user?.isOwner !== false ? "owner" : "partner";
   const partnerRole = myRole === "owner" ? "partner" : "owner";
@@ -2887,8 +2871,21 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
   const partnerName = myRole === "owner" ? nameB : nameA;
   const [activeTab, setActiveTab] = useState("negociacion");
   const [newAgreementText, setNewAgreementText] = useState("");
+  const [prefix, setPrefix] = useState("El acuerdo es…");
   const [counterText, setCounterText] = useState({});
   const [showNewForm, setShowNewForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState("");
+
+  const PREFIXES = [
+    "El acuerdo es…",
+    "Prometemos…",
+    "Queda prohibido…",
+    "Siempre vamos a…",
+    "En caso de pelea…",
+    "Cuando alguno de los dos…",
+    "Los dos acordamos…",
+  ];
 
   const allEntries = Object.entries(burbuja || {});
   const pendingEntries = allEntries.filter(([, v]) => v?.status === "pending" && v?.proposalText);
@@ -2900,7 +2897,7 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
     const text = newAgreementText.trim();
     if (!text) return;
     const id = `acuerdo_${Date.now()}`;
-    onPropose(id, text, false);
+    onPropose(id, text, false, prefix);
     setNewAgreementText("");
     setShowNewForm(false);
   };
@@ -2913,6 +2910,12 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
   };
 
   const getLabel = (v) => v?.approvedText || v?.proposalText || "";
+  const getPrefix = (v) => v?.prefix || "El acuerdo es…";
+
+  const startEdit = (id, v) => {
+    setEditingId(id);
+    setEditText(getLabel(v));
+  };
 
   return (
     <div style={{ background:C.sandL, minHeight:"100vh", paddingBottom:90 }}>
@@ -2927,7 +2930,7 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
         <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
           <div style={{ display:"flex", gap:10, alignItems:"flex-start" }}>
             <div style={{ width:28, height:28, background:"#ede5ff", borderRadius:8, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontSize:"0.9rem" }}>✍️</div>
-            <div style={{ fontSize:"0.82rem", color:C.inkM, lineHeight:1.6 }}><b>Negociación:</b> Cualquiera propone un acuerdo con el formato "El acuerdo es…". Le llega al otro, quien puede aprobarlo o proponer un ajuste.</div>
+            <div style={{ fontSize:"0.82rem", color:C.inkM, lineHeight:1.6 }}><b>Negociación:</b> Cualquiera propone un acuerdo con el formato que elijas. Le llega al otro, quien puede aprobarlo o proponer un ajuste.</div>
           </div>
           <div style={{ display:"flex", gap:10, alignItems:"flex-start" }}>
             <div style={{ width:28, height:28, background:"#ede5ff", borderRadius:8, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontSize:"0.9rem" }}>🤝</div>
@@ -2956,8 +2959,21 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
             ) : (
               <div style={{ background:C.white, borderRadius:18, padding:16, marginBottom:14, border:`1.5px solid ${C.border}`, boxShadow:`0 3px 0 ${C.border}` }}>
                 <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", color:C.dark, marginBottom:12 }}>Nueva propuesta de acuerdo</div>
+                <div style={{ marginBottom:10 }}>
+                  <div style={{ fontSize:"0.7rem", fontWeight:800, color:C.inkL, marginBottom:6 }}>¿Cómo empieza?</div>
+                  <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                    {PREFIXES.map(p => (
+                      <div key={p} onClick={() => setPrefix(p)}
+                        style={{ padding:"5px 10px", borderRadius:20, fontSize:"0.72rem", fontWeight:700, cursor:"pointer",
+                          background:prefix===p?"#6a3cbf":C.sandL, color:prefix===p?"#fff":C.inkM,
+                          border:`1.5px solid ${prefix===p?"#6a3cbf":C.border}`, transition:"all 0.15s" }}>
+                        {p}
+                      </div>
+                    ))}
+                  </div>
+                </div>
                 <div style={{ background:C.sandL, borderRadius:10, padding:"10px 12px", marginBottom:10, border:`1px solid ${C.border}` }}>
-                  <span style={{ fontWeight:800, color:C.olive, fontSize:"0.88rem" }}>El acuerdo es… </span>
+                  <span style={{ fontWeight:800, color:C.olive, fontSize:"0.88rem" }}>{prefix} </span>
                   <span style={{ fontSize:"0.78rem", color:C.inkL }}>(escribe el resto abajo)</span>
                 </div>
                 <TA value={newAgreementText} onChange={setNewAgreementText} placeholder="Ej: vernos al menos 1 vez a la semana · nunca dormir enojados · siempre avisarnos si llegamos tarde..." rows={3} style={{ marginBottom:10 }}/>
@@ -2976,12 +2992,12 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
                   <div key={id} style={{ background:C.white, borderRadius:16, padding:14, marginBottom:10, border:`2px solid ${C.olive}`, boxShadow:`0 3px 0 rgba(100,70,180,0.15)` }}>
                     <div style={{ fontSize:"0.7rem", fontWeight:800, color:C.olive, marginBottom:6 }}>Propuesta de {partnerName}</div>
                     <div style={{ background:"#f0ebff", borderRadius:10, padding:"10px 12px", marginBottom:12, border:`1px solid ${C.border}` }}>
-                      <span style={{ fontWeight:800, color:"#6a3cbf", fontSize:"0.84rem" }}>El acuerdo es… </span>
+                      <span style={{ fontWeight:800, color:"#6a3cbf", fontSize:"0.84rem" }}>{getPrefix(v)} </span>
                       <span style={{ fontSize:"0.9rem", color:C.ink, fontWeight:700 }}>{getLabel(v)}</span>
                     </div>
                     <Btn onClick={() => onApprove(id)} style={{ width:"100%", background:"#6a3cbf", color:"#fff", marginBottom:8, fontSize:"0.88rem" }}>✅ Aprobar este acuerdo</Btn>
                     <div style={{ fontSize:"0.7rem", fontWeight:800, color:C.inkL, marginBottom:6 }}>¿Quieres negociar?</div>
-                    <TA value={counterText[id] || ""} onChange={v2 => setCounterText(p => ({ ...p, [id]: v2 }))} placeholder="El acuerdo es… (tu versión ajustada)" rows={2} style={{ marginBottom:8 }}/>
+                    <TA value={counterText[id] || ""} onChange={v2 => setCounterText(p => ({ ...p, [id]: v2 }))} placeholder="Escribe tu versión ajustada..." rows={2} style={{ marginBottom:8 }}/>
                     <Btn onClick={() => handleCounter(id)} variant="sand" style={{ width:"100%", fontSize:"0.84rem" }}>↔ Enviar contrapropuesta</Btn>
                   </div>
                 ))}
@@ -2995,7 +3011,7 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
                 {pendingByMe.map(([id, v]) => (
                   <div key={id} style={{ background:C.white, borderRadius:14, padding:14, marginBottom:8, border:`1.5px solid ${C.border}`, opacity:0.85 }}>
                     <div style={{ background:C.sandL, borderRadius:10, padding:"10px 12px", border:`1px solid ${C.border}` }}>
-                      <span style={{ fontWeight:800, color:C.inkL, fontSize:"0.84rem" }}>El acuerdo es… </span>
+                      <span style={{ fontWeight:800, color:C.inkL, fontSize:"0.84rem" }}>{getPrefix(v)} </span>
                       <span style={{ fontSize:"0.88rem", color:C.inkM }}>{getLabel(v)}</span>
                     </div>
                     <div style={{ marginTop:8, fontSize:"0.72rem", color:C.inkL, fontWeight:700 }}>Enviado · esperando que {partnerName} responda...</div>
@@ -3029,12 +3045,28 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
                   <div key={id} style={{ background:C.white, borderRadius:16, padding:16, marginBottom:10, border:`2px solid #b39ddb`, boxShadow:`0 3px 0 rgba(100,70,180,0.12)` }}>
                     <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
                       <div style={{ width:26, height:26, background:"#6a3cbf", borderRadius:8, display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontWeight:800, fontSize:"0.78rem", flexShrink:0 }}>{i+1}</div>
-                      <div style={{ fontSize:"0.64rem", fontWeight:800, color:C.olive, letterSpacing:"0.4px" }}>ACUERDO DE {(nameA+" & "+nameB).toUpperCase()}</div>
+                      <div style={{ fontSize:"0.64rem", fontWeight:800, color:C.olive, letterSpacing:"0.4px", flex:1 }}>ACUERDO DE {(nameA+" & "+nameB).toUpperCase()}</div>
+                      <div style={{ display:"flex", gap:6 }}>
+                        <button onClick={() => startEdit(id, v)}
+                          style={{ background:"#ede5ff", border:"none", borderRadius:8, padding:"4px 8px", fontSize:"0.7rem", cursor:"pointer", color:"#6a3cbf", fontWeight:700 }}>✏️ Editar</button>
+                        <button onClick={() => { if(window.confirm("¿Eliminar este acuerdo?")) onDelete(id); }}
+                          style={{ background:"#ffeded", border:"none", borderRadius:8, padding:"4px 8px", fontSize:"0.7rem", cursor:"pointer", color:"#c05050", fontWeight:700 }}>🗑</button>
+                      </div>
                     </div>
-                    <div style={{ background:"linear-gradient(135deg, #f0ebff 0%, #ede5ff 100%)", borderRadius:12, padding:"12px 14px", border:`1px solid ${C.border}` }}>
-                      <span style={{ fontWeight:800, color:"#6a3cbf", fontSize:"0.88rem" }}>El acuerdo es… </span>
-                      <span style={{ fontSize:"0.92rem", color:C.ink, fontWeight:700, lineHeight:1.6 }}>{getLabel(v)}</span>
-                    </div>
+                    {editingId === id ? (
+                      <div>
+                        <TA value={editText} onChange={setEditText} rows={3} style={{ marginBottom:8 }}/>
+                        <div style={{ display:"flex", gap:8 }}>
+                          <Btn onClick={() => { onEdit(id, editText.trim()); setEditingId(null); }} style={{ flex:1, background:"#6a3cbf", color:"#fff", fontSize:"0.84rem" }}>Guardar</Btn>
+                          <Btn onClick={() => setEditingId(null)} variant="ghost" style={{ padding:"10px 14px" }}>✕</Btn>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ background:"linear-gradient(135deg, #f0ebff 0%, #ede5ff 100%)", borderRadius:12, padding:"12px 14px", border:`1px solid ${C.border}` }}>
+                        <span style={{ fontWeight:800, color:"#6a3cbf", fontSize:"0.88rem" }}>{getPrefix(v)} </span>
+                        <span style={{ fontSize:"0.92rem", color:C.ink, fontWeight:700, lineHeight:1.6 }}>{getLabel(v)}</span>
+                      </div>
+                    )}
                   </div>
                 ))}
               </>
@@ -5488,30 +5520,30 @@ export default function App() {
       const currentLoc = item.location || "garden";
       // Pond-dependent items require pond first
       const POND_DEPS = ["koi1", "koi2", "lotus_pad"];
-      if (POND_DEPS.includes(item.id) && !safeGarden.pond && currentLoc === "garden") {
+      if (POND_DEPS.includes(item.id) && !safeGarden.pond && !safeGarden[item.id]) {
         toast("Necesitas el Estanque primero 🪷");
         return;
       }
-      // Si el item ya está en el lugar actual, quitarlo
-      if (safeGarden[item.id] === currentLoc) {
-        const ng = { ...safeGarden };
-        delete ng[item.id];
+      const currentVal = safeGarden[item.id];
+      // Si el item ya está colocado en ESTE lugar → quitar (pasa a "owned")
+      if (currentVal === currentLoc) {
+        const ng = { ...safeGarden, [item.id]: "owned" };
         if (user?.code && !user?.isGuest) {
           fbSaveGardenState(user.code, { garden: ng, accessories, water, happiness }).catch(() => {});
         }
         setGarden(ng);
-        toast(`${item.name} quitado del ${currentLoc === "indoor" ? "cuarto" : "jardín"}`);
+        toast(`${item.name} quitado`);
         save(null, { bamboo, happiness, water, garden: ng, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit: new Date().toISOString(), testScores, lessonsDone, gratitud, momentos });
         return;
       }
-      // Si el item está en el otro lugar, moverlo
-      if (safeGarden[item.id] && safeGarden[item.id] !== currentLoc) {
+      // Si el item ya es "owned" o está en otro lugar → ponerlo en lugar actual (sin costo)
+      if (currentVal === "owned" || (currentVal && currentVal !== currentLoc)) {
         const ng = { ...safeGarden, [item.id]: currentLoc };
         if (user?.code && !user?.isGuest) {
           fbSaveGardenState(user.code, { garden: ng, accessories, water, happiness }).catch(() => {});
         }
         setGarden(ng);
-        toast(`${item.name} movido a ${currentLoc === "indoor" ? "cuarto" : "jardín"}`);
+        toast(`${item.name} puesto en ${currentLoc === "indoor" ? "cuarto" : "jardín"}`);
         save(null, { bamboo, happiness, water, garden: ng, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit: new Date().toISOString(), testScores, lessonsDone, gratitud, momentos });
         return;
       }
@@ -5788,7 +5820,7 @@ export default function App() {
     save(null, { bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja:map, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
   };
 
-  const proposeBurbuja = async (id, text, isCounter = false) => {
+  const proposeBurbuja = async (id, text, isCounter = false, prefix = "El acuerdo es…") => {
     const clean = (text || "").trim();
     if (!clean) return;
     const myRole = user?.isOwner !== false ? "owner" : "partner";
@@ -5797,28 +5829,13 @@ export default function App() {
       toast("Primero ambos deben escribir su parte");
       return;
     }
-    // Buscar la pregunta asociada
-    let contextualText = clean;
-    if (BURBUJA_ITEM_MAP && BURBUJA_ITEM_MAP[id] && BURBUJA_ITEM_MAP[id].question) {
-      const q = BURBUJA_ITEM_MAP[id].question.toLowerCase();
-      if (q.includes("prohibid")) {
-        contextualText = `Está prohibido ${clean}`;
-      } else if (q.includes("permitid")) {
-        contextualText = `Está permitido ${clean}`;
-      } else if (q.includes("necesit")) {
-        contextualText = `Necesito ${clean}`;
-      } else if (q.includes("quieres") || q.includes("quiero")) {
-        contextualText = `Quiero ${clean}`;
-      } else if (q.includes("definir") || q.includes("tipo de relación")) {
-        contextualText = `Nuestra relación es ${clean}`;
-      } // Puedes agregar más reglas aquí según las preguntas
-    }
-    const history = [...(prev.history || []), { id: Date.now(), type: isCounter ? "counter" : "proposal", by: myRole, text: contextualText, at: new Date().toISOString() }];
+    const history = [...(prev.history || []), { id: Date.now(), type: isCounter ? "counter" : "proposal", by: myRole, text: clean, at: new Date().toISOString() }];
     const next = {
       ...prev,
       status: "pending",
-      proposalText: contextualText,
+      proposalText: clean,
       proposalBy: myRole,
+      prefix: isCounter ? (prev.prefix || prefix) : prefix,
       history,
       approvedText: null,
       approvedBy: null,
@@ -5894,6 +5911,29 @@ export default function App() {
     }
 
     save(null, { bamboo:nextBamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja:map, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
+  };
+
+  const deleteBurbuja = async (id) => {
+    const map = { ...burbuja };
+    delete map[id];
+    setBurbuja(map);
+    if (user?.code && !user?.isGuest) {
+      fbDeleteBurbuja(user.code, id).catch(() => {});
+    }
+    save(null, { bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja:map, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
+    toast("Acuerdo eliminado");
+  };
+
+  const editBurbuja = async (id, newText) => {
+    const prev = burbuja[id] || {};
+    const next = { ...prev, approvedText: newText };
+    const map = { ...burbuja, [id]: next };
+    setBurbuja(map);
+    if (user?.code && !user?.isGuest) {
+      fbSaveBurbuja(user.code, id, next).catch(() => {});
+    }
+    save(null, { bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja:map, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
+    toast("Acuerdo actualizado ✓");
   };
 
   const saveCoupleInfo = (info) => {
@@ -6033,7 +6073,7 @@ export default function App() {
         {tab==="jardin" && <Jardin bamboo={bamboo} happiness={happiness} water={water} garden={garden} accessories={accessories} mochiHappy={mochiHappy} pandaBubble={pandaBubble} onPetA={petMochiA} onPetB={petMochiB} onBuy={buyItem} onWater={waterGarden} onBuyAccessory={buyAccessory} user={user}/>}
         {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson}/>}
         {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user}/>}
-        {tab==="burbuja" && <Burbuja burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} user={user}/>}
+        {tab==="burbuja" && <Burbuja burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} onDelete={deleteBurbuja} onEdit={editBurbuja} user={user}/>}
         {tab==="perfil" && <Perfil user={user} bamboo={bamboo} garden={garden} accessories={accessories} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} lessonsDone={lessonsDone} coupleInfo={coupleInfo} streakInfo={streakData} streakAnalytics={streakAnalytics} onUpdateStreakSettings={updateStreakSettings} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} onSendMessage={sendMsg} onConsejoEarn={earnConsejo}/>} 
       </div>
       <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:480, background:C.white, borderTop:`1.5px solid ${C.border}`, display:"flex", zIndex:1000, boxShadow:`0 -3px 0 ${C.line}` }}>

@@ -408,6 +408,9 @@ export const fbSaveBurbuja = (coupleCode, key, data) =>
     updatedAt: serverTimestamp()
   }, { merge: true });
 
+export const fbDeleteBurbuja = (coupleCode, key) =>
+  deleteDoc(doc(db, "burbuja", `${coupleCode}_${key}`));
+
 export const fbListenBurbuja = (coupleCode, cb) => {
   const q = query(collection(db, "burbuja"), where("coupleCode", "==", coupleCode));
   return onSnapshot(q, snap => {

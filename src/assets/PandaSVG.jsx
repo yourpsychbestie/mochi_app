@@ -1,46 +1,35 @@
 import React from "react";
 
-// Componente reutilizable para el panda SVG
 export default function PandaSVG({ size = 120, style = {} }) {
+  const OL = "#3a2010";
+  const GR = "#6a6a6a";
+  const WH = "#ffffff";
+  const PK = "#f4a898";
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 512 512"
-      width={size}
-      height={size}
-      style={style}
-    >
-      <rect width="512" height="512" rx="114" fill="#2d3d2d" />
-      {/* Body */}
-      <ellipse cx="256" cy="360" rx="120" ry="110" fill="#f0ece0" />
-      {/* Tummy */}
-      <ellipse cx="256" cy="370" rx="70" ry="80" fill="#fdf9f0" opacity="0.8" />
-      {/* Head */}
-      <ellipse cx="256" cy="220" rx="110" ry="105" fill="#f0ece0" />
-      {/* Ears */}
-      <circle cx="160" cy="130" r="48" fill="#1a261a" />
-      <circle cx="160" cy="130" r="30" fill="#2d3d2d" />
-      <circle cx="352" cy="130" r="48" fill="#1a261a" />
-      <circle cx="352" cy="130" r="30" fill="#2d3d2d" />
-      {/* Eye patches */}
-      <ellipse cx="220" cy="215" rx="38" ry="34" fill="#1a261a" transform="rotate(-10 220 215)" />
-      <ellipse cx="292" cy="215" rx="38" ry="34" fill="#1a261a" transform="rotate(10 292 215)" />
-      {/* Eyes */}
-      <ellipse cx="220" cy="216" rx="20" ry="18" fill="#fdf9f0" />
-      <ellipse cx="292" cy="216" rx="20" ry="18" fill="#fdf9f0" />
-      <ellipse cx="222" cy="218" rx="13" ry="12" fill="#1a1a2a" />
-      <ellipse cx="294" cy="218" rx="13" ry="12" fill="#1a1a2a" />
-      <circle cx="227" cy="213" r="5" fill="white" />
-      <circle cx="299" cy="213" r="5" fill="white" />
-      {/* Nose */}
-      <ellipse cx="256" cy="238" rx="11" ry="7" fill="#1a261a" opacity="0.7" />
-      {/* Mouth */}
-      <path d="M238 252 Q248 262 256 256 Q264 262 274 252" fill="none" stroke="#1a261a" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-      {/* Blush */}
-      <ellipse cx="188" cy="240" rx="22" ry="14" fill="#f0907a" opacity="0.35" />
-      <ellipse cx="324" cy="240" rx="22" ry="14" fill="#f0907a" opacity="0.35" />
-      {/* Heart */}
-      <path d="M256 310 C256 302 262 298 268 304 C274 298 280 302 280 310 C280 320 268 330 268 330 C268 330 256 320 256 310Z" fill="#e8607a" opacity="0.9" />
+    <svg viewBox="-44 -55 88 160" width={size} style={{ display: "block", ...style }}>
+      <g>
+        <ellipse cx="0" cy="98" rx="28" ry="6" fill={OL} opacity="0.10"/>
+        <rect x="-20" y="72" width="17" height="28" rx="8" fill={GR} stroke={OL} strokeWidth="1.8"/>
+        <rect x="3" y="72" width="17" height="28" rx="8" fill={GR} stroke={OL} strokeWidth="1.8"/>
+        <path d="M-18 96 Q-14 100 -10 96" fill="none" stroke={OL} strokeWidth="1.2" strokeLinecap="round"/>
+        <path d="M5 96 Q9 100 13 96" fill="none" stroke={OL} strokeWidth="1.2" strokeLinecap="round"/>
+        <ellipse cx="0" cy="56" rx="30" ry="34" fill={WH} stroke={OL} strokeWidth="2"/>
+        <path d="M-30 42 C-44 42 -46 58 -38 66 C-34 70 -28 68 -26 62" fill={GR} stroke={OL} strokeWidth="1.8" strokeLinejoin="round"/>
+        <path d="M30 42 C44 42 46 58 38 66 C34 70 28 68 26 62" fill={GR} stroke={OL} strokeWidth="1.8" strokeLinejoin="round"/>
+        <circle cx="0" cy="-4" r="36" fill={WH} stroke={OL} strokeWidth="2"/>
+        <circle cx="-28" cy="-36" r="13" fill={GR} stroke={OL} strokeWidth="1.8"/>
+        <circle cx="28" cy="-36" r="13" fill={GR} stroke={OL} strokeWidth="1.8"/>
+        <ellipse cx="-12" cy="-6" rx="13" ry="12" fill={GR} stroke={OL} strokeWidth="1.2" transform="rotate(-10 -12 -6)"/>
+        <ellipse cx="12" cy="-6" rx="13" ry="12" fill={GR} stroke={OL} strokeWidth="1.2" transform="rotate(10 12 -6)"/>
+        <circle cx="-12" cy="-6" r="5.5" fill="#4a3a2a" stroke={OL} strokeWidth="0.6"/>
+        <circle cx="12" cy="-6" r="5.5" fill="#4a3a2a" stroke={OL} strokeWidth="0.6"/>
+        <circle cx="-10" cy="-8" r="2" fill={WH} opacity="0.8"/>
+        <circle cx="14" cy="-8" r="2" fill={WH} opacity="0.8"/>
+        <path d="M-4 4 Q0 7 4 4 Q2 9 0 9 Q-2 9 -4 4Z" fill={OL} opacity="0.85"/>
+        <path d="M-6 13 Q0 18 6 13" fill="none" stroke={OL} strokeWidth="1.8" strokeLinecap="round"/>
+        <ellipse cx="-22" cy="6" rx="10" ry="6" fill={PK} opacity="0.7"/>
+        <ellipse cx="22" cy="6" rx="10" ry="6" fill={PK} opacity="0.7"/>
+      </g>
     </svg>
   );
 }
