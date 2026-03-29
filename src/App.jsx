@@ -1,3 +1,42 @@
+// Calcula datos de racha diaria: streak actual, más largo, milestones, progreso, etc.
+function computeDailyStreakData(streakInteractions, longestStreak = 0) {
+  // streakInteractions: array de fechas tipo 'YYYY-MM-DD' o array de objetos con .date
+  const days = Array.isArray(streakInteractions)
+    ? [...new Set(streakInteractions.map(d => typeof d === "string" ? d : d.date))].sort()
+    : [];
+  let currentStreak = 1, maxStreak = 1, prev = null;
+  for (let i = 0; i < days.length; i++) {
+    if (i > 0) {
+      const prevDate = new Date(days[i - 1]);
+      const currDate = new Date(days[i]);
+      const diff = (currDate - prevDate) / (1000 * 60 * 60 * 24);
+      if (diff === 1) {
+        currentStreak++;
+        if (currentStreak > maxStreak) maxStreak = currentStreak;
+      } else {
+        currentStreak = 1;
+      }
+    }
+  }
+  // milestones desbloqueados
+  const unlockedMilestones = STREAK_MILESTONES.filter(m => maxStreak >= m);
+  // siguiente milestone
+  const nextMilestone = STREAK_MILESTONES.find(m => maxStreak < m) || null;
+  // porcentaje de progreso al siguiente milestone
+  const lastMilestone = unlockedMilestones.length > 0 ? unlockedMilestones[unlockedMilestones.length - 1] : 0;
+  const progressPct = nextMilestone ? Math.round(100 * (maxStreak - lastMilestone) / (nextMilestone - lastMilestone)) : 100;
+  // hoy hecho
+  const today = new Date().toISOString().slice(0, 10);
+  const todayDone = days.includes(today);
+  return {
+    currentStreak: maxStreak,
+    longestStreak: Math.max(maxStreak, longestStreak),
+    unlockedMilestones,
+    nextMilestone,
+    progressPct,
+    todayDone,
+  };
+}
 // GLOBAL STYLES — debe ir antes de cualquier uso
 const STYLES = `
 @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
