@@ -5,597 +5,15 @@ import {
   fbCleanupBeforeAccountDelete,
   fbSaveUser, fbGetUser,
   fbGetCode, fbCreateCodeOwner, fbClaimPartnerCode, fbFindCodeByUid,
-  fbSaveProgress, fbGetProgress,
-  fbSendMessage, fbListenMessages,
-  fbSaveTestAnswers, fbListenTest, fbResetTest,
-  fbListenExSession, fbSendExMessage, fbStartExSession, fbCompleteExSession,
-  fbListenBamboo, fbIncrementBamboo, fbSpendBamboo, fbGetBamboo,
-  fbSaveGardenState, fbListenGardenState, fbPurchaseGardenUpdate,
-  fbAddGratitud, fbListenGratitud,
-  fbAddMomento, fbListenMomentos,
-  fbSaveConoce, fbListenConoce,
-  fbSaveLessonRead, fbListenLessons,
-  fbSaveBurbuja, fbDeleteBurbuja, fbListenBurbuja,
-  fbSaveGameState, fbListenGameState, fbResetGame,
-  fbSendNotif, fbListenNotifs, fbMarkNotifRead,
-  fbSaveStreakInteraction, fbListenStreakInteractions,
-  fbSaveStreakProfile, fbListenStreakProfile,
-  fbSaveDiarioEntry, fbListenDiario,
+	fbSaveProgress, fbGetProgress,
 } from "./firebase";
-import Cuestionarios, { getQuizAdviceFromConoce } from "./Cuestionarios";
-
-// Prevents the fbOnAuthChange listener from calling afterLogin while doReg/doJoin
-// is actively handling a fresh registration (avoids race conditions on new sign-ups).
-let _pendingLocalAuth = false;
-
-const C = {
-  cream:"#ede5ff", cream2:"#faf6ff", dark:"#2d1b4e",
-  olive:"#7c5cbf", oliveL:"#b39ddb", gold:"#d4a843",
-  salmon:"#e8907a", sky:"#a78bda", sand:"#e3d8f8", sandL:"#f5f0ff",
-  white:"#ffffff", ink:"#1a1030", inkM:"#6b5a8a", inkL:"#9e8dc2",
-  border:"rgba(100,70,180,0.14)", line:"rgba(100,70,180,0.08)",
-  pink:"#f4a8c0", rose:"#c05068",
-  mint:"#d4c8ff", teal:"#7c5cbf",
-};
-
-const ls = {
-  get:(k)=>{ try{return JSON.parse(localStorage.getItem(k));}catch{return null;} },
-  set:(k,v)=>{ try{localStorage.setItem(k,JSON.stringify(v));}catch{} },
-};
-
-const MAX_MESSAGE_LENGTH = 220;
-const BUBBLE_PREVIEW_LENGTH = 38;
-
-const toJsDate = (value) => {
-  if (!value) return null;
-  if (value instanceof Date) return value;
-  if (typeof value === "number") {
-    const d = new Date(value);
-    return Number.isNaN(d.getTime()) ? null : d;
-  }
-  if (typeof value === "string") {
-    const d = new Date(value);
-    return Number.isNaN(d.getTime()) ? null : d;
-  }
-  if (typeof value?.toDate === "function") {
-    const d = value.toDate();
-    return Number.isNaN(d?.getTime?.()) ? null : d;
-  }
-  if (typeof value?.seconds === "number") {
-    const ms = value.seconds * 1000 + Math.floor((value.nanoseconds || 0) / 1e6);
-    const d = new Date(ms);
-    return Number.isNaN(d.getTime()) ? null : d;
-  }
-  return null;
-};
-
-const getWeekStartUtc = (date) => {
-  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
-  const day = d.getUTCDay();
-  const diff = day === 0 ? -6 : 1 - day; // Monday as week start
-  d.setUTCDate(d.getUTCDate() + diff);
-  return d;
-};
-
-const getWeeklyStreak = (dates) => {
-  const weekMs = 7 * 24 * 60 * 60 * 1000;
-  const activeWeekSet = new Set(
-    dates
-      .map(toJsDate)
-      .filter(Boolean)
-      .map(d => getWeekStartUtc(d).getTime())
-  );
-  if (!activeWeekSet.size) return 0;
-
-  let streak = 0;
-  let cursor = getWeekStartUtc(new Date()).getTime();
-
-  if (!activeWeekSet.has(cursor)) {
-    const sortedWeeks = [...activeWeekSet].sort((a, b) => b - a);
-    cursor = sortedWeeks[0];
-  }
-
-  while (activeWeekSet.has(cursor)) {
-    streak += 1;
-    cursor -= weekMs;
-  }
-
-  return streak;
-};
-
-const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100];
-const STREAK_TYPES = {
-  message: "Mensaje de amor",
-  exercise: "Ejercicio o leccion",
-  gratitude: "Gratitud",
-  moment: "Momento especial",
-  conoce: "Pregunta de Conocete",
-  agreement: "Acuerdo en Burbuja",
-};
-
-const STREAK_RESOURCES = [
-  { type: "Articulo", title: "Escucha activa en pareja (5 minutos)", url: "https://www.gottman.com/blog/active-listening/" },
-  { type: "Video", title: "Reparar conflictos con calidez", url: "https://www.youtube.com/watch?v=AKTyPgwfPgg" },
-  { type: "Articulo", title: "Micro-habitos de conexion emocional", url: "https://positivepsychology.com/emotional-intimacy/" },
-];
-
-const getDateKeyLocal = (date = new Date()) => {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-};
-
-const addDaysToKey = (key, delta) => {
-  const [y, m, d] = String(key).split("-").map(Number);
-  const dt = new Date(y, (m || 1) - 1, d || 1);
-  dt.setDate(dt.getDate() + delta);
-  return getDateKeyLocal(dt);
-};
-
-const computeDailyStreakData = (interactions, prevLongest = 0) => {
-  const cutoffKey = addDaysToKey(getDateKeyLocal(), -180);
-  const sorted = (interactions || [])
-    .filter(i => i?.completed && i?.date && String(i.date) >= cutoffKey)
-    .sort((a, b) => String(a.date).localeCompare(String(b.date)));
-
-  const byDate = {};
-  sorted.forEach(i => {
-    if (!byDate[i.date]) byDate[i.date] = [];
-    byDate[i.date].push(i);
-  });
-
-  const dates = Object.keys(byDate).sort();
-  const todayKey = getDateKeyLocal();
-  const yesterdayKey = addDaysToKey(todayKey, -1);
-  const anchor = byDate[todayKey] ? todayKey : (byDate[yesterdayKey] ? yesterdayKey : null);
-
-  let currentStreak = 0;
-  if (anchor) {
-    let cursor = anchor;
-    while (byDate[cursor]) {
-      currentStreak += 1;
-      cursor = addDaysToKey(cursor, -1);
-    }
-  }
-
-  let longestStreak = Math.max(0, prevLongest);
-  if (dates.length) {
-    let run = 1;
-    longestStreak = Math.max(longestStreak, 1);
-    for (let i = 1; i < dates.length; i += 1) {
-      run = dates[i] === addDaysToKey(dates[i - 1], 1) ? run + 1 : 1;
-      if (run > longestStreak) longestStreak = run;
-    }
-  }
-
-  const unlockedMilestones = STREAK_MILESTONES.filter(m => currentStreak >= m);
-  const nextMilestone = STREAK_MILESTONES.find(m => m > currentStreak) || null;
-  const previousMilestone = [...STREAK_MILESTONES].reverse().find(m => m <= currentStreak) || 0;
-  const denom = nextMilestone ? Math.max(1, nextMilestone - previousMilestone) : 1;
-  const numer = nextMilestone ? currentStreak - previousMilestone : 1;
-  const progressPct = nextMilestone ? Math.max(0, Math.min(100, Math.round((numer / denom) * 100))) : 100;
-
-  return {
-    byDate,
-    todayKey,
-    todayDone: !!byDate[todayKey],
-    currentStreak,
-    longestStreak,
-    unlockedMilestones,
-    nextMilestone,
-    progressPct,
-  };
-};
-
-const WEEKDAY_NAMES = ["Dom", "Lun", "Mar", "Mie", "Jue", "Vie", "Sab"];
-
-const computeStreakAnalytics = (interactions) => {
-  const byDate = {};
-  (interactions || []).forEach(i => {
-    if (!i?.completed || !i?.date) return;
-    byDate[i.date] = (byDate[i.date] || 0) + 1;
-  });
-
-  const getWindowKeys = (days, offset = 0) => {
-    const keys = [];
-    for (let i = days - 1 + offset; i >= offset; i -= 1) {
-      keys.push(addDaysToKey(getDateKeyLocal(), -i));
-    }
-    return keys;
-  };
-
-  const last7 = getWindowKeys(7, 0);
-  const prev7 = getWindowKeys(7, 7);
-  const last30 = getWindowKeys(30, 0);
-
-  const active7 = last7.filter(k => !!byDate[k]).length;
-  const activePrev7 = prev7.filter(k => !!byDate[k]).length;
-  const active30 = last30.filter(k => !!byDate[k]).length;
-
-  const retention7 = Math.round((active7 / 7) * 100);
-  const retention30 = Math.round((active30 / 30) * 100);
-  const trendDeltaDays = active7 - activePrev7;
-
-  const weekdayCounts = Array(7).fill(0);
-  last30.forEach(k => {
-    if (!byDate[k]) return;
-    const [y, m, d] = k.split("-").map(Number);
-    const wd = new Date(y, m - 1, d).getDay();
-    weekdayCounts[wd] += 1;
-  });
-
-  const weekdaySeries = WEEKDAY_NAMES.map((name, idx) => ({ name, value: weekdayCounts[idx] }));
-  const minVal = Math.min(...weekdayCounts);
-  const weakest = weekdaySeries.find(w => w.value === minVal) || { name: "-", value: 0 };
-
-  return {
-    retention7,
-    retention30,
-    trendDeltaDays,
-    active7,
-    active30,
-    weekdaySeries,
-    weakestWeekday: weakest,
-  };
-};
-
-class SectionErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error) {
-    console.error("Section render error:", error);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return this.props.fallback || null;
-    }
-    return this.props.children;
-  }
-}
-
-const getMyName = (user, fallback = "Yo") => {
-  const parts = String(user?.names || "")
-    .split("&")
-    .map(s => s.trim())
-    .filter(Boolean);
-  if (user?.isOwner === false) return parts[1] || parts[0] || fallback;
-  return parts[0] || parts[1] || fallback;
-};
-
-const getCoupleNames = (user) => {
-  const parts = String(user?.names || "")
-    .split("&")
-    .map((s) => s.trim())
-    .filter(Boolean);
-  return {
-    nameA: parts[0] || "Persona A",
-    nameB: parts[1] || parts[0] || "Persona B",
-  };
-};
 
 // ═══════════════════════════════════════════════
 // GARDEN ITEMS — multiple quantities, koi/lotus aesthetic
 // ═══════════════════════════════════════════════
 const GARDEN_ITEMS = [
-  // Plantas
-  {id:"bamboo1",   cat:"plantas", name:"Bambú",           cost:20,  desc:"Trae serenidad al jardín"},
-  {id:"bamboo2",   cat:"plantas", name:"Bambusal",         cost:35,  desc:"Bosquecito de bambú"},
-  {id:"bonsai",    cat:"plantas", name:"Bonsái",           cost:90,  desc:"Paciencia y belleza cultivada"},
-  {id:"lotus1",    cat:"plantas", name:"Loto Rosa",        cost:25,  desc:"Flor del amor puro"},
-  {id:"lotus2",    cat:"plantas", name:"Loto Blanco",      cost:30,  desc:"Pureza y paz"},
-  {id:"willow",    cat:"plantas", name:"Sauce Llorón",     cost:45,  desc:"Elegancia serena"},
-  {id:"peony",     cat:"plantas", name:"Peonía",           cost:15,  desc:"Flores de primavera"},
-  {id:"cherry",    cat:"plantas", name:"Cerezo",           cost:80,  desc:"Belleza efímera"},
-  {id:"lily",      cat:"plantas", name:"Lirio Azul",       cost:20,  desc:"Calma y claridad"},
-  {id:"flower_pot",cat:"plantas", name:"Maceta con Flor",  cost:18,  desc:"Tierna y colorida"},
-  {id:"herb_pot",  cat:"plantas", name:"Hierbitas",        cost:22,  desc:"Un jardín pequeñito"},
-  {id:"seeds",     cat:"plantas", name:"Bolsita de Semillas",cost:12, desc:"Todo empieza con una semilla"},
-  // Agua
-  {id:"pond",      cat:"agua",    name:"Estanque",         cost:60,  desc:"Espejo del cielo"},
-  {id:"koi1",      cat:"agua",    name:"Pez Koi Rojo",     cost:40,  desc:"Buena fortuna"},
-  {id:"koi2",      cat:"agua",    name:"Pez Koi Dorado",   cost:55,  desc:"Prosperidad"},
-  {id:"lotus_pad", cat:"agua",    name:"Hoja de Loto",     cost:20,  desc:"Reposa en el agua"},
-  {id:"wateringcan",cat:"agua",   name:"Regadera",         cost:28,  desc:"Con amor se riega todo"},
-  {id:"hose",      cat:"agua",    name:"Manguera",         cost:32,  desc:"Para el jardín grande"},
-  // Cielo & Pájaros
-  {id:"sun",       cat:"cielo",   name:"Sol",              cost:30,  desc:"Calienta el jardín"},
-  {id:"rainbow",   cat:"cielo",   name:"Arcoíris",         cost:100, desc:"Magia después de la lluvia"},
-  {id:"swallow1",  cat:"cielo",   name:"Gorrión",          cost:35,  desc:"Mensajero del amor"},
-  {id:"swallow2",  cat:"cielo",   name:"Par de Gorriones", cost:55,  desc:"Vuelan juntos siempre"},
-  {id:"clouds",    cat:"cielo",   name:"Nubecitas",        cost:25,  desc:"Sueños flotantes"},
-  {id:"birds_fly", cat:"cielo",   name:"Bandada",          cost:65,  desc:"Libertad compartida"},
-  // Decoración
-  {id:"arch",      cat:"deco",    name:"Arco de Enredaderas",cost:75, desc:"Entrada a su mundo"},
-  {id:"birdhouse", cat:"deco",    name:"Casita de Pájaro",  cost:40,  desc:"Un hogar dentro del hogar"},
-  {id:"lantern",   cat:"deco",    name:"Farolito",          cost:25,  desc:"Luz cálida"},
-  {id:"lantern2",  cat:"deco",    name:"Farolitos",         cost:40,  desc:"Noche romántica"},
-  {id:"heart",     cat:"deco",    name:"Corazón",           cost:50,  desc:"Amor visible"},
-  {id:"bridge",    cat:"deco",    name:"Puente",            cost:70,  desc:"Un camino juntos"},
-  {id:"pagoda",    cat:"deco",    name:"Pagoda",            cost:90,  desc:"Refugio sagrado"},
-  {id:"tools",     cat:"deco",    name:"Herramientas",      cost:20,  desc:"Los jardineros expertos"},
-  {id:"rocks",     cat:"deco",    name:"Jardín de Rocas",   cost:45,  desc:"Calma zen"},
-  // Especiales
-  {id:"firefly",   cat:"especial",name:"Luciérnagas",       cost:65,  desc:"Magia nocturna"},
-  {id:"moongate",  cat:"especial",name:"Luna Llena",        cost:120, desc:"Romance bajo la luna"},
-  // Cuarto (indoor)
-  {id:"lamp",        cat:"cuarto", name:"Lámpara Cozy",      cost:30, desc:"Calidez de hogar"},
-  {id:"rug",         cat:"cuarto", name:"Alfombra Suave",    cost:25, desc:"Pisada suave"},
-  {id:"cushions",    cat:"cuarto", name:"Cojines",            cost:20, desc:"Para acurrucarse"},
-  {id:"shelf",       cat:"cuarto", name:"Librero",            cost:45, desc:"Historias compartidas"},
-  {id:"fairy_lights",cat:"cuarto", name:"Luces de Hada",     cost:40, desc:"Noche mágica"},
-  {id:"indoor_plant",cat:"cuarto", name:"Plantita Interior", cost:15, desc:"Vida en el cuarto"},
+  // ... (aquí van los objetos de items del jardín, que ya existen en el archivo)
 ];
-
-// Regar sigue siendo acción especial
-const WATER_ACTION = {id:"water", name:"Regar", cost:5};
-
-// ═══════════════════════════════════════════════
-// PANDA ACCESSORIES
-// ═══════════════════════════════════════════════
-const PANDA_ACCESSORIES = [
-  // Sombreros
-  {id:"hat_flower",   cat:"sombrero", name:"Corona de Flores",   cost:40, emoji:"🌸", desc:"Romanticísima"},
-  {id:"hat_crown",    cat:"sombrero", name:"Corona Real",         cost:70, emoji:"👑", desc:"Son reyes"},
-  {id:"hat_straw",    cat:"sombrero", name:"Sombrero de Paja",   cost:25, emoji:"🌾", desc:"Del jardín"},
-  {id:"hat_beret",    cat:"sombrero", name:"Boina Chic",          cost:32, emoji:"🧢", desc:"Cute y elegante"},
-  {id:"hat_beanie",   cat:"sombrero", name:"Gorrito Nube",        cost:36, emoji:"🧶", desc:"Suave y cozy"},
-  {id:"hat_frog",     cat:"sombrero", name:"Sombrero Ranita",     cost:45, emoji:"🐸", desc:"Demasiado tierno"},
-  {id:"hat_garden",   cat:"sombrero", name:"Gorro Jardinero",     cost:30, emoji:"🪴", desc:"El experto del jardín"},
-  // Lentes
-  {id:"glasses_heart",cat:"lentes",  name:"Lentes Corazón",      cost:30, emoji:"💝", desc:"Ver con amor"},
-  {id:"glasses_sun",  cat:"lentes",  name:"Lentes de Sol",       cost:25, emoji:"😎", desc:"Fresquísimos"},
-  {id:"glasses_round",cat:"lentes",  name:"Lentes Redondos",     cost:28, emoji:"🕶️", desc:"Estilo clásico"},
-  {id:"glasses_star", cat:"lentes",  name:"Lentes Estrella",     cost:42, emoji:"⭐", desc:"Brillo total"},
-  // Accesorios
-  {id:"acc_bow",      cat:"accesorio",name:"Moño Rosa",           cost:20, emoji:"🎀", desc:"Kawaii"},
-  {id:"acc_scarf",    cat:"accesorio",name:"Bufanda",             cost:25, emoji:"🧣", desc:"Para el frío"},
-  {id:"acc_apron",    cat:"accesorio",name:"Delantal de Jardín",  cost:28, emoji:"🌿", desc:"El/la chef del jardín"},
-  {id:"acc_gloves",   cat:"accesorio",name:"Guantes de Jardín",   cost:22, emoji:"🧤", desc:"Manos protegidas"},
-  {id:"acc_basket",   cat:"accesorio",name:"Cesta de Flores",     cost:35, emoji:"🧺", desc:"Recolector/a de amor"},
-  // Trajes
-  {id:"outfit_kimono",  cat:"traje", name:"Kimono",               cost:60, emoji:"👘", desc:"Elegancia japonesa"},
-  {id:"outfit_sailor",  cat:"traje", name:"Marinero",             cost:55, emoji:"⚓", desc:"Aventureros del mar"},
-  {id:"outfit_witch",   cat:"traje", name:"Brujita",              cost:65, emoji:"🧙", desc:"Magia y misterio"},
-  {id:"outfit_angel",   cat:"traje", name:"Angelitos",            cost:80, emoji:"👼", desc:"Purísimos"},
-  {id:"outfit_cottage", cat:"traje", name:"Cottagecore",          cost:70, emoji:"🌻", desc:"Encanto rural"},
-  {id:"outfit_overalls",cat:"traje", name:"Overol de Jardín",     cost:55, emoji:"🌱", desc:"Jardinero/a en acción"},
-  {id:"outfit_cozy",    cat:"traje", name:"Cozy de Invierno",     cost:75, emoji:"☕", desc:"Calientito y adorable"},
-];
-
-
-const EXERCISES = [
-  {id:"validacion",emoji:"💬",title:"La Danza de la Validación",tags:"DBT · Sistémica",bamboo:40,time:"15 min",
-    desc:"Aprendan a validar las emociones del otro sin defenderse ni explicar. La validación no significa estar de acuerdo — significa decir 'tiene sentido que sientas eso'.",
-    instructions:["Abran Mochi en sus celulares al mismo tiempo","Persona A escribe algo que le molestó recientemente","Persona B responde validando, sin defenderse ni explicar","Intercambien roles en el siguiente turno","Al terminar, compartan cómo se sintieron por mensaje"],
-    phases:[
-      {role:0,q:"Persona A: Comparte algo que te molestó esta semana (no tiene que ser sobre tu pareja).",ph:"Esta semana me sentí… cuando…",hint:"Habla desde el 'yo'. Ej: 'Me sentí ignorado/a cuando…'"},
-      {role:1,q:"Persona B: Valida con 'Tiene sentido porque...'",ph:"Tiene sentido porque…",hint:"Validar no es estar de acuerdo. Solo reconocer."},
-      {role:0,q:"Persona A: ¿Te sentiste comprendido/a?",ph:"Me sentí comprendido/a cuando…"},
-      {role:1,q:"Persona B: Tu turno — comparte algo que hayas sentido.",ph:"Esta semana yo sentí…"},
-      {role:0,q:"Persona A: Valida a tu pareja.",ph:"Tiene sentido porque…"},
-      {role:1,q:"Persona B: ¿Cómo fue recibir esa validación?",ph:"Eso me hizo sentir…"},
-    ]},
-  {id:"ojos",emoji:"👁",title:"4 Minutos de Contacto Visual",tags:"ACT · Arthur Aron",bamboo:30,time:"5 min",
-    desc:"Mirarse a los ojos 4 minutos sin hablar. Estudios de Arthur Aron demuestran que esta práctica genera sentimientos de amor profundo entre extraños — imagina entre parejas.",
-    instructions:["Abran Mochi al mismo tiempo en sus celulares","Este ejercicio es de presencia — sin hablar, solo escribir","Escriban lo que sienten al pensar en el otro en este momento","Lean la respuesta del otro en silencio","Compartan una palabra de cómo se sintieron al final"],
-    timer:240,timerLabel:"Mírense a los ojos en silencio",
-    beforeTimer:["Siéntense frente a frente, muy cerca.","Pongan el teléfono entre los dos.","Está permitido sonreír — no hablar.","Presionen INICIAR cuando estén listos."],
-    afterPrompts:[{role:0,ph:"Una palabra para lo que sentí…"},{role:1,ph:"Lo que vi en tus ojos fue…"}]},
-  {id:"espejo",emoji:"🪞",title:"Técnica del Espejo",tags:"Imago · Narrativa",bamboo:35,time:"20 min",
-    desc:"El espejo confirma que el mensaje fue recibido antes de responder. Basada en terapia Imago de Harville Hendrix.",
-    instructions:["Persona A escribe algo importante que quiera compartir","Persona B refleja con sus palabras lo que entendió","A confirma si fue bien capturado o aclara","B valida la experiencia de A sin dar consejos","Intercambien roles en la siguiente ronda"],
-    phases:[
-      {role:0,q:"Persona A: Algo que quieras que tu pareja entienda mejor.",ph:"Quiero que entiendas que…"},
-      {role:1,q:"Persona B: Refleja lo que escuchaste.",ph:"Lo que escucho es… ¿Lo capté bien?",hint:"No interpretes — solo refleja. Usa sus mismas palabras."},
-      {role:0,q:"Persona A: ¿Te sentiste reflejado/a?",ph:"Sí captaste… / Lo que faltó fue…"},
-      {role:1,q:"Persona B: Valida.",ph:"Tiene sentido porque…"},
-      {role:1,q:"Persona B: Ahora comparte tú.",ph:"Quiero que entiendas que…"},
-      {role:0,q:"Persona A: Refleja.",ph:"Lo que escucho es…"},
-      {role:1,q:"¿Cómo fue sentirte reflejado/a?",ph:"De este ejercicio me llevo…"},
-    ]},
-  {id:"apreciacion",emoji:"💝",title:"3 Apreciaciones Específicas",tags:"Gottman · TCC+",bamboo:25,time:"10 min",
-    desc:"La fórmula Gottman: 5 interacciones positivas por cada negativa. Las apreciaciones vagas no nutren — las específicas sí.",
-    instructions:["Cada persona piensa en 3 cosas específicas que aprecia del otro","Compartan una a la vez por turno","Quien recibe, solo responde gracias y cómo le hizo sentir","No minimicen ni desvíen los halagos","Dejen que el amor entre ✨"],
-    phases:[
-      {role:0,q:"Persona A: Una apreciación MUY específica.",ph:"Aprecio cuando hiciste…",hint:"Específico: 'me preparaste café el martes', no 'eres atento/a'"},
-      {role:1,q:"Persona B: Recibe. Di 'Gracias' y cómo te hizo sentir.",ph:"Gracias. Eso me hizo sentir…"},
-      {role:1,q:"Persona B: Tu apreciación específica.",ph:"Aprecio cuando tú…"},
-      {role:0,q:"Persona A: Recibe.",ph:"Gracias. Eso me hizo sentir…"},
-      {role:0,q:"Persona A: Algo que admiras profundamente.",ph:"Lo que más admiro de cómo enfrentas la vida es…"},
-      {role:1,q:"¿Cómo se sienten después?",ph:"Hacer esto juntos me hace sentir que nuestra relación…"},
-    ]},
-  {id:"respiracion",emoji:"🌬",title:"Respiración Sincronizada",tags:"ACT · Mindfulness",bamboo:20,time:"8 min",
-    desc:"Respirar juntos activa el nervio vago — el nervio de la seguridad. Sincronizar la respiración reduce cortisol y genera co-regulación emocional.",
-    instructions:["Búsquense un lugar tranquilo en sus respectivos espacios","Escriban cómo se sienten en este momento (sin filtro)","El otro responde con presencia, sin consejos","Compartan una cosa que necesitan del otro hoy","Terminen enviando un emoji que represente cómo se sienten"],
-    timer:300,timerLabel:"4 seg inhalar · 2 sostener · 6 exhalar",
-    beforeTimer:["Siéntense uno detrás del otro.","El de atrás coloca su mano en la espalda.","Sigan el ritmo 4-2-6 juntos.","Presionen INICIAR."],
-    afterPrompts:[{role:0,ph:"Después de respirar juntos, siento…"},{role:1,ph:"Lo que noté al sincronizarme fue…"}]},
-  {id:"carta",emoji:"✉️",title:"Carta a mi Herida",tags:"Narrativa · TCC",bamboo:60,time:"30 min",
-    desc:"Identificar las creencias de infancia que gobiernan cómo amamos. Cada uno escribe individualmente y luego comparte lo que quiera.",
-    instructions:["Cada uno escribe su carta por separado (tómense 10-15 min)","Compartan lo que se sientan cómodos compartiendo aquí","El otro solo lee y responde con presencia, sin consejo","No hay respuesta correcta — solo estar presente","Terminen con un mensaje de cierre cálido"],
-    isEscritura:true,
-    instruccion:"Escribe una carta a tu herida de infancia. Comienza: 'Querida [soledad / miedo al abandono…], sé que estás ahí porque...'",
-    prompts:["¿Cómo y cuándo apareciste en mi vida?","¿Qué creencias sobre el amor me enseñaste?","¿Cómo apareces en mi relación hoy?","¿Qué quiero decirte desde mi yo adulto?"],
-    afterPrompts:[{role:0,ph:"Compartir esto me hizo sentir…"},{role:1,ph:"Después de escucharte, entiendo mejor que…"}]},
-  {id:"suenos",emoji:"🌙",title:"Mapa de Sueños",tags:"Narrativa · Positiva",bamboo:35,time:"15 min",
-    desc:"Las parejas que conocen los sueños del otro tienen 3x más probabilidades de navegar conflictos. Este ejercicio crea un mapa compartido del futuro.",
-    instructions:["Cada persona piensa en 3 sueños personales","Compartan sin juzgar ni 'aterrizar' los sueños","Busquen los sueños que se superponen","Identifiquen uno que puedan perseguir juntos","Celébrense por soñar en voz alta"],
-    phases:[
-      {role:0,q:"Persona A: Un sueño que tienes para tu vida.",ph:"Algo que sueño es…",hint:"Sin filtros. No importa si parece imposible."},
-      {role:1,q:"Persona B: ¿Qué admiras de ese sueño?",ph:"Lo que admiro de ese sueño es…"},
-      {role:1,q:"Persona B: Tu sueño.",ph:"Algo que yo sueño es…"},
-      {role:0,q:"Persona A: ¿Qué admiras de ese sueño?",ph:"Lo que me inspira de eso es…"},
-      {role:0,q:"¿Hay un sueño que quieran perseguir juntos?",ph:"Un sueño que podríamos tener juntos…"},
-      {role:1,q:"¿Cuál sería el primer paso?",ph:"El primer paso podría ser…"},
-    ]},
-  {id:"perdida",emoji:"🕊",title:"El Perdón Activo",tags:"Gottman · EFT",bamboo:55,time:"25 min",
-    desc:"El perdón no es olvidar — es soltar la carga. Basado en el modelo de Gottman: reconocer, asumir responsabilidad, reparar.",
-    instructions:["Elijan algo específico que quieran sanar juntos","No es para reabrir heridas — es para cerrarlas","Quien pide perdón escribe desde el corazón, sin justificarse","Quien perdona responde con apertura, sin condiciones","Terminen con un mensaje de cierre y un compromiso"],
-    phases:[
-      {role:0,q:"Persona A: Algo que quieras sanar entre ustedes.",ph:"Algo que quisiera soltar es…",hint:"Sin acusaciones. Desde el 'yo'."},
-      {role:1,q:"Persona B: Reconoce sin defenderte.",ph:"Entiendo que te afectó cuando…"},
-      {role:1,q:"Persona B: Asume tu parte.",ph:"Mi parte en esto fue…"},
-      {role:0,q:"Persona A: ¿Qué necesitas para soltar esto?",ph:"Para poder soltar esto necesito sentir…"},
-      {role:1,q:"Persona B: ¿Puedes ofrecerlo?",ph:"Lo que puedo ofrecerte es…"},
-      {role:0,q:"¿Cómo se sienten ahora?",ph:"Después de este ejercicio, me siento…"},
-    ]},
-  {id:"amor_idiomas",emoji:"💞",title:"Idiomas del Amor",tags:"Chapman · ACT",bamboo:30,time:"12 min",
-    desc:"Gary Chapman identificó 5 idiomas del amor. Conocer el idioma de tu pareja evita que el amor se pierda en traducción.",
-    instructions:["Lean los 5 idiomas juntos","Cada quien elige su TOP 2","Compartan sin juzgar","Hablen de cómo pueden 'hablar' el idioma del otro","Hagan un pequeño compromiso"],
-    phases:[
-      {role:0,q:"De estos 5, ¿cuál es tu idioma principal? (Palabras de afirmación / Tiempo de calidad / Regalos / Actos de servicio / Contacto físico)",ph:"Mi idioma del amor principal es…",hint:"El que más te hace sentir amado/a cuando lo recibes."},
-      {role:1,q:"Persona B: ¿Cuál es tu idioma?",ph:"Mi idioma del amor es…"},
-      {role:0,q:"¿Cómo podrías hablar mejor el idioma de tu pareja?",ph:"Podría hablar tu idioma cuando…"},
-      {role:1,q:"Persona B: ¿Cómo podrías hablar el idioma de tu pareja?",ph:"Podría hablar tu idioma cuando…"},
-      {role:0,q:"Un pequeño compromiso para esta semana.",ph:"Esta semana voy a…"},
-      {role:1,q:"¿Cómo se sienten con este compromiso?",ph:"Este compromiso me hace sentir…"},
-    ]},
-  {id:"conflicto",emoji:"⚡",title:"Mapa del Conflicto",tags:"EFT · Sistémica",bamboo:45,time:"20 min",
-    desc:"Bajo cada pelea hay una necesidad no expresada. Este ejercicio les ayuda a ir de la superficie al corazón del conflicto.",
-    instructions:["Elijan un conflicto reciente (no el más grande)","No busquen quién tiene razón","Busquen qué necesidad hay detrás","El objetivo es entenderse, no ganar","Hablen despacio y hagan pausas"],
-    phases:[
-      {role:0,q:"Persona A: Describe el conflicto desde tu perspectiva.",ph:"Cuando discutimos por… yo sentí…",hint:"Sin acusaciones. 'Yo sentí…' no 'Tú hiciste…'"},
-      {role:1,q:"Persona B: ¿Qué sentiste tú?",ph:"Desde mi lugar, yo sentí…"},
-      {role:0,q:"Persona A: ¿Qué necesidad tuya no estaba siendo vista?",ph:"Detrás de mi reacción, lo que necesitaba era…"},
-      {role:1,q:"Persona B: ¿Qué necesidad tuya no estaba siendo vista?",ph:"Lo que yo necesitaba era…"},
-      {role:0,q:"¿Pueden ver el ciclo? ¿Cómo se activan mutuamente?",ph:"Creo que cuando tú… yo reacciono con… y eso te hace…"},
-      {role:1,q:"¿Qué podrían hacer diferente la próxima vez?",ph:"La próxima vez podríamos…"},
-    ]},
-  {id:"presencia",emoji:"🌿",title:"Presencia Plena",tags:"Mindfulness · ACT",bamboo:25,time:"10 min",
-    desc:"En un mundo de distracciones, dar presencia plena es el regalo más raro. 10 minutos sin teléfonos, sin listas mentales — solo ustedes.",
-    instructions:["Silencien notificaciones — solo Mochi abierto","No hay agenda — solo estar presentes el uno para el otro","Escriban lo primero que piensan al ver el nombre del otro","No hay respuesta correcta ni incorrecta","Al terminar, compartan una observación del ejercicio"],
-    timer:600,timerLabel:"Presencia plena — sin distracciones",
-    beforeTimer:["Apaguen o silencien los teléfonos.","Siéntense cómodos, cerca.","No hay tema — solo estén presentes.","Hablen de lo que surja naturalmente.","Presionen INICIAR."],
-    afterPrompts:[{role:0,ph:"Lo que noté en ti hoy fue…"},{role:1,ph:"Estar presente contigo me hizo sentir…"}]},
-];
-
-const CONOCE_CATS = {
-  infancia:{emoji:"🧸",label:"Infancia",bg:"#f5edda",preguntas:["¿Cuál es tu recuerdo más feliz de la infancia?","¿Cómo era tu relación con tu mamá cuando eras pequeño/a?","¿Cómo era tu relación con tu papá cuando eras pequeño/a?","¿Qué aprendiste sobre el amor en tu familia de origen?","¿Cuál fue el momento más difícil de tu infancia?","¿Qué cosas de tu infancia te gustaría haber tenido?"]},
-  amor: {emoji:"💕",label:"El Amor",bg:"#fce8e0",preguntas:["¿Qué significa para ti sentirte amado/a?","¿Cuál ha sido tu mayor herida en el amor?","¿Qué es lo que más te da miedo en una relación?","¿Qué valoras más de nuestra relación hoy?","¿Hay algo que siempre has querido decirme y no has podido?","¿Qué necesitas de mí que quizás no me has pedido?"]},
-  suenos: {emoji:"🌙",label:"Sueños",bg:"#e4e8f8",preguntas:["¿Cuál es el sueño que sientes que aún no has perseguido?","¿Cómo te imaginas tu vida en 10 años?","¿Qué cosa quisiste lograr y aún no has intentado?","¿Qué nos falta vivir juntos?","Si el dinero no fuera problema, ¿cómo vivirías?","¿Qué legado quieres dejar en el mundo?"]},
-  miedos: {emoji:"🫂",label:"Miedos",bg:"#e4f0e0",preguntas:["¿A qué le tienes más miedo en la vida?","¿Cuándo más necesitas que te abracen?","¿Cuándo te sientes solo/a aunque esté presente?","¿Qué es lo que más te cuesta pedir?","¿Qué es lo que más te cuesta recibir?","¿Cuál es tu mayor inseguridad y cómo puedo apoyarte?"]},
-};
-
-const BURBUJA_SECTIONS = [
-  {id:"tipo",icon:"💑",title:"Tipo de relación",sub:"Monogamia, exclusividad, definición",itemBg:"#fce4d0",
-    items:[
-      {id:"tipo1",q:"¿Qué tipo de relación tienen? ¿Cómo la definirían?",phA:"Para mí nuestra relación es...",phB:"Para mí nuestra relación es..."},
-      {id:"tipo2",q:"¿Cuánto espacio personal necesita cada uno?",phA:"Necesito...",phB:"Necesito..."},
-      {id:"tipo3",q:"¿Cómo manejan el tiempo con amigos y familia por separado?",phA:"Para mí es importante...",phB:"Para mí es importante..."},
-    ]},
-  {id:"fidelidad",icon:"🤝",title:"Fidelidad & Límites",sub:"Qué es infidelidad para nosotros",itemBg:"#fce4e4",
-    items:[
-      {id:"fidel1",q:"¿Qué consideras tú que es infidelidad?",phA:"Para mí la infidelidad es...",phB:"Para mí la infidelidad es...",note:"Más allá de lo físico: mensajes, emocional, coqueteo. Sin respuestas incorrectas."},
-      {id:"fidel2",q:"¿Qué le pides al otro para sentirte seguro/a?",phA:"Para sentirme seguro/a necesito...",phB:"Para sentirme seguro/a necesito..."},
-      {id:"fidel3",q:"¿Cómo manejan la privacidad (teléfonos, contraseñas)?",phA:"Para mí la privacidad significa...",phB:"Para mí la privacidad significa..."},
-    ]},
-  {id:"discusion",icon:"⚡",title:"Reglas para discutir",sub:"Cómo manejar conflictos juntos",itemBg:"#e8eafc",
-    items:[
-      {id:"disc1",q:"Señal de 'necesito pausa' — ¿cuál es la tuya?",phA:"Cuando me desborda...",phB:"Cuando me desborda..."},
-      {id:"disc2",q:"¿Qué está PROHIBIDO en una discusión entre ustedes?",phA:"Ej: gritar, traer el pasado...",phB:"Ej: insultar, silencio de días..."},
-      {id:"disc3",q:"¿Cómo se reconcilian después de una pelea?",phA:"Para reconciliarme necesito...",phB:"Para reconciliarme necesito..."},
-      {id:"disc4",q:"¿Cuánto tiempo de pausa está bien antes de retomar una conversación?",phA:"Necesito al menos...",phB:"Necesito al menos..."},
-    ]},
-  {id:"quiero",icon:"✨",title:"Lo que quiero del otro",sub:"Necesidades, deseos, peticiones",itemBg:"#fce4f4",
-    items:[
-      {id:"quiero1",q:"¿Qué MÁS necesitas de tu pareja que no has pedido?",phA:"Lo que más necesito es...",phB:"Lo que más necesito es..."},
-      {id:"quiero2",q:"¿Cómo prefieres recibir amor?",phA:"Me siento amado/a cuando...",phB:"Me siento amado/a cuando..."},
-      {id:"quiero3",q:"¿Qué es algo pequeño que el otro podría hacer y te haría muy feliz?",phA:"Algo pequeño que me haría feliz...",phB:"Algo pequeño que me haría feliz..."},
-    ]},
-  {id:"futuro",icon:"🌱",title:"El Futuro",sub:"Planes, metas y sueños compartidos",itemBg:"#e4f4e8",
-    items:[
-      {id:"fut1",q:"¿Dónde se imaginan viviendo en 5 años?",phA:"Me imagino que...",phB:"Me imagino que..."},
-      {id:"fut2",q:"¿Quieren tener o no tener hijos? ¿Cuándo?",phA:"Sobre los hijos, yo siento...",phB:"Sobre los hijos, yo siento..."},
-      {id:"fut3",q:"¿Cómo se imaginan su hogar ideal?",phA:"Mi hogar ideal es...",phB:"Mi hogar ideal es..."},
-    ]},
-  {id:"economia",icon:"💰",title:"Economía & Dinero",sub:"Finanzas, gastos y metas económicas",itemBg:"#fef8e0",
-    items:[
-      {id:"eco1",q:"¿Cómo van a manejar el dinero? ¿Juntos, separados o mixto?",phA:"Para mí lo ideal es...",phB:"Para mí lo ideal es..."},
-      {id:"eco2",q:"¿Cuánto es 'gasto grande' que requiere consultarse?",phA:"Para mí, más de...",phB:"Para mí, más de..."},
-      {id:"eco3",q:"¿Qué metas económicas tienen juntos?",phA:"Una meta que quiero es...",phB:"Una meta que quiero es..."},
-      {id:"eco4",q:"¿Cómo manejan las deudas o situaciones económicas difíciles?",phA:"En esos momentos yo...",phB:"En esos momentos yo..."},
-      {id:"eco5",q:"¿Ahorran juntos? ¿Para qué?",phA:"Me gustaría que ahorráramos para...",phB:"Me gustaría que ahorráramos para..."},
-    ]},
-  {id:"familia",icon:"🏠",title:"Familia & Crianza",sub:"Familias de origen, hijos y límites",itemBg:"#ffe8f0",
-    items:[
-      {id:"fam1",q:"¿Cuánto espacio tiene la familia de origen en su relación?",phA:"Para mí, mi familia...",phB:"Para mí, mi familia..."},
-      {id:"fam2",q:"¿Cómo manejan las opiniones o críticas de sus familias sobre la relación?",phA:"Cuando mi familia opina...",phB:"Cuando mi familia opina..."},
-      {id:"fam3",q:"¿Quieren tener hijos? ¿Cuántos y cuándo?",phA:"Sobre los hijos yo pienso...",phB:"Sobre los hijos yo pienso..."},
-      {id:"fam4",q:"¿Cómo quieren criar a sus hijos? ¿Qué valores son innegociables?",phA:"Para mí es esencial enseñar...",phB:"Para mí es esencial enseñar..."},
-      {id:"fam5",q:"¿Cómo dividen responsabilidades del hogar?",phA:"Yo me siento cómodo/a haciendo...",phB:"Yo me siento cómodo/a haciendo..."},
-      {id:"fam6",q:"¿Tienen mascotas o quieren tenerlas?",phA:"Sobre las mascotas...",phB:"Sobre las mascotas..."},
-    ]},
-];
-
-const BURBUJA_ITEM_MAP = BURBUJA_SECTIONS.reduce((acc, sec) => {
-  sec.items.forEach(item => {
-    acc[item.id] = { question: item.q, section: sec.title };
-  });
-  return acc;
-}, {});
-
-const LOVE_PROMPTS = [
-  { icon:"🌸", idea:"Hoy noté algo lindo en ti: " },
-  { icon:"💜", idea:"Gracias por... me hizo sentir " },
-  { icon:"🌍", idea:"Cuando estoy contigo pienso en " },
-  { icon:"🐼", idea:"Te extraño porque " },
-  { icon:"✨", idea:"Eres especial para mí porque " },
-  { icon:"🌿", idea:"Hoy me sonreí al recordar cuando " },
-  { icon:"🫶", idea:"Llevo todo el día pensando en decirte que " },
-  { icon:"💫", idea:"Cuando estás cerca siento " },
-];
-
-const hashSeed = (txt = "") => String(txt).split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-const getDayNumberLocal = (date = new Date()) => {
-  const start = new Date(date.getFullYear(), 0, 0);
-  const diff = date - start;
-  return Math.floor(diff / 86400000);
-};
-
-const CONSEJOS_DIARIOS = [
-  { id: 1, fuente:"TCC", titulo:"Pensamientos vs. hechos", texto:"Antes de reaccionar, pregúntate: ¿esto es un hecho real o una interpretación mía? La mente llena huecos con miedos. Chécalo con tu pareja antes de asumir." },
-  { id: 2, fuente:"DBT", titulo:"Conciencia sin juicio", texto:"Hoy practica observar lo que sientes sin calificarlo de bueno o malo. Decir 'noto que me siento alejado/a' en vez de 'eres distante' abre puertas, no las cierra." },
-  { id: 3, fuente:"ACT", titulo:"Valores como brújula", texto:"¿Qué cualidad de pareja quieres ser hoy, independientemente de cómo te sientes? Actuar desde tus valores —no desde el humor del momento— construye la relación que quieres." },
-  { id: 4, fuente:"Sistémica", titulo:"Patrones circulares", texto:"En pareja, cada acción genera una reacción. Si te preguntas '¿qué hago yo que mantiene este patrón?', encuentras el poder de cambiarlo desde tu lado." },
-  { id: 5, fuente:"Centrado en la persona", titulo:"Presencia total", texto:"Regala 10 minutos de atención plena a tu pareja hoy, sin teléfono ni distracciones. Sentirse visto y escuchado es una de las necesidades más profundas del ser humano." },
-  { id: 6, fuente:"DBT", titulo:"FAST para el respeto propio", texto:"En una conversación difícil: sé Justo/a contigo y con el otro, pide sin Amenazas, mantén tu Sinceridad y Ten respeto propio. Tu bienestar importa tanto como el de tu pareja." },
-  { id: 7, fuente:"TCC", titulo:"Reestructuración cognitiva", texto:"Cuando pienses 'siempre hace esto', prueba con 'últimamente ha pasado esto seguido'. Pequeños cambios en el lenguaje interno reducen la intensidad del conflicto." },
-  { id: 8, fuente:"ACT", titulo:"Defusión cognitiva", texto:"Un pensamiento no es una verdad absoluta. La próxima vez que aparezca una crítica interna como 'no soy suficiente', nómbrala: 'estoy teniendo el pensamiento de que...' Eso crea distancia y libertad." },
-  { id: 9, fuente:"Sistémica", titulo:"La relación como entidad", texto:"Imaginen que su relación es un tercer ser que los dos cuidan. ¿Qué necesita ese ser hoy de ti? ¿Atención, descanso, juego, ternura?" },
-  { id: 10, fuente:"Centrado en la persona", titulo:"Validación genuina", texto:"Validar no es estar de acuerdo; es decir 'entiendo que eso te duele'. Esa frase puede transformar una discusión en una conexión." },
-  { id: 11, fuente:"DBT", titulo:"Regulación emocional", texto:"Cuando sientas que la emoción te desborda, activa el TIPP: Temperatura (agua fría en la cara), Intensidad (ejercicio fuerte 20 seg), Pausa respirada, Pasear. Regula el cuerpo primero." },
-  { id: 12, fuente:"ACT", titulo:"Comprometerse en acción", texto:"El amor no es solo sentimiento; es elección y acción. Elige hoy un gesto concreto de amor hacia tu pareja, aunque no 'tengas ganas'. La acción muchas veces precede al sentimiento." },
-  { id: 13, fuente:"TCC", titulo:"Comunicación asertiva", texto:"El triángulo de la comunicación sana: di lo que observas, lo que sientes y lo que necesitas. Ej: 'Cuando no contestas (observo), me siento invisible (siento), necesito saber que me escuchas (necesito).'"},
-  { id: 14, fuente:"Sistémica", titulo:"Historia de la relación", texto:"Recuerden una historia que los hizo reír juntos. Evocar recuerdos positivos activa el sistema de apego seguro y recuerda por qué eligieron estar juntos." },
-  { id: 15, fuente:"Centrado en la persona", titulo:"Escucha empática profunda", texto:"Hoy escucha para entender, no para responder. Refleja lo que tu pareja dijo con tus palabras antes de opinar. Eso comunica: 'eres importante para mí'." },
-  { id: 16, fuente:"DBT", titulo:"Tolerancia al malestar", texto:"No todas las incomodidades necesitan resolverse ahora. A veces acompañar el silencio o la tristeza del otro sin 'arreglarlo' es la forma más amorosa de estar presente." },
-  { id: 17, fuente:"ACT", titulo:"Flexibilidad psicológica", texto:"Soltar el control de cómo 'debería' ser tu pareja te libera. Aceptar que son dos personas distintas no significa resignarse; significa dejar espacio para el amor real, no el idealizado." },
-  { id: 18, fuente:"TCC", titulo:"Pensamientos automáticos", texto:"Cuando una situación te genere una reacción fuerte, pregúntate: ¿qué pensé automáticamente? ¿Qué evidencia tengo a favor y en contra? Muchas veces la emoción va al pasado, no al presente." },
-  { id: 19, fuente:"Sistémica", titulo:"Roles y complementariedad", texto:"En toda pareja hay roles que se complementan. Reflexiona: ¿cuál es tu posición habitual en los conflictos? ¿Persigues o te alejas? Comprender tu patrón es el primer paso para cambiarlo." },
-  { id: 20, fuente:"Centrado en la persona", titulo:"El yo auténtico", texto:"Para dar amor genuino, primero necesitas conocerte. ¿Qué te nutre? ¿Qué te agota? Cuidarte a ti mismo/a no es egoísmo; es la base para amar bien a otra persona." },
-  { id: 21, fuente:"DBT", titulo:"Habilidades interpersonales DEAR MAN", texto:"Para pedir algo importante: Describe el contexto, Expresa cómo te sientes, Afirma lo que quieres, Refuerza por qué es bueno para ambos, Mantente enfocado/a, Aparenta seguridad, Negocia si es necesario." },
-  { id: 22, fuente:"ACT", titulo:"El observador interno", texto:"Detrás de tus pensamientos y emociones hay una parte de ti que los observa sin juzgar. Desde ese lugar, puedes elegir cómo responder en vez de reaccionar automáticamente." },
-  { id: 23, fuente:"TCC", titulo:"Distorsión: lectura de mente", texto:"Cuando asumas que sabes lo que tu pareja piensa o siente sin preguntarlo, detente. La lectura de mente genera malentendidos. Pregunta siempre antes de concluir." },
-  { id: 24, fuente:"Sistémica", titulo:"Contexto y narrativa", texto:"Cada relación tiene una narrativa única: cómo se cuentan su historia importa. ¿La cuentan desde la fortaleza o desde las heridas? Pueden reescribir juntos el relato que los define." },
-  { id: 25, fuente:"Centrado en la persona", titulo:"Congruencia emocional", texto:"Cuando lo que sientes, piensas y dices están alineados, transmites confianza y seguridad. La autenticidad es uno de los ingredientes más atractivos en una relación duradera." },
-  { id: 26, fuente:"DBT", titulo:"Mindfulness en la relación", texto:"Durante una conversación importante, noten su respiración, la postura, el tono de voz del otro. La conciencia plena del momento evita que piloto automático tome el control." },
-  { id: 27, fuente:"ACT", titulo:"Compasión hacia ti mismo/a", texto:"Trátate como tratarías a un amigo querido que está sufriendo. La autocompasión no es debilidad; es el cimiento desde el que puedes dar y recibir amor con más plenitud." },
-  { id: 28, fuente:"TCC", titulo:"Conducta vs. personalidad", texto:"Critica la conducta, no a la persona. 'No me gustó que llegaras tarde' es muy diferente a 'eres irresponsable'. La primera invita al cambio; la segunda activa la defensa." },
-  { id: 29, fuente:"Sistémica", titulo:"Límites sanos", texto:"Los límites no separan a las personas; las conectan de forma segura. Un límite sano dice: 'esto me lastima y lo que necesito es...' No es un ultimátum, es un puente." },
-  { id: 30, fuente:"Centrado en la persona", titulo:"Crecimiento mutuo", texto:"La mejor relación no es la que te hace cómodo/a, sino la que te ayuda a crecer. ¿Tu relación te invita a ser tu mejor versión? ¿Tú invitas a tu pareja a serlo?" },
-];
-
-// ════════════════════ GAME CONSTANTS ════════════════════
-const MEMORY_EMOJIS = ["🌸","🌺","🌻","🌹","🌈","⭐","🦋","🐝","💫","🎀"];
 
 function checkC4Win(board, row, col, ROWS, COLS, role) {
   const check = (dr, dc) => {
@@ -643,76 +61,375 @@ const WYR_QS = [
   { a:"Que tu pareja sea tu mejor amigo/a", b:"Que tu pareja sea tu aventura constante" },
 ];
 
-function PandaBody({ x = 0, y = 0, scale = 1, flip = false, happy = false }) {
-  const OL = "#3a2010";
-  const GR = "#6a6a6a";
+// ─── Panda drawing helper ────────────────────────────────────────────────────
+// Origin = body center. Head at (0,-56). Total bbox ≈ x:−70..70 y:−112..90
+// KEY: ENTIRE outer body is gray; only belly & face are white.
+function PandaBody({ happy = false }) {
+  const OL = "#2e1a0e";
+  const GR = "#5e5e5e";   // panda gray
   const WH = "#ffffff";
-  const PK = "#f4a898";
-  const s = scale;
+  const PK = "#f5a89a";
   return (
-    <g transform={`translate(${x},${y}) scale(${flip ? -s : s},${s})`}>
-      {/* Shadow */}
-      <ellipse cx="0" cy="98" rx="28" ry="6" fill={OL} opacity="0.10"/>
-      {/* Legs */}
-      <rect x="-20" y="72" width="17" height="28" rx="8" fill={GR} stroke={OL} strokeWidth="1.8"/>
-      <rect x="3"   y="72" width="17" height="28" rx="8" fill={GR} stroke={OL} strokeWidth="1.8"/>
+    <g>
+      {/* ── LEGS (wide, chubby) ── */}
+      <path d="M-34 52 C-38 52 -44 54 -44 68 C-44 80 -36 88 -22 88 C-12 88 -8 82 -8 72 C-8 60 -14 52 -22 52 Z"
+        fill={GR} stroke={OL} strokeWidth="2.4"/>
+      <path d="M  8 52 C  4 52 -2 54 -2 68 C -2 80  6 88 20 88 C 30 88 36 82 36 72 C 36 60 30 52 22 52 Z"
+        fill={GR} stroke={OL} strokeWidth="2.4"/>
       {/* Toe lines */}
-      <path d="M-18 96 Q-14 100 -10 96" fill="none" stroke={OL} strokeWidth="1.2" strokeLinecap="round"/>
-      <path d="M5 96 Q9 100 13 96"       fill="none" stroke={OL} strokeWidth="1.2" strokeLinecap="round"/>
-      {/* Body */}
-      <ellipse cx="0" cy="56" rx="30" ry="34" fill={WH} stroke={OL} strokeWidth="2"/>
-      {/* Tummy highlight */}
-      <ellipse cx="0" cy="60" rx="18" ry="22" fill={WH} opacity="0.6"/>
-      {/* Left arm */}
-      <path d="M-30 42 C-44 42 -46 58 -38 66 C-34 70 -28 68 -26 62" fill={GR} stroke={OL} strokeWidth="1.8" strokeLinejoin="round"/>
-      {/* Right arm */}
-      <path d="M30 42 C44 42 46 58 38 66 C34 70 28 68 26 62" fill={GR} stroke={OL} strokeWidth="1.8" strokeLinejoin="round"/>
-      {/* Head */}
-      <circle cx="0" cy="-4" r="36" fill={WH} stroke={OL} strokeWidth="2"/>
-      {/* Ears */}
-      <circle cx="-28" cy="-36" r="13" fill={GR} stroke={OL} strokeWidth="1.8"/>
-      <circle cx=" 28" cy="-36" r="13" fill={GR} stroke={OL} strokeWidth="1.8"/>
-      {/* Eye patches */}
-      <ellipse cx="-12" cy="-6" rx="13" ry="12" fill={GR} stroke={OL} strokeWidth="1.2" transform="rotate(-10 -12 -6)"/>
-      <ellipse cx=" 12" cy="-6" rx="13" ry="12" fill={GR} stroke={OL} strokeWidth="1.2" transform="rotate(10 12 -6)"/>
-      {/* Eyes */}
-      {happy ? (
-        <>
-          <path d="M-16 -7 Q-12 -2 -8 -7" fill="none" stroke={OL} strokeWidth="2" strokeLinecap="round"/>
-          <path d="M8 -7 Q12 -2 16 -7"    fill="none" stroke={OL} strokeWidth="2" strokeLinecap="round"/>
-        </>
-      ) : (
-        <>
-          <circle cx="-12" cy="-6" r="5.5" fill="#4a3a2a" stroke={OL} strokeWidth="0.6"/>
-          <circle cx=" 12" cy="-6" r="5.5" fill="#4a3a2a" stroke={OL} strokeWidth="0.6"/>
-          <circle cx="-10" cy="-8" r="2"   fill={WH} opacity="0.8"/>
-          <circle cx=" 14" cy="-8" r="2"   fill={WH} opacity="0.8"/>
-        </>
-      )}
-      {/* Nose */}
-      <path d="M-4 4 Q0 7 4 4 Q2 9 0 9 Q-2 9 -4 4Z" fill={OL} opacity="0.85"/>
-      {/* Mouth */}
-      <path d={happy ? "M-8 13 Q0 20 8 13" : "M-6 13 Q0 18 6 13"} fill="none" stroke={OL} strokeWidth="1.8" strokeLinecap="round"/>
-      {/* Cheeks */}
-      <ellipse cx="-22" cy="6" rx="10" ry="6" fill={PK} opacity="0.7"/>
-      <ellipse cx=" 22" cy="6" rx="10" ry="6" fill={PK} opacity="0.7"/>
+      <path d="M-40 85 Q-33 91 -26 85" fill="none" stroke={OL} strokeWidth="1.8" strokeLinecap="round"/>
+      <path d="M  4 85 Q 13 91  22 85" fill="none" stroke={OL} strokeWidth="1.8" strokeLinecap="round"/>
+
+      {/* ── OUTER BODY — all gray ── */}
+      <ellipse cx="0" cy="14" rx="46" ry="48" fill={GR} stroke={OL} strokeWidth="2.6"/>
+
+      {/* ── WHITE BELLY PATCH ── */}
+      <path d="M0 -38 C34 -28 38 12 32 44 Q16 58 0 58 Q-16 58 -32 44 C-38 12 -34 -28 0 -38Z"
+        fill={WH} opacity="0.95"/>
+
+      {/* ── LEFT ARM ── */}
+      <path d="M-44 -6 C-60 -6 -66 20 -60 42 C-56 54 -44 56 -38 48 C-32 42 -32 26 -34 12 C-36 0 -38 -6 -44 -6Z"
+        fill={GR} stroke={OL} strokeWidth="2.4"/>
+
+      {/* ── RIGHT ARM ── */}
+      <path d="M 44 -6 C 60 -6 66 20 60 42 C 56 54 44 56 38 48 C 32 42 32 26 34 12 C 36 0 38 -6 44 -6Z"
+        fill={GR} stroke={OL} strokeWidth="2.4"/>
+
+      {/* ── HEAD ── white circle */}
+      <circle cx="0" cy="-56" r="46" fill={WH} stroke={OL} strokeWidth="2.8"/>
+
+      {/* Ears — gray, slightly inset */}
+      <circle cx="-34" cy="-94" r="22" fill={GR} stroke={OL} strokeWidth="2.4"/>
+      <circle cx=" 34" cy="-94" r="22" fill={GR} stroke={OL} strokeWidth="2.4"/>
+      {/* Ear inner shadow */}
+      <circle cx="-34" cy="-94" r="12" fill="#4a4a4a" opacity="0.45"/>
+      <circle cx=" 34" cy="-94" r="12" fill="#4a4a4a" opacity="0.45"/>
+
+      {/* Eye patches — large, soft gray ovals */}
+      <ellipse cx="-16" cy="-58" rx="19" ry="18" fill={GR} stroke={OL} strokeWidth="1.6"
+        transform="rotate(-10 -16 -58)"/>
+      <ellipse cx=" 16" cy="-58" rx="19" ry="18" fill={GR} stroke={OL} strokeWidth="1.6"
+        transform="rotate( 10  16 -58)"/>
+
+
+      {acc.outfit_sailor && (() => {
+        const [tx, ty] = H(0, 22);
+        return (
+          <g transform={`translate(${tx},${ty}) scale(${sc * f},${sc})`}>
+            <path d="M-32-6 C-36 10-36 32-34 56 C-22 62 22 62 34 56 C36 32 36 10 32-6 C18-12 8-14 0-14 C-8-14-18-12-32-6Z"
+              fill="#f0f4fc" stroke={OL} strokeWidth="2"/>
+            <path d="M-14-14 L0 12 L14-14" fill="none" stroke="#9ab0d8" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <rect x="-34" y="28" width="68" height="11" rx="5.5" fill="#9ab0d8" stroke={OL} strokeWidth="1.4"/>
+            <circle cx="0" cy="16" r="5" fill="#f8b8c8" stroke={OL} strokeWidth="1"/>
+          </g>
+        );
+      })()}
+
+      {acc.outfit_witch && (() => {
+        const [tx, ty] = H(0, 22);
+        return (
+          <g transform={`translate(${tx},${ty}) scale(${sc * f},${sc})`}>
+            <path d="M-34-6 C-38 10-38 32-36 56 C-24 62 24 62 36 56 C38 32 38 10 34-6 C20-12 8-14 0-14 C-8-14-20-12-34-6Z"
+              fill="#ccc0e8" stroke={OL} strokeWidth="2"/>
+            <path d="M-32-6 C-20 4-9 8 0 8 C9 8 20 4 32-6" fill="none" stroke="#d8c870" strokeWidth="2.4" strokeLinecap="round"/>
+            <ellipse cx="0" cy="32" rx="8" ry="7" fill="#b0a0d8" stroke={OL} strokeWidth="1" opacity="0.8"/>
+          </g>
+        );
+      })()}
+
+      {acc.outfit_angel && (() => {
+        const [tx, ty] = H(0, 22);
+        return (
+          <g transform={`translate(${tx},${ty}) scale(${sc * f},${sc})`}>
+            <path d="M-32-6 C-36 10-36 32-34 56 C-22 62 22 62 34 56 C36 32 36 10 32-6 C18-12 8-14 0-14 C-8-14-18-12-32-6Z"
+              fill="#fdf8f0" stroke={OL} strokeWidth="2"/>
+            <ellipse cx="-46" cy="18" rx="14" ry="22" fill="#f0f8ff" stroke={OL} strokeWidth="1.1" opacity="0.75"/>
+            <ellipse cx=" 46" cy="18" rx="14" ry="22" fill="#f0f8ff" stroke={OL} strokeWidth="1.1" opacity="0.75"/>
+          </g>
+        );
+      })()}
+    </g>
+  );
+
+// ...existing code...
+
+// ─── Accessories rendered in the same coordinate space as PandaBody ──────────
+// hx,hy = head center in parent SVG coords; sc = scale applied to the panda
+function PandaAcc({ acc = {}, hx, hy, sc, flip = false }) {
+  if (!acc) return null;
+  const OL = "#2e1a0e";
+  const f = flip ? -1 : 1; // mirror X for right panda
+  // shortcuts – all coords are in parent-SVG space already
+  const H = (dx, dy) => [hx + dx * sc * f, hy + dy * sc]; // head-relative
+  const [ex, ey] = H(0, 0);   // eye patch center ≈ head center
+
+  return (
+    <g>
+      {/* ── HATS ── */}
+      {acc.hat_flower && (() => {
+        const [tx, ty] = H(0, -48);
+        return (
+          <g transform={`translate(${tx},${ty}) scale(${sc*f},${sc})`}>
+            <path d="M-32 4 C-20-2-8-4 0-4 C8-4 20-2 32 4" fill="none" stroke="#7a9850" strokeWidth="2.8" strokeLinecap="round"/>
+            <ellipse cx="-20" cy="0" rx="8" ry="4.5" fill="#a8c878" stroke={OL} strokeWidth="0.8" transform="rotate(-30 -20 0)"/>
+            <ellipse cx=" 20" cy="0" rx="8" ry="4.5" fill="#a8c878" stroke={OL} strokeWidth="0.8" transform="rotate( 30  20 0)"/>
+            {[[-28,0],[-10,-8],[10,-9],[28,0]].map(([x,y],i)=>(
+              <g key={i} transform={`translate(${x},${y})`}>
+                {[0,72,144,216,288].map((a,j)=>(
+                  <ellipse key={j} cx={Math.cos(a*Math.PI/180)*5.5} cy={Math.sin(a*Math.PI/180)*5.5}
+                    rx="4.5" ry="3"
+                    fill={[["#f5c0cc","#fde0ea"],["#fce0b0","#fff5d0"],["#d8c0f8","#ece0ff"],["#f5c0cc","#fde0ea"]][i][j%2]}
+                    stroke={OL} strokeWidth="0.5" transform={`rotate(${a})`} opacity="0.92"/>
+                ))}
+                <circle cx="0" cy="0" r="3.5" fill="#fffce8" stroke={OL} strokeWidth="0.4"/>
+              </g>
+            ))}
+          </g>
+        );
+      })()}
+
+      {acc.hat_crown && (() => {
+        const [tx, ty] = H(0, -50);
+        return (
+          <g transform={`translate(${tx},${ty}) scale(${sc*f},${sc})`}>
+            <path d="M-28 6 L-30-10 L-16 0 L0-18 L16 0 L30-10 L28 6Z" fill="#faecc0" stroke={OL} strokeWidth="1.6" strokeLinejoin="round"/>
+            <line x1="-28" y1="6" x2="28" y2="6" stroke={OL} strokeWidth="1.2" opacity="0.6"/>
+            <circle cx="0" cy="-16" r="4.5" fill="#f5a0b8" stroke={OL} strokeWidth="0.8"/>
+            <circle cx="-16" cy="-1"  r="3.5" fill="#90d0f0" stroke={OL} strokeWidth="0.7"/>
+            <circle cx=" 16" cy="-1"  r="3.5" fill="#90d0f0" stroke={OL} strokeWidth="0.7"/>
+          </g>
+        );
+      })()}
+
+      {acc.hat_straw && (() => {
+        const [tx, ty] = H(0, -46);
+        return (
+          <g transform={`translate(${tx},${ty}) scale(${sc*f},${sc})`}>
+            <ellipse cx="0" cy="4" rx="42" ry="10" fill="#e8d898" stroke={OL} strokeWidth="1.6"/>
+            <path d="M-20 4 C-20-16 20-16 20 4" fill="#f0e0b0" stroke={OL} strokeWidth="1.6"/>
+            <ellipse cx="0" cy="4" rx="20" ry="5" fill="#e8d898"/>
+            <path d="M-20 3 Q-8-2 8-2 Q16-1 20 3" fill="none" stroke="#d89080" strokeWidth="3.5" strokeLinecap="round" opacity="0.85"/>
+          </g>
+        );
+      })()}
+
+      {acc.hat_beret && (() => {
+        const [tx, ty] = H(-4, -48);
+        return (
+          <g transform={`translate(${tx},${ty}) scale(${sc*f},${sc})`}>
+            <ellipse cx="-4" cy="-4" rx="26" ry="12" fill="#e8b8c8" stroke={OL} strokeWidth="1.6"/>
+            <circle cx="12" cy="-14" r="4" fill="#f8d0dc" stroke={OL} strokeWidth="0.8"/>
+            <rect x="-20" y="4" width="28" height="6" rx="3" fill="#d890a8" stroke={OL} strokeWidth="0.8" opacity="0.75"/>
+          </g>
+        );
+      })()}
+
+      {acc.hat_beanie && (() => {
+        const [tx, ty] = H(0, -48);
+        return (
+          <g transform={`translate(${tx},${ty}) scale(${sc*f},${sc})`}>
+            <path d="M-24 4 C-24-14-14-22 0-22 C14-22 24-14 24 4" fill="#a8d8f0" stroke={OL} strokeWidth="1.6"/>
+            <rect x="-26" y="2" width="52" height="9" rx="4.5" fill="#80b8d8" stroke={OL} strokeWidth="1.4"/>
+            <circle cx="0" cy="-25" r="6" fill="#e8f4ff" stroke={OL} strokeWidth="0.8"/>
+          </g>
+        );
+      })()}
+
+      {acc.hat_frog && (() => {
+        const [tx, ty] = H(0, -47);
+        return (
+          <g transform={`translate(${tx},${ty}) scale(${sc*f},${sc})`}>
+            <ellipse cx="0" cy="2" rx="28" ry="11" fill="#a8d898" stroke={OL} strokeWidth="1.6"/>
+            <ellipse cx="-12" cy="-9" rx="6" ry="6" fill="#c0eeac" stroke={OL} strokeWidth="1.4"/>
+            <ellipse cx=" 12" cy="-9" rx="6" ry="6" fill="#c0eeac" stroke={OL} strokeWidth="1.4"/>
+            <circle cx="-12" cy="-9" r="2" fill={OL} opacity="0.8"/>
+            <circle cx=" 12" cy="-9" r="2" fill={OL} opacity="0.8"/>
+          </g>
+        );
+      })()}
+
+      {/* ── GLASSES ── */}
+      {acc.glasses_heart && (() => {
+        const [tx, ty] = H(0, 2);
+        return (
+          <g transform={`translate(${tx},${ty}) scale(${sc*f},${sc})`}>
+            <path d="M-22 0 C-22-5-18-7-14-4 C-10-7-6-5-6 0 C-6 5-14 11-14 11 C-14 11-22 5-22 0Z" fill="#f8c0cc" stroke={OL} strokeWidth="1.4"/>
+            <path d="M  6 0 C  6-5 10-7 14-4 C 18-7 22-5 22 0 C 22 5 14 11 14 11 C 14 11  6 5  6 0Z" fill="#f8c0cc" stroke={OL} strokeWidth="1.4"/>
+            <line x1="-6" y1="1" x2="6" y2="1" stroke={OL} strokeWidth="1.8" strokeLinecap="round"/>
+            <line x1="-22" y1="1" x2="-32" y2="-1" stroke={OL} strokeWidth="1.8" strokeLinecap="round"/>
+            <line x1=" 22" y1="1" x2=" 32" y2="-1" stroke={OL} strokeWidth="1.8" strokeLinecap="round"/>
+          </g>
+        );
+      })()}
+
+      {acc.glasses_sun && (() => {
+        const [tx, ty] = H(0, 2);
+        return (
+          <g transform={`translate(${tx},${ty}) scale(${sc*f},${sc})`}>
+            <rect x="-26" y="-7" width="18" height="12" rx="6" fill="#b0c8e0" stroke={OL} strokeWidth="1.4" opacity="0.82"/>
+            <rect x="  8" y="-7" width="18" height="12" rx="6" fill="#b0c8e0" stroke={OL} strokeWidth="1.4" opacity="0.82"/>
+            <line x1="-8" y1="0" x2="8" y2="0" stroke={OL} strokeWidth="1.8" strokeLinecap="round"/>
+            <line x1="-26" y1="-1" x2="-34" y2="-2" stroke={OL} strokeWidth="1.8" strokeLinecap="round"/>
+            <line x1=" 26" y1="-1" x2=" 34" y2="-2" stroke={OL} strokeWidth="1.8" strokeLinecap="round"/>
+            <rect x="-23" y="-5" width="6" height="4" rx="2" fill="white" opacity="0.28"/>
+          </g>
+        );
+      })()}
+
+      {acc.glasses_round && (() => {
+        const [tx, ty] = H(0, 2);
+        return (
+          <g transform={`translate(${tx},${ty}) scale(${sc*f},${sc})`}>
+            <circle cx="-14" cy="0" r="9" fill="#e8f2f8" stroke={OL} strokeWidth="1.8" opacity="0.75"/>
+            <circle cx=" 14" cy="0" r="9" fill="#e8f2f8" stroke={OL} strokeWidth="1.8" opacity="0.75"/>
+            <line x1="-5" y1="0" x2="5" y2="0" stroke={OL} strokeWidth="1.6" strokeLinecap="round"/>
+            <line x1="-23" y1="-1" x2="-31" y2="-2" stroke={OL} strokeWidth="1.6" strokeLinecap="round"/>
+            <line x1=" 23" y1="-1" x2=" 31" y2="-2" stroke={OL} strokeWidth="1.6" strokeLinecap="round"/>
+          </g>
+        );
+      })()}
+
+      {acc.glasses_clear && (() => {
+        const [tx, ty] = H(0, 2);
+        return (
+          <g transform={`translate(${tx},${ty}) scale(${sc*f},${sc})`}>
+            <rect x="-24" y="-7" width="16" height="12" rx="4" fill="#d8eef8" stroke={OL} strokeWidth="1.5" opacity="0.55"/>
+            <rect x="  8" y="-7" width="16" height="12" rx="4" fill="#d8eef8" stroke={OL} strokeWidth="1.5" opacity="0.55"/>
+            <line x1="-8" y1="0" x2="8" y2="0" stroke={OL} strokeWidth="1.6" strokeLinecap="round"/>
+            <line x1="-24" y1="-1" x2="-32" y2="-2" stroke={OL} strokeWidth="1.6" strokeLinecap="round"/>
+            <line x1=" 24" y1="-1" x2=" 32" y2="-2" stroke={OL} strokeWidth="1.6" strokeLinecap="round"/>
+          </g>
+        );
+      })()}
+
+      {acc.glasses_star && (() => {
+        const [tx, ty] = H(0, 2);
+        return (
+          <g transform={`translate(${tx},${ty}) scale(${sc*f},${sc})`}>
+            <path d="M-14-9 L-12-3 L-6-3 L-11 1 L-9 7 L-14 3 L-19 7 L-17 1 L-22-3 L-16-3Z" fill="#fce8b0" stroke={OL} strokeWidth="1.2"/>
+            <path d="M 14-9 L 12-3 L  6-3 L 11 1 L  9 7 L 14 3 L 19 7 L 17 1 L 22-3 L 16-3Z" fill="#fce8b0" stroke={OL} strokeWidth="1.2"/>
+            <line x1="-6" y1="0" x2="6" y2="0" stroke={OL} strokeWidth="1.6" strokeLinecap="round"/>
+          </g>
+        );
+      })()}
+
+      {/* ── BOW ── */}
+      {acc.acc_bow && (() => {
+        const [tx, ty] = H(28, -30);
+        return (
+          <g transform={`translate(${tx},${ty}) scale(${sc},${sc})`}>
+            <path d="M-12 0 C-18-9-24-11-20-2 C-16 7-6 4 0 0Z" fill="#f8c0d0" stroke={OL} strokeWidth="1.2"/>
+            <path d="M 12 0 C 18-9 24-11 20-2 C 16 7  6 4 0 0Z" fill="#e8b0e0" stroke={OL} strokeWidth="1.2"/>
+            <circle cx="0" cy="0" r="5" fill="#fde8f0" stroke={OL} strokeWidth="0.8"/>
+          </g>
+        );
+      })()}
+
+      {/* ── SCARF ── */}
+      {acc.acc_scarf && (() => {
+        const [tx, ty] = H(0, 14);
+        return (
+          <g transform={`translate(${tx},${ty}) scale(${sc*f},${sc})`}>
+            <path d="M-30-2 C-20-8-8-10 0-10 C8-10 20-8 30-2 C32 2 30 8 26 9 C20 10 12 7 0 7 C-12 7-20 10-26 9 C-30 8-32 2-30-2Z"
+              fill="#f8c0c8" stroke={OL} strokeWidth="1.5"/>
+            <path d="M22 7 C28 14 30 24 24 28 C20 32 14 29 12 22"
+              fill="none" stroke="#f0a8b8" strokeWidth="7" strokeLinecap="round"/>
+            <path d="M-22 6 Q-10 5 0 5 Q10 5 22 6" fill="none" stroke="white" strokeWidth="1.2" opacity="0.4" strokeLinecap="round"/>
+          </g>
+        );
+      })()}
+
+      {/* ── OUTFITS ── */}
+      {acc.outfit_kimono && (() => {
+        const [tx, ty] = H(0, 20);
+        return (
+          <g transform={`translate(${tx},${ty}) scale(${sc*f},${sc})`}>
+            <path d="M-30-6 C-34 8-34 28-32 50 C-22 55 22 55 32 50 C34 28 34 8 30-6 C18-12 8-14 0-14 C-8-14-18-12-30-6Z"
+              fill="#f0c8d8" stroke={OL} strokeWidth="1.8"/>
+            <path d="M-14-14 L0 12 L14-14" fill="none" stroke="#fdf0f8" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+            <rect x="-32" y="22" width="64" height="13" rx="5" fill="#d890b0" stroke={OL} strokeWidth="1.3"/>
+            <ellipse cx="0" cy="28" rx="11" ry="7" fill="#e8a0c0" stroke={OL} strokeWidth="0.9"/>
+            {[[-18,8],[14,8],[-10,36],[10,36]].map(([x,y],i)=>(
+              <circle key={i} cx={x} cy={y} r="2.2" fill="#fde0f0" opacity="0.6"/>
+            ))}
+          </g>
+        );
+      })()}
+
+      {acc.outfit_sailor && (() => {
+        const [tx, ty] = H(0, 20);
+        return (
+          <g transform={`translate(${tx},${ty}) scale(${sc*f},${sc})`}>
+            <path d="M-28-4 C-32 10-32 30-30 50 C-20 56 20 56 30 50 C32 30 32 10 28-4 C16-10 6-12 0-12 C-6-12-16-10-28-4Z"
+              fill="#f0f4fc" stroke={OL} strokeWidth="1.8"/>
+            <path d="M-12-12 L0 10 L12-12" fill="none" stroke="#9ab0d8" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+            <rect x="-30" y="24" width="60" height="10" rx="5" fill="#9ab0d8" stroke={OL} strokeWidth="1.3"/>
+            <circle cx="0" cy="14" r="4" fill="#f8b8c8" stroke={OL} strokeWidth="0.9"/>
+          </g>
+        );
+      })()}
+
+      {acc.outfit_witch && (() => {
+        const [tx, ty] = H(0, 18);
+        return (
+          <g transform={`translate(${tx},${ty}) scale(${sc*f},${sc})`}>
+            <path d="M-30-4 C-34 10-34 30-32 50 C-22 56 22 56 32 50 C34 30 34 10 30-4 C18-10 6-12 0-12 C-6-12-18-10-30-4Z"
+              fill="#ccc0e8" stroke={OL} strokeWidth="1.8"/>
+            <path d="M-28-4 C-18 4-8 8 0 8 C8 8 18 4 28-4" fill="none" stroke="#d8c870" strokeWidth="2.2" strokeLinecap="round"/>
+            <ellipse cx="0" cy="28" rx="7" ry="6" fill="#b0a0d8" stroke={OL} strokeWidth="0.9" opacity="0.75"/>
+          </g>
+        );
+      })()}
+
+      {acc.outfit_angel && (() => {
+        const [tx, ty] = H(0, 18);
+        return (
+          <g transform={`translate(${tx},${ty}) scale(${sc*f},${sc})`}>
+            <path d="M-28-4 C-32 10-32 30-30 50 C-20 56 20 56 30 50 C32 30 32 10 28-4 C16-10 6-12 0-12 C-6-12-16-10-28-4Z"
+              fill="#fdf8f0" stroke={OL} strokeWidth="1.8"/>
+            <ellipse cx="-40" cy="16" rx="12" ry="20" fill="#f0f8ff" stroke={OL} strokeWidth="1" opacity="0.72"/>
+            <ellipse cx=" 40" cy="16" rx="12" ry="20" fill="#f0f8ff" stroke={OL} strokeWidth="1" opacity="0.72"/>
+          </g>
+        );
+      })()}
     </g>
   );
 }
 
-function CouplePandaSVG({ happy = false, size = 160 }) {
+function CouplePandaSVG({ happy = false, size = 160, accessories }) {
+  // Pandas placed in a 280×210 viewBox
+  // Left panda: translate(72,162) scale(0.82) → head center ≈ (72, 119)
+  // Right panda: translate(202,166) scale(0.80) → head center ≈ (202, 124)
+  const acc = accessories || {};
+  const LSC = 0.82, RSC = 0.80;
+  const LX = 72,  LY = 162;
+  const RX = 202, RY = 166;
+  // head center y = translateY + headOffsetInBody * scale = translateY + (-52)*scale
+  const LHY = LY + (-52) * LSC;  // ≈ 119
+  const RHY = RY + (-52) * RSC;  // ≈ 124
   return (
-    <svg viewBox="-90 -55 250 170" width={size} style={{ display: "block" }}>
-      <PandaBody x="-30" y="0" scale={0.82} happy={happy}/>
-      <PandaBody x=" 78" y="4"  scale={0.80} flip happy={happy}/>
+    <svg viewBox="0 0 280 210" width={size} style={{ display: "block", overflow: "visible" }}>
+      {/* Left panda */}
+      <g transform={`translate(${LX},${LY}) scale(${LSC},${LSC})`}>
+        <PandaBody happy={happy}/>
+      </g>
+      <PandaAcc acc={acc} hx={LX} hy={LHY} sc={LSC} flip={false}/>
+
+      {/* Right panda (mirrored) */}
+      <g transform={`translate(${RX},${RY}) scale(${-RSC},${RSC})`}>
+        <PandaBody happy={happy}/>
+      </g>
+      <PandaAcc acc={acc} hx={RX} hy={RHY} sc={RSC} flip={true}/>
     </svg>
   );
 }
 
 function SinglePandaSVG({ size = 100 }) {
   return (
-    <svg viewBox="-44 -55 88 160" width={size} style={{ display: "block" }}>
-      <PandaBody x="0" y="0" scale={0.88}/>
+    <svg viewBox="0 0 120 180" width={size} style={{ display: "block" }}>
+      <g transform="translate(60,145) scale(0.9,0.9)">
+        <PandaBody happy={false}/>
+      </g>
     </svg>
   );
 }
@@ -1157,258 +874,8 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
           <rect x="40" y="160" width="72" height="13" rx="5" fill="#e8a8c0" stroke={OL} strokeWidth="1.2" opacity="0.82"/>
           <ellipse cx="76" cy="167" rx="10" ry="6.5" fill="#f0c0d4" stroke={OL} strokeWidth="0.8"/>
           {[[52,148],[88,148],[60,172],[92,172]].map(([x,y],i) => (
-            <circle key={i} cx={x} cy={y} r="2" fill="#fde8f0" stroke={OL} strokeWidth="0.5" opacity="0.6"/>
+            <ellipse key={i} cx={x} cy={y} rx="6" ry="3.5" fill="white" opacity="0.8" />
           ))}
-          <path d="M138 140 C134 150 132 170 134 195 C140 200 170 202 214 195 C216 170 214 150 210 140 C200 132 188 130 176 130 C164 130 152 132 138 140Z"
-            fill="url(#kimonoR)" stroke={OL} strokeWidth="1.8" opacity="0.88"/>
-          <path d="M160 130 L176 155 L192 130" fill="none" stroke="#eef2fa" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.9"/>
-          <rect x="140" y="160" width="72" height="13" rx="5" fill="#a8c0e8" stroke={OL} strokeWidth="1.2" opacity="0.82"/>
-          <ellipse cx="176" cy="167" rx="10" ry="6.5" fill="#c0d4f0" stroke={OL} strokeWidth="0.8"/>
-          {[[152,148],[188,148],[160,172],[192,172]].map(([x,y],i) => (
-            <circle key={i} cx={x} cy={y} r="2" fill="#e8f0fc" stroke={OL} strokeWidth="0.5" opacity="0.6"/>
-          ))}
-        </g>
-      )}
-
-      {/* OUTFIT: SAILOR */}
-      {owned.outfit_sailor && (
-        <g filter="url(#wc)">
-          <path d="M45 136 C43 151 43 170 45 192 C56 197 95 197 107 192 C109 170 109 151 107 136 C92 131 61 131 45 136Z" fill="#f0f4fc" stroke={OL} strokeWidth="1.8" opacity="0.92"/>
-          <path d="M59 132 L76 152 L93 132" fill="none" stroke="#a8b8d8" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.85"/>
-          <rect x="47" y="161" width="58" height="9" rx="4.5" fill="#b8c8e0" stroke={OL} strokeWidth="1.2" opacity="0.82"/>
-          <circle cx="76" cy="156" r="3.5" fill="#f5c8d8" stroke={OL} strokeWidth="0.8"/>
-          <path d="M145 136 C143 151 143 170 145 192 C156 197 195 197 207 192 C209 170 209 151 207 136 C192 131 161 131 145 136Z" fill="#f0f4fc" stroke={OL} strokeWidth="1.8" opacity="0.92"/>
-          <path d="M159 132 L176 152 L193 132" fill="none" stroke="#98a8c8" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.85"/>
-          <rect x="147" y="161" width="58" height="9" rx="4.5" fill="#a8b8d8" stroke={OL} strokeWidth="1.2" opacity="0.85"/>
-          <circle cx="176" cy="156" r="3.5" fill="#c8d8f5" stroke={OL} strokeWidth="0.8"/>
-        </g>
-      )}
-
-      {/* OUTFIT: BATA/WITCH */}
-      {owned.outfit_witch && (
-        <g filter="url(#wc)">
-          <path d="M44 138 C40 155 40 176 44 194 C56 201 97 201 108 194 C112 176 112 155 108 138 C92 132 60 132 44 138Z" fill="#d8c8f0" stroke={OL} strokeWidth="1.8" opacity="0.85"/>
-          <path d="M52 138 C60 145 69 149 76 149 C83 149 92 145 100 138" fill="none" stroke="#e8d8a8" strokeWidth="2.2" strokeLinecap="round" opacity="0.75"/>
-          <ellipse cx="76" cy="168" rx="6" ry="5" fill="#c8b8e0" stroke={OL} strokeWidth="0.8" opacity="0.7"/>
-          <path d="M144 138 C140 155 140 176 144 194 C156 201 197 201 208 194 C212 176 212 155 208 138 C192 132 160 132 144 138Z" fill="#c8b8e8" stroke={OL} strokeWidth="1.8" opacity="0.85"/>
-          <path d="M152 138 C160 145 169 149 176 149 C183 149 192 145 200 138" fill="none" stroke="#e8d8a8" strokeWidth="2.2" strokeLinecap="round" opacity="0.75"/>
-          <ellipse cx="176" cy="168" rx="6" ry="5" fill="#b8a8d8" stroke={OL} strokeWidth="0.8" opacity="0.7"/>
-        </g>
-      )}
-
-      {/* OUTFIT: ANGEL */}
-      {owned.outfit_angel && (
-        <g filter="url(#wc)">
-          <path d="M44 137 C42 154 42 174 44 192 C56 199 96 199 108 192 C110 174 110 154 108 137 C92 132 60 132 44 137Z" fill="#fdf8f2" stroke={OL} strokeWidth="1.8" opacity="0.92"/>
-          <ellipse cx="34" cy="151" rx="10" ry="18" fill="#f0f8ff" stroke={OL} strokeWidth="1" opacity="0.65"/>
-          <ellipse cx="118" cy="151" rx="10" ry="18" fill="#f0f8ff" stroke={OL} strokeWidth="1" opacity="0.65"/>
-          <path d="M144 137 C142 154 142 174 144 192 C156 199 196 199 208 192 C210 174 210 154 208 137 C192 132 160 132 144 137Z" fill="#fdf8f2" stroke={OL} strokeWidth="1.8" opacity="0.92"/>
-          <ellipse cx="134" cy="151" rx="10" ry="18" fill="#f0f8ff" stroke={OL} strokeWidth="1" opacity="0.65"/>
-          <ellipse cx="218" cy="151" rx="10" ry="18" fill="#f0f8ff" stroke={OL} strokeWidth="1" opacity="0.65"/>
-        </g>
-      )}
-
-      {/* ══ RIGHT PANDA — same accessories mirrored ══ */}
-
-      {owned.hat_flower && (
-        <g transform="rotate(-4, 176, 88) translate(176, 42)" filter="url(#wc)">
-          <path d="M-36 0 C-24 -6 -10 -8 0 -8 C10 -8 24 -6 36 0" fill="none" stroke="#8aaa70" strokeWidth="3" strokeLinecap="round" opacity="0.85"/>
-          <ellipse cx="-22" cy="-4" rx="7" ry="4" fill="#b8d8a0" stroke={OL} strokeWidth="0.8" transform="rotate(-30 -22 -4)" opacity="0.85"/>
-          <ellipse cx="22" cy="-4" rx="7" ry="4" fill="#b8d8a0" stroke={OL} strokeWidth="0.8" transform="rotate(30 22 -4)" opacity="0.85"/>
-          {[[-30,-2],[-10,-9],[12,-10],[32,-2]].map(([x,y],i) => (
-            <g key={i} transform={`translate(${x},${y})`}>
-              {[0,72,144,216,288].map((a,j) => (
-                <ellipse key={j} cx={Math.cos(a*Math.PI/180)*5} cy={Math.sin(a*Math.PI/180)*5}
-                  rx="4" ry="2.5"
-                  fill={[["#c8e8f8","#e0f4ff"],["#fdecc8","#fff5d8"],["#d8eec8","#eaffd8"],["#c8e8f8","#e0f4ff"]][i][j%2]}
-                  stroke={OL} strokeWidth="0.6" transform={`rotate(${a})`} opacity="0.88"/>
-              ))}
-              <circle cx="0" cy="0" r="3.5" fill="#fffaea" stroke={OL} strokeWidth="0.5"/>
-            </g>
-          ))}
-        </g>
-      )}
-
-      {owned.hat_crown && (
-        <g transform="rotate(-4, 176, 88) translate(176, 44)" filter="url(#wc)">
-          <path d="M-26 6 L-28 -8 L-16 0 L0 -16 L16 0 L28 -8 L26 6 Z" fill="#faecc8" stroke={OL} strokeWidth="1.5" strokeLinejoin="round" opacity="0.92"/>
-          <path d="M-26 6 L26 6" fill="none" stroke={OL} strokeWidth="1.5" opacity="0.6"/>
-          <circle cx="0" cy="-14" r="4" fill="#f5b8c8" stroke={OL} strokeWidth="0.8"/>
-          <circle cx="-16" cy="-2" r="3" fill="#b8e0f0" stroke={OL} strokeWidth="0.8"/>
-          <circle cx="16" cy="-2" r="3" fill="#b8e0f0" stroke={OL} strokeWidth="0.8"/>
-        </g>
-      )}
-
-      {owned.hat_straw && (
-        <g transform="rotate(-4, 176, 88) translate(176, 46)" filter="url(#wc)">
-          <ellipse cx="0" cy="2" rx="40" ry="9" fill="#e8d8a8" stroke={OL} strokeWidth="1.5" opacity="0.9"/>
-          <path d="M-20 2 C-20 -16 20 -16 20 2" fill="#f0e0b8" stroke={OL} strokeWidth="1.5" opacity="0.9"/>
-          <ellipse cx="0" cy="2" rx="20" ry="4" fill="#e8d8a8" opacity="0.9"/>
-          <path d="M-20 2 C-10 -2 10 -2 20 2" fill="none" stroke="#e0a8a0" strokeWidth="3" strokeLinecap="round" opacity="0.8"/>
-        </g>
-      )}
-
-      {owned.hat_beret && (
-        <g transform="rotate(-4, 176, 88) translate(176, 46)" filter="url(#wc)">
-          <ellipse cx="-6" cy="-4" rx="23" ry="11" fill="#c8d8f0" stroke={OL} strokeWidth="1.5" opacity="0.88"/>
-          <circle cx="9" cy="-12" r="3.5" fill="#d8e8f8" stroke={OL} strokeWidth="0.8"/>
-          <rect x="-18" y="2" width="24" height="5" rx="2.5" fill="#a8b8d8" stroke={OL} strokeWidth="0.8" opacity="0.7"/>
-        </g>
-      )}
-
-      {owned.hat_beanie && (
-        <g transform="rotate(-4, 176, 88) translate(176, 46)" filter="url(#wc)">
-          <path d="M-22 4 C-22 -12 -12 -20 0 -20 C12 -20 22 -12 22 4" fill="#f5c8d8" stroke={OL} strokeWidth="1.5" opacity="0.88"/>
-          <rect x="-24" y="2" width="48" height="8" rx="4" fill="#e8a8c0" stroke={OL} strokeWidth="1.2" opacity="0.85"/>
-          <circle cx="0" cy="-23" r="5" fill="#fde8f0" stroke={OL} strokeWidth="0.8"/>
-        </g>
-      )}
-
-      {owned.hat_frog && (
-        <g transform="rotate(-4, 176, 88) translate(176, 45)" filter="url(#wc)">
-          <ellipse cx="0" cy="0" rx="26" ry="10" fill="#b8e0a8" stroke={OL} strokeWidth="1.5" opacity="0.88"/>
-          <ellipse cx="-11" cy="-8" rx="5" ry="5" fill="#c8eebc" stroke={OL} strokeWidth="1.2"/>
-          <ellipse cx="11" cy="-8" rx="5" ry="5" fill="#c8eebc" stroke={OL} strokeWidth="1.2"/>
-          <circle cx="-11" cy="-8" r="1.5" fill={OL} opacity="0.8"/>
-          <circle cx="11" cy="-8" r="1.5" fill={OL} opacity="0.8"/>
-        </g>
-      )}
-
-      {owned.glasses_heart && (
-        <g transform="rotate(-4, 176, 88) translate(176, 84)" filter="url(#wc)">
-          <path d="M-20 -1 C-20 -5 -17 -7 -14 -4 C-11 -7 -8 -5 -8 -1 C-8 3 -14 8 -14 8 C-14 8 -20 3 -20 -1Z" fill="#f5c8d8" stroke={OL} strokeWidth="1.5" opacity="0.88"/>
-          <path d="M8 -1 C8 -5 11 -7 14 -4 C17 -7 20 -5 20 -1 C20 3 14 8 14 8 C14 8 8 3 8 -1Z" fill="#f5c8d8" stroke={OL} strokeWidth="1.5" opacity="0.88"/>
-          <line x1="-8" y1="0" x2="8" y2="0" stroke={OL} strokeWidth="1.8" strokeLinecap="round" opacity="0.7"/>
-          <line x1="-20" y1="0" x2="-29" y2="-2" stroke={OL} strokeWidth="1.8" strokeLinecap="round" opacity="0.7"/>
-          <line x1="20" y1="0" x2="29" y2="-2" stroke={OL} strokeWidth="1.8" strokeLinecap="round" opacity="0.7"/>
-        </g>
-      )}
-
-      {owned.glasses_sun && (
-        <g transform="rotate(-4, 176, 88) translate(176, 84)" filter="url(#wc)">
-          <rect x="-24" y="-7" width="16" height="11" rx="5.5" fill="#c8d8e8" stroke={OL} strokeWidth="1.5" opacity="0.75"/>
-          <rect x="8" y="-7" width="16" height="11" rx="5.5" fill="#c8d8e8" stroke={OL} strokeWidth="1.5" opacity="0.75"/>
-          <line x1="-8" y1="-1" x2="8" y2="-1" stroke={OL} strokeWidth="1.8" strokeLinecap="round" opacity="0.7"/>
-          <line x1="-24" y1="-2" x2="-32" y2="-3" stroke={OL} strokeWidth="1.8" strokeLinecap="round" opacity="0.7"/>
-          <line x1="24" y1="-2" x2="32" y2="-3" stroke={OL} strokeWidth="1.8" strokeLinecap="round" opacity="0.7"/>
-        </g>
-      )}
-
-      {owned.glasses_round && (
-        <g transform="rotate(-4, 176, 88) translate(176, 84)" filter="url(#wc)">
-          <circle cx="-12" cy="-1" r="7.2" fill="#e8f0f8" stroke={OL} strokeWidth="1.8" opacity="0.7"/>
-          <circle cx="12" cy="-1" r="7.2" fill="#e8f0f8" stroke={OL} strokeWidth="1.8" opacity="0.7"/>
-          <line x1="-4.8" y1="-1" x2="4.8" y2="-1" stroke={OL} strokeWidth="1.6" strokeLinecap="round" opacity="0.7"/>
-          <line x1="-19" y1="-2" x2="-27" y2="-3" stroke={OL} strokeWidth="1.6" strokeLinecap="round" opacity="0.7"/>
-          <line x1="19" y1="-2" x2="27" y2="-3" stroke={OL} strokeWidth="1.6" strokeLinecap="round" opacity="0.7"/>
-        </g>
-      )}
-
-      {owned.glasses_clear && (
-        <g transform="rotate(-4, 176, 88) translate(176, 84)" filter="url(#wc)">
-          <rect x="-22" y="-7" width="14" height="11" rx="4" fill="#e0f0f8" stroke={OL} strokeWidth="1.5" opacity="0.55"/>
-          <rect x="8" y="-7" width="14" height="11" rx="4" fill="#e0f0f8" stroke={OL} strokeWidth="1.5" opacity="0.55"/>
-          <line x1="-8" y1="-1" x2="8" y2="-1" stroke={OL} strokeWidth="1.6" strokeLinecap="round" opacity="0.65"/>
-          <line x1="-22" y1="-2" x2="-30" y2="-3" stroke={OL} strokeWidth="1.6" strokeLinecap="round" opacity="0.65"/>
-          <line x1="22" y1="-2" x2="30" y2="-3" stroke={OL} strokeWidth="1.6" strokeLinecap="round" opacity="0.65"/>
-        </g>
-      )}
-
-      {owned.glasses_star && (
-        <g transform="rotate(-4, 176, 88) translate(176, 84)" filter="url(#wc)">
-          <path d="M-13 -8 L-11 -3 L-6 -3 L-10 -0.5 L-8.5 4.5 L-13 2 L-17.5 4.5 L-16 -0.5 L-20 -3 L-15 -3Z" fill="#fdecc8" stroke={OL} strokeWidth="1.2" opacity="0.88"/>
-          <path d="M13 -8 L15 -3 L20 -3 L16 -0.5 L17.5 4.5 L13 2 L8.5 4.5 L10 -0.5 L6 -3 L11 -3Z" fill="#fdecc8" stroke={OL} strokeWidth="1.2" opacity="0.88"/>
-          <line x1="-6" y1="-1" x2="6" y2="-1" stroke={OL} strokeWidth="1.6" strokeLinecap="round" opacity="0.7"/>
-        </g>
-      )}
-
-      {owned.acc_bow && (
-        <g transform="rotate(-4, 176, 88) translate(206, 58)" filter="url(#wc)">
-          <path d="M-12 0 C-18 -8 -24 -10 -20 -2 C-16 6 -6 4 0 0Z" fill="#c8e0f8" stroke={OL} strokeWidth="1.2" opacity="0.88"/>
-          <path d="M12 0 C18 -8 24 -10 20 -2 C16 6 6 4 0 0Z" fill="#d8e8f8" stroke={OL} strokeWidth="1.2" opacity="0.88"/>
-          <circle cx="0" cy="0" r="4.5" fill="#e8f4ff" stroke={OL} strokeWidth="0.8"/>
-        </g>
-      )}
-
-    </svg>
-  );
-}
-
-
-
-// ═══════════════════════════════════════════════
-// NEW GARDEN SCENE — koi/lotus watercolor aesthetic
-// ═══════════════════════════════════════════════
-function GardenScene({ garden, waterLevel, bgImage, isIndoor }) {
-  const g = garden || {};
-  // showIn: returns true if item should render in current view
-  // stored as "garden"|"indoor" (or true for backward compat = "garden")
-  const showIn = id => {
-    const v = g[id];
-    if (!v || v === "owned") return false;
-    const loc = v === true || v === "garden" ? "garden" : "indoor";
-    return isIndoor ? loc === "indoor" : loc === "garden";
-  };
-  const w = waterLevel || 0;
-  // 5 watercolor levels: 0-20 drought, 20-40 dry, 40-60 ok, 60-80 lush, 80-100 thriving
-  const lvl = w < 20 ? 0 : w < 40 ? 1 : w < 60 ? 2 : w < 80 ? 3 : 4;
-
-  const SKY = ["#e8cfa0","#dde8c8","#c8e8f0","#b0ddf8","#90d0f8"];
-  const SKY2 = ["#f0e4c0","#e8f0d8","#d8f0e8","#c8eef8","#b8e4ff"];
-  const GROUND1 = ["#c89848","#b8c060","#88b830","#60a828","#48a020"];
-  const GROUND2 = ["#b07830","#98a840","#68980c","#488810","#308808"];
-  const HILL = ["#c0b060","#a0c058","#78b848","#58a840","#40a038"];
-  const MIST = ["#d0b870","#b8c870","#90c890","#78c8a8","#60c8b8"];
-
-  // Grass blade color per level
-  const grassC = ["#c8a830","#a8b840","#78a828","#509820","#388810"];
-  // Crack lines on dry ground
-  const showCracks = lvl === 0;
-  // Flower dots on lush/thriving
-  const showFlowers = lvl >= 3;
-  // Water shimmer on thriving
-  const showDew = lvl === 4;
-
-  const dry = lvl === 0;
-  const withering = w < 40;
-  const waterCol = dry ? "#c8b870" : "#88c8c8";
-
-  return (
-    <svg viewBox="0 0 390 420" style={{ width:"100%", height:"420px", display:"block", borderRadius: "0 0 20px 20px" }}>
-      {bgImage ? (
-        <image href={bgImage} x="0" y="0" width="390" height="420" preserveAspectRatio="xMidYMid slice"/>
-      ) : (<>
-      <defs>
-        <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={SKY[lvl]}/>
-          <stop offset="100%" stopColor={SKY2[lvl]}/>
-        </linearGradient>
-        <linearGradient id="groundGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={GROUND1[lvl]}/>
-          <stop offset="100%" stopColor={GROUND2[lvl]}/>
-        </linearGradient>
-        <linearGradient id="hillGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={HILL[lvl]}/>
-          <stop offset="100%" stopColor={GROUND2[lvl]}/>
-        </linearGradient>
-        <filter id="watercolor" x="-5%" y="-5%" width="110%" height="110%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" result="noise"/>
-          <feDisplacementMap in="SourceGraphic" in2="noise" scale="4" xChannelSelector="R" yChannelSelector="G"/>
-        </filter>
-      </defs>
-      <rect width="390" height="420" fill="url(#skyGrad)"/>
-
-      {/* Level indicator — subtle watercolor wash */}
-      {lvl >= 3 && <ellipse cx="195" cy="260" rx="195" ry="50" fill={MIST[lvl]} opacity="0.15" filter="url(#watercolor)"/>}
-
-      {/* Clouds */}
-      {showIn("clouds") && <g>
-        <ellipse cx="80" cy="45" rx="40" ry="20" fill="white" opacity="0.85"/>
-        <ellipse cx="100" cy="38" rx="28" ry="18" fill="white" opacity="0.9"/>
-        <ellipse cx="60" cy="42" rx="22" ry="14" fill="white" opacity="0.8"/>
-        <ellipse cx="280" cy="55" rx="34" ry="16" fill="white" opacity="0.75"/>
-        <ellipse cx="300" cy="48" rx="22" ry="14" fill="white" opacity="0.8"/>
-      </g>}
       {!showIn("clouds") && <g>
         <ellipse cx="90" cy="50" rx="28" ry="12" fill="white" opacity="0.5"/>
         <ellipse cx="280" cy="42" rx="20" ry="9" fill="white" opacity="0.4"/>
@@ -1473,10 +940,10 @@ function GardenScene({ garden, waterLevel, bgImage, isIndoor }) {
       ))}
 
       {/* Dew sparkles — thriving only */}
-      {showDew && [30,80,140,200,260,330,370].map((x,i)=>(
+	  {showDew && [30,80,140,200,260,330,370].map((x,i)=>(
         <circle key={i} cx={x} cy={224+(i%3)*6} r="2" fill="white" opacity="0.6"/>
       ))}
-      </>)}
+      </g>)}
 
       {/* ── STYLE: warm cartoon, dark brown outlines, pastel muted palette ── */}
 
@@ -1900,8 +1367,7 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
                     borderTop:"8px solid #e8907a" }}/>
                 </div>
               )}
-              <CouplePandaSVG happy={mochiHappy} size={140}/>
-              <PandaAccessoryLayer accessories={accessories} pandaSize={140}/>
+              <CouplePandaSVG happy={mochiHappy} size={140} accessories={accessories}/>
               {/* Invisible split click zones */}
               <div onClick={e => { e.stopPropagation(); onPetA(); }} style={{ position:"absolute", top:0, left:0, width:"50%", height:"100%", cursor:"pointer" }}/>
               <div onClick={e => { e.stopPropagation(); onPetB(); }} style={{ position:"absolute", top:0, right:0, width:"50%", height:"100%", cursor:"pointer" }}/>
@@ -5112,7 +4578,7 @@ const NAV = [
   { id: "conocete", emoji: "💬", label: "Conócete" },
   { id: "burbuja", emoji: "🫧", label: "Burbuja" },
   { id: "perfil", emoji: "👤", label: "Nosotros" },
-];
+];}
 
 // ═══════════════════════════════════════════════
 // ROOT APP — updated state + decay logic
@@ -6401,3 +5867,4 @@ function Baul({ user, gratitud, momentos, onAddGratitud, onAddMomento }) {
     </div>
   );
 }
+

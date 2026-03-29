@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/mochi_app/',
+  base: '/',
   build: {
     outDir: 'dist',
     sourcemap: false,
