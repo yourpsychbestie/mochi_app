@@ -1,4 +1,6 @@
 // Calcula datos de racha diaria: streak actual, más largo, milestones, progreso, etc.
+// Variable global para evitar ReferenceError en autenticación local
+let _pendingLocalAuth = false;
 function computeDailyStreakData(streakInteractions, longestStreak = 0) {
   // streakInteractions: array de fechas tipo 'YYYY-MM-DD' o array de objetos con .date
   const days = Array.isArray(streakInteractions)
