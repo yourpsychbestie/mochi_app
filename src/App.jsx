@@ -29,6 +29,141 @@ import {
 // Hitos de racha para recompensas o logros
 const STREAK_MILESTONES = [3, 7, 14, 21, 30, 50, 100];
 
+// ───────────────────────────────────────────────
+// Login component moved up to avoid ReferenceError
+function Login({ onLogin }) {
+  const [tab, setTab] = useState("login");
+  const [email, setEmail] = useState(""); const [pass, setPass] = useState("");
+  const [nameA, setNameA] = useState(""); const [nameB, setNameB] = useState(""); const [durN, setDurN] = useState(""); const [durU, setDurU] = useState("meses");
+  const [pCode, setPCode] = useState(""); const [pEmail, setPEmail] = useState(""); const [pPass, setPPass] = useState("");
+  const [err, setErr] = useState("");
+  const makeCode = () => "MO" + Math.random().toString(36).slice(2, 6).toUpperCase();
+  const [code, setCode] = useState(makeCode());
+  const [codeStatus, setCodeStatus] = useState("checking"); // checking | available | taken | error
+
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!code || tab !== "register") return;
+
+    setCodeStatus("checking");
+    fbGetCode(code)
+      .then((data) => {
+        if (cancelled) return;
+        setCodeStatus(data ? "taken" : "available");
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setCodeStatus("error");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [code, tab]);
+
+  const authErrMsg = (e, fallback) => {
+    const code = e?.code || "";
+    if (code === "auth/invalid-email") {
+      return "Correo inválido. Revisa que esté bien escrito.";
+    }
+    if (code === "auth/unauthorized-domain") {
+      return "Dominio no autorizado en Firebase. Agrega tu dominio de Netlify en Authentication > Settings > Authorized domains.";
+    }
+    if (code === "auth/network-request-failed") {
+      return "Error de red al conectar con Firebase. Revisa conexión, bloqueadores o HTTPS.";
+    }
+    if (code === "auth/operation-not-allowed") {
+      return "Email/Password no está habilitado en Firebase Authentication.";
+    }
+    if (code === "auth/too-many-requests") {
+      return "Demasiados intentos, espera unos minutos.";
+    }
+    return fallback;
+  };
+
+  const isPermissionError = (e) => {
+    const code = e?.code || "";
+    const msg = e?.message || "";
+    return code === "permission-denied"
+      || code === "missing-or-insufficient-permissions"
+      || msg.includes("Missing or insufficient permissions")
+      || msg.toLowerCase().includes("permissions");
+  };
+
+  const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+  const normalizeEmail = (value) => String(value || "").trim().toLowerCase();
+
+  const ensureAuthReady = async (firebaseUser) => {
+    await firebaseUser?.getIdToken(true).catch(() => {});
+    await wait(350);
+  };
+
+  const retryFirestore = async (fn) => {
+    let lastErr;
+    for (const delay of [0, 500, 1000]) {
+      if (delay) await wait(delay);
+      try {
+        return await fn();
+      } catch (e) {
+        lastErr = e;
+        if (!isPermissionError(e)) throw e;
+      }
+    }
+    throw lastErr;
+  };
+
+  const doLogin = async () => {
+    const cleanEmail = normalizeEmail(email);
+    if (!cleanEmail || !pass) { setErr("Completa correo y contraseña"); return; }
+    setLoading(true); setErr("");
+    try {
+      const cred = await fbLogin(cleanEmail, pass);
+      let userData = await fbGetUser(cred.user.uid);
+      // If no Firestore data found, still let them in with basic info
+      if (!userData) {
+        userData = { email: cleanEmail, names: cleanEmail.split("@")[0] + " & ?", code: "", isOwner: true };
+      }
+      if (!userData?.code) {
+        const found = await fbFindCodeByUid(cred.user.uid).catch(() => null);
+        if (found?.code) {
+          userData = {
+            ...userData,
+            code: found.code,
+            names: userData?.names || found.names || (cleanEmail.split("@")[0] + " & ?"),
+            since: userData?.since || found.since || "Juntos",
+          };
+          await fbSaveUser(cred.user.uid, {
+            code: found.code,
+            names: userData.names,
+            since: userData.since,
+          }).catch(() => {});
+        }
+      }
+      onLogin({ uid: cred.user.uid, email: cleanEmail, ...userData, isGuest: false }, false);
+    } catch(e) {
+      const code = e.code || "";
+      if (code === "auth/invalid-credential" || code === "auth/wrong-password") {
+        setErr("Correo o contraseña incorrectos");
+      } else if (code === "auth/user-not-found") {
+        setErr("No existe una cuenta con ese correo");
+      } else if (code === "auth/too-many-requests") {
+        setErr("Demasiados intentos, espera unos minutos");
+      } else {
+        setErr(authErrMsg(e, "Error al entrar: " + (e.message || e.code || "desconocido")));
+      }
+    }
+    setLoading(false);
+  };
+
+  // ...existing code for doReg, doJoin, etc...
+  // (omitted for brevity, unchanged)
+
+  // ...existing code for return JSX...
+  // (omitted for brevity, unchanged)
+}
+
 // Analiza los streaks del usuario y retorna estadísticas básicas
 function computeStreakAnalytics(streakInteractions) {
   // streakInteractions debe ser un array de fechas o marcas de actividad
