@@ -8,6 +8,44 @@ import {
 	fbSaveProgress, fbGetProgress,
 } from "./firebase";
 
+// Hitos de racha para recompensas o logros
+const STREAK_MILESTONES = [3, 7, 14, 21, 30, 50, 100];
+
+// Analiza los streaks del usuario y retorna estadísticas básicas
+function computeStreakAnalytics(streakInteractions) {
+  // streakInteractions debe ser un array de fechas o marcas de actividad
+  if (!Array.isArray(streakInteractions) || streakInteractions.length === 0) {
+    return {
+      total: 0,
+      currentStreak: 0,
+      longestStreak: 0,
+      daysActive: [],
+    };
+  }
+  // Suponiendo que streakInteractions son strings de fecha tipo 'YYYY-MM-DD'
+  const days = [...new Set(streakInteractions)].sort();
+  let currentStreak = 1, longestStreak = 1, prev = null;
+  for (let i = 0; i < days.length; i++) {
+    if (i > 0) {
+      const prevDate = new Date(days[i - 1]);
+      const currDate = new Date(days[i]);
+      const diff = (currDate - prevDate) / (1000 * 60 * 60 * 24);
+      if (diff === 1) {
+        currentStreak++;
+        if (currentStreak > longestStreak) longestStreak = currentStreak;
+      } else {
+        currentStreak = 1;
+      }
+    }
+  }
+  return {
+    total: days.length,
+    currentStreak,
+    longestStreak,
+    daysActive: days,
+  };
+}
+
 // ═══════════════════════════════════════════════
 // GARDEN ITEMS — multiple quantities, koi/lotus aesthetic
 // ═══════════════════════════════════════════════
