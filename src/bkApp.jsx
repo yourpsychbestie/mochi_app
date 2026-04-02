@@ -2165,7 +2165,7 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
       fbSendNotif(user.code, {
         type: "ejercicio",
         msg: `${myName} inició "${ex.title}" — te toca continuar 🌿`,
-        forUid: "partner",
+        forUid: user?.isOwner !== false ? "partner" : "owner",
         fromUid: user.uid,
       }).catch(() => {});
     } catch(e) {
@@ -2197,7 +2197,7 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
         fbSendNotif(user.code, {
           type: "ejercicio",
           msg: `${myName} respondió en "${ex.title}" — sigue tú ✍️`,
-          forUid: "partner",
+          forUid: user?.isOwner !== false ? "partner" : "owner",
           fromUid: user.uid,
         }).catch(() => {});
       }
@@ -2654,6 +2654,7 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
   const partnerName = myRole === "owner" ? nameB : nameA;
   const [open, setOpen] = useState({});
   const [tmp, setTmp] = useState({});
+  const [editingApproved, setEditingApproved] = useState({});
 
   const get = (id, f) => tmp[id]?.[f] ?? burbuja[id]?.[f] ?? "";
   const set_ = (id, f, v) => setTmp(p => ({ ...p, [id]: { ...p[id], [f]: v } }));
@@ -2756,6 +2757,46 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
                   <div style={{ background: C.white, borderRadius: 10, padding: 10, marginTop: 8, border: `1.5px solid ${C.olive}` }}>
                     <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.olive, marginBottom: 3, letterSpacing: "0.4px" }}>✓ ACUERDO APROBADO</div>
                     <div style={{ fontSize: "0.85rem", fontWeight: 700, color: C.ink, lineHeight:1.6 }}>{entry.approvedText || entry.proposalText}</div>
+                    {!editingApproved[item.id] ? (
+                      <div style={{ display:"flex", justifyContent:"flex-end", marginTop:8 }}>
+                        <Btn
+                          onClick={() => {
+                            set_(item.id, "proposalText", entry.approvedText || entry.proposalText || "");
+                            setEditingApproved(p => ({ ...p, [item.id]: true }));
+                          }}
+                          variant="sand"
+                          style={{ padding:"8px 12px", fontSize:"0.8rem" }}
+                        >
+                          Editar acuerdo
+                        </Btn>
+                      </div>
+                    ) : (
+                      <div style={{ marginTop:8 }}>
+                        <TA value={proposalText} onChange={v => set_(item.id, "proposalText", v)} placeholder="Escribe la nueva versión del acuerdo..." rows={2} />
+                        <div style={{ display:"flex", gap:8, justifyContent:"flex-end", marginTop:6 }}>
+                          <Btn
+                            onClick={() => {
+                              setEditingApproved(p => ({ ...p, [item.id]: false }));
+                              set_(item.id, "proposalText", entry.approvedText || entry.proposalText || "");
+                            }}
+                            variant="ghost"
+                            style={{ padding:"8px 12px", fontSize:"0.8rem" }}
+                          >
+                            Cancelar
+                          </Btn>
+                          <Btn
+                            onClick={() => {
+                              onPropose(item.id, proposalText, true);
+                              setEditingApproved(p => ({ ...p, [item.id]: false }));
+                            }}
+                            variant="olive"
+                            style={{ padding:"8px 12px", fontSize:"0.8rem" }}
+                          >
+                            Enviar edición
+                          </Btn>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>;
@@ -4403,7 +4444,7 @@ export default function App() {
         fbSendNotif(user.code, {
           type: "racha",
           msg: `${myName} alcanzo un nuevo hito de racha 🐼`,
-          forUid: "partner",
+          forUid: user?.isOwner !== false ? "partner" : "owner",
           fromUid: user.uid,
         }).catch(() => {});
       }
@@ -4572,7 +4613,7 @@ export default function App() {
       setBamboo(nb); trigHappy();
       toast("Lección completada ✓ +10 bambú 🌿");
       trackDailyInteraction("exercise");
-      fbSendNotif(user.code, { type:"leccion", msg:`${myName} leyó una lección — ¡léela tú también! 📖`, forUid:"partner", fromUid: user.uid }).catch(()=>{});
+      fbSendNotif(user.code, { type:"leccion", msg:`${myName} leyó una lección — ¡léela tú también! 📖`, forUid:user?.isOwner !== false ? "partner" : "owner", fromUid: user.uid }).catch(()=>{});
     } else {
       const nl = { ...lessonsDone, [lessonId]: { ...(lessonsDone[lessonId] || {}), [myKey]: true } };
       setLessonsDone(nl);
@@ -4599,7 +4640,7 @@ export default function App() {
       const nb = await fbIncrementBamboo(user.code, total).catch(() => bamboo + total);
       setBamboo(nb);
       trackDailyInteraction("exercise");
-      fbSendNotif(user.code, { type:"ejercicio", msg:`${myName} completó un ejercicio — ¡complétalo tú también! 🌿`, forUid:"partner", fromUid: user.uid }).catch(()=>{});
+      fbSendNotif(user.code, { type:"ejercicio", msg:`${myName} completó un ejercicio — ¡complétalo tú también! 🌿`, forUid:user?.isOwner !== false ? "partner" : "owner", fromUid: user.uid }).catch(()=>{});
     } else {
       setBamboo(b => b + total);
       trackDailyInteraction("exercise");
@@ -4632,6 +4673,10 @@ export default function App() {
     if (user?.code && !user?.isGuest) {
       // Fire and forget — listener will sync
       fbSendMessage(user.code, msg).catch(e => console.warn("Send failed:", e));
+      if (user?.uid) {
+        const me = getMyName(user, "Tu pareja");
+        fbSendNotif(user.code, { type:"mensaje", msg:`${me} te envió un mensajito 💌`, forUid:user?.isOwner !== false ? "partner" : "owner", fromUid: user.uid }).catch(()=>{});
+      }
     } else {
       const key = user?.code ? "mochi_msgs_" + user.code : "mochi_msgs_guest";
       const prev = ls.get(key) || [];
@@ -4665,7 +4710,7 @@ export default function App() {
         trigHappy();
         toast("¡Guardado! Esperando que tu pareja responda para ganar bambú 🌿");
         trackDailyInteraction("conoce");
-        fbSendNotif(user.code, { type:"conoce", msg:`${myName} respondió una pregunta — ¡tu turno! 🌿`, forUid:"partner", fromUid: user.uid }).catch(()=>{});
+        fbSendNotif(user.code, { type:"conoce", msg:`${myName} respondió una pregunta — ¡tu turno! 🌿`, forUid:user?.isOwner !== false ? "partner" : "owner", fromUid: user.uid }).catch(()=>{});
       }
     } else {
       // Local mode
@@ -4688,6 +4733,10 @@ export default function App() {
     toast("Tu parte quedó guardada ✓");
     if (user?.code && !user?.isGuest) {
       await fbSaveBurbuja(user.code, id, next).catch(() => {});
+      if (user?.uid) {
+        const me = getMyName(user, "Tu pareja");
+        fbSendNotif(user.code, { type:"acuerdo", msg:`${me} actualizó su parte de un acuerdo 🫧`, forUid:user?.isOwner !== false ? "partner" : "owner", fromUid: user.uid }).catch(()=>{});
+      }
     }
     save(null, { bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja:map, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
   };
@@ -4724,7 +4773,7 @@ export default function App() {
         fbSendNotif(user.code, {
           type: "acuerdo",
           msg: isCounter ? `${me} envió una contraoferta de acuerdo ↔` : `${me} te envió una propuesta de acuerdo ✉️`,
-          forUid: "partner",
+          forUid: user?.isOwner !== false ? "partner" : "owner",
           fromUid: user.uid
         }).catch(() => {});
       }
@@ -4775,7 +4824,7 @@ export default function App() {
         fbSendNotif(user.code, {
           type: "acuerdo",
           msg: `${me} aprobó su acuerdo ✅`,
-          forUid: "partner",
+          forUid: user?.isOwner !== false ? "partner" : "owner",
           fromUid: user.uid
         }).catch(() => {});
       }
@@ -4813,7 +4862,7 @@ export default function App() {
       setBamboo(nb);
       trackDailyInteraction("gratitude");
       // Notify partner
-      if (user?.uid) fbSendNotif(user.code, { type:"gratitud", msg:`${myName} escribió algo de gratitud 💛`, forUid:"partner", fromUid: user.uid }).catch(()=>{});
+      if (user?.uid) fbSendNotif(user.code, { type:"gratitud", msg:`${myName} escribió algo de gratitud 💛`, forUid:user?.isOwner !== false ? "partner" : "owner", fromUid: user.uid }).catch(()=>{});
     } else {
       const ng = [{ ...enriched, id: Date.now() }, ...gratitud];
       setGratitud(ng);
@@ -4832,7 +4881,7 @@ export default function App() {
       const nb = await fbIncrementBamboo(user.code, 5).catch(() => bamboo + 5);
       setBamboo(nb);
       trackDailyInteraction("moment");
-      if (user?.uid) fbSendNotif(user.code, { type:"momento", msg:`${myName} guardó un momento especial ✨`, forUid:"partner", fromUid: user.uid }).catch(()=>{});
+      if (user?.uid) fbSendNotif(user.code, { type:"momento", msg:`${myName} guardó un momento especial ✨`, forUid:user?.isOwner !== false ? "partner" : "owner", fromUid: user.uid }).catch(()=>{});
     } else {
       const nm = [{ ...enriched, id: Date.now() }, ...momentos];
       setMomentos(nm);
@@ -4927,14 +4976,23 @@ export default function App() {
       <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:480, background:C.white, borderTop:`1.5px solid ${C.border}`, display:"flex", zIndex:1000, boxShadow:`0 -3px 0 ${C.line}` }}>
         {NAV.map(n => {
           const active = tab === n.id;
-          const notifTypes = { "ejerc":["ejercicio","leccion"], "conocete":["conoce"], "burbuja":["gratitud","momento","acuerdo"], "perfil":["racha"] };
-          const nBadge = notifTypes[n.id] ? notifs.filter(x=>!x.read && x.forUid===user?.uid && notifTypes[n.id].includes(x.type)).length : 0;
+          const myNotifRole = user?.isOwner !== false ? "owner" : "partner";
+          const isNotifForMe = (x) => {
+            if (!x || x.read) return false;
+            if (x.fromUid && user?.uid && x.fromUid === user.uid) return false;
+            return x.forUid === user?.uid || x.forUid === myNotifRole || (x.forUid === "partner" && myNotifRole === "partner");
+          };
+          const notifTypes = { "ejerc":["ejercicio","leccion"], "conocete":["conoce"], "burbuja":["gratitud","momento","acuerdo"], "perfil":["racha","mensaje"] };
+          const nBadge = notifTypes[n.id] ? notifs.filter(x => isNotifForMe(x) && notifTypes[n.id].includes(x.type)).length : 0;
           const badge = nBadge > 0 ? nBadge : null;
           return (
             <div key={n.id} onClick={()=>{
               setTab(n.id);
               // Mark related notifs as read
-              notifs.filter(x=>!x.read && x.forUid===user?.uid).forEach(x=>fbMarkNotifRead(x.id).catch(()=>{}));
+              const tabTypes = notifTypes[n.id] || [];
+              notifs
+                .filter(x => isNotifForMe(x) && tabTypes.includes(x.type))
+                .forEach(x => fbMarkNotifRead(x.id).catch(()=>{}));
             }} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", padding:"8px 0 7px", cursor:"pointer" }}>
               <div style={{ position:"relative" }}>
                 <div style={{ fontSize:active?"1.3rem":"1.1rem", transition:"all 0.15s", filter:active?"none":"opacity(0.45)", transform:active?"scale(1.15) translateY(-2px)":"none" }}>{n.emoji}</div>
