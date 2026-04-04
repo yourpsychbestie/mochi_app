@@ -2060,20 +2060,20 @@ function Login({ onLogin }) {
           ))}
         </div>
         {tab === "register" && (
-          <div style={{ background: "#f0f7e8", borderRadius: 12, padding: "9px 14px", marginBottom: 10, border: "1px solid #c8ddb0", textAlign: "center" }}>
-            <div style={{ fontSize: "0.78rem", color: "#4a6a30", lineHeight: 1.6 }}>
+          <div style={{ background: C.cream, borderRadius: 12, padding: "9px 14px", marginBottom: 10, border: `1px solid ${C.border}`, textAlign: "center" }}>
+            <div style={{ fontSize: "0.78rem", color: C.inkM, lineHeight: 1.6 }}>
               🌱 <strong>¿Eres el primero?</strong> Crea la cuenta y le mandas tu código a tu pareja para que se una.
             </div>
           </div>
         )}
         {tab === "pair" && (
-          <div style={{ background: "#f0f0ff", borderRadius: 12, padding: "9px 14px", marginBottom: 10, border: "1px solid #b8b8e0", textAlign: "center" }}>
-            <div style={{ fontSize: "0.78rem", color: "#404090", lineHeight: 1.6 }}>
+          <div style={{ background: C.cream, borderRadius: 12, padding: "9px 14px", marginBottom: 10, border: `1px solid ${C.border}`, textAlign: "center" }}>
+            <div style={{ fontSize: "0.78rem", color: C.inkM, lineHeight: 1.6 }}>
               🐾 <strong>¿Tu pareja ya tiene cuenta?</strong> Pídele su código y úsalo aquí para conectarse.
             </div>
           </div>
         )}
-        {err && <div style={{ background: "#fce4e4", color: "#c04040", fontSize: "0.82rem", fontWeight: 700, padding: "9px 13px", borderRadius: 10, marginBottom: 12, textAlign: "center" }}>{err}</div>}
+        {err && <div style={{ background: "#ffeef8", color: "#9b356f", fontSize: "0.82rem", fontWeight: 700, padding: "9px 13px", borderRadius: 10, marginBottom: 12, textAlign: "center", border: "1px solid rgba(155,53,111,0.2)" }}>{err}</div>}
         {tab === "login" && <>
           <label style={LBL}>Correo</label><Inp value={email} onChange={setEmail} placeholder="tu@correo.com" type="email" style={{ marginBottom: 10 }} />
           <label style={LBL}>Contraseña</label><Inp value={pass} onChange={setPass} placeholder="••••••••" type="password" style={{ marginBottom: 16 }} />
@@ -3460,12 +3460,12 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
 const STYLES = `
 @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: #f8f2e4; }
+body { background: #f3ecff; }
 @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
 @keyframes floatHappy { 0%,100%{transform:translateY(0) rotate(-1.5deg)} 50%{transform:translateY(-18px) rotate(1.5deg)} }
-textarea:focus, input:focus { border-color: #4a6e30 !important; box-shadow: 0 0 0 3px rgba(74,110,48,0.15) !important; outline: none !important; }
+textarea:focus, input:focus { border-color: #6f56b8 !important; box-shadow: 0 0 0 3px rgba(111,86,184,0.18) !important; outline: none !important; }
 ::-webkit-scrollbar { width:4px; height:4px; }
-::-webkit-scrollbar-thumb { background:#ede4cc; border-radius:50px; }
+::-webkit-scrollbar-thumb { background:#dfd0ff; border-radius:50px; }
 select { appearance: none; }
 @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
 @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
