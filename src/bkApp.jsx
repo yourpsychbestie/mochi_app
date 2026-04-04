@@ -3130,7 +3130,7 @@ function ConsejoDelDiaSection({ user }) {
 }
 
 // PROFILE — Enhanced with more info fields
-function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, conoce, lessonsDone, coupleInfo, streakInfo, streakAnalytics, onUpdateStreakSettings, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento, onSendMessage }) {
+function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, conoce, lessonsDone, coupleInfo, streakInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento, onSendMessage }) {
   const [editMode, setEditMode] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [showLoveModal, setShowLoveModal] = useState(false);
@@ -3272,8 +3272,6 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
       </div>
 
       <ConsejoDelDiaSection user={user} />
-
-      <StreakSection streakInfo={streakInfo} streakAnalytics={streakAnalytics} onUpdateSettings={onUpdateStreakSettings} user={user} />
 
             {/* ── BAÚL DE GRATITUD ── */}
       <div style={{ margin:"0 14px 12px" }}>
@@ -4899,7 +4897,7 @@ export default function App() {
         {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson}/>}
         {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user}/>}
         {tab==="burbuja" && <Burbuja burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} user={user}/>}
-        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} garden={garden} accessories={accessories} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} lessonsDone={lessonsDone} coupleInfo={coupleInfo} streakInfo={streakData} streakAnalytics={streakAnalytics} onUpdateStreakSettings={updateStreakSettings} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} onSendMessage={sendMsg}/>} 
+        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} garden={garden} accessories={accessories} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} lessonsDone={lessonsDone} coupleInfo={coupleInfo} streakInfo={streakData} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} onSendMessage={sendMsg}/>} 
       </div>
       <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:480, background:C.white, borderTop:`1.5px solid ${C.border}`, display:"flex", zIndex:1000, boxShadow:`0 -3px 0 ${C.line}` }}>
         {NAV.map(n => {

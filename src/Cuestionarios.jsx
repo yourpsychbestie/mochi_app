@@ -1,11 +1,11 @@
 import React, { useMemo, useRef, useState } from "react";
 
 const SCALE_OPTIONS = [
-  { id: "1", label: "Casi nunca", color: "#fbe4cf" },
-  { id: "2", label: "A veces", color: "#f5edda" },
-  { id: "3", label: "Frecuente", color: "#e4f0e0" },
-  { id: "4", label: "Casi siempre", color: "#d8f0ea" },
-  { id: "5", label: "Siempre", color: "#cfe9ff" },
+  { id: "1", label: "Casi nunca", color: "#f3ecff" },
+  { id: "2", label: "A veces", color: "#eee2ff" },
+  { id: "3", label: "Frecuente", color: "#e6d7ff" },
+  { id: "4", label: "Casi siempre", color: "#dccbff" },
+  { id: "5", label: "Siempre", color: "#d2bfff" },
 ];
 
 const QUIZZES = [
@@ -206,6 +206,12 @@ export function getQuizAdviceFromConoce(conoce, role) {
 
 export default function Cuestionarios({ conoce, onSave, onQuizComplete, user }) {
   const myRole = user?.isOwner !== false ? "owner" : "partner";
+  const partnerRole = myRole === "owner" ? "partner" : "owner";
+  const nameParts = String(user?.names || "").split("&").map((s) => s.trim()).filter(Boolean);
+  const ownerName = nameParts[0] || "Panda A";
+  const partnerName = nameParts[1] || nameParts[0] || "Panda B";
+  const myName = myRole === "owner" ? ownerName : partnerName;
+  const otherName = myRole === "owner" ? partnerName : ownerName;
   const [openQuiz, setOpenQuiz] = useState(null);
   const [quizNoticeById, setQuizNoticeById] = useState({});
   const rewardedByQuizRef = useRef({});
@@ -224,6 +230,7 @@ export default function Cuestionarios({ conoce, onSave, onQuizComplete, user }) 
   }, [conoce, myRole]);
 
   const myAdvice = useMemo(() => getQuizAdviceFromConoce(conoce || {}, myRole), [conoce, myRole]);
+  const partnerAdvice = useMemo(() => getQuizAdviceFromConoce(conoce || {}, partnerRole), [conoce, partnerRole]);
 
   const saveResponse = (quiz, idx, value, alreadyAnswered, answeredBefore) => {
     const key = `${quiz.catKey}-${idx}`;
@@ -240,11 +247,11 @@ export default function Cuestionarios({ conoce, onSave, onQuizComplete, user }) 
   };
 
   return (
-    <div style={{ background: "#ffffff", borderRadius: 18, padding: 14, border: "1.5px solid rgba(30,43,30,0.14)", marginTop: 12 }}>
-      <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: "#1e2b1e", marginBottom: 4 }}>
+    <div style={{ background: "#ffffff", borderRadius: 18, padding: 14, border: "1.5px solid rgba(63,47,99,0.16)", marginTop: 12 }}>
+      <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: "#3f2f63", marginBottom: 4 }}>
         3 test para conocerse mejor
       </div>
-      <div style={{ fontSize: "0.78rem", color: "#5a6a4a", marginBottom: 10, lineHeight: 1.55 }}>
+      <div style={{ fontSize: "0.78rem", color: "#5f4d7f", marginBottom: 10, lineHeight: 1.55 }}>
         Respondan individualmente y luego comparen resultados. Mochi les sugiere 5 consejos personalizados cuando terminen los tres.
       </div>
 
@@ -252,14 +259,14 @@ export default function Cuestionarios({ conoce, onSave, onQuizComplete, user }) 
         const prog = progressByQuiz[quiz.id] || { answered: 0, total: quiz.questions.length };
         const isOpen = openQuiz === quiz.id;
         return (
-          <div key={quiz.id} style={{ background: "#f8f2e4", borderRadius: 14, padding: 12, border: "1px solid rgba(30,43,30,0.1)", marginBottom: 8 }}>
+          <div key={quiz.id} style={{ background: "#f3ecff", borderRadius: 14, padding: 12, border: "1px solid rgba(63,47,99,0.12)", marginBottom: 8 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
               <div>
-                <div style={{ fontWeight: 800, color: "#1e2b1e", fontSize: "0.88rem" }}>
+                <div style={{ fontWeight: 800, color: "#3f2f63", fontSize: "0.88rem" }}>
                   {quiz.emoji} {quiz.title}
                 </div>
-                <div style={{ color: "#5a6a4a", fontSize: "0.72rem" }}>{quiz.subtitle}</div>
-                <div style={{ marginTop: 4, fontSize: "0.68rem", fontWeight: 800, color: "#4a6e30" }}>
+                <div style={{ color: "#5f4d7f", fontSize: "0.72rem" }}>{quiz.subtitle}</div>
+                <div style={{ marginTop: 4, fontSize: "0.68rem", fontWeight: 800, color: "#6f56b8" }}>
                   {prog.answered} / {prog.total}
                 </div>
               </div>
@@ -267,8 +274,8 @@ export default function Cuestionarios({ conoce, onSave, onQuizComplete, user }) 
                 onClick={() => setOpenQuiz(isOpen ? null : quiz.id)}
                 style={{
                   border: "none",
-                  background: "#4a6e30",
-                  color: "#fdf8ef",
+                  background: "#6f56b8",
+                  color: "#f8f3ff",
                   borderRadius: 10,
                   padding: "8px 10px",
                   fontSize: "0.74rem",
@@ -288,8 +295,8 @@ export default function Cuestionarios({ conoce, onSave, onQuizComplete, user }) 
                   const alreadyAnswered = !!selected;
                   const answeredBefore = prog.answered;
                   return (
-                    <div key={idx} style={{ background: "#fff", borderRadius: 12, padding: 10, marginBottom: 8, border: "1px solid rgba(30,43,30,0.1)" }}>
-                      <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "#1e2b1e", marginBottom: 8 }}>
+                    <div key={idx} style={{ background: "#fff", borderRadius: 12, padding: 10, marginBottom: 8, border: "1px solid rgba(63,47,99,0.12)" }}>
+                      <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "#3f2f63", marginBottom: 8 }}>
                         {idx + 1}. {q.text}
                       </div>
 
@@ -300,13 +307,13 @@ export default function Cuestionarios({ conoce, onSave, onQuizComplete, user }) 
                               key={opt.id}
                               onClick={() => saveResponse(quiz, idx, opt.id, alreadyAnswered, answeredBefore)}
                               style={{
-                                border: selected === opt.id ? "2px solid #4a6e30" : "1px solid rgba(30,43,30,0.15)",
+                                border: selected === opt.id ? "2px solid #6f56b8" : "1px solid rgba(63,47,99,0.15)",
                                 background: opt.color,
                                 borderRadius: 9,
                                 padding: "7px 8px",
                                 fontSize: "0.72rem",
                                 fontWeight: 800,
-                                color: "#1e2b1e",
+                                color: "#32264a",
                                 cursor: "pointer",
                               }}
                             >
@@ -323,14 +330,14 @@ export default function Cuestionarios({ conoce, onSave, onQuizComplete, user }) 
                               key={opt.id}
                               onClick={() => saveResponse(quiz, idx, opt.id, alreadyAnswered, answeredBefore)}
                               style={{
-                                border: selected === opt.id ? "2px solid #4a6e30" : "1px solid rgba(30,43,30,0.15)",
-                                background: selected === opt.id ? "#e4f0e0" : "#fff",
+                                border: selected === opt.id ? "2px solid #6f56b8" : "1px solid rgba(63,47,99,0.15)",
+                                background: selected === opt.id ? "#efe6ff" : "#fff",
                                 borderRadius: 9,
                                 padding: "8px 10px",
                                 textAlign: "left",
                                 fontSize: "0.76rem",
                                 fontWeight: 700,
-                                color: "#1e2b1e",
+                                color: "#32264a",
                                 cursor: "pointer",
                               }}
                             >
@@ -343,12 +350,12 @@ export default function Cuestionarios({ conoce, onSave, onQuizComplete, user }) 
                   );
                 })}
                 {prog.answered === prog.total && (
-                  <div style={{ background: "#e4f0e0", border: "1px solid rgba(74,110,48,0.3)", color: "#2f4f22", borderRadius: 10, padding: "8px 10px", fontSize: "0.74rem", fontWeight: 800, marginTop: 8 }}>
+                  <div style={{ background: "#efe6ff", border: "1px solid rgba(111,86,184,0.28)", color: "#4b3b75", borderRadius: 10, padding: "8px 10px", fontSize: "0.74rem", fontWeight: 800, marginTop: 8 }}>
                     ✅ Ya completaste este cuestionario.
                   </div>
                 )}
                 {quizNoticeById[quiz.id] && (
-                  <div style={{ background: "#eef6ea", border: "1px solid rgba(74,110,48,0.25)", color: "#2f4f22", borderRadius: 10, padding: "8px 10px", fontSize: "0.74rem", fontWeight: 800, marginTop: 8 }}>
+                  <div style={{ background: "#f3ecff", border: "1px solid rgba(111,86,184,0.22)", color: "#4b3b75", borderRadius: 10, padding: "8px 10px", fontSize: "0.74rem", fontWeight: 800, marginTop: 8 }}>
                     {quizNoticeById[quiz.id]}
                   </div>
                 )}
@@ -358,8 +365,37 @@ export default function Cuestionarios({ conoce, onSave, onQuizComplete, user }) 
         );
       })}
 
-      <div style={{ fontSize: "0.74rem", color: "#5a6a4a", marginTop: 4 }}>
-        Los consejos de "Mochi recomienda" ahora aparecen arriba en Resultado de tests.
+      <div style={{ background: "#f3ecff", borderRadius: 14, padding: 12, border: "1px solid rgba(63,47,99,0.12)", marginTop: 10 }}>
+        <div style={{ fontWeight: 800, color: "#3f2f63", fontSize: "0.9rem", marginBottom: 8 }}>
+          📊 Resultados de tests
+        </div>
+
+        {[{ name: myName, advice: myAdvice }, { name: otherName, advice: partnerAdvice }].map((p) => (
+          <div key={p.name} style={{ background: "#fff", borderRadius: 11, padding: 10, border: "1px solid rgba(63,47,99,0.12)", marginBottom: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
+              <div style={{ fontSize: "0.8rem", fontWeight: 800, color: "#3f2f63" }}>🐼 {p.name}</div>
+              <div style={{ fontSize: "0.7rem", fontWeight: 800, color: p.advice.complete ? "#6f56b8" : "#5f4d7f" }}>
+                {p.advice.progress.answered}/{p.advice.progress.total}
+              </div>
+            </div>
+
+            {!p.advice.complete ? (
+              <div style={{ fontSize: "0.74rem", color: "#5f4d7f", lineHeight: 1.6 }}>
+                Aún faltan respuestas para generar los consejos de Mochi.
+              </div>
+            ) : (
+              <ol style={{ margin: 0, paddingLeft: 18, color: "#32264a" }}>
+                {p.advice.tips.map((tip, idx) => (
+                  <li key={idx} style={{ fontSize: "0.75rem", fontWeight: 700, lineHeight: 1.55, marginBottom: 3 }}>{tip}</li>
+                ))}
+              </ol>
+            )}
+          </div>
+        ))}
+
+        <div style={{ fontSize: "0.72rem", color: "#5f4d7f" }}>
+          Aquí se muestran los resultados y consejos de los tests, dentro de Conócete.
+        </div>
       </div>
     </div>
   );
