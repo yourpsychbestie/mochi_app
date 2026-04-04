@@ -532,16 +532,16 @@ const getDayNumberLocal = (date = new Date()) => {
 };
 
 const CONSEJOS_DIARIOS = [
-  { id: 1, texto: "Consejo terapéutico del panda 🐼: hagan una pregunta curiosa en vez de asumir." },
-  { id: 2, texto: "Nombrar emociones baja la intensidad del conflicto: digan 'me siento...' antes de discutir." },
-  { id: 3, texto: "Una reparación rápida (perdón, abrazo o broma suave) vale oro después de un roce." },
-  { id: 4, texto: "Cinco interacciones positivas por cada negativa fortalecen el vínculo." },
-  { id: 5, texto: "Validar no es estar de acuerdo: es reconocer la experiencia del otro." },
-  { id: 6, texto: "Agradezcan algo pequeño del día. Lo cotidiano también construye amor." },
-  { id: 7, texto: "Escucha activa: repite con tus palabras lo que entendiste antes de responder." },
-  { id: 8, texto: "Antes de corregir, conecta: una frase cálida abre mejor la conversación." },
-  { id: 9, texto: "Hagan micro-pausas cuando suba el tono: respirar 20 segundos ayuda." },
-  { id: 10, texto: "Elijan un ritual diario de conexión de 5 minutos sin pantallas." },
+  { id: 1, texto: "TCC (Aaron Beck): identifiquen el pensamiento automático en discusión (ej. 'no le importo') y sométanlo a evidencia. Reescriban juntos una cognición más equilibrada: 'sí le importo, hoy ambos estamos cansados'. Esta reestructuración cognitiva reduce personalización y catastrofismo." },
+  { id: 2, texto: "DBT (Marsha Linehan): usen la habilidad STOP antes de responder: S = Stop, T = Take a step back, O = Observe, P = Proceed mindfully. Pausen 90 segundos, nombren emoción + intensidad (0-10) y retomen con tono bajo. Esto previene escaladas impulsivas." },
+  { id: 3, texto: "ACT (Steven Hayes): cuando aparezca una historia mental rígida ('siempre hacemos lo mismo'), practiquen defusión verbal: 'estoy teniendo el pensamiento de que...'. Al separarse del pensamiento, recuperan flexibilidad psicológica para elegir conductas valiosas." },
+  { id: 4, texto: "Terapia de esquemas (Jeffrey Young): detecten si se activó un modo vulnerable (abandono, crítica, exigencia). En vez de contraatacar, ofrezcan 'reparentalización limitada': validación + seguridad + límite claro. Ejemplo: 'entiendo que te dolió, y quiero resolverlo contigo'." },
+  { id: 5, texto: "Gottman: apliquen reparación temprana en los primeros 3 minutos del conflicto. Usen una frase de desescalada ('estamos en el mismo equipo') y cambien de acusación a necesidad concreta. La calidad del inicio predice la calidad del cierre." },
+  { id: 6, texto: "ACT orientada a valores: definan hoy un valor relacional central (cuidado, honestidad, lealtad, ternura) y conviértanlo en una micro-acción observable de 5 minutos. En tercera generación, actuar por valores pesa más que 'ganar' la discusión." },
+  { id: 7, texto: "TCC conductual: hagan una 'prueba de realidad' sobre intenciones. Antes de concluir, formulen 2 hipótesis alternativas no hostiles y pregunten con curiosidad. Esto reduce sesgo de confirmación y lectura mental negativa en pareja." },
+  { id: 8, texto: "DBT regulación emocional: si la activación está alta, practiquen TIPP breve (temperatura fría en rostro, respiración diafragmática, relajar músculos). Luego usen DEAR MAN para pedir algo sin atacar: Describe, Express, Assert, Reinforce, Mindful, Appear confident, Negotiate." },
+  { id: 9, texto: "Compasión focalizada (CFT, Paul Gilbert): distingan sistema de amenaza vs sistema de calma. Hablen desde voz compasiva, más lenta y cálida, y validen primero la emoción del otro. Bajar amenaza fisiológica abre cooperación real." },
+  { id: 10, texto: "EFT de pareja (Sue Johnson): detrás de la protesta suele haber necesidad de apego. Reformulen el conflicto en clave de vínculo: 'cuando te alejas me siento sola/o y necesito cercanía'. Vulnerabilidad segura genera respuestas más amorosas que la crítica." },
 ];
 
 function CouplePandaSVG({ happy = false, size = 160 }) {
@@ -906,7 +906,9 @@ function GardenItemIcon({ id, size = 38 }) {
 
 
 function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
-  const owned = accessories || {};
+  const owned = Object.fromEntries(
+    Object.entries(accessories || {}).map(([k, v]) => [k, v === true])
+  );
   // New viewBox: 260x220 matching new CouplePandaSVG
   // Left panda head center: ~76, 88 (tilted +6deg)
   // Right panda head center: ~176, 88 (tilted -4deg)
@@ -2833,10 +2835,10 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
             return (
               <div key={item.id} style={{ background: C.white, borderRadius: 13, padding: 13, marginBottom: 9, borderLeft: `3px solid ${C.olive}`, border: `1.5px solid ${C.border}` }}>
                 <div style={{ fontSize: "0.72rem", fontWeight: 800, color: C.inkL, marginBottom: 5, letterSpacing: "0.3px" }}>PROMPT</div>
-                <div style={{ fontSize: "0.82rem", fontWeight: 800, color: C.dark, marginBottom: 7 }}>{item.q}</div>
+                <div style={{ fontSize: "0.82rem", fontWeight: 800, color: C.rose, marginBottom: 7 }}>{item.q}</div>
                 <div style={{ fontSize: "0.72rem", fontWeight: 800, color: C.olive, marginBottom: 3, letterSpacing: "0.3px" }}>ACUERDO</div>
                 <div style={{ fontSize: "0.85rem", fontWeight: 700, color: C.ink, lineHeight: 1.6 }}>
-                  {`${item.q}: ${approvedText}`}
+                  {approvedText}
                 </div>
 
                 {!editingApproved[item.id] ? (
@@ -3046,7 +3048,7 @@ function StreakSection({ streakInfo, streakAnalytics, onUpdateSettings, user }) 
   );
 }
 
-function ConsejoDelDiaSection({ user }) {
+function ConsejoDelDiaSection({ user, onClaimReward }) {
   const ownerKey = user?.code || user?.email || "guest";
   const favKey = `mochi_consejos_fav_${ownerKey}`;
   const [offset, setOffset] = useState(0);
@@ -3073,10 +3075,18 @@ function ConsejoDelDiaSection({ user }) {
     setFavs(prev => isFav ? prev.filter(id => id !== consejo.id) : [...prev, consejo.id]);
   };
 
+  const handleToggleOpen = () => {
+    setOpen(v => {
+      const next = !v;
+      if (next) onClaimReward?.();
+      return next;
+    });
+  };
+
   return (
     <div style={{ margin: "0 14px 12px" }}>
       <button
-        onClick={() => setOpen(v => !v)}
+        onClick={handleToggleOpen}
         style={{
           width: "100%",
           background: C.white,
@@ -3094,7 +3104,7 @@ function ConsejoDelDiaSection({ user }) {
           gap: 8,
         }}
       >
-        <span>Consejo del Día 🐼</span>
+        <span>Consejo del Día 🐼 · +15 bambú</span>
         <span style={{ fontSize: "0.86rem", color: C.inkL }}>{open ? "Cerrar" : "Abrir"}</span>
       </button>
 
@@ -3107,8 +3117,8 @@ function ConsejoDelDiaSection({ user }) {
             </div>
           </div>
 
-          <div style={{ background: "linear-gradient(130deg, #fff7e8 0%, #f3ffe9 100%)", borderRadius: 12, padding: "11px 12px", border: `1px solid ${C.border}`, marginBottom: 10 }}>
-            <div style={{ fontSize: "0.88rem", color: C.ink, lineHeight: 1.7, fontWeight: 700 }}>{consejo.texto}</div>
+          <div style={{ background: "linear-gradient(130deg, #f7f1ff 0%, #eee3ff 100%)", borderRadius: 12, padding: "11px 12px", border: `1px solid ${C.border}`, marginBottom: 10 }}>
+            <div style={{ fontSize: "0.88rem", color: C.ink, lineHeight: 1.75, fontWeight: 700 }}>{consejo.texto}</div>
           </div>
 
           <div style={{ display: "flex", gap: 8 }}>
@@ -3121,7 +3131,7 @@ function ConsejoDelDiaSection({ user }) {
           </div>
 
           <div style={{ marginTop: 8, fontSize: "0.68rem", color: C.inkL, fontWeight: 700 }}>
-            Favoritos guardados: {favs.length}
+            Favoritos guardados: {favs.length} · Marco clínico: TCC, DBT, ACT y terapias contextuales.
           </div>
         </div>
       )}
@@ -3130,7 +3140,7 @@ function ConsejoDelDiaSection({ user }) {
 }
 
 // PROFILE — Enhanced with more info fields
-function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, conoce, lessonsDone, coupleInfo, streakInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento, onSendMessage }) {
+function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, conoce, lessonsDone, coupleInfo, streakInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento, onSendMessage, onClaimDailyTip }) {
   const [editMode, setEditMode] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [showLoveModal, setShowLoveModal] = useState(false);
@@ -3271,7 +3281,7 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
         </div>
       </div>
 
-      <ConsejoDelDiaSection user={user} />
+      <ConsejoDelDiaSection user={user} onClaimReward={onClaimDailyTip} />
 
             {/* ── BAÚL DE GRATITUD ── */}
       <div style={{ margin:"0 14px 12px" }}>
@@ -4817,6 +4827,26 @@ export default function App() {
     toast("✨ Guardado en el baúl de momentos +5 bambú 🌿");
   };
 
+  const claimDailyTip = async () => {
+    const reward = 15;
+    const message = `Consejo del día leído +${reward} bambú 🌿`;
+    trigHappy();
+    trackDailyInteraction("consejo");
+
+    if (user?.code && !user?.isGuest) {
+      const nb = await fbIncrementBamboo(user.code, reward).catch(() => bamboo + reward);
+      setBamboo(nb);
+      toast(message);
+      save(null, { bamboo:nb, happiness, water, garden, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
+      return;
+    }
+
+    const nb = bamboo + reward;
+    setBamboo(nb);
+    toast(message);
+    save(null, { bamboo:nb, happiness, water, garden, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
+  };
+
   const logout = async () => {
     await fbLogout().catch(() => {});
     ls.set("mochi_last", null); setUser(null); setScreen("login");
@@ -4897,7 +4927,7 @@ export default function App() {
         {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson}/>}
         {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user}/>}
         {tab==="burbuja" && <Burbuja burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} user={user}/>}
-        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} garden={garden} accessories={accessories} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} lessonsDone={lessonsDone} coupleInfo={coupleInfo} streakInfo={streakData} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} onSendMessage={sendMsg}/>} 
+        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} garden={garden} accessories={accessories} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} lessonsDone={lessonsDone} coupleInfo={coupleInfo} streakInfo={streakData} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} onSendMessage={sendMsg} onClaimDailyTip={claimDailyTip}/>} 
       </div>
       <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:480, background:C.white, borderTop:`1.5px solid ${C.border}`, display:"flex", zIndex:1000, boxShadow:`0 -3px 0 ${C.line}` }}>
         {NAV.map(n => {
