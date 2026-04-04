@@ -27,13 +27,13 @@ import Cuestionarios, { getQuizAdviceFromConoce } from "./Cuestionarios";
 let _pendingLocalAuth = false;
 
 const C = {
-  cream:"#f5edda", cream2:"#fdf8ef", dark:"#1e2b1e",
-  olive:"#4a6e30", oliveL:"#7ab848", gold:"#d4a843",
-  salmon:"#e8907a", sky:"#88b8c8", sand:"#ede4cc", sandL:"#f8f2e4",
-  white:"#ffffff", ink:"#1e2b1e", inkM:"#5a6a4a", inkL:"#8a9a7a",
-  border:"rgba(30,43,30,0.14)", line:"rgba(30,43,30,0.08)",
-  pink:"#f4a8c0", rose:"#e8607a",
-  mint:"#b8e8d8", teal:"#4a9a8a",
+  cream:"#efe6ff", cream2:"#f8f3ff", dark:"#3f2f63",
+  olive:"#6f56b8", oliveL:"#9a7cff", gold:"#c7a35a",
+  salmon:"#d88ec8", sky:"#a89de8", sand:"#dfd0ff", sandL:"#f3ecff",
+  white:"#ffffff", ink:"#32264a", inkM:"#5f4d7f", inkL:"#8e7aad",
+  border:"rgba(63,47,99,0.16)", line:"rgba(63,47,99,0.09)",
+  pink:"#efb7e8", rose:"#d26ab3",
+  mint:"#d6c9ff", teal:"#7761be",
 };
 
 const ls = {
@@ -1311,7 +1311,9 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
 // NEW GARDEN SCENE — koi/lotus watercolor aesthetic
 // ═══════════════════════════════════════════════
 function GardenScene({ garden, waterLevel }) {
-  const g = garden || {};
+  const g = Object.fromEntries(
+    Object.entries(garden || {}).map(([k, v]) => [k, v === true])
+  );
   const w = waterLevel || 0;
   // 5 watercolor levels: 0-20 drought, 20-40 dry, 40-60 ok, 60-80 lush, 80-100 thriving
   const lvl = w < 20 ? 0 : w < 40 ? 1 : w < 60 ? 2 : w < 80 ? 3 : 4;
@@ -1732,9 +1734,13 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
           {shopItems.map(item => {
             const owned = shopTab === "accesorios" ? accessories?.[item.id] : garden?.[item.id];
             const POND_DEPS = ["koi1", "koi2", "lotus_pad"];
-            const locked = shopTab !== "accesorios" && POND_DEPS.includes(item.id) && !garden?.pond && !owned;
+            const pondReady = garden?.pond === true || garden?.pond === "owned";
+            const locked = shopTab !== "accesorios" && POND_DEPS.includes(item.id) && !pondReady && !owned;
             return (
-              <div key={item.id} onClick={() => shopTab==="accesorios" ? onBuyAccessory(item) : onBuy(item)}
+              <div key={item.id} onClick={() => {
+                if (locked) return;
+                shopTab === "accesorios" ? onBuyAccessory(item) : onBuy(item);
+              }}
                 style={{ background:owned===true?"#d4e8c4":owned==="owned"?C.cream:locked?"#f0ede8":C.sandL,
                   border:`2px solid ${owned===true?C.olive:owned==="owned"?"#c8b060":locked?C.sand:C.border}`,
                   borderRadius:16, padding:"12px 10px", textAlign:"center", cursor:locked?"default":"pointer",
@@ -1748,11 +1754,21 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
                 </div>
                 <div style={{ fontSize:"0.67rem", fontWeight:800, color:C.ink, marginBottom:2, lineHeight:1.2 }}>{item.name}</div>
                 <div style={{ fontSize:"0.62rem", color:C.inkL, marginBottom:5, lineHeight:1.2 }}>{locked ? "🔒 Requiere Estanque" : item.desc}</div>
-                {owned
-                  ? <div style={{ background:C.olive, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>✓</div>
-                  : locked
-                  ? <div style={{ background:C.sand, color:C.inkL, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>🔒</div>
-                  : <div style={{ background:C.dark, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>{item.cost} 🌿</div>}
+                {shopTab !== "accesorios" ? (
+                  owned === true
+                    ? <div style={{ background:C.olive, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>Quitar</div>
+                    : owned === "owned"
+                    ? <div style={{ background:C.dark, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>Poner</div>
+                    : locked
+                    ? <div style={{ background:C.sand, color:C.inkL, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>🔒</div>
+                    : <div style={{ background:C.dark, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>{item.cost} 🌿</div>
+                ) : (
+                  owned
+                    ? <div style={{ background:C.olive, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>✓</div>
+                    : locked
+                    ? <div style={{ background:C.sand, color:C.inkL, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>🔒</div>
+                    : <div style={{ background:C.dark, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>{item.cost} 🌿</div>
+                )}
               </div>
             );
           })}
@@ -2655,11 +2671,17 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
   const [open, setOpen] = useState({});
   const [tmp, setTmp] = useState({});
   const [editingApproved, setEditingApproved] = useState({});
+  const [burbujaTab, setBurbujaTab] = useState("negociacion");
 
   const get = (id, f) => tmp[id]?.[f] ?? burbuja[id]?.[f] ?? "";
   const set_ = (id, f, v) => setTmp(p => ({ ...p, [id]: { ...p[id], [f]: v } }));
   const approvedCount = Object.values(burbuja).filter(v => v?.status === "approved").length;
   const total = BURBUJA_SECTIONS.reduce((s, sec) => s + sec.items.length, 0);
+  const approvedItems = BURBUJA_SECTIONS.flatMap(sec =>
+    sec.items
+      .filter(item => burbuja[item.id]?.status === "approved")
+      .map(item => ({ item, entry: burbuja[item.id] || {} }))
+  );
 
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
@@ -2675,7 +2697,37 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
           <div style={{ fontSize: "0.76rem", fontWeight: 800, color: C.olive, whiteSpace: "nowrap" }}>{approvedCount} / {total}</div>
         </div>
       </div>
-      {BURBUJA_SECTIONS.map(sec => (
+      <div style={{ display: "flex", gap: 8, margin: "0 14px 10px" }}>
+        {[ ["negociacion", "Negociación"], ["acuerdos", "Acuerdos hechos"] ].map(([id, label]) => (
+          <button
+            key={id}
+            onClick={() => setBurbujaTab(id)}
+            style={{
+              flex: 1,
+              borderRadius: 12,
+              padding: "10px 12px",
+              border: `1.5px solid ${burbujaTab === id ? C.dark : C.border}`,
+              background: burbujaTab === id ? C.dark : C.white,
+              color: burbujaTab === id ? C.cream2 : C.ink,
+              fontFamily: "'Fredoka One',cursive",
+              fontSize: "0.82rem",
+              cursor: "pointer",
+              boxShadow: burbujaTab === id ? "0 2px 0 rgba(0,0,0,0.18)" : `0 2px 0 ${C.border}`,
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {burbujaTab === "negociacion" && BURBUJA_SECTIONS.map(sec => {
+        const pendingItems = sec.items.filter(item => {
+          const entry = burbuja[item.id] || {};
+          return entry.status !== "approved";
+        });
+        if (!pendingItems.length) return null;
+
+        return (
         <div key={sec.id} style={{ background: C.white, borderRadius: 18, margin: "0 14px 10px", boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}`, overflow: "hidden" }}>
           <div onClick={() => setOpen(p => ({ ...p, [sec.id]: !p[sec.id] }))} style={{ display: "flex", alignItems: "center", gap: 12, padding: 16, cursor: "pointer" }}>
             <div style={{ width: 44, height: 44, background: sec.itemBg, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.7rem", flexShrink: 0 }}>{sec.icon}</div>
@@ -2686,7 +2738,7 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
             <div style={{ color: C.inkL, transition: "transform 0.25s", transform: open[sec.id] ? "rotate(180deg)" : "none" }}>▼</div>
           </div>
           {open[sec.id] && <div style={{ padding: "0 16px 16px" }}>
-            {sec.items.map(item => {
+            {pendingItems.map(item => {
               const entry = burbuja[item.id] || {};
               const myText = get(item.id, myRole);
               const partnerText = entry[partnerRole] || "";
@@ -2753,57 +2805,85 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
                   </div>
                 )}
 
-                {isApproved && (
-                  <div style={{ background: C.white, borderRadius: 10, padding: 10, marginTop: 8, border: `1.5px solid ${C.olive}` }}>
-                    <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.olive, marginBottom: 3, letterSpacing: "0.4px" }}>✓ ACUERDO APROBADO</div>
-                    <div style={{ fontSize: "0.85rem", fontWeight: 700, color: C.ink, lineHeight:1.6 }}>{entry.approvedText || entry.proposalText}</div>
-                    {!editingApproved[item.id] ? (
-                      <div style={{ display:"flex", justifyContent:"flex-end", marginTop:8 }}>
-                        <Btn
-                          onClick={() => {
-                            set_(item.id, "proposalText", entry.approvedText || entry.proposalText || "");
-                            setEditingApproved(p => ({ ...p, [item.id]: true }));
-                          }}
-                          variant="sand"
-                          style={{ padding:"8px 12px", fontSize:"0.8rem" }}
-                        >
-                          Editar acuerdo
-                        </Btn>
-                      </div>
-                    ) : (
-                      <div style={{ marginTop:8 }}>
-                        <TA value={proposalText} onChange={v => set_(item.id, "proposalText", v)} placeholder="Escribe la nueva versión del acuerdo..." rows={2} />
-                        <div style={{ display:"flex", gap:8, justifyContent:"flex-end", marginTop:6 }}>
-                          <Btn
-                            onClick={() => {
-                              setEditingApproved(p => ({ ...p, [item.id]: false }));
-                              set_(item.id, "proposalText", entry.approvedText || entry.proposalText || "");
-                            }}
-                            variant="ghost"
-                            style={{ padding:"8px 12px", fontSize:"0.8rem" }}
-                          >
-                            Cancelar
-                          </Btn>
-                          <Btn
-                            onClick={() => {
-                              onPropose(item.id, proposalText, true);
-                              setEditingApproved(p => ({ ...p, [item.id]: false }));
-                            }}
-                            variant="olive"
-                            style={{ padding:"8px 12px", fontSize:"0.8rem" }}
-                          >
-                            Enviar edición
-                          </Btn>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>;
             })}
           </div>}
         </div>
-      ))}
+      )})}
+
+      {burbujaTab === "negociacion" && !BURBUJA_SECTIONS.some(sec => sec.items.some(item => (burbuja[item.id] || {}).status !== "approved")) && (
+        <div style={{ margin: "0 14px 10px", background: C.white, borderRadius: 16, padding: 14, border: `1.5px solid ${C.border}` }}>
+          <div style={{ fontSize: "0.82rem", color: C.inkM, fontWeight: 700, lineHeight: 1.6 }}>
+            No hay acuerdos pendientes de negociación. Revisa la pestaña de acuerdos hechos.
+          </div>
+        </div>
+      )}
+
+      {burbujaTab === "acuerdos" && (
+        <div style={{ margin: "0 14px 10px" }}>
+          {!approvedItems.length ? (
+            <div style={{ background: C.white, borderRadius: 16, padding: 14, border: `1.5px solid ${C.border}` }}>
+              <div style={{ fontSize: "0.82rem", color: C.inkM, fontWeight: 700, lineHeight: 1.6 }}>
+                Aún no tienen acuerdos aprobados. Cuando aprueben uno, aparecerá aquí.
+              </div>
+            </div>
+          ) : approvedItems.map(({ item, entry }) => {
+            const proposalText = get(item.id, "proposalText");
+            const approvedText = entry.approvedText || entry.proposalText || "";
+            return (
+              <div key={item.id} style={{ background: C.white, borderRadius: 13, padding: 13, marginBottom: 9, borderLeft: `3px solid ${C.olive}`, border: `1.5px solid ${C.border}` }}>
+                <div style={{ fontSize: "0.72rem", fontWeight: 800, color: C.inkL, marginBottom: 5, letterSpacing: "0.3px" }}>PROMPT</div>
+                <div style={{ fontSize: "0.82rem", fontWeight: 800, color: C.dark, marginBottom: 7 }}>{item.q}</div>
+                <div style={{ fontSize: "0.72rem", fontWeight: 800, color: C.olive, marginBottom: 3, letterSpacing: "0.3px" }}>ACUERDO</div>
+                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: C.ink, lineHeight: 1.6 }}>
+                  {`${item.q}: ${approvedText}`}
+                </div>
+
+                {!editingApproved[item.id] ? (
+                  <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+                    <Btn
+                      onClick={() => {
+                        set_(item.id, "proposalText", approvedText);
+                        setEditingApproved(p => ({ ...p, [item.id]: true }));
+                      }}
+                      variant="sand"
+                      style={{ padding: "8px 12px", fontSize: "0.8rem" }}
+                    >
+                      Editar acuerdo
+                    </Btn>
+                  </div>
+                ) : (
+                  <div style={{ marginTop: 8 }}>
+                    <TA value={proposalText} onChange={v => set_(item.id, "proposalText", v)} placeholder="Escribe la nueva versión del acuerdo..." rows={2} />
+                    <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
+                      <Btn
+                        onClick={() => {
+                          setEditingApproved(p => ({ ...p, [item.id]: false }));
+                          set_(item.id, "proposalText", approvedText);
+                        }}
+                        variant="ghost"
+                        style={{ padding: "8px 12px", fontSize: "0.8rem" }}
+                      >
+                        Cancelar
+                      </Btn>
+                      <Btn
+                        onClick={() => {
+                          onPropose(item.id, proposalText, true);
+                          setEditingApproved(p => ({ ...p, [item.id]: false }));
+                        }}
+                        variant="olive"
+                        style={{ padding: "8px 12px", fontSize: "0.8rem" }}
+                      >
+                        Enviar edición
+                      </Btn>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -3060,16 +3140,6 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [loveText, setLoveText] = useState("");
   const [quickLove, setQuickLove] = useState(null);
-  const [debugTapCount, setDebugTapCount] = useState(0);
-  const [debugTapUntil, setDebugTapUntil] = useState(0);
-  const [debugNotice, setDebugNotice] = useState("");
-  const [manualDebugEnabled, setManualDebugEnabled] = useState(() => {
-    try {
-      return localStorage.getItem("mochi_debug_streak") === "1";
-    } catch {
-      return false;
-    }
-  });
   const [nameInput, setNameInput] = useState(user?.names || "");
   const deleteCloseTimer = useRef(null);
   const [form, setForm] = useState({
@@ -3087,19 +3157,12 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
     bucketList: coupleInfo.bucketList || "",
   });
 
-  const totalEx = Object.values(exDone).reduce((a, b) => a + b, 0);
-  const nameParts = String(user?.names || "").split("&").map(s => s.trim()).filter(Boolean);
-  const nameA = nameParts[0] || "Panda A";
-  const nameB = nameParts[1] || nameParts[0] || "Panda B";
   const myEmail = user?.email || "guest";
   const myRole = user?.isOwner !== false ? "owner" : "partner";
-  const myMsgs = messages.filter(m => m.senderEmail === myEmail).length;
   const partnerMsgs = [...messages]
     .filter(m => m.senderEmail !== myEmail)
     .sort((a, b) => new Date(b?.time || 0).getTime() - new Date(a?.time || 0).getTime());
   const recentPartnerMsgs = partnerMsgs.slice(0, 3);
-  const ownerQuiz = getQuizAdviceFromConoce(conoce || {}, "owner");
-  const partnerQuiz = getQuizAdviceFromConoce(conoce || {}, "partner");
   const approvedAgreements = Object.entries(burbuja || {})
     .filter(([, v]) => v?.status === "approved" && (v?.approvedText || v?.proposalText))
     .map(([id, v]) => ({
@@ -3107,58 +3170,6 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
       text: v.approvedText || v.proposalText,
       question: v.question || BURBUJA_ITEM_MAP[id]?.question || "Acuerdo"
     }));
-  const gardenPlacedCount = Object.values(garden || {}).filter(v => v === true).length;
-  const outfitOwnedCount = Object.entries(accessories || {}).filter(([k, v]) => k.startsWith("outfit_") && (v === true || v === "owned")).length;
-  const combosCount = gardenPlacedCount * outfitOwnedCount;
-  const lessonsTogetherCount = Object.values(lessonsDone || {}).filter(v => v?.owner && v?.partner).length;
-  const myConoceCount = Object.values(conoce || {}).filter(v => !!v?.[myRole]).length;
-
-  const quizScaleScores = Object.entries(conoce || {}).reduce((arr, [k, v]) => {
-    if (!k.startsWith("quizFortalezas-") && !k.startsWith("quizPersonalidad-")) return arr;
-    const raw = Number(v?.[myRole]);
-    if (!Number.isFinite(raw)) return arr;
-    return [...arr, raw];
-  }, []);
-  const myQuiz = getQuizAdviceFromConoce(conoce || {}, myRole);
-  const highQuizScore = quizScaleScores.length >= 10
-    ? (quizScaleScores.reduce((s, n) => s + n, 0) / quizScaleScores.length) >= 4
-    : false;
-
-  const weeklyActivityDates = [
-    ...messages.map(m => m?.time),
-    ...gratitud.map(g => g?.createdAt),
-    ...momentos.map(m => m?.createdAt),
-  ];
-  const weeklyActiveWeeks = new Set(
-    weeklyActivityDates
-      .map(toJsDate)
-      .filter(Boolean)
-      .map(d => getWeekStartUtc(d).getTime())
-  ).size;
-  const weeklyStreak = getWeeklyStreak(weeklyActivityDates);
-  const debugByQuery = typeof window !== "undefined"
-    && new URLSearchParams(window.location.search).get("debug") === "1";
-  const showDebugStreak = debugByQuery || manualDebugEnabled;
-
-  const onTapLogros = () => {
-    const now = Date.now();
-    const withinWindow = now <= debugTapUntil;
-    const nextCount = withinWindow ? debugTapCount + 1 : 1;
-    setDebugTapCount(nextCount);
-    setDebugTapUntil(now + 2200);
-
-    if (nextCount >= 5) {
-      const nextEnabled = !manualDebugEnabled;
-      setManualDebugEnabled(nextEnabled);
-      try {
-        localStorage.setItem("mochi_debug_streak", nextEnabled ? "1" : "0");
-      } catch {}
-      setDebugTapCount(0);
-      setDebugTapUntil(0);
-      setDebugNotice(nextEnabled ? "Debug de racha activado" : "Debug de racha desactivado");
-      setTimeout(() => setDebugNotice(""), 1800);
-    }
-  };
   const [connected, setConnected] = useState(false);
   useEffect(() => {
     if (user?.code && !user?.isGuest) {
@@ -3172,19 +3183,6 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
       });
     }
   }, [user?.code]);
-
-  const ACHS = [
-    { icon: "🌳", name: "Maestro del Jardín", done: gardenPlacedCount >= 20 },
-    { icon: "🧥", name: "Panda Estiloso", done: outfitOwnedCount >= 10 },
-    { icon: "🎨", name: "Equipo Creativo", done: combosCount >= 5 },
-    { icon: "⚡", name: "Dúo Dinámico", done: totalEx >= 15 },
-    { icon: "📚", name: "Alumnos Estelares", done: lessonsTogetherCount >= 10 },
-    { icon: "💞", name: "Constancia Amorosa", done: weeklyStreak >= 4 && lessonsTogetherCount >= 4 },
-    { icon: "📝", name: "Poetas Digitales", done: myMsgs >= 20 },
-    { icon: "🤝", name: "Equipo Comprometido", done: approvedAgreements.length >= 5 },
-    { icon: "🔎", name: "Investigadores del Amor", done: myConoceCount >= 30 },
-    { icon: "🏅", name: "Másters en Conexión", done: myQuiz.complete && highQuizScore },
-  ];
 
   const FIELDS = [
     { key: "anniversary", label: "💑 Aniversario", ph: "Ej: 14 de febrero de 2022" },
@@ -3244,8 +3242,8 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
         {coupleInfo.anniversary && <div style={{ color: C.gold, fontSize: "0.82rem", fontWeight: 700, marginTop: 4 }}>💑 {coupleInfo.anniversary}</div>}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, padding: "10px 14px" }}>
-        {[["Ejercicios", totalEx], ["Bambú 🌿", bamboo], ["Mensajes", myMsgs]].map(([l, v]) => (
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, padding: "10px 14px" }}>
+        {[["Bambú 🌿", bamboo], ["Días de racha 🔥", streakInfo?.currentStreak || 0]].map(([l, v]) => (
           <div key={l} style={{ background: C.white, borderRadius: 16, padding: "14px 10px", textAlign: "center", boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
             <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.7rem", color: C.dark }}>{v}</div>
             <div style={{ fontSize: "0.7rem", color: C.inkL, fontWeight: 700 }}>{l}</div>
@@ -3299,78 +3297,6 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
         ))}
       </div>
 
-      {/* ── RESULTADOS CONOCETE: 3 TEST ── */}
-      <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:16, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
-        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:8 }}>🧠 Test para conocerse mejor</div>
-        <div style={{ fontSize:"0.78rem", color:C.inkL, lineHeight:1.6, marginBottom:10 }}>
-          Estos consejos se generan con los 3 cuestionarios de Conócete (fortalezas, valores y personalidad).
-        </div>
-
-        {[{ role:"owner", name:nameA, data:ownerQuiz }, { role:"partner", name:nameB, data:partnerQuiz }].map(person => (
-          <div key={person.role} style={{ background:C.cream, borderRadius:12, padding:10, marginBottom:8, border:`1px solid ${C.border}` }}>
-            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:8, marginBottom:6 }}>
-              <div style={{ fontSize:"0.8rem", fontWeight:800, color:C.dark }}>🐼 {person.name}</div>
-              <div style={{ fontSize:"0.7rem", fontWeight:800, color:person.data.complete ? C.olive : C.inkL }}>
-                {person.data.progress.answered}/{person.data.progress.total}
-              </div>
-            </div>
-            {!person.data.complete ? (
-              <div style={{ fontSize:"0.76rem", color:C.inkM, lineHeight:1.6 }}>
-                Aún faltan respuestas para generar los 5 consejos de Mochi.
-              </div>
-            ) : (
-              <ol style={{ margin:0, paddingLeft:18, color:C.ink }}>
-                {person.data.tips.map((tip, idx) => (
-                  <li key={idx} style={{ fontSize:"0.78rem", fontWeight:700, lineHeight:1.6, marginBottom:3 }}>{tip}</li>
-                ))}
-              </ol>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* Achievements */}
-      <div onClick={onTapLogros} style={{ padding: "4px 14px 6px", fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark, cursor: "pointer", userSelect: "none" }}>Logros</div>
-      {debugNotice && <div style={{ padding: "0 14px 8px", fontSize: "0.72rem", color: C.inkL, fontWeight: 800 }}>{debugNotice}</div>}
-      <div style={{ display: "flex", gap: 10, padding: "4px 14px 18px", overflowX: "auto" }}>
-        {ACHS.map(a => <div key={a.name} style={{ background: a.done ? C.cream : C.sandL, borderRadius: 16, padding: "14px 11px", textAlign: "center", minWidth: 118, flexShrink: 0, opacity: a.done ? 1 : 0.4, boxShadow: `0 2px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
-          <div style={{ fontSize: "1.7rem", marginBottom: 5 }}>{a.icon}</div>
-          <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.ink, lineHeight: 1.3 }}>{a.name}</div>
-        </div>)}
-      </div>
-      {showDebugStreak && (
-        <div style={{ margin: "0 14px 12px", background: "#fff8e8", border: "1.5px dashed #d4a843", borderRadius: 14, padding: "10px 12px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 4 }}>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.88rem", color: C.dark }}>Debug racha semanal</div>
-            <button
-              onClick={() => {
-                setManualDebugEnabled(false);
-                try {
-                  localStorage.setItem("mochi_debug_streak", "0");
-                } catch {}
-                setDebugNotice("Debug de racha desactivado");
-                setTimeout(() => setDebugNotice(""), 1800);
-              }}
-              style={{
-                border: `1.5px solid ${C.border}`,
-                background: C.white,
-                color: C.ink,
-                borderRadius: 9,
-                padding: "4px 8px",
-                fontSize: "0.68rem",
-                fontWeight: 800,
-                cursor: "pointer"
-              }}
-            >
-              Reset debug
-            </button>
-          </div>
-          <div style={{ fontSize: "0.78rem", color: C.inkM, lineHeight: 1.6, fontWeight: 700 }}>
-            weeklyStreak: {weeklyStreak} / 4 · weeksWithActivity: {weeklyActiveWeeks} · lessonsTogether: {lessonsTogetherCount}
-          </div>
-        </div>
-      )}
-
       <div style={{ padding: "0 14px 20px" }}>
 
         {/* Couple code — discrete, at bottom */}
@@ -3391,30 +3317,6 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
             }} variant="sand" style={{ padding: "10px 14px", fontSize: "0.8rem" }}>Copiar</Btn>
           </div>
         </div>}
-
-        {/* Test Initial Scores */}
-        {testScores && (() => {
-          const avgs = TEST_AREAS.map(a => { const s = testScores[a.id]||{}; return {...a, avg:((s.a||3)+(s.b||3))/2}; });
-          const total = (avgs.reduce((s,a)=>s+a.avg,0)/avgs.length).toFixed(1);
-          return (
-            <div style={{ marginBottom:12, background:C.white, borderRadius:18, padding:18, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
-              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
-                <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.05rem", color:C.dark }}>📊 Diagnóstico de pareja</div>
-                <div style={{ background:C.olive, color:C.cream2, borderRadius:8, padding:"4px 12px", fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem" }}>{total}/5</div>
-              </div>
-              {avgs.map(a => (
-                <div key={a.id} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
-                  <div style={{ fontSize:"1rem", minWidth:22 }}>{a.emoji}</div>
-                  <div style={{ fontSize:"0.78rem", color:C.inkM, flex:1 }}>{a.label}</div>
-                  <div style={{ display:"flex", gap:3 }}>{[1,2,3,4,5].map(i=>(
-                    <div key={i} style={{ width:11, height:11, borderRadius:"50%", background:i<=Math.round(a.avg)?TEST_COLORS[Math.round(a.avg)-1]:C.sand }}/>
-                  ))}</div>
-                </div>
-              ))}
-              <Btn onClick={onRetakeTest} variant="sand" style={{ width:"100%", marginTop:10, fontSize:"0.82rem" }}>Repetir diagnóstico 🔄</Btn>
-            </div>
-          );
-        })()}
 
         {/* ── CAMBIAR NOMBRE ── */}
         <div style={{ background: C.white, borderRadius: 16, padding: "16px", border: `1.5px solid ${C.border}`, marginBottom: 12, boxShadow: `0 2px 0 ${C.border}` }}>
@@ -4472,10 +4374,36 @@ export default function App() {
         return;
       }
       const safeGarden = garden && typeof garden === "object" ? garden : {};
-      if (safeGarden[item.id]) { toast("Ya está en el jardín"); return; }
+      if (safeGarden[item.id] === true) {
+        const ng = { ...safeGarden, [item.id]: "owned" };
+        setGarden(ng);
+        if (user?.code && !user?.isGuest) {
+          fbSaveGardenState(user.code, { garden: ng, accessories, water, happiness }).catch(() => {});
+        }
+        save(null, { bamboo, happiness, water, garden:ng, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit: new Date().toISOString(), testScores, lessonsDone, gratitud, momentos });
+        toast(`${item.name} guardado`);
+        return;
+      }
+
+      if (safeGarden[item.id] === "owned") {
+        const POND_DEPS = ["koi1", "koi2", "lotus_pad"];
+        if (POND_DEPS.includes(item.id) && safeGarden.pond !== true) {
+          toast("Primero coloca el Estanque para usar este objeto 🪷");
+          return;
+        }
+        const ng = { ...safeGarden, [item.id]: true };
+        setGarden(ng);
+        if (user?.code && !user?.isGuest) {
+          fbSaveGardenState(user.code, { garden: ng, accessories, water, happiness }).catch(() => {});
+        }
+        save(null, { bamboo, happiness, water, garden:ng, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit: new Date().toISOString(), testScores, lessonsDone, gratitud, momentos });
+        toast(`${item.name} colocado 🌿`);
+        return;
+      }
+
       // Pond-dependent items require pond first
       const POND_DEPS = ["koi1", "koi2", "lotus_pad"];
-      if (POND_DEPS.includes(item.id) && !safeGarden.pond) {
+      if (POND_DEPS.includes(item.id) && safeGarden.pond !== true && safeGarden.pond !== "owned") {
         toast("Necesitas el Estanque primero 🪷");
         return;
       }
@@ -4590,14 +4518,14 @@ export default function App() {
     const nameA = user?.names ? user.names.split("&")[0].trim() : "Panda A";
     const nameB = user?.names ? user.names.split("&")[1]?.trim() || "Panda B" : "Panda B";
     const myEmail = user?.email || "guest";
-    const pandaAMsgs = [...messages].filter(m => user?.isOwner !== false ? m.senderEmail === myEmail : m.senderEmail !== myEmail);
-    const pandaBMsgs = [...messages].filter(m => user?.isOwner !== false ? m.senderEmail !== myEmail : m.senderEmail === myEmail);
-    const msgA = pandaAMsgs[0];
-    const msgB = pandaBMsgs[0];
-    const textA = msgA ? msgA.text.slice(0, BUBBLE_PREVIEW_LENGTH) + (msgA.text.length > BUBBLE_PREVIEW_LENGTH ? "..." : "") : null;
-    const textB = msgB ? msgB.text.slice(0, BUBBLE_PREVIEW_LENGTH) + (msgB.text.length > BUBBLE_PREVIEW_LENGTH ? "..." : "") : "¡Los quiero mucho! 🐼";
+    const partnerName = user?.isOwner !== false ? nameB : nameA;
+    const partnerMsgs = [...messages].filter(m => m.senderEmail !== myEmail);
+    const partnerMsg = partnerMsgs[0];
+    const textB = partnerMsg
+      ? partnerMsg.text.slice(0, BUBBLE_PREVIEW_LENGTH) + (partnerMsg.text.length > BUBBLE_PREVIEW_LENGTH ? "..." : "")
+      : "¡Los quiero mucho! 🐼";
     // Show speech bubbles over pandas for 5 seconds
-    setPandaBubble({ nameA: msgA ? nameA : null, textA, nameB, textB });
+    setPandaBubble({ nameA: null, textA: null, nameB: partnerName, textB });
     setTimeout(() => setPandaBubble(null), 5000);
     const nh = Math.min(100, happiness + 2);
     setHappiness(nh);
