@@ -11,5 +11,24 @@
   <body>
     <noscript>Necesitas habilitar JavaScript para correr esta app.</noscript>
     <div id="root"></div>
+    <script>
+      // Force migration away from older cached shells/service workers.
+      (function () {
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function (regs) {
+            regs.forEach(function (r) { r.unregister(); });
+          }).catch(function () {});
+        }
+        if ("caches" in window) {
+          caches.keys().then(function (keys) {
+            keys.forEach(function (k) {
+              if (k.indexOf("mochi") !== -1 || k.indexOf("workbox") !== -1) {
+                caches.delete(k);
+              }
+            });
+          }).catch(function () {});
+        }
+      })();
+    </script>
   </body>
 </html>
