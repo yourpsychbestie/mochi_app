@@ -532,16 +532,126 @@ const getDayNumberLocal = (date = new Date()) => {
 };
 
 const CONSEJOS_DIARIOS = [
-  { id: 1, texto: "TCC (Aaron Beck): identifiquen el pensamiento automático en discusión (ej. 'no le importo') y sométanlo a evidencia. Reescriban juntos una cognición más equilibrada: 'sí le importo, hoy ambos estamos cansados'. Esta reestructuración cognitiva reduce personalización y catastrofismo." },
-  { id: 2, texto: "DBT (Marsha Linehan): usen la habilidad STOP antes de responder: S = Stop, T = Take a step back, O = Observe, P = Proceed mindfully. Pausen 90 segundos, nombren emoción + intensidad (0-10) y retomen con tono bajo. Esto previene escaladas impulsivas." },
-  { id: 3, texto: "ACT (Steven Hayes): cuando aparezca una historia mental rígida ('siempre hacemos lo mismo'), practiquen defusión verbal: 'estoy teniendo el pensamiento de que...'. Al separarse del pensamiento, recuperan flexibilidad psicológica para elegir conductas valiosas." },
-  { id: 4, texto: "Terapia de esquemas (Jeffrey Young): detecten si se activó un modo vulnerable (abandono, crítica, exigencia). En vez de contraatacar, ofrezcan 'reparentalización limitada': validación + seguridad + límite claro. Ejemplo: 'entiendo que te dolió, y quiero resolverlo contigo'." },
-  { id: 5, texto: "Gottman: apliquen reparación temprana en los primeros 3 minutos del conflicto. Usen una frase de desescalada ('estamos en el mismo equipo') y cambien de acusación a necesidad concreta. La calidad del inicio predice la calidad del cierre." },
-  { id: 6, texto: "ACT orientada a valores: definan hoy un valor relacional central (cuidado, honestidad, lealtad, ternura) y conviértanlo en una micro-acción observable de 5 minutos. En tercera generación, actuar por valores pesa más que 'ganar' la discusión." },
-  { id: 7, texto: "TCC conductual: hagan una 'prueba de realidad' sobre intenciones. Antes de concluir, formulen 2 hipótesis alternativas no hostiles y pregunten con curiosidad. Esto reduce sesgo de confirmación y lectura mental negativa en pareja." },
-  { id: 8, texto: "DBT regulación emocional: si la activación está alta, practiquen TIPP breve (temperatura fría en rostro, respiración diafragmática, relajar músculos). Luego usen DEAR MAN para pedir algo sin atacar: Describe, Express, Assert, Reinforce, Mindful, Appear confident, Negotiate." },
-  { id: 9, texto: "Compasión focalizada (CFT, Paul Gilbert): distingan sistema de amenaza vs sistema de calma. Hablen desde voz compasiva, más lenta y cálida, y validen primero la emoción del otro. Bajar amenaza fisiológica abre cooperación real." },
-  { id: 10, texto: "EFT de pareja (Sue Johnson): detrás de la protesta suele haber necesidad de apego. Reformulen el conflicto en clave de vínculo: 'cuando te alejas me siento sola/o y necesito cercanía'. Vulnerabilidad segura genera respuestas más amorosas que la crítica." },
+  {
+    id: 1,
+    texto: "Escucha de verdad, no solo esperes tu turno para hablar.",
+    explicacion: "Muchas veces cuando nuestro amor habla, ya estamos pensando en qué vamos a responder. Esto hace que no nos conectemos de verdad.",
+    practica: "Cuando tu pareja te cuente algo, haz una pausa mental y repite con tus palabras lo que escuchaste antes de dar tu opinión. Esto le hace sentir que realmente le importas.",
+    autor: "John Gottman",
+    quienEs: "Psicólogo que estudió parejas por 40 años. Descubrió que las parejas que duran son las que se sienten escuchadas, no las que nunca discuten."
+  },
+  {
+    id: 2,
+    texto: "Agradece algo específico hoy, no solo 'gracias por todo'.",
+    explicacion: "Los 'gracias por todo' se olvidan. Pero cuando dices 'gracias por traerme café esta mañana, me salvaste el día', eso se queda.",
+    practica: "Menciona algo concreto que tu pareja hizo, cuándo lo hizo, y cómo te hizo sentir. Ejemplo: 'Gracias por mandarme ese mensaje antes de mi junta, me dio mucha calma'.",
+    autor: "Martin Seligman",
+    quienEs: "Padre de la Psicología Positiva. Descubrió que las parejas que practican gratitud específica son hasta 25% más felices."
+  },
+  {
+    id: 3,
+    texto: "Pide lo que necesitas, no te quejes de lo que no te gusta.",
+    explicacion: "Decir 'nunca me escuchas' solo hace que el otro se defienda. Pero decir 'necesito 10 minutos de tu atención sin celular cuando llegue a casa' abre una conversación.",
+    practica: "Usa esta fórmula: 'Cuando [pasa algo], yo siento [emoción], porque necesito [necesidad]. ¿Podrías [petición concreta]?'",
+    autor: "Marshall Rosenberg",
+    quienEs: "Creador de la Comunicación No Violenta, una forma de hablar sin herir. Sus técnicas se usan en todo el mundo para resolver conflictos."
+  },
+  {
+    id: 4,
+    texto: "Cuando te equivocas, pide perdón rápido y de corazón.",
+    explicacion: "No importa tanto cuánto peleen las parejas que duran, sino qué tan rápido se reparan. Un 'me equivoqué, lo siento' sincero en las primeras horas vale más que mil explicaciones después.",
+    practica: "Si hubo un malentendido, no esperes a que se enfríe. Di: 'Me equivoqué, lo siento. ¿Cómo puedo hacerlo mejor?' Sin excusas, sin 'pero tú también...'",
+    autor: "John y Julie Gottman",
+    quienEs: "Psicólogos que pueden predecir con 90% de acierto qué parejas se divorciarán. La reparación rápida es su hallazgo más importante."
+  },
+  {
+    id: 5,
+    texto: "Nombra tu emoción antes de reaccionar.",
+    explicacion: "Cuando estamos enojados o ansiosos, nuestro cerebro entra en modo 'supervivencia' y decimos cosas que no queremos. Pero nombrar lo que sentimos calma el cerebro en segundos.",
+    practica: "Antes de responder en calor, di: 'Ahora mismo me siento [frustrado/a, asustado/a, triste...]'. Esto activa la parte racional de tu cerebro y te da control.",
+    autor: "Dan Siegel",
+    quienEs: "Psiquiatra y neurocientífico. Acuñó la frase 'nombrarlo para dominarlo' porque la ciencia muestra que nombrar emociones reduce la activación del miedo."
+  },
+  {
+    id: 6,
+    texto: "Los pequeños momentos diarios valen más que los grandes gestos.",
+    explicacion: "Un viaje romántico una vez al año no sustituye a un 'buenos días' todos los días, o preguntar '¿cómo estuvo tu día?' con atención real.",
+    practica: "Crea un ritual de 2 minutos: un beso de despedida, un mensaje de buenas noches, o preguntar qué fue lo mejor del día. Lo que haces todos los días construye la base de la relación.",
+    autor: "John Gottman",
+    quienEs: "Llama a esto 'Capital Emocional': los pequeños depósitos de cariño diarios que te protegen cuando llegan las crisis."
+  },
+  {
+    id: 7,
+    texto: "Puedes entender a tu pareja sin estar de acuerdo.",
+    explicacion: "Validar no significa decir 'tienes razón'. Significa decir 'entiendo por qué lo sientes así'. Esto hace que tu amor se sienta visto, no atacado.",
+    practica: "Cuando tu pareja exprese algo difícil, responde: 'Tiene sentido que te sientas así dado lo que pasó'. No des tu opinión todavía, solo reconoce su experiencia.",
+    autor: "Sue Johnson",
+    quienEs: "Creadora de EFT, la terapia de pareja más efectiva. Su investigación muestra que el miedo más grande en pareja es no importarle a la otra persona."
+  },
+  {
+    id: 8,
+    texto: "Celebra los logros de tu pareja como si fueran tuyos.",
+    explicacion: "Cuando tu amor te cuenta algo bueno, tu reacción importa más de lo que crees. Responder con entusiasmo genuino fortalece el vínculo más que manejar bien los conflictos.",
+    practica: "Cuando tu pareja comparta una buena noticia, pregunta detalles, celebra con ellos, y di por qué te enorgullece. Evita minimizar ('eso es fácil') o cambiar de tema.",
+    autor: "Shelly Gable",
+    quienEs: "Psicóloga de UCLA que estudió miles de parejas. Descubrió que celebrar juntos libera dopamina (la hormona de la felicidad) en ambos."
+  },
+  {
+    id: 9,
+    texto: "Respeta cuando tu pareja dice 'no tengo energía ahora'.",
+    explicacion: "A veces nuestro amor necesita espacio no porque no nos quiera, sino porque su sistema nervioso está saturado. Cuando alguien está en modo 'supervivencia', no puede conectar emocionalmente.",
+    practica: "Si notas que tu pareja está agotado/a, pregunta: '¿Tienes energía para hablar de esto ahora o mejor lo dejamos para después?' Esto no es rechazo, es cuidado mutuo.",
+    autor: "Stephen Porges",
+    quienEs: "Descubrió el Sistema Nervioso Polivagal, que explica por qué a veces necesitamos pausas para regular nuestro cuerpo antes de poder conectar."
+  },
+  {
+    id: 10,
+    texto: "Usa 'y' en vez de 'pero'.",
+    explicacion: "La palabra 'pero' borra todo lo anterior. 'Te amo, pero...' suena como 'en realidad no te amo tanto'. En cambio, 'y' mantiene ambas verdades: 'Entiendo que estás cansado/a Y necesito hablar contigo'.",
+    practica: "Escucha tus conversaciones. Cuando vayas a decir 'pero', cámbialo por 'y'. Notarás cómo la conversación fluye mejor.",
+    autor: "Marshall Rosenberg",
+    quienEs: "Esta técnica viene de la Comunicación No Violenta, usada en mediaciones de paz en todo el mundo."
+  },
+  {
+    id: 11,
+    texto: "Pregunta antes de asumir lo que piensa tu pareja.",
+    explicacion: "Nuestra mente inventa historias sobre las intenciones del otro, y casi siempre son peores de lo real. 'Seguro ya no le importo' puede ser solo 'está distraído con el trabajo'.",
+    practica: "Cuando notes que estás asumiendo algo negativo, pregunta: '¿Qué quisiste decir cuando...?' o '¿Cómo te sientes?'. La curiosidad cura más que la certeza.",
+    autor: "Aaron Beck",
+    quienEs: "Padre de la Terapia Cognitiva. Identificó la 'lectura de mente' como uno de los pensamientos más dañinos para las relaciones."
+  },
+  {
+    id: 12,
+    texto: "La confianza se construye con pequeñas acciones repetidas.",
+    explicacion: "No son los grandes gestos los que crean seguridad, sino las pequeñas promesas cumplidas: 'Te llamo después', y llamar. 'Llego temprano', y llegar temprano.",
+    practica: "Haz una promesa pequeña y cumplela. La consistencia diaria es la base de sentirse seguro con alguien.",
+    autor: "John Bowlby",
+    quienEs: "Estudió cómo los niños se apegan a sus cuidadores. Sus descubrimientos sobre el apego seguro aplican también a las parejas adultas."
+  },
+  {
+    id: 13,
+    texto: "La mayoría de los problemas de pareja no tienen solución — y eso está bien.",
+    explicacion: "El 69% de los conflictos de pareja son por diferencias de personalidad o valores que nunca desaparecerán. Las parejas que duran no resuelven todo; aprenden a 'bailar' con sus diferencias.",
+    practica: "Cuando surja un tema recurrente, díganle: 'Ah, este es nuestro tema de siempre'. Reconocer el patrón ayuda a no tomarlo personal y buscar compromisos en vez de ganar.",
+    autor: "John Gottman",
+    quienEs: "Descubrió esto en su laboratorio de parejas. El objetivo no es eliminar diferencias, sino mantener la conexión a pesar de ellas."
+  },
+  {
+    id: 14,
+    texto: "Tu cuerpo te avisa cuando necesitas una pausa.",
+    explicacion: "Cuando el corazón late rápido, los músculos se tensan y la mente se nubla, es señal de que tu sistema nervioso está saturado. En ese estado, no puedes conversar bien.",
+    practica: "Acuerden una 'palabra de pausa' (ej: 'necesito un break'). Cuando alguien la diga, ambos toman 20-30 minutos para calmarse antes de seguir hablando. No es huir, es cuidarse.",
+    autor: "John Gottman",
+    quienEs: "Llama a esto 'inundación emocional' y recomienda pausas de 20 minutos para que el cuerpo se regule."
+  },
+  {
+    id: 15,
+    texto: "El amor es algo que haces, no solo algo que sientes.",
+    explicacion: "La pasión sube y baja naturalmente en toda relación larga. Pero la intimidad y el compromiso se eligen todos los días: enviar ese mensaje, hacer esa pregunta, dar ese abrazo.",
+    practica: "Elige un acto de amor consciente hoy, aunque no sientas 'mariposas'. Las acciones renuevan los sentimientos, no al revés.",
+    autor: "Robert Sternberg",
+    quienEs: "Propuso que el amor duradero tiene 3 partes: intimidad, pasión y compromiso. Las parejas que duran cultivan las tres, especialmente cuando la pasión baja."
+  },
 ];
 
 function CouplePandaSVG({ happy = false, size = 160 }) {
@@ -3110,15 +3220,37 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
 
       {open && (
         <div style={{ marginTop: 10, background: C.white, borderRadius: 18, padding: 16, boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark }}>Consejo del Día</div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 12 }}>
+            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", color: C.dark }}>💡 Consejo del Día</div>
             <div style={{ background: C.cream, borderRadius: 999, padding: "5px 10px", fontSize: "0.68rem", fontWeight: 800, color: C.inkL }}>
               #{consejo.id}
             </div>
           </div>
 
-          <div style={{ background: "linear-gradient(130deg, #f7f1ff 0%, #eee3ff 100%)", borderRadius: 12, padding: "11px 12px", border: `1px solid ${C.border}`, marginBottom: 10 }}>
-            <div style={{ fontSize: "0.88rem", color: C.ink, lineHeight: 1.75, fontWeight: 700 }}>{consejo.texto}</div>
+          {/* El consejo principal */}
+          <div style={{ background: "linear-gradient(130deg, #f7f1ff 0%, #eee3ff 100%)", borderRadius: 14, padding: "14px 16px", border: `1.5px solid ${C.border}`, marginBottom: 12 }}>
+            <div style={{ fontSize: "1rem", color: C.dark, lineHeight: 1.6, fontWeight: 800 }}>{consejo.texto}</div>
+          </div>
+
+          {/* Por qué funciona */}
+          <div style={{ background: C.sandL, borderRadius: 12, padding: "12px 14px", marginBottom: 12, border: `1px solid ${C.border}` }}>
+            <div style={{ fontSize: "0.75rem", fontWeight: 800, color: C.olive, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>💜 Por qué funciona</div>
+            <div style={{ fontSize: "0.88rem", color: C.ink, lineHeight: 1.7 }}>{consejo.explicacion}</div>
+          </div>
+
+          {/* Qué puedes hacer hoy */}
+          <div style={{ background: "#f0f8ff", borderRadius: 12, padding: "12px 14px", marginBottom: 12, border: `1px solid #d0e0f0` }}>
+            <div style={{ fontSize: "0.75rem", fontWeight: 800, color: "#4a6fa5", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>✨ Qué puedes hacer hoy</div>
+            <div style={{ fontSize: "0.88rem", color: C.ink, lineHeight: 1.7 }}>{consejo.practica}</div>
+          </div>
+
+          {/* Quién lo dice */}
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 10, background: C.cream, borderRadius: 12, padding: "12px 14px", marginBottom: 14, border: `1px solid ${C.border}` }}>
+            <div style={{ fontSize: "1.4rem" }}>👤</div>
+            <div>
+              <div style={{ fontSize: "0.85rem", fontWeight: 800, color: C.dark, marginBottom: 2 }}>{consejo.autor}</div>
+              <div style={{ fontSize: "0.78rem", color: C.inkM, lineHeight: 1.5 }}>{consejo.quienEs}</div>
+            </div>
           </div>
 
           <div style={{ display: "flex", gap: 8 }}>
@@ -3130,8 +3262,8 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
             </Btn>
           </div>
 
-          <div style={{ marginTop: 8, fontSize: "0.68rem", color: C.inkL, fontWeight: 700 }}>
-            Favoritos guardados: {favs.length} · Marco clínico: TCC, DBT, ACT y terapias contextuales.
+          <div style={{ marginTop: 10, fontSize: "0.68rem", color: C.inkL, fontWeight: 700, textAlign: "center" }}>
+            💜 {favs.length} consejo{favs.length !== 1 ? 's' : ''} guardado{favs.length !== 1 ? 's' : ''} en favoritos
           </div>
         </div>
       )}
