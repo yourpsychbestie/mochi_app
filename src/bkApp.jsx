@@ -449,10 +449,62 @@ const EXERCISES = [
 ];
 
 const CONOCE_CATS = {
-  infancia:{emoji:"🧸",label:"Infancia",bg:"#f5edda",preguntas:["¿Cuál es tu recuerdo más feliz de la infancia?","¿Cómo era tu relación con tu mamá cuando eras pequeño/a?","¿Cómo era tu relación con tu papá cuando eras pequeño/a?","¿Qué aprendiste sobre el amor en tu familia de origen?","¿Cuál fue el momento más difícil de tu infancia?","¿Qué cosas de tu infancia te gustaría haber tenido?"]},
-  amor: {emoji:"💕",label:"El Amor",bg:"#fce8e0",preguntas:["¿Qué significa para ti sentirte amado/a?","¿Cuál ha sido tu mayor herida en el amor?","¿Qué es lo que más te da miedo en una relación?","¿Qué valoras más de nuestra relación hoy?","¿Hay algo que siempre has querido decirme y no has podido?","¿Qué necesitas de mí que quizás no me has pedido?"]},
-  suenos: {emoji:"🌙",label:"Sueños",bg:"#e4e8f8",preguntas:["¿Cuál es el sueño que sientes que aún no has perseguido?","¿Cómo te imaginas tu vida en 10 años?","¿Qué cosa quisiste lograr y aún no has intentado?","¿Qué nos falta vivir juntos?","Si el dinero no fuera problema, ¿cómo vivirías?","¿Qué legado quieres dejar en el mundo?"]},
-  miedos: {emoji:"🫂",label:"Miedos",bg:"#e4f0e0",preguntas:["¿A qué le tienes más miedo en la vida?","¿Cuándo más necesitas que te abracen?","¿Cuándo te sientes solo/a aunque esté presente?","¿Qué es lo que más te cuesta pedir?","¿Qué es lo que más te cuesta recibir?","¿Cuál es tu mayor inseguridad y cómo puedo apoyarte?"]},
+  infancia: {
+    emoji: "🧸",
+    label: "Infancia",
+    bg: "#f5edda",
+    descripcion: "Conocer de dónde venimos nos ayuda a entender cómo amamos hoy. No hay respuestas correctas, solo tu historia.",
+    preguntas: [
+      "¿Cuál es tu recuerdo más feliz de cuando eras niño/a?",
+      "¿Qué comida te recuerda a tu casa?",
+      "¿Qué tradición familiar te gustaría tener con nosotros?",
+      "¿Cómo se decían 'te quiero' en tu familia?",
+      "¿Qué hacías para divertirte cuando eras pequeño/a?",
+      "¿Qué cosa de tu infancia te gustaría recuperar?"
+    ]
+  },
+  cosasFavoritas: {
+    emoji: "⭐",
+    label: "Cosas Favoritas",
+    bg: "#fff4e0",
+    descripcion: "Las cosas que nos gustan dicen mucho de quiénes somos. Simple, rápido y divertido.",
+    preguntas: [
+      "¿Cuál es tu comida favorita?",
+      "¿Qué película podrías ver mil veces?",
+      "¿Qué música te pone de buen humor?",
+      "¿Cuál es tu lugar favorito del mundo?",
+      "¿Qué harías si tuvieras un día libre sin compromisos?",
+      "¿Qué regalo te ha hecho más ilusión?"
+    ]
+  },
+  sueños: {
+    emoji: "🌙",
+    label: "Sueños",
+    bg: "#e4e8f8",
+    descripcion: "Compartir lo que soñamos nos acerca. No tiene que ser realista, solo honesto.",
+    preguntas: [
+      "¿Qué te gustaría aprender a hacer este año?",
+      "¿A dónde te gustaría viajar conmigo?",
+      "¿Qué te gustaría que hiciéramos más juntos?",
+      "¿Qué trabajo harías si el dinero no importara?",
+      "¿Qué te gustaría lograr en los próximos 5 años?",
+      "¿Qué aventura te gustaría vivir?"
+    ]
+  },
+  miedos: {
+    emoji: "🫂",
+    label: "Miedos & Apoyo",
+    bg: "#e4f0e0",
+    descripcion: "Decir qué nos asusta y cómo nos cuidan es clave para sentirnos seguros juntos.",
+    preguntas: [
+      "¿Qué situación te hace sentir incómodo/a?",
+      "¿Cómo puedo darte ánimos cuando estás mal?",
+      "¿Qué necesitas cuando tienes un día difícil?",
+      "¿Qué te cuesta pedir ayuda?",
+      "¿Qué te hace sentir más querido/a?",
+      "¿Cómo puedo mostrarte que estoy aquí para ti?"
+    ]
+  },
 };
 
 const BURBUJA_SECTIONS = [
@@ -2527,6 +2579,16 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
         <div style={{ background: C.dark, padding:"44px 18px 0" }}>
           <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.9rem", color:C.cream2, marginBottom:4 }}>Ejercicios ⭐</div>
           <div style={{ color:`${C.cream}88`, fontSize:"0.84rem", fontWeight:600, marginBottom:14 }}>Actividades y aprendizaje en pareja</div>
+          
+          {/* Instrucciones */}
+          <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 12, padding: "12px 14px", marginBottom: 14, border: "1px solid rgba(255,255,255,0.2)" }}>
+            <div style={{ fontSize: "0.78rem", color: `${C.cream}cc`, lineHeight: 1.6 }}>
+              💡 <strong style={{ color: C.cream2 }}>¿Cómo funciona?</strong> Cada ejercicio está basado en terapia de pareja real. 
+              Pueden hacerlos juntos o por separado. Cada uno gana bambú 🌿 para el jardín. 
+              Repetirlos los hace más profundos.
+            </div>
+          </div>
+          
           <div style={{ display:"flex", gap:4 }}>
             {[["ejerc","🌿 Ejercicios"],["lecciones","📖 Lecciones"]].map(([id,label]) => (
               <div key={id} onClick={() => setEjTab(id)}
@@ -2566,6 +2628,15 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
       </div>
       {ejTab === "lecciones" && (
       <div style={{ background: C.sandL, minHeight:"60vh", paddingBottom:14 }}>
+        {/* Instrucciones de Lecciones */}
+        <div style={{ margin: "12px 14px 0", background: C.white, borderRadius: 16, padding: "14px 16px", boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
+          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark, marginBottom: 6 }}>📖 ¿Qué son las Lecciones?</div>
+          <div style={{ fontSize: "0.8rem", color: C.inkM, lineHeight: 1.6 }}>
+            Herramientas reales de psicología de pareja, explicadas de forma simple. 
+            Lee una al día — cada lección te da +10 bambú 🌿. Las puedes releer cuando quieras.
+          </div>
+        </div>
+        
         <div style={{ margin:"10px 14px 0" }}>
         <div style={{ background:"#e8f0ff", borderRadius:14, padding:"9px 14px", marginBottom:10, border:`1px solid #a8b8e830` }}>
           <div style={{ fontSize:"0.8rem", color:"#4050a0", lineHeight:1.5 }}>💡 Herramientas reales de psicología de pareja.</div>
@@ -2730,9 +2801,18 @@ function Conocete({ conoce, onSave, user }) {
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
       <ScreenTop title="Conócete" sub="Preguntas para descubrirse" />
       <div style={{ margin: 14 }}>
+        {/* Descripción de la categoría */}
+        <div style={{ background: CONOCE_CATS[cat].bg, borderRadius: 14, padding: "14px 16px", marginBottom: 12, border: `1.5px solid ${C.border}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+            <span style={{ fontSize: "1.6rem" }}>{CONOCE_CATS[cat].emoji}</span>
+            <span style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", color: C.dark }}>{CONOCE_CATS[cat].label}</span>
+          </div>
+          <div style={{ fontSize: "0.82rem", color: C.inkM, lineHeight: 1.6 }}>{CONOCE_CATS[cat].descripcion}</div>
+        </div>
+
         <div style={{ background: C.white, borderRadius: 20, padding: 18, boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", color: C.dark }}>{CONOCE_CATS[cat].emoji} {CONOCE_CATS[cat].label}</div>
+            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", color: C.dark }}>Preguntas</div>
             <button onClick={() => setCat(null)} style={{ background: C.sand, border: `1.5px solid ${C.border}`, borderRadius: 8, width: 30, height: 30, cursor: "pointer", fontSize: "0.85rem", color: C.inkM }}>✕</button>
           </div>
           {CONOCE_CATS[cat].preguntas.map((q, i) => {
@@ -2754,6 +2834,16 @@ function Conocete({ conoce, onSave, user }) {
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
       <ScreenTop title="Conócete" sub="Preguntas para descubrirse" />
+      
+      {/* Instrucciones introductorias */}
+      <div style={{ margin: "12px 14px", background: C.white, borderRadius: 16, padding: "16px 18px", boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
+        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark, marginBottom: 8 }}>💬 ¿Cómo funciona?</div>
+        <div style={{ fontSize: "0.82rem", color: C.inkM, lineHeight: 1.7 }}>
+          Responde las preguntas por separado. Cuando ambos contesten, podrán ver las respuestas del otro. 
+          No hay respuestas correctas — se trata de conocerse mejor. Cada respuesta te da +15 bambú 🌿
+        </div>
+      </div>
+
       <div style={{ padding: "8px 14px 0", fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark }}>Elige una categoría</div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 11, padding: "10px 14px" }}>
         {Object.entries(CONOCE_CATS).map(([key, data]) => {
@@ -2802,8 +2892,12 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
         <p style={{ color: `${C.cream}88`, fontSize: "0.86rem", fontWeight: 600, margin: "4px 0 0" }}>Sus reglas, acuerdos y mundo compartido · +10 bambú c/u</p>
       </div>
       <div style={{ background: C.cream, borderRadius: 18, margin: "14px 14px 8px", padding: 16, border: `1.5px solid ${C.border}`, boxShadow: `0 3px 0 ${C.border}` }}>
-        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.05rem", color: C.dark, marginBottom: 5 }}>¿Qué es la burbuja?</div>
-        <div style={{ fontSize: "0.85rem", color: C.inkM, lineHeight: 1.7 }}>Su relación tiene sus propias reglas — únicas para ustedes. Este es el espacio para definirlas juntos, sin juicios.</div>
+        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.05rem", color: C.dark, marginBottom: 5 }}>🫧 ¿Qué es la Burbuja?</div>
+        <div style={{ fontSize: "0.85rem", color: C.inkM, lineHeight: 1.7 }}>
+          Acá construyen juntos las reglas y acuerdos de su relación. En <strong>Negociación</strong>: cada uno propone su respuesta a preguntas clave — 
+          si ambos aprueban, se guarda como acuerdo. En <strong>Acuerdos</strong>: ven todo lo que han acordado y pueden editarlo. 
+          Cada acuerdo aprobado da +10 bambú 🌿 a los dos.
+        </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
           <ProgBar value={approvedCount} max={total} color={C.olive} height={7} style={{ flex: 1 }} />
           <div style={{ fontSize: "0.76rem", fontWeight: 800, color: C.olive, whiteSpace: "nowrap" }}>{approvedCount} / {total}</div>
