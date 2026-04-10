@@ -3399,13 +3399,7 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
     .filter(m => m.senderEmail !== myEmail)
     .sort((a, b) => new Date(b?.time || 0).getTime() - new Date(a?.time || 0).getTime());
   const recentPartnerMsgs = partnerMsgs.slice(0, 3);
-  const approvedAgreements = Object.entries(burbuja || {})
-    .filter(([, v]) => v?.status === "approved" && (v?.approvedText || v?.proposalText))
-    .map(([id, v]) => ({
-      id,
-      text: v.approvedText || v.proposalText,
-      question: v.question || BURBUJA_ITEM_MAP[id]?.question || "Acuerdo"
-    }));
+
   const [connected, setConnected] = useState(false);
   useEffect(() => {
     if (user?.code && !user?.isGuest) {
@@ -3516,19 +3510,6 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
           onAddGratitud={onAddGratitud} onAddMomento={onAddMomento}
           user={user}
         />
-      </div>
-
-      {/* ── ACUERDOS HECHOS ── */}
-      <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:16, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
-        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:8 }}>🤝 Acuerdos hechos</div>
-        {!approvedAgreements.length ? (
-          <div style={{ fontSize:"0.82rem", color:C.inkL, lineHeight:1.6 }}>Todavía no tienen acuerdos aprobados. Vayan a Burbuja y cierren su primer acuerdo juntos.</div>
-        ) : approvedAgreements.slice(0, 20).map(a => (
-          <div key={a.id} style={{ background:C.cream, borderRadius:10, padding:10, marginBottom:8, border:`1px solid ${C.border}` }}>
-            <div style={{ fontSize:"0.7rem", color:C.inkL, fontWeight:800, marginBottom:4 }}>{a.question}</div>
-            <div style={{ fontSize:"0.84rem", color:C.ink, fontWeight:700, lineHeight:1.6 }}>{a.text}</div>
-          </div>
-        ))}
       </div>
 
       <div style={{ padding: "0 14px 20px" }}>
