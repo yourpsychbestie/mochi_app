@@ -2638,9 +2638,6 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
         </div>
         
         <div style={{ margin:"10px 14px 0" }}>
-        <div style={{ background:"#e8f0ff", borderRadius:14, padding:"9px 14px", marginBottom:10, border:`1px solid #a8b8e830` }}>
-          <div style={{ fontSize:"0.8rem", color:"#4050a0", lineHeight:1.5 }}>💡 Herramientas reales de psicología de pareja.</div>
-        </div>
         {(() => {
           const dayOfYear = Math.floor((new Date()-new Date(new Date().getFullYear(),0,0))/86400000);
           const todayId = DAILY_LESSONS[dayOfYear % DAILY_LESSONS.length].id;
@@ -3257,12 +3254,14 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
   const favKey = `mochi_consejos_fav_${ownerKey}`;
   const [offset, setOffset] = useState(0);
   const [open, setOpen] = useState(false);
+  const [showFavs, setShowFavs] = useState(false);
   const [favs, setFavs] = useState(() => ls.get(favKey) || []);
   const dayKey = getDateKeyLocal();
 
   useEffect(() => {
     setOffset(0);
     setOpen(false);
+    setShowFavs(false);
   }, [dayKey, ownerKey]);
 
   useEffect(() => {
@@ -3279,27 +3278,35 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
     setFavs(prev => isFav ? prev.filter(id => id !== consejo.id) : [...prev, consejo.id]);
   };
 
-  const handleToggleOpen = () => {
-    setOpen(v => {
-      const next = !v;
-      if (next) onClaimReward?.();
-      return next;
-    });
+  const removeFav = (id) => {
+    setFavs(prev => prev.filter(fid => fid !== id));
   };
+
+  const handleOpen = () => {
+    setOpen(true);
+    onClaimReward?.();
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const favsList = favs.map(id => CONSEJOS_DIARIOS.find(c => c.id === id)).filter(Boolean);
 
   return (
     <div style={{ margin: "0 14px 12px" }}>
+      {/* Botón para abrir el modal */}
       <button
-        onClick={handleToggleOpen}
+        onClick={handleOpen}
         style={{
           width: "100%",
-          background: C.white,
+          background: "linear-gradient(130deg, #f7f1ff 0%, #eee3ff 100%)",
           color: C.dark,
           border: `1.5px solid ${C.border}`,
           borderRadius: 14,
-          padding: "12px 14px",
+          padding: "14px 16px",
           fontFamily: "'Fredoka One',cursive",
-          fontSize: "0.98rem",
+          fontSize: "1rem",
           cursor: "pointer",
           boxShadow: `0 3px 0 ${C.border}`,
           display: "flex",
@@ -3308,56 +3315,266 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
           gap: 8,
         }}
       >
-        <span>Consejo del Día 🐼 · +15 bambú</span>
-        <span style={{ fontSize: "0.86rem", color: C.inkL }}>{open ? "Cerrar" : "Abrir"}</span>
+        <span>💡 Consejo del Día · +15 bambú</span>
+        <span style={{ fontSize: "0.9rem" }}>🐼</span>
       </button>
 
+      {/* Botón para ver favoritos (solo si hay favoritos) */}
+      {favs.length > 0 && (
+        <button
+          onClick={() => setShowFavs(true)}
+          style={{
+            width: "100%",
+            marginTop: 8,
+            background: C.cream,
+            color: C.dark,
+            border: `1.5px solid ${C.border}`,
+            borderRadius: 12,
+            padding: "10px 14px",
+            fontFamily: "'Fredoka One',cursive",
+            fontSize: "0.85rem",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+          }}
+        >
+          <span>💜</span>
+          <span>Ver {favs.length} favorito{favs.length !== 1 ? 's' : ''}</span>
+        </button>
+      )}
+
+      {/* Modal Pop-up del Consejo */}
       {open && (
-        <div style={{ marginTop: 10, background: C.white, borderRadius: 18, padding: 16, boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 12 }}>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", color: C.dark }}>💡 Consejo del Día</div>
-            <div style={{ background: C.cream, borderRadius: 999, padding: "5px 10px", fontSize: "0.68rem", fontWeight: 800, color: C.inkL }}>
-              #{consejo.id}
+        <div 
+          style={{ 
+            position: "fixed", 
+            inset: 0, 
+            background: "rgba(45,31,70,0.65)", 
+            zIndex: 6000, 
+            display: "flex", 
+            alignItems: "center", 
+            justifyContent: "center", 
+            padding: "20px" 
+          }} 
+          onClick={handleClose}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()} 
+            style={{ 
+              width: "100%", 
+              maxWidth: 520, 
+              background: C.white, 
+              borderRadius: 28, 
+              padding: "24px 22px 24px", 
+              border: `2px solid ${C.border}`, 
+              boxShadow: "0 20px 60px rgba(0,0,0,0.35)", 
+              maxHeight: "85vh", 
+              overflowY: "auto" 
+            }}
+          >
+            {/* Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: "1.8rem" }}>💡</span>
+                <div>
+                  <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.2rem", color: C.dark }}>Consejo del Día</div>
+                  <div style={{ fontSize: "0.75rem", color: C.inkL, fontWeight: 700 }}>#{consejo.id} · +15 bambú 🌿</div>
+                </div>
+              </div>
+              <button 
+                onClick={handleClose} 
+                style={{ 
+                  width: 40, 
+                  height: 40, 
+                  borderRadius: "50%", 
+                  border: "none", 
+                  background: C.cream, 
+                  color: C.inkM, 
+                  fontWeight: 900, 
+                  fontSize: "1.1rem", 
+                  cursor: "pointer" 
+                }}
+              >
+                ✕
+              </button>
             </div>
-          </div>
 
-          {/* El consejo principal */}
-          <div style={{ background: "linear-gradient(130deg, #f7f1ff 0%, #eee3ff 100%)", borderRadius: 14, padding: "14px 16px", border: `1.5px solid ${C.border}`, marginBottom: 12 }}>
-            <div style={{ fontSize: "1rem", color: C.dark, lineHeight: 1.6, fontWeight: 800 }}>{consejo.texto}</div>
-          </div>
-
-          {/* Por qué funciona */}
-          <div style={{ background: C.sandL, borderRadius: 12, padding: "12px 14px", marginBottom: 12, border: `1px solid ${C.border}` }}>
-            <div style={{ fontSize: "0.75rem", fontWeight: 800, color: C.olive, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>💜 Por qué funciona</div>
-            <div style={{ fontSize: "0.88rem", color: C.ink, lineHeight: 1.7 }}>{consejo.explicacion}</div>
-          </div>
-
-          {/* Qué puedes hacer hoy */}
-          <div style={{ background: "#f0f8ff", borderRadius: 12, padding: "12px 14px", marginBottom: 12, border: `1px solid #d0e0f0` }}>
-            <div style={{ fontSize: "0.75rem", fontWeight: 800, color: "#4a6fa5", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>✨ Qué puedes hacer hoy</div>
-            <div style={{ fontSize: "0.88rem", color: C.ink, lineHeight: 1.7 }}>{consejo.practica}</div>
-          </div>
-
-          {/* Quién lo dice */}
-          <div style={{ display: "flex", alignItems: "flex-start", gap: 10, background: C.cream, borderRadius: 12, padding: "12px 14px", marginBottom: 14, border: `1px solid ${C.border}` }}>
-            <div style={{ fontSize: "1.4rem" }}>👤</div>
-            <div>
-              <div style={{ fontSize: "0.85rem", fontWeight: 800, color: C.dark, marginBottom: 2 }}>{consejo.autor}</div>
-              <div style={{ fontSize: "0.78rem", color: C.inkM, lineHeight: 1.5 }}>{consejo.quienEs}</div>
+            {/* El consejo principal */}
+            <div style={{ background: "linear-gradient(130deg, #f7f1ff 0%, #eee3ff 100%)", borderRadius: 18, padding: "18px 20px", border: `2px solid ${C.border}`, marginBottom: 14 }}>
+              <div style={{ fontSize: "1.15rem", color: C.dark, lineHeight: 1.6, fontWeight: 800, textAlign: "center" }}>
+                {consejo.texto}
+              </div>
             </div>
-          </div>
 
-          <div style={{ display: "flex", gap: 8 }}>
-            <Btn onClick={() => setOffset(v => (v + 1) % CONSEJOS_DIARIOS.length)} variant="sand" style={{ flex: 1, padding: "10px 12px", fontSize: "0.82rem" }}>
-              Ver otro consejo
-            </Btn>
-            <Btn onClick={toggleFav} variant={isFav ? "olive" : "cream"} style={{ flex: 1, padding: "10px 12px", fontSize: "0.82rem" }}>
-              {isFav ? "Guardado ✓" : "Guardar favorito"}
-            </Btn>
-          </div>
+            {/* Por qué funciona */}
+            <div style={{ background: C.sandL, borderRadius: 14, padding: "14px 16px", marginBottom: 12, border: `1.5px solid ${C.border}` }}>
+              <div style={{ fontSize: "0.8rem", fontWeight: 800, color: C.olive, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>💜 Por qué funciona</div>
+              <div style={{ fontSize: "0.9rem", color: C.ink, lineHeight: 1.7 }}>{consejo.explicacion}</div>
+            </div>
 
-          <div style={{ marginTop: 10, fontSize: "0.68rem", color: C.inkL, fontWeight: 700, textAlign: "center" }}>
-            💜 {favs.length} consejo{favs.length !== 1 ? 's' : ''} guardado{favs.length !== 1 ? 's' : ''} en favoritos
+            {/* Qué puedes hacer hoy */}
+            <div style={{ background: "#f0f8ff", borderRadius: 14, padding: "14px 16px", marginBottom: 12, border: `1.5px solid #d0e0f0` }}>
+              <div style={{ fontSize: "0.8rem", fontWeight: 800, color: "#4a6fa5", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>✨ Qué puedes hacer hoy</div>
+              <div style={{ fontSize: "0.9rem", color: C.ink, lineHeight: 1.7 }}>{consejo.practica}</div>
+            </div>
+
+            {/* Quién lo dice */}
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 12, background: C.cream, borderRadius: 14, padding: "14px 16px", marginBottom: 16, border: `1.5px solid ${C.border}` }}>
+              <div style={{ fontSize: "1.6rem" }}>👤</div>
+              <div>
+                <div style={{ fontSize: "0.9rem", fontWeight: 800, color: C.dark, marginBottom: 3 }}>{consejo.autor}</div>
+                <div style={{ fontSize: "0.8rem", color: C.inkM, lineHeight: 1.5 }}>{consejo.quienEs}</div>
+              </div>
+            </div>
+
+            {/* Botones */}
+            <div style={{ display: "flex", gap: 10 }}>
+              <Btn onClick={() => setOffset(v => (v + 1) % CONSEJOS_DIARIOS.length)} variant="sand" style={{ flex: 1, padding: "12px 14px", fontSize: "0.9rem" }}>
+                Ver otro consejo
+              </Btn>
+              <Btn onClick={toggleFav} variant={isFav ? "olive" : "cream"} style={{ flex: 1, padding: "12px 14px", fontSize: "0.9rem" }}>
+                {isFav ? "Guardado ✓" : "Guardar favorito"}
+              </Btn>
+            </div>
+
+            {/* Botón cerrar */}
+            <button 
+              onClick={handleClose}
+              style={{
+                width: "100%",
+                marginTop: 16,
+                background: C.dark,
+                color: C.cream2,
+                border: "none",
+                borderRadius: 14,
+                padding: "14px",
+                fontFamily: "'Fredoka One',cursive",
+                fontSize: "1rem",
+                cursor: "pointer",
+                boxShadow: "0 4px 0 rgba(0,0,0,0.2)"
+              }}
+            >
+              Entendido 💜
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Favoritos */}
+      {showFavs && (
+        <div 
+          style={{ 
+            position: "fixed", 
+            inset: 0, 
+            background: "rgba(45,31,70,0.65)", 
+            zIndex: 6001, 
+            display: "flex", 
+            alignItems: "center", 
+            justifyContent: "center", 
+            padding: "20px" 
+          }} 
+          onClick={() => setShowFavs(false)}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()} 
+            style={{ 
+              width: "100%", 
+              maxWidth: 520, 
+              background: C.white, 
+              borderRadius: 28, 
+              padding: "24px 22px 24px", 
+              border: `2px solid ${C.border}`, 
+              boxShadow: "0 20px 60px rgba(0,0,0,0.35)", 
+              maxHeight: "85vh", 
+              overflowY: "auto" 
+            }}
+          >
+            {/* Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: "1.8rem" }}>💜</span>
+                <div>
+                  <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.2rem", color: C.dark }}>Mis Favoritos</div>
+                  <div style={{ fontSize: "0.75rem", color: C.inkL, fontWeight: 700 }}>{favs.length} consejo{favs.length !== 1 ? 's' : ''} guardado{favs.length !== 1 ? 's' : ''}</div>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowFavs(false)} 
+                style={{ 
+                  width: 40, 
+                  height: 40, 
+                  borderRadius: "50%", 
+                  border: "none", 
+                  background: C.cream, 
+                  color: C.inkM, 
+                  fontWeight: 900, 
+                  fontSize: "1.1rem", 
+                  cursor: "pointer" 
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Lista de favoritos */}
+            {favsList.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "40px 20px", color: C.inkL }}>
+                <div style={{ fontSize: "3rem", marginBottom: 10 }}>💜</div>
+                <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", marginBottom: 8 }}>No tienes favoritos aún</div>
+                <div style={{ fontSize: "0.85rem" }}>Guarda los consejos que más te gusten para verlos aquí</div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {favsList.map((favConsejo) => (
+                  <div key={favConsejo.id} style={{ background: C.sandL, borderRadius: 16, padding: "14px 16px", border: `1.5px solid ${C.border}` }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                      <div style={{ fontSize: "0.7rem", fontWeight: 800, color: C.inkL }}>#{favConsejo.id}</div>
+                      <button 
+                        onClick={() => removeFav(favConsejo.id)}
+                        style={{ 
+                          background: "none", 
+                          border: "none", 
+                          color: "#e86040", 
+                          fontSize: "0.75rem", 
+                          cursor: "pointer",
+                          fontWeight: 700
+                        }}
+                      >
+                        Quitar ✕
+                      </button>
+                    </div>
+                    <div style={{ fontSize: "0.95rem", color: C.dark, fontWeight: 700, marginBottom: 8, lineHeight: 1.5 }}>
+                      {favConsejo.texto}
+                    </div>
+                    <div style={{ fontSize: "0.75rem", color: C.inkM, fontWeight: 700 }}>
+                      {favConsejo.autor}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Botón cerrar */}
+            <button 
+              onClick={() => setShowFavs(false)}
+              style={{
+                width: "100%",
+                marginTop: 20,
+                background: C.dark,
+                color: C.cream2,
+                border: "none",
+                borderRadius: 14,
+                padding: "14px",
+                fontFamily: "'Fredoka One',cursive",
+                fontSize: "1rem",
+                cursor: "pointer",
+                boxShadow: "0 4px 0 rgba(0,0,0,0.2)"
+              }}
+            >
+              Cerrar
+            </button>
           </div>
         </div>
       )}
