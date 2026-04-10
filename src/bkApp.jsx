@@ -2074,7 +2074,7 @@ function Login({ onLogin }) {
     _pendingLocalAuth = true;
     let createdAuthUser = false;
     try {
-      const since = durN ? `Juntos ${durN} ${durU}` : "Juntos desde hoy";
+      const since = durN ? `Juntos ${durN} ${durU}` : null;
       const cred = await fbRegister(cleanEmail, pass);
       createdAuthUser = true;
       const uid = cred.user.uid;
@@ -2140,7 +2140,7 @@ function Login({ onLogin }) {
         partnerName: cleanPartnerName,
       }));
       const names = claim.names || "Nosotros";
-      const since = claim.since || "Juntos desde hoy";
+      const since = claim.since || null;
       await retryFirestore(() => fbSaveUser(uid, { email: cleanPartnerEmail, names, code: cleanCode, since, isOwner: false }));
       // Also update owner's user record with new names
       if (claim.ownerUid) await retryFirestore(() => fbSaveUser(claim.ownerUid, { names }));
@@ -3786,13 +3786,16 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
         <div style={{ background: C.cream, borderRadius: 16, padding: "14px 16px", border: `1.5px solid ${C.border}`, marginBottom: 8 }}>
           <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.inkL, letterSpacing: "0.6px", marginBottom: 8 }}>AVISO LEGAL Y PRIVACIDAD</div>
           <div style={{ fontSize: "0.72rem", color: C.inkM, lineHeight: 1.65 }}>
-            <b>Mochi</b> es una aplicación de bienestar para parejas desarrollada por Johana Fragoso. Todos los derechos reservados © {new Date().getFullYear()}. El nombre, diseño, concepto, personajes y contenido de Mochi están protegidos por las leyes de propiedad intelectual. Queda prohibida su reproducción, distribución o uso comercial sin autorización expresa por escrito.
+            <b>Mochi</b> es una aplicación de bienestar para parejas desarrollada por <b>Johana Heidi Fragoso Blendl</b> en colaboración con inteligencia artificial. Todos los derechos reservados © {new Date().getFullYear()}. El nombre, diseño, concepto, personajes y contenido de Mochi están protegidos por las leyes de propiedad intelectual. Queda prohibida su reproducción, distribución o uso comercial sin autorización expresa por escrito.
           </div>
           <div style={{ fontSize: "0.72rem", color: C.inkM, lineHeight: 1.65, marginTop: 8 }}>
             <b>Privacidad de datos:</b> Tu información personal (correo, nombre y progreso) se almacena de forma segura y cifrada. No se vende ni comparte con terceros. Puedes eliminar tu cuenta y todos tus datos en cualquier momento usando el botón de arriba. Al usar Mochi, aceptas estos términos.
           </div>
+          <div style={{ fontSize: "0.72rem", color: C.inkM, lineHeight: 1.65, marginTop: 8 }}>
+            <b>Uso responsable:</b> El uso de esta aplicación es responsabilidad exclusiva de la pareja. Mochi es una herramienta de apoyo al bienestar emocional y no sustituye la terapia profesional. Los ejercicios y consejos son sugerencias basadas en investigación psicológica; cada pareja es única y debe adaptar el contenido a sus necesidades específicas.
+          </div>
         </div>
-        <div style={{ fontSize: "0.65rem", color: C.inkL, textAlign: "center", paddingBottom: 4 }}>Mochi v1.0 · Hecho con 🐼 amor</div>
+        <div style={{ fontSize: "0.65rem", color: C.inkL, textAlign: "center", paddingBottom: 4 }}>Mochi v1.0 · Hecho con 🐼 amor por Johana Fragoso</div>
       </div>
 
       {showLoveModal && (
@@ -5336,6 +5339,16 @@ export default function App() {
   const claimDailyTip = async () => {
     const reward = 15;
     const message = `Consejo del día leído +${reward} bambú 🌿`;
+    
+    // Verificar si ya se reclamó hoy
+    const todayKey = getDateKeyLocal();
+    const alreadyClaimed = streakInteractions.some(i => i.type === "consejo" && i.date === todayKey);
+    
+    if (alreadyClaimed) {
+      toast("Ya reclamaste tu consejo del día hoy 🌿 Vuelve mañana para más bambú");
+      return;
+    }
+    
     trigHappy();
     trackDailyInteraction("consejo");
 
