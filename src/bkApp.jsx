@@ -2153,6 +2153,46 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
           })}
         </div>
       </div>
+
+      {/* JUEGOS - Botón debajo de la tienda */}
+      <div style={{ margin: "16px 14px 20px" }}>
+        <div style={{ background: "linear-gradient(135deg, #f7f1ff 0%, #e8e0f8 100%)", borderRadius: 18, padding: "18px 20px", boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+            <div style={{ fontSize: "2.5rem" }}>🎮</div>
+            <div>
+              <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", color: C.dark }}>Juegos de Pareja</div>
+              <div style={{ fontSize: "0.8rem", color: C.inkM }}>Diviértete y gana bambú juntos</div>
+            </div>
+          </div>
+          
+          <button 
+            onClick={() => window.open('/juegos', '_self')}
+            style={{
+              width: "100%",
+              background: C.dark,
+              color: C.cream2,
+              border: "none",
+              borderRadius: 14,
+              padding: "14px 20px",
+              fontFamily: "'Fredoka One',cursive",
+              fontSize: "1rem",
+              cursor: "pointer",
+              boxShadow: "0 4px 0 rgba(0,0,0,0.2)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8
+            }}
+          >
+            <span>🎯</span>
+            <span>Jugar "¿Quién lo dijo?"</span>
+          </button>
+          
+          <div style={{ marginTop: 10, fontSize: "0.75rem", color: C.inkL, textAlign: "center" }}>
+            50 preguntas · 5 bambú por acierto
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -4697,7 +4737,6 @@ function Onboarding({ onDone }) {
 const NAV = [
   { id: "jardin", emoji: "🌿", label: "Jardín" },
   { id: "ejerc", emoji: "⭐", label: "Ejerc." },
-  { id: "juegos", emoji: "🎮", label: "Juegos" },
   { id: "conocete", emoji: "💬", label: "Conócete" },
   { id: "burbuja", emoji: "🫧", label: "Burbuja" },
   { id: "perfil", emoji: "👤", label: "Nosotros" },
@@ -5875,7 +5914,6 @@ export default function App() {
       <div style={{ paddingBottom:72 }}>
         {tab==="jardin" && <Jardin bamboo={bamboo} happiness={happiness} water={water} garden={garden} accessories={accessories} mochiHappy={mochiHappy} pandaBubble={pandaBubble} onPet={petMochi} onBuy={buyItem} onWater={waterGarden} onBuyAccessory={buyAccessory}/>}
         {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson}/>}
-        {tab==="juegos" && <TriviaJuego user={user} onComplete={(result) => { toast(`¡Ganaron ${result.bamboo} bambú!`); }} onAddBamboo={(amount) => incrementBamboo(user?.code, amount)} />}
         {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user}/>}
         {tab==="burbuja" && <Burbuja burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} user={user}/>}
         {tab==="perfil" && <Perfil user={user} bamboo={bamboo} garden={garden} accessories={accessories} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} lessonsDone={lessonsDone} coupleInfo={coupleInfo} streakInfo={streakData} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} onSendMessage={sendMsg} onClaimDailyTip={claimDailyTip}/>} 
