@@ -1817,15 +1817,13 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
           <div style={{ background: C.olive, borderRadius: 10, padding: "8px 16px", fontFamily: "'Fredoka One',cursive", fontSize: "1.05rem", color: C.cream2, boxShadow: "0 3px 0 rgba(0,0,0,0.2)" }}>🌿 {bamboo}</div>
         </div>
         {/* Bars */}
-        {[{l:"♡ AMOR",v:happiness,c:C.salmon},{l:"💧 AGUA",v:water,c:dry?"#e86030":withering?"#e8a030":C.sky}].map(b => (
-          <div key={b.l} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
-            <span style={{ fontSize:"0.68rem", color:`${C.cream}88`, fontWeight:800, minWidth:54, letterSpacing:"0.5px" }}>{b.l}</span>
-            <div style={{ flex:1, height:9, background:"rgba(255,255,255,0.14)", borderRadius:50, overflow:"hidden" }}>
-              <div style={{ height:"100%", width:b.v+"%", background:b.c, borderRadius:50, transition:"width 0.8s" }}/>
-            </div>
-            <span style={{ fontSize:"0.68rem", color:`${C.cream}88`, fontWeight:800, minWidth:28, textAlign:"right" }}>{b.v}%</span>
+        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
+          <span style={{ fontSize:"0.68rem", color:`${C.cream}88`, fontWeight:800, minWidth:54, letterSpacing:"0.5px" }}>💧 AGUA</span>
+          <div style={{ flex:1, height:9, background:"rgba(255,255,255,0.14)", borderRadius:50, overflow:"hidden" }}>
+            <div style={{ height:"100%", width:water+"%", background:dry?"#e86030":withering?"#e8a030":C.sky, borderRadius:50, transition:"width 0.8s" }}/>
           </div>
-        ))}
+          <span style={{ fontSize:"0.68rem", color:`${C.cream}88`, fontWeight:800, minWidth:28, textAlign:"right" }}>{water}%</span>
+        </div>
         {dry && <div style={{ background:"#e86030", borderRadius:8, padding:"6px 12px", fontSize:"0.76rem", color:"white", fontWeight:800, textAlign:"center", marginTop:6 }}>⚠️ ¡El jardín se está secando! Riégalo pronto</div>}
         {!dry && withering && <div style={{ background:"#e8a030", borderRadius:8, padding:"6px 12px", fontSize:"0.76rem", color:"white", fontWeight:800, textAlign:"center", marginTop:6 }}>🌱 El jardín necesita agua</div>}
       </div>
@@ -1936,6 +1934,46 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
               </div>
             );
           })}
+        </div>
+      </div>
+
+      {/* JUEGOS - Botón debajo de la tienda */}
+      <div style={{ margin: "16px 14px 20px" }}>
+        <div style={{ background: "linear-gradient(135deg, #f7f1ff 0%, #e8e0f8 100%)", borderRadius: 18, padding: "18px 20px", boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+            <div style={{ fontSize: "2.5rem" }}>🎮</div>
+            <div>
+              <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", color: C.dark }}>Juegos de Pareja</div>
+              <div style={{ fontSize: "0.8rem", color: C.inkM }}>Diviértete y gana bambú juntos</div>
+            </div>
+          </div>
+          
+          <button 
+            onClick={() => window.location.href = '/juegos'}
+            style={{
+              width: "100%",
+              background: C.dark,
+              color: C.cream2,
+              border: "none",
+              borderRadius: 14,
+              padding: "14px 20px",
+              fontFamily: "'Fredoka One',cursive",
+              fontSize: "1rem",
+              cursor: "pointer",
+              boxShadow: "0 4px 0 rgba(0,0,0,0.2)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8
+            }}
+          >
+            <span>🎯</span>
+            <span>Jugar "¿Quién lo dijo?"</span>
+          </button>
+          
+          <div style={{ marginTop: 10, fontSize: "0.75rem", color: C.inkL, textAlign: "center" }}>
+            50 preguntas · 5 bambú por acierto
+          </div>
         </div>
       </div>
     </div>
