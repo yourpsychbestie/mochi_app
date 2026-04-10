@@ -733,6 +733,63 @@ const CONSEJOS_DIARIOS = [
     quienEs: "Propuso que el amor duradero tiene 3 partes: intimidad, pasión y compromiso. Las parejas que duran cultivan las tres, especialmente cuando la pasión baja."
   },
 ];
+// ═══════════════════════════════════════════════════════════
+// JUEGO: ¿QUIÉN LO DIJO? - 50 preguntas para parejas
+// ═══════════════════════════════════════════════════════════
+const TRIVIA_PREGUNTAS = [
+  { id: 1,  texto: "¿Quién es más madrugador?" },
+  { id: 2,  texto: "¿A quién le gusta más el café?" },
+  { id: 3,  texto: "¿Quién es más ordenado/a?" },
+  { id: 4,  texto: "¿Quién cocina mejor?" },
+  { id: 5,  texto: "¿Quién es más impuntual?" },
+  { id: 6,  texto: "¿A quién le gusta más leer?" },
+  { id: 7,  texto: "¿Quién es más deportista?" },
+  { id: 8,  texto: "¿Quién es más paciente?" },
+  { id: 9,  texto: "¿A quién le gusta más la música?" },
+  { id: 10, texto: "¿Quién es más detallista?" },
+  { id: 11, texto: "¿Quién es más terco/a?" },
+  { id: 12, texto: "¿A quién le gusta más la playa?" },
+  { id: 13, texto: "¿Quién es más romántico/a?" },
+  { id: 14, texto: "¿Quién es más aventurero/a?" },
+  { id: 15, texto: "¿A quién le gusta más dormir?" },
+  { id: 16, texto: "¿Quién es más perfeccionista?" },
+  { id: 17, texto: "¿Quién es más sociable?" },
+  { id: 18, texto: "¿A quién le gusta más el chocolate?" },
+  { id: 19, texto: "¿Quién es más cuidadoso/a con el dinero?" },
+  { id: 20, texto: "¿Quién es más olvidadizo/a?" },
+  { id: 21, texto: "¿A quién le gusta más bailar?" },
+  { id: 22, texto: "¿Quién es más celoso/a?" },
+  { id: 23, texto: "¿Quién es más creativo/a?" },
+  { id: 24, texto: "¿A quién le gusta más la lluvia?" },
+  { id: 25, texto: "¿Quién es más estricto/a con los horarios?" },
+  { id: 26, texto: "¿Quién es más chillón/a cuando está enfermo/a?" },
+  { id: 27, texto: "¿A quién le gusta más el vino?" },
+  { id: 28, texto: "¿Quién es más planificador/a?" },
+  { id: 29, texto: "¿Quién es más espontáneo/a?" },
+  { id: 30, texto: "¿A quién le gusta más el invierno?" },
+  { id: 31, texto: "¿Quién es más dramático/a?" },
+  { id: 32, texto: "¿Quién es más bueno/a con la tecnología?" },
+  { id: 33, texto: "¿A quién le gusta más cocinar?" },
+  { id: 34, texto: "¿Quién es más competitivo/a?" },
+  { id: 35, texto: "¿Quién es más calmado/a en crisis?" },
+  { id: 36, texto: "¿A quién le gusta más ver series?" },
+  { id: 37, texto: "¿Quién es más positivo/a?" },
+  { id: 38, texto: "¿Quién es más perfeccionista con la limpieza?" },
+  { id: 39, texto: "¿A quién le gusta más el sushi?" },
+  { id: 40, texto: "¿Quién es más cariñoso/a?" },
+  { id: 41, texto: "¿Quién es más indeciso/a?" },
+  { id: 42, texto: "¿A quién le gusta más hacer ejercicio?" },
+  { id: 43, texto: "¿Quién es más curioso/a?" },
+  { id: 44, texto: "¿Quién es más protector/a?" },
+  { id: 45, texto: "¿A quién le gusta más el desorden creativo?" },
+  { id: 46, texto: "¿Quién es más soñador/a?" },
+  { id: 47, texto: "¿Quién es más práctico/a?" },
+  { id: 48, texto: "¿A quién le gusta más la pizza?" },
+  { id: 49, texto: "¿Quién es más bueno/a dando regalos?" },
+  { id: 50, texto: "¿Quién dijo 'te amo' primero?" },
+];
+
+;
 
 function CouplePandaSVG({ happy = false, size = 160 }) {
   const s = size;
@@ -1977,15 +2034,13 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
           <div style={{ background: C.olive, borderRadius: 10, padding: "8px 16px", fontFamily: "'Fredoka One',cursive", fontSize: "1.05rem", color: C.cream2, boxShadow: "0 3px 0 rgba(0,0,0,0.2)" }}>🌿 {bamboo}</div>
         </div>
         {/* Bars */}
-        {[{l:"♡ AMOR",v:happiness,c:C.salmon},{l:"💧 AGUA",v:water,c:dry?"#e86030":withering?"#e8a030":C.sky}].map(b => (
-          <div key={b.l} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
-            <span style={{ fontSize:"0.68rem", color:`${C.cream}88`, fontWeight:800, minWidth:54, letterSpacing:"0.5px" }}>{b.l}</span>
-            <div style={{ flex:1, height:9, background:"rgba(255,255,255,0.14)", borderRadius:50, overflow:"hidden" }}>
-              <div style={{ height:"100%", width:b.v+"%", background:b.c, borderRadius:50, transition:"width 0.8s" }}/>
-            </div>
-            <span style={{ fontSize:"0.68rem", color:`${C.cream}88`, fontWeight:800, minWidth:28, textAlign:"right" }}>{b.v}%</span>
+        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
+          <span style={{ fontSize:"0.68rem", color:`${C.cream}88`, fontWeight:800, minWidth:54, letterSpacing:"0.5px" }}>💧 AGUA</span>
+          <div style={{ flex:1, height:9, background:"rgba(255,255,255,0.14)", borderRadius:50, overflow:"hidden" }}>
+            <div style={{ height:"100%", width:water+"%", background:dry?"#e86030":withering?"#e8a030":C.sky, borderRadius:50, transition:"width 0.8s" }}/>
           </div>
-        ))}
+          <span style={{ fontSize:"0.68rem", color:`${C.cream}88`, fontWeight:800, minWidth:28, textAlign:"right" }}>{water}%</span>
+        </div>
         {dry && <div style={{ background:"#e86030", borderRadius:8, padding:"6px 12px", fontSize:"0.76rem", color:"white", fontWeight:800, textAlign:"center", marginTop:6 }}>⚠️ ¡El jardín se está secando! Riégalo pronto</div>}
         {!dry && withering && <div style={{ background:"#e8a030", borderRadius:8, padding:"6px 12px", fontSize:"0.76rem", color:"white", fontWeight:800, textAlign:"center", marginTop:6 }}>🌱 El jardín necesita agua</div>}
       </div>
@@ -4642,6 +4697,7 @@ function Onboarding({ onDone }) {
 const NAV = [
   { id: "jardin", emoji: "🌿", label: "Jardín" },
   { id: "ejerc", emoji: "⭐", label: "Ejerc." },
+  { id: "juegos", emoji: "🎮", label: "Juegos" },
   { id: "conocete", emoji: "💬", label: "Conócete" },
   { id: "burbuja", emoji: "🫧", label: "Burbuja" },
   { id: "perfil", emoji: "👤", label: "Nosotros" },
@@ -4650,6 +4706,232 @@ const NAV = [
 // ═══════════════════════════════════════════════
 // ROOT APP — updated state + decay logic
 // ═══════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════
+// JUEGO: ¿QUIÉN LO DIJO?
+// ═══════════════════════════════════════════════════════════
+function TriviaJuego({ user, onComplete, onAddBamboo }) {
+  const parsedNames = parseCoupleNames(user?.names);
+  const nameA = parsedNames.a;
+  const nameB = parsedNames.b;
+  const myRole = user?.isOwner === false ? 1 : 0;
+  const partnerRole = myRole === 0 ? 1 : 0;
+  
+  const [gameState, setGameState] = useState("intro"); // intro, playing, waiting, results
+  const [currentQ, setCurrentQ] = useState(0);
+  const [myAnswers, setMyAnswers] = useState({});
+  const [partnerAnswers, setPartnerAnswers] = useState({});
+  const [selectedQuestions, setSelectedQuestions] = useState([]);
+  const [score, setScore] = useState(0);
+  
+  // Seleccionar 10 preguntas aleatorias al inicio
+  useEffect(() => {
+    const shuffled = [...TRIVIA_PREGUNTAS].sort(() => Math.random() - 0.5);
+    setSelectedQuestions(shuffled.slice(0, 10));
+  }, []);
+  
+  const startGame = () => {
+    setGameState("playing");
+    setCurrentQ(0);
+    setMyAnswers({});
+    setPartnerAnswers({});
+    setScore(0);
+  };
+  
+  const answerQuestion = (who) => {
+    const newAnswers = { ...myAnswers, [selectedQuestions[currentQ].id]: who };
+    setMyAnswers(newAnswers);
+    
+    if (currentQ < selectedQuestions.length - 1) {
+      setCurrentQ(currentQ + 1);
+    } else {
+      // Guardar en Firebase y esperar al otro
+      setGameState("waiting");
+      // Aquí iría la lógica de Firebase
+      // Por ahora simulamos que el otro ya respondió
+      setTimeout(() => {
+        const mockPartnerAnswers = {};
+        selectedQuestions.forEach(q => {
+          mockPartnerAnswers[q.id] = Math.random() > 0.5 ? 0 : 1;
+        });
+        setPartnerAnswers(mockPartnerAnswers);
+        
+        // Calcular puntaje
+        let matches = 0;
+        selectedQuestions.forEach(q => {
+          if (newAnswers[q.id] === mockPartnerAnswers[q.id]) {
+            matches++;
+          }
+        });
+        setScore(matches);
+        setGameState("results");
+        
+        // Dar bambú
+        const bambooEarned = matches * 5; // 5 bambú por acierto
+        onAddBamboo?.(bambooEarned);
+        onComplete?.({ score: matches, total: 10, bamboo: bambooEarned });
+      }, 2000);
+    }
+  };
+  
+  if (gameState === "intro") {
+    return (
+      <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
+        <ScreenTop title="¿Quién lo dijo?" sub="Juego de parejas" />
+        <div style={{ margin: "20px 14px", background: C.white, borderRadius: 20, padding: "24px 20px", boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
+          <div style={{ textAlign: "center", marginBottom: 24 }}>
+            <div style={{ fontSize: "4rem", marginBottom: 10 }}>🎮</div>
+            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.4rem", color: C.dark, marginBottom: 12 }}>¿Quién lo dijo?</div>
+            <div style={{ fontSize: "0.9rem", color: C.inkM, lineHeight: 1.7 }}>
+              Responde 10 preguntas sobre ustedes. <br/>
+              Tu pareja hace lo mismo. <br/>
+              ¡Ganan bambú por cada respuesta que coincida!
+            </div>
+          </div>
+          
+          <div style={{ background: C.cream, borderRadius: 14, padding: "16px", marginBottom: 20, border: `1.5px solid ${C.border}` }}>
+            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark, marginBottom: 10, textAlign: "center" }}>🎁 Recompensas</div>
+            <div style={{ display: "flex", justifyContent: "space-around" }}>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: "1.5rem" }}>5🌿</div>
+                <div style={{ fontSize: "0.75rem", color: C.inkM }}>por acierto</div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: "1.5rem" }}>50🌿</div>
+                <div style={{ fontSize: "0.75rem", color: C.inkM }}>si aciertan 10</div>
+              </div>
+            </div>
+          </div>
+          
+          <Btn onClick={startGame} variant="dark" style={{ width: "100%", padding: "16px", fontSize: "1.1rem" }}>
+            ¡Empezar a jugar! 🚀
+          </Btn>
+        </div>
+      </div>
+    );
+  }
+  
+  if (gameState === "playing") {
+    const q = selectedQuestions[currentQ];
+    return (
+      <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
+        <ScreenTop title="¿Quién lo dijo?" sub={`Pregunta ${currentQ + 1} de ${selectedQuestions.length}`} />
+        <div style={{ margin: "20px 14px" }}>
+          {/* Progreso */}
+          <div style={{ marginBottom: 16 }}>
+            <ProgBar value={currentQ} max={selectedQuestions.length} color={C.olive} height={8} />
+          </div>
+          
+          {/* Pregunta */}
+          <div style={{ background: C.white, borderRadius: 20, padding: "28px 24px", marginBottom: 16, boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
+            <div style={{ fontSize: "1.3rem", color: C.dark, fontWeight: 800, textAlign: "center", lineHeight: 1.5 }}>
+              {q.texto}
+            </div>
+          </div>
+          
+          {/* Opciones */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <button
+              onClick={() => answerQuestion(0)}
+              style={{
+                background: "linear-gradient(135deg, #e8f5ec 0%, #d4e8c4 100%)",
+                border: `2px solid ${C.border}`,
+                borderRadius: 16,
+                padding: "20px 24px",
+                fontFamily: "'Fredoka One',cursive",
+                fontSize: "1.1rem",
+                color: C.dark,
+                cursor: "pointer",
+                boxShadow: `0 3px 0 ${C.border}`,
+                transition: "transform 0.15s"
+              }}
+              onMouseDown={e => e.currentTarget.style.transform = "scale(0.98)"}
+              onMouseUp={e => e.currentTarget.style.transform = "scale(1)"}
+            >
+              {nameA}
+            </button>
+            
+            <button
+              onClick={() => answerQuestion(1)}
+              style={{
+                background: "linear-gradient(135deg, #f0e8f8 0%, #e4d8f0 100%)",
+                border: `2px solid ${C.border}`,
+                borderRadius: 16,
+                padding: "20px 24px",
+                fontFamily: "'Fredoka One',cursive",
+                fontSize: "1.1rem",
+                color: C.dark,
+                cursor: "pointer",
+                boxShadow: `0 3px 0 ${C.border}`,
+                transition: "transform 0.15s"
+              }}
+              onMouseDown={e => e.currentTarget.style.transform = "scale(0.98)"}
+              onMouseUp={e => e.currentTarget.style.transform = "scale(1)"}
+            >
+              {nameB}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  if (gameState === "waiting") {
+    return (
+      <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ textAlign: "center", padding: 20 }}>
+          <div style={{ fontSize: "4rem", marginBottom: 20, animation: "float 2s ease-in-out infinite" }}>⏳</div>
+          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.3rem", color: C.dark, marginBottom: 12 }}>¡Listo!</div>
+          <div style={{ fontSize: "0.95rem", color: C.inkM }}>Esperando las respuestas de tu pareja...</div>
+        </div>
+      </div>
+    );
+  }
+  
+  if (gameState === "results") {
+    const percentage = Math.round((score / selectedQuestions.length) * 100);
+    const bambooEarned = score * 5;
+    
+    return (
+      <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
+        <ScreenTop title="Resultados" sub="¿Quién lo dijo?" />
+        <div style={{ margin: "20px 14px" }}>
+          <div style={{ background: C.white, borderRadius: 20, padding: "28px 24px", boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}`, textAlign: "center" }}>
+            <div style={{ fontSize: "5rem", marginBottom: 16 }}>
+              {percentage >= 80 ? "🏆" : percentage >= 60 ? "🎉" : percentage >= 40 ? "👍" : "💪"}
+            </div>
+            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "2.5rem", color: C.olive, marginBottom: 8 }}>
+              {score}/{selectedQuestions.length}
+            </div>
+            <div style={{ fontSize: "1.1rem", color: C.dark, fontWeight: 700, marginBottom: 20 }}>
+              {percentage >= 80 ? "¡Se conocen perfectamente! 💕" : 
+               percentage >= 60 ? "¡Muy buena conexión! 💚" : 
+               percentage >= 40 ? "Van por buen camino 💛" : 
+               "¡Hay que practicar más! 💪"}
+            </div>
+            <div style={{ background: C.cream, borderRadius: 14, padding: "20px", marginBottom: 24, border: `1.5px solid ${C.border}` }}>
+              <div style={{ fontSize: "0.85rem", color: C.inkM, marginBottom: 8 }}>Han ganado</div>
+              <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "2rem", color: C.olive }}>
+                +{bambooEarned} 🌿
+              </div>
+            </div>
+            
+            <Btn onClick={startGame} variant="dark" style={{ width: "100%", padding: "16px", fontSize: "1.05rem", marginBottom: 12 }}>
+              Jugar otra vez 🔄
+            </Btn>
+            
+            <Btn onClick={() => setGameState("intro")} variant="sand" style={{ width: "100%", padding: "14px", fontSize: "0.95rem" }}>
+              Volver al menú
+            </Btn>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  return null;
+}
+
 export default function App() {
   const [screen, setScreen] = useState("login");
   const [user, setUser] = useState(null);
@@ -5593,6 +5875,7 @@ export default function App() {
       <div style={{ paddingBottom:72 }}>
         {tab==="jardin" && <Jardin bamboo={bamboo} happiness={happiness} water={water} garden={garden} accessories={accessories} mochiHappy={mochiHappy} pandaBubble={pandaBubble} onPet={petMochi} onBuy={buyItem} onWater={waterGarden} onBuyAccessory={buyAccessory}/>}
         {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson}/>}
+        {tab==="juegos" && <TriviaJuego user={user} onComplete={(result) => { toast(`¡Ganaron ${result.bamboo} bambú!`); }} onAddBamboo={(amount) => incrementBamboo(user?.code, amount)} />}
         {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user}/>}
         {tab==="burbuja" && <Burbuja burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} user={user}/>}
         {tab==="perfil" && <Perfil user={user} bamboo={bamboo} garden={garden} accessories={accessories} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} lessonsDone={lessonsDone} coupleInfo={coupleInfo} streakInfo={streakData} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} onSendMessage={sendMsg} onClaimDailyTip={claimDailyTip}/>} 
