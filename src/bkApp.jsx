@@ -3709,9 +3709,41 @@ select { appearance: none; }
 `;
 
 const OB = [
-  { title: "Bienvenidos a Mochi", body: "Una app para que su amor florezca — basada en terapia real." },
-  { title: "Su jardín crece con amor", body: "Completen ejercicios, envíen mensajes y respondan preguntas juntos para ganar bambú 🌿 y plantar cosas en el jardín." },
-  { title: "¡Listos para empezar!", body: "Hagan su primer ejercicio y siembren la primera semilla." },
+  { 
+    title: "Bienvenidos a Mochi 🐼", 
+    body: "Un espacio privado para que su amor crezca. Basada en 40 años de investigación de parejas por el psicólogo John Gottman.",
+    icon: "🐼"
+  },
+  { 
+    title: "¿Cómo funciona?", 
+    body: "Cada día pueden: leer un consejo de pareja, hacer un ejercicio juntos, responder preguntas para conocerse mejor, y construir acuerdos en pareja.",
+    icon: "💡"
+  },
+  { 
+    title: "Ganen bambú juntos 🌿", 
+    body: "Cada interacción les da bambú: +15 por ejercicios, +15 por preguntas, +10 por acuerdos, +10 por lecciones. ¡Usen el bambú para decorar su jardín!",
+    icon: "🌿"
+  },
+  { 
+    title: "Mantengan su racha 🔥", 
+    body: "Conecten cada día para mantener su racha activa. Cuantos más días seguidos, más bambú extra ganan. ¡No dejen que se apague!",
+    icon: "🔥"
+  },
+  { 
+    title: "Conéctense con un código", 
+    body: "Uno de ustedes crea una cuenta y comparte el código con su pareja. Así sus respuestas, mensajes y progreso se sincronizan.",
+    icon: "🔗"
+  },
+  { 
+    title: "Todo queda entre ustedes", 
+    body: "Sus respuestas, mensajes y acuerdos son privados. Solo ustedes dos pueden verlos. Sin publicidad, sin vender datos.",
+    icon: "🔒"
+  },
+  { 
+    title: "¡Listos para empezar!", 
+    body: "Hagan su primer ejercicio juntos y siembren la primera semilla en su jardín. Su relación vale la inversión.",
+    icon: "🌱"
+  },
 ];
 
 // ═══════════════════════════════════════════════
@@ -4179,19 +4211,71 @@ function LeccionDia({ lessonsDone, onComplete }) {
 
 function Onboarding({ onDone }) {
   const [i, setI] = useState(0);
+  const current = OB[i];
+  const isLast = i === OB.length - 1;
+
   return (
-    <div style={{ minHeight: "100vh", background: C.sandL, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "28px 20px" }}>
-      <div style={{ textAlign: "center", maxWidth: 320 }}>
-        <div style={{ animation: "float 3s ease-in-out infinite", marginBottom: 16 }}>
-          <CouplePandaSVG size={170} happy />
+    <div style={{ minHeight: "100vh", background: "linear-gradient(180deg, #f8f4ff 0%, #f0e8ff 100%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "28px 20px" }}>
+      <div style={{ textAlign: "center", maxWidth: 340, width: "100%" }}>
+        {/* Icono grande */}
+        <div style={{ animation: "float 3s ease-in-out infinite", marginBottom: 20, fontSize: "5rem" }}>
+          {current.icon}
         </div>
-        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.85rem", color: C.dark, marginBottom: 8 }}>{OB[i].title}</div>
-        <div style={{ color: C.inkM, lineHeight: 1.6, marginBottom: 24, fontFamily: "'Nunito',sans-serif" }}>{OB[i].body}</div>
-        <div style={{ display: "flex", gap: 7, justifyContent: "center", marginBottom: 24 }}>{OB.map((_, j) => <div key={j} style={{ width: j === i ? 24 : 8, height: 8, borderRadius: 50, background: j === i ? C.dark : C.sand, transition: "all 0.3s" }} />)}</div>
-        {i < OB.length - 1 ? <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <button onClick={onDone} style={{ background: "none", border: "none", color: C.inkL, fontWeight: 700, cursor: "pointer", fontFamily: "'Nunito',sans-serif" }}>Saltar</button>
-          <button onClick={() => setI(i + 1)} style={{ background: C.white, border: `1.5px solid ${C.border}`, color: C.dark, borderRadius: 12, padding: "10px 22px", fontFamily: "'Fredoka One',cursive", cursor: "pointer", boxShadow: `0 3px 0 ${C.border}` }}>Siguiente →</button>
-        </div> : <button onClick={onDone} style={{ width: "100%", background: C.dark, color: C.cream2, border: "none", borderRadius: 12, padding: "14px", fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", cursor: "pointer", boxShadow: "0 4px 0 rgba(0,0,0,0.2)" }}>Comenzar juntos 🐼</button>}
+
+        {/* Título */}
+        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.6rem", color: C.dark, marginBottom: 12 }}>
+          {current.title}
+        </div>
+
+        {/* Body */}
+        <div style={{ color: C.inkM, lineHeight: 1.7, marginBottom: 28, fontFamily: "'Nunito',sans-serif", fontSize: "1rem" }}>
+          {current.body}
+        </div>
+
+        {/* Indicadores de progreso */}
+        <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 32 }}>
+          {OB.map((_, j) => (
+            <div key={j} style={{
+              width: j === i ? 28 : 8,
+              height: 8,
+              borderRadius: 50,
+              background: j === i ? C.dark : C.border,
+              transition: "all 0.3s"
+            }} />
+          ))}
+        </div>
+
+        {/* Botones */}
+        {!isLast ? (
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <button onClick={onDone} style={{
+              background: "none", border: "none", color: C.inkL, fontWeight: 700,
+              cursor: "pointer", fontFamily: "'Nunito',sans-serif", fontSize: "0.9rem", padding: "10px 0"
+            }}>
+              Saltar
+            </button>
+            <button onClick={() => setI(i + 1)} style={{
+              background: C.dark, color: C.cream2, border: "none", borderRadius: 14,
+              padding: "14px 28px", fontFamily: "'Fredoka One',cursive", fontSize: "1rem",
+              cursor: "pointer", boxShadow: "0 4px 0 rgba(0,0,0,0.2)"
+            }}>
+              Siguiente →
+            </button>
+          </div>
+        ) : (
+          <button onClick={onDone} style={{
+            width: "100%", background: C.olive, color: C.cream2, border: "none",
+            borderRadius: 14, padding: "16px", fontFamily: "'Fredoka One',cursive",
+            fontSize: "1.15rem", cursor: "pointer", boxShadow: "0 4px 0 rgba(0,0,0,0.2)"
+          }}>
+            Comenzar juntos 💜
+          </button>
+        )}
+
+        {/* Progreso numérico */}
+        <div style={{ marginTop: 20, fontSize: "0.8rem", color: C.inkL, fontWeight: 600 }}>
+          {i + 1} de {OB.length}
+        </div>
       </div>
     </div>
   );
