@@ -1936,46 +1936,6 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
           })}
         </div>
       </div>
-
-      {/* JUEGOS - Botón debajo de la tienda */}
-      <div style={{ margin: "16px 14px 20px" }}>
-        <div style={{ background: "linear-gradient(135deg, #f7f1ff 0%, #e8e0f8 100%)", borderRadius: 18, padding: "18px 20px", boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-            <div style={{ fontSize: "2.5rem" }}>🎮</div>
-            <div>
-              <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", color: C.dark }}>Juegos de Pareja</div>
-              <div style={{ fontSize: "0.8rem", color: C.inkM }}>Diviértete y gana bambú juntos</div>
-            </div>
-          </div>
-          
-          <button 
-            onClick={() => window.location.href = '/juegos'}
-            style={{
-              width: "100%",
-              background: C.dark,
-              color: C.cream2,
-              border: "none",
-              borderRadius: 14,
-              padding: "14px 20px",
-              fontFamily: "'Fredoka One',cursive",
-              fontSize: "1rem",
-              cursor: "pointer",
-              boxShadow: "0 4px 0 rgba(0,0,0,0.2)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8
-            }}
-          >
-            <span>🎯</span>
-            <span>Jugar "¿Quién lo dijo?"</span>
-          </button>
-          
-          <div style={{ marginTop: 10, fontSize: "0.75rem", color: C.inkL, textAlign: "center" }}>
-            50 preguntas · 5 bambú por acierto
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
