@@ -284,63 +284,35 @@ const getCoupleNames = (user) => {
 // GARDEN ITEMS — multiple quantities, koi/lotus aesthetic
 // ═══════════════════════════════════════════════
 const GARDEN_ITEMS = [
-  // ═══════════════════════════════════════════════════════════
-  // PLANTAS - DÍA
-  // ═══════════════════════════════════════════════════════════
-  {id:"bamboo1",  cat:"plantas", name:"Bambú",           cost:20,  desc:"Trae serenidad", timeOfDay:"any"},
-  {id:"bamboo2",  cat:"plantas", name:"Bambusal",        cost:35,  desc:"Bosquecito de bambú", timeOfDay:"any"},
-  {id:"lotus1",   cat:"plantas", name:"Loto Rosa",       cost:25,  desc:"Flor del amor puro", timeOfDay:"day"},
-  {id:"lotus2",   cat:"plantas", name:"Loto Blanco",     cost:30,  desc:"Pureza y paz", timeOfDay:"day"},
-  {id:"willow",   cat:"plantas", name:"Sauce Llorón",    cost:45,  desc:"Elegancia serena", timeOfDay:"any"},
-  {id:"peony",    cat:"plantas", name:"Peonía",          cost:15,  desc:"Flores de primavera", timeOfDay:"day"},
-  {id:"cherry",   cat:"plantas", name:"Cerezo",          cost:80,  desc:"Belleza efímera", timeOfDay:"day"},
-  {id:"lily",     cat:"plantas", name:"Lirio Azul",      cost:20,  desc:"Calma y claridad", timeOfDay:"day"},
-  {id:"moonflower",cat:"plantas",name:"Flor de Luna",    cost:35,  desc:"Solo florece de noche ✨", timeOfDay:"night"},
-  
-  // ═══════════════════════════════════════════════════════════
-  // AGUA - CUALQUIERA
-  // ═══════════════════════════════════════════════════════════
-  {id:"pond",     cat:"agua",    name:"Estanque",        cost:60,  desc:"Espejo del cielo", timeOfDay:"any"},
-  {id:"koi1",     cat:"agua",    name:"Pez Koi Rojo",    cost:40,  desc:"Buena fortuna", timeOfDay:"any"},
-  {id:"koi2",     cat:"agua",    name:"Pez Koi Dorado",  cost:55,  desc:"Prosperidad", timeOfDay:"any"},
-  {id:"lotus_pad",cat:"agua",    name:"Hoja de Loto",    cost:20,  desc:"Reposa en el agua", timeOfDay:"day"},
-  {id:"moon_reflection",cat:"agua",name:"Reflejo Lunar", cost:45,  desc:"La luna en el agua 🌙", timeOfDay:"night"},
-  
-  // ═══════════════════════════════════════════════════════════
-  // CIELO - DÍA
-  // ═══════════════════════════════════════════════════════════
-  {id:"sun",      cat:"cielo",   name:"Sol",             cost:30,  desc:"Calienta el jardín", timeOfDay:"day"},
-  {id:"rainbow",  cat:"cielo",   name:"Arcoíris",        cost:100, desc:"Magia después de la lluvia", timeOfDay:"day"},
-  {id:"swallow1", cat:"cielo",   name:"Golondrina",      cost:35,  desc:"Mensajera del amor", timeOfDay:"day"},
-  {id:"swallow2", cat:"cielo",   name:"Par de Golondrinas",cost:55,desc:"Vuelo juntos", timeOfDay:"day"},
-  {id:"clouds",   cat:"cielo",   name:"Nubes",           cost:25,  desc:"Sueños flotantes", timeOfDay:"day"},
-  
-  // ═══════════════════════════════════════════════════════════
-  // NOCTURNO - NOCHE
-  // ═══════════════════════════════════════════════════════════
-  {id:"moon",         cat:"nocturno", name:"Luna Llena",        cost:50,  desc:"Ilumina el jardín 🌕", timeOfDay:"night"},
-  {id:"stars",        cat:"nocturno", name:"Estrellas",         cost:35,  desc:"Brillan en la oscuridad ✨", timeOfDay:"night"},
-  {id:"constellation",cat:"nocturno", name:"Constelación Amor", cost:70,  desc:"Estrellas formando corazón 💫", timeOfDay:"night"},
-  {id:"shooting_star",cat:"nocturno", name:"Estrella Fugaz",    cost:85,  desc:"Pide un deseo 🌠", timeOfDay:"night"},
-  {id:"owl",          cat:"nocturno", name:"Búho Sabio",        cost:60,  desc:"Guardián de la noche 🦉", timeOfDay:"night"},
-  {id:"night_lantern",cat:"nocturno", name:"Farolillos Mágicos",cost:40,  desc:"Luz suave flotando 🏮", timeOfDay:"night"},
-  {id:"sleeping_cat", cat:"nocturno", name:"Gatito Durmiendo",  cost:55,  desc:"Sueños felinos 🐱", timeOfDay:"night"},
-  
-  // ═══════════════════════════════════════════════════════════
-  // DECORACIÓN - CUALQUIERA
-  // ═══════════════════════════════════════════════════════════
-  {id:"lantern",  cat:"deco",    name:"Farolito",        cost:25,  desc:"Luz cálida", timeOfDay:"any"},
-  {id:"lantern2", cat:"deco",    name:"Farolitos Dobles",cost:40,  desc:"Noche romántica", timeOfDay:"any"},
-  {id:"heart",    cat:"deco",    name:"Corazón",         cost:50,  desc:"Amor visible", timeOfDay:"any"},
-  {id:"bridge",   cat:"deco",    name:"Puente",          cost:70,  desc:"Un camino juntos", timeOfDay:"any"},
-  {id:"pagoda",   cat:"deco",    name:"Pagoda",          cost:90,  desc:"Refugio sagrado", timeOfDay:"any"},
-  
-  // ═══════════════════════════════════════════════════════════
-  // ESPECIALES
-  // ═══════════════════════════════════════════════════════════
-  {id:"firefly",  cat:"especial",name:"Luciérnagas",     cost:65,  desc:"Magia nocturna ✨", timeOfDay:"night"},
-  {id:"moongate", cat:"especial",name:"Portal Lunar",    cost:120, desc:"Entrada a los sueños 🌙", timeOfDay:"night"},
-  {id:"aurora",   cat:"especial",name:"Aurora Boreal",   cost:150, desc:"Colores en el cielo 🌌", timeOfDay:"night"},
+  // Plantas
+  {id:"bamboo1",  cat:"plantas", name:"Bambú",        cost:20,  desc:"Trae serenidad"},
+  {id:"bamboo2",  cat:"plantas", name:"Bambusal",      cost:35,  desc:"Bosquecito de bambú"},
+  {id:"lotus1",   cat:"plantas", name:"Loto Rosa",     cost:25,  desc:"Flor del amor puro"},
+  {id:"lotus2",   cat:"plantas", name:"Loto Blanco",   cost:30,  desc:"Pureza y paz"},
+  {id:"willow",   cat:"plantas", name:"Sauce Llorón",  cost:45,  desc:"Elegancia serena"},
+  {id:"peony",    cat:"plantas", name:"Peonía",        cost:15,  desc:"Flores de primavera"},
+  {id:"cherry",   cat:"plantas", name:"Cerezo",        cost:80,  desc:"Belleza efímera"},
+  {id:"lily",     cat:"plantas", name:"Lirio Azul",    cost:20,  desc:"Calma y claridad"},
+  // Agua
+  {id:"pond",     cat:"agua",    name:"Estanque",      cost:60,  desc:"Espejo del cielo"},
+  {id:"koi1",     cat:"agua",    name:"Pez Koi Rojo",  cost:40,  desc:"Buena fortuna"},
+  {id:"koi2",     cat:"agua",    name:"Pez Koi Dorado",cost:55,  desc:"Prosperidad"},
+  {id:"lotus_pad",cat:"agua",    name:"Hoja de Loto",  cost:20,  desc:"Reposa en el agua"},
+  // Cielo
+  {id:"sun",      cat:"cielo",   name:"Sol",           cost:30,  desc:"Calienta el jardín"},
+  {id:"rainbow",  cat:"cielo",   name:"Arcoíris",      cost:100, desc:"Magia después de la lluvia"},
+  {id:"swallow1", cat:"cielo",   name:"Golondrina",    cost:35,  desc:"Mensajera del amor"},
+  {id:"swallow2", cat:"cielo",   name:"Par de Golondrinas",cost:55,desc:"Vuelo juntos"},
+  {id:"clouds",   cat:"cielo",   name:"Nubes",         cost:25,  desc:"Sueños flotantes"},
+  // Decoración
+  {id:"lantern",  cat:"deco",    name:"Farolito",      cost:25,  desc:"Luz cálida"},
+  {id:"lantern2", cat:"deco",    name:"Farolitos",     cost:40,  desc:"Noche romántica"},
+  {id:"heart",    cat:"deco",    name:"Corazón",       cost:50,  desc:"Amor visible"},
+  {id:"bridge",   cat:"deco",    name:"Puente",        cost:70,  desc:"Un camino juntos"},
+  {id:"pagoda",   cat:"deco",    name:"Pagoda",        cost:90,  desc:"Refugio sagrado"},
+  // Especiales
+  {id:"firefly",  cat:"especial",name:"Luciérnagas",   cost:65,  desc:"Magia nocturna"},
+  {id:"moongate", cat:"especial",name:"Luna Llena",    cost:120, desc:"Romance bajo la luna"},
 ];
 
 // Regar sigue siendo acción especial
@@ -733,63 +705,6 @@ const CONSEJOS_DIARIOS = [
     quienEs: "Propuso que el amor duradero tiene 3 partes: intimidad, pasión y compromiso. Las parejas que duran cultivan las tres, especialmente cuando la pasión baja."
   },
 ];
-// ═══════════════════════════════════════════════════════════
-// JUEGO: ¿QUIÉN LO DIJO? - 50 preguntas para parejas
-// ═══════════════════════════════════════════════════════════
-const TRIVIA_PREGUNTAS = [
-  { id: 1,  texto: "¿Quién es más madrugador?" },
-  { id: 2,  texto: "¿A quién le gusta más el café?" },
-  { id: 3,  texto: "¿Quién es más ordenado/a?" },
-  { id: 4,  texto: "¿Quién cocina mejor?" },
-  { id: 5,  texto: "¿Quién es más impuntual?" },
-  { id: 6,  texto: "¿A quién le gusta más leer?" },
-  { id: 7,  texto: "¿Quién es más deportista?" },
-  { id: 8,  texto: "¿Quién es más paciente?" },
-  { id: 9,  texto: "¿A quién le gusta más la música?" },
-  { id: 10, texto: "¿Quién es más detallista?" },
-  { id: 11, texto: "¿Quién es más terco/a?" },
-  { id: 12, texto: "¿A quién le gusta más la playa?" },
-  { id: 13, texto: "¿Quién es más romántico/a?" },
-  { id: 14, texto: "¿Quién es más aventurero/a?" },
-  { id: 15, texto: "¿A quién le gusta más dormir?" },
-  { id: 16, texto: "¿Quién es más perfeccionista?" },
-  { id: 17, texto: "¿Quién es más sociable?" },
-  { id: 18, texto: "¿A quién le gusta más el chocolate?" },
-  { id: 19, texto: "¿Quién es más cuidadoso/a con el dinero?" },
-  { id: 20, texto: "¿Quién es más olvidadizo/a?" },
-  { id: 21, texto: "¿A quién le gusta más bailar?" },
-  { id: 22, texto: "¿Quién es más celoso/a?" },
-  { id: 23, texto: "¿Quién es más creativo/a?" },
-  { id: 24, texto: "¿A quién le gusta más la lluvia?" },
-  { id: 25, texto: "¿Quién es más estricto/a con los horarios?" },
-  { id: 26, texto: "¿Quién es más chillón/a cuando está enfermo/a?" },
-  { id: 27, texto: "¿A quién le gusta más el vino?" },
-  { id: 28, texto: "¿Quién es más planificador/a?" },
-  { id: 29, texto: "¿Quién es más espontáneo/a?" },
-  { id: 30, texto: "¿A quién le gusta más el invierno?" },
-  { id: 31, texto: "¿Quién es más dramático/a?" },
-  { id: 32, texto: "¿Quién es más bueno/a con la tecnología?" },
-  { id: 33, texto: "¿A quién le gusta más cocinar?" },
-  { id: 34, texto: "¿Quién es más competitivo/a?" },
-  { id: 35, texto: "¿Quién es más calmado/a en crisis?" },
-  { id: 36, texto: "¿A quién le gusta más ver series?" },
-  { id: 37, texto: "¿Quién es más positivo/a?" },
-  { id: 38, texto: "¿Quién es más perfeccionista con la limpieza?" },
-  { id: 39, texto: "¿A quién le gusta más el sushi?" },
-  { id: 40, texto: "¿Quién es más cariñoso/a?" },
-  { id: 41, texto: "¿Quién es más indeciso/a?" },
-  { id: 42, texto: "¿A quién le gusta más hacer ejercicio?" },
-  { id: 43, texto: "¿Quién es más curioso/a?" },
-  { id: 44, texto: "¿Quién es más protector/a?" },
-  { id: 45, texto: "¿A quién le gusta más el desorden creativo?" },
-  { id: 46, texto: "¿Quién es más soñador/a?" },
-  { id: 47, texto: "¿Quién es más práctico/a?" },
-  { id: 48, texto: "¿A quién le gusta más la pizza?" },
-  { id: 49, texto: "¿Quién es más bueno/a dando regalos?" },
-  { id: 50, texto: "¿Quién dijo 'te amo' primero?" },
-];
-
-;
 
 function CouplePandaSVG({ happy = false, size = 160 }) {
   const s = size;
@@ -1109,47 +1024,26 @@ function GardenItemIcon({ id, size = 38 }) {
       <ellipse cx="48" cy="28" rx="7" ry="4.5" fill="white" opacity="0.92"/>
       <ellipse cx="43" cy="26" rx="5" ry="3.5" fill="white" opacity="0.88"/>
     </svg>),
-    swallow1: (<svg viewBox="0 0 48 40" width={s} height={s*0.83}>
-      <g transform="translate(24 20)">
-        {/* Cuerpo */}
-        <ellipse cx="0" cy="2" rx="5" ry="3" fill="#3a4558"/>
-        {/* Cabeza */}
-        <circle cx="0" cy="-2" r="3.5" fill="#3a4558"/>
-        {/* Pico */}
-        <path d="M0 -2 L8 -1 L0 0" fill="#e8a030"/>
-        {/* Ala izquierda - curva elegante */}
-        <path d="M-2 0 Q-12 -8 -22 -4 Q-18 2 -10 4 Q-6 3 -2 2" fill="#2a3448"/>
-        {/* Ala derecha - curva elegante */}
-        <path d="M2 0 Q12 -8 22 -4 Q18 2 10 4 Q6 3 2 2" fill="#2a3448"/>
-        {/* Cola bifurcada */}
-        <path d="M-2 3 L-8 12 L-3 10 L0 14 L3 10 L8 12 L2 3" fill="#3a4558"/>
-        {/* Ojo */}
-        <circle cx="1" cy="-3" r="1" fill="white"/>
-        <circle cx="1.2" cy="-3" r="0.5" fill="#1a1a1a"/>
+    swallow1: (<svg viewBox="0 0 46 34" width={s} height={s*0.74}>
+      <g transform="translate(23 17)">
+        <path d="M0 -1 C-5 -9 -15 -12 -22 -9 C-16 -6 -11 -2 -7 2 C-12 1 -17 3 -21 7 C-13 7 -7 5 -1 1" fill="#2a3448"/>
+        <path d="M0 -1 C5 -9 15 -12 22 -9 C16 -6 11 -2 7 2 C12 1 17 3 21 7 C13 7 7 5 1 1" fill="#2a3448"/>
+        <ellipse cx="0" cy="1" rx="4.2" ry="2.6" fill="#1f2838"/>
+        <path d="M-1 2 L-6 8 L-2 7 L0 10 L2 7 L6 8 L1 2" fill="#1f2838" opacity="0.95"/>
       </g>
     </svg>),
-    swallow2: (<svg viewBox="0 0 64 44" width={s} height={s*0.69}>
-      {/* Primera golondrina */}
-      <g transform="translate(20 22)">
-        <ellipse cx="0" cy="2" rx="5" ry="3" fill="#3a4558"/>
-        <circle cx="0" cy="-2" r="3.5" fill="#3a4558"/>
-        <path d="M0 -2 L8 -1 L0 0" fill="#e8a030"/>
-        <path d="M-2 0 Q-12 -8 -22 -4 Q-18 2 -10 4 Q-6 3 -2 2" fill="#2a3448"/>
-        <path d="M2 0 Q12 -8 22 -4 Q18 2 10 4 Q6 3 2 2" fill="#2a3448"/>
-        <path d="M-2 3 L-8 12 L-3 10 L0 14 L3 10 L8 12 L2 3" fill="#3a4558"/>
-        <circle cx="1" cy="-3" r="1" fill="white"/>
-        <circle cx="1.2" cy="-3" r="0.5" fill="#1a1a1a"/>
+    swallow2: (<svg viewBox="0 0 60 34" width={s} height={s*0.57}>
+      <g transform="translate(18 15) scale(0.9)">
+        <path d="M0 -1 C-5 -9 -15 -12 -22 -9 C-16 -6 -11 -2 -7 2 C-12 1 -17 3 -21 7 C-13 7 -7 5 -1 1" fill="#2a3448"/>
+        <path d="M0 -1 C5 -9 15 -12 22 -9 C16 -6 11 -2 7 2 C12 1 17 3 21 7 C13 7 7 5 1 1" fill="#2a3448"/>
+        <ellipse cx="0" cy="1" rx="4.2" ry="2.6" fill="#1f2838"/>
+        <path d="M-1 2 L-6 8 L-2 7 L0 10 L2 7 L6 8 L1 2" fill="#1f2838" opacity="0.95"/>
       </g>
-      {/* Segunda golondrina - más pequeña y atrás */}
-      <g transform="translate(46 26) scale(0.75)">
-        <ellipse cx="0" cy="2" rx="5" ry="3" fill="#4a5568"/>
-        <circle cx="0" cy="-2" r="3.5" fill="#4a5568"/>
-        <path d="M0 -2 L8 -1 L0 0" fill="#e8a030"/>
-        <path d="M-2 0 Q-12 -8 -22 -4 Q-18 2 -10 4 Q-6 3 -2 2" fill="#3a4458"/>
-        <path d="M2 0 Q12 -8 22 -4 Q18 2 10 4 Q6 3 2 2" fill="#3a4458"/>
-        <path d="M-2 3 L-8 12 L-3 10 L0 14 L3 10 L8 12 L2 3" fill="#4a5568"/>
-        <circle cx="1" cy="-3" r="1" fill="white"/>
-        <circle cx="1.2" cy="-3" r="0.5" fill="#1a1a1a"/>
+      <g transform="translate(42 19) scale(0.72) rotate(10)">
+        <path d="M0 -1 C-5 -9 -15 -12 -22 -9 C-16 -6 -11 -2 -7 2 C-12 1 -17 3 -21 7 C-13 7 -7 5 -1 1" fill="#37435a"/>
+        <path d="M0 -1 C5 -9 15 -12 22 -9 C16 -6 11 -2 7 2 C12 1 17 3 21 7 C13 7 7 5 1 1" fill="#37435a"/>
+        <ellipse cx="0" cy="1" rx="4.2" ry="2.6" fill="#283246"/>
+        <path d="M-1 2 L-6 8 L-2 7 L0 10 L2 7 L6 8 L1 2" fill="#283246" opacity="0.95"/>
       </g>
     </svg>),
     clouds: (<svg viewBox="0 0 54 32" width={s} height={s*0.59}>
@@ -1158,86 +1052,6 @@ function GardenItemIcon({ id, size = 38 }) {
       <ellipse cx="29" cy="13" rx="13" ry="8.5" fill="white" opacity="0.95"/>
       <ellipse cx="40" cy="18" rx="11" ry="7" fill="white" opacity="0.9"/>
       <ellipse cx="28" cy="19" rx="21" ry="9" fill="none" stroke="#d5e0e8" strokeWidth="1" opacity="0.7"/>
-    </svg>),
-    // ═══════════════════════════════════════════════════════════
-    // NOCTURNOS - NUEVOS
-    // ═══════════════════════════════════════════════════════════
-    moon: (<svg viewBox="0 0 48 48" width={s} height={s}>
-      <circle cx="24" cy="24" r="20" fill="#f8e8c0" opacity="0.95"/>
-      <circle cx="24" cy="24" r="18" fill="#f5e0a8"/>
-      <circle cx="18" cy="20" r="4" fill="#e8d090" opacity="0.6"/>
-      <circle cx="30" cy="28" r="5" fill="#e8d090" opacity="0.5"/>
-      <circle cx="22" cy="32" r="3" fill="#e8d090" opacity="0.4"/>
-    </svg>),
-    stars: (<svg viewBox="0 0 52 44" width={s} height={s*0.85}>
-      {[12,28,42,18,38,8,46,24].map((x,i)=>(
-        <g key={i} transform={`translate(${x} ${[12,18,14,26,22,32,28,36][i]})`}>
-          <path d="M0 -4 L0.8 -0.8 L4 0 L0.8 0.8 L0 4 L-0.8 0.8 L-4 0 L-0.8 -0.8Z" fill="#f8e060" opacity={[0.9,0.7,0.85,0.75,0.8,0.65,0.9,0.7][i]}/>
-        </g>
-      ))}
-    </svg>),
-    constellation: (<svg viewBox="0 0 52 40" width={s} height={s*0.77}>
-      <path d="M8 20 L20 12 L32 20 L44 16" fill="none" stroke="#c8a8e8" strokeWidth="1" strokeDasharray="3,3" opacity="0.6"/>
-      <circle cx="8" cy="20" r="2.5" fill="#f8e8ff"/><circle cx="20" cy="12" r="3" fill="#f8e8ff"/><circle cx="32" cy="20" r="2.5" fill="#f8e8ff"/><circle cx="44" cy="16" r="2" fill="#f8e8ff"/>
-      <path d="M20 12 Q26 8 32 20" fill="none" stroke="#e8a8c8" strokeWidth="1.5" opacity="0.5"/>
-    </svg>),
-    shooting_star: (<svg viewBox="0 0 48 40" width={s} height={s*0.83}>
-      <path d="M8 32 L32 8" fill="none" stroke="url(#stargrad)" strokeWidth="2" strokeLinecap="round" opacity="0.8"/>
-      <defs><linearGradient id="stargrad"><stop offset="0%" stopColor="#f8e060" stopOpacity="0"/><stop offset="50%" stopColor="#f8e060" stopOpacity="1"/><stop offset="100%" stopColor="#f8e060" stopOpacity="0"/></linearGradient></defs>
-      <path d="M32 8 L30 12 L34 11 L35 15 L38 12 L42 13 L38 10 L40 6 L36 8 L32 8Z" fill="#f8e060"/>
-    </svg>),
-    owl: (<svg viewBox="0 0 44 48" width={s} height={s*1.09}>
-      <ellipse cx="22" cy="28" rx="14" ry="16" fill="#6a5848"/>
-      <circle cx="22" cy="18" r="12" fill="#7a6858"/>
-      <circle cx="16" cy="16" r="5" fill="#f8e060"/><circle cx="28" cy="16" r="5" fill="#f8e060"/>
-      <circle cx="16" cy="16" r="2.5" fill="#1a1a1a"/><circle cx="28" cy="16" r="2.5" fill="#1a1a1a"/>
-      <ellipse cx="22" cy="22" rx="3" ry="2" fill="#e8a030"/>
-      <path d="M18 38 L14 44 L22 40 L30 44 L26 38" fill="#5a4838"/>
-    </svg>),
-    night_lantern: (<svg viewBox="0 0 40 52" width={s} height={s*1.3}>
-      <path d="M12 8 Q20 4 28 8 L26 36 Q20 40 14 36 Z" fill="#f8a030" opacity="0.9"/>
-      <ellipse cx="20" cy="8" rx="8" ry="3" fill="#e89020"/>
-      <ellipse cx="20" cy="36" rx="6" ry="2.5" fill="#e89020"/>
-      <ellipse cx="20" cy="22" rx="5" ry="8" fill="#f8d060" opacity="0.6"/>
-    </svg>),
-    sleeping_cat: (<svg viewBox="0 0 48 36" width={s} height={s*0.75}>
-      <ellipse cx="28" cy="22" rx="16" ry="10" fill="#a09080"/>
-      <circle cx="18" cy="18" r="8" fill="#a09080"/>
-      <circle cx="14" cy="16" r="1.5" fill="#1a1a1a" opacity="0.3"/>
-      <path d="M10 12 L12 16 L14 12" fill="#a09080"/>
-      <path d="M18 12 L20 16 L22 12" fill="#a09080"/>
-      <ellipse cx="38" cy="26" rx="4" ry="3" fill="#b0a090"/>
-      <path d="M42 24 Q46 22 44 26" fill="none" stroke="#a09080" strokeWidth="2"/>
-    </svg>),
-    moonflower: (<svg viewBox="0 0 44 52" width={s} height={s*1.18}>
-      <rect x="20" y="28" width="5" height="22" rx="2.5" fill="#5a7e3c"/>
-      {[0,60,120,180,240,300].map((a,i)=>(
-        <ellipse key={i} cx={22+Math.cos(a*Math.PI/180)*10} cy={20+Math.sin(a*Math.PI/180)*8} rx="7" ry="10" fill={i%2===0?"#c8b8e8":"#e8d8f8"} transform={`rotate(${a} ${22+Math.cos(a*Math.PI/180)*10} ${20+Math.sin(a*Math.PI/180)*8})`} opacity="0.9"/>
-      ))}
-      <circle cx="22" cy="20" r="5" fill="#f8e060"/>
-    </svg>),
-    moon_reflection: (<svg viewBox="0 0 52 32" width={s} height={s*0.62}>
-      <ellipse cx="26" cy="18" rx="24" ry="12" fill="#5a7890" opacity="0.5"/>
-      <ellipse cx="26" cy="16" rx="8" ry="6" fill="#f8e8c0" opacity="0.4"/>
-      <ellipse cx="26" cy="20" rx="6" ry="4" fill="#f8e8c0" opacity="0.3"/>
-      <ellipse cx="26" cy="24" rx="4" ry="2.5" fill="#f8e8c0" opacity="0.2"/>
-    </svg>),
-    firefly: (<svg viewBox="0 0 48 44" width={s} height={s*0.92}>
-      {[12,24,36,18,30,8,40].map((x,i)=>(
-        <circle key={i} cx={x} cy={[14,20,16,28,24,32,30][i]} r={[2.5,3,2,2.5,2,2,2.5][i]} fill="#c8f860" opacity={[0.9,0.7,0.85,0.75,0.8,0.6,0.9][i]}>
-          <animate attributeName="opacity" values={[0.9,0.7,0.85,0.75,0.8,0.6,0.9][i]+";0.3;"+[0.9,0.7,0.85,0.75,0.8,0.6,0.9][i]} dur={[1.5,2,1.8,2.2,1.6,2.5,1.4][i]+"s" repeatCount="indefinite"/>
-        </circle>
-      ))}
-    </svg>),
-    moongate: (<svg viewBox="0 0 48 52" width={s} height={s*1.08}>
-      <path d="M8 52 L8 20 Q8 4 24 4 Q40 4 40 20 L40 52" fill="none" stroke="#a898b8" strokeWidth="6"/>
-      <path d="M14 52 L14 24 Q14 12 24 12 Q34 12 34 24 L34 52" fill="none" stroke="#c8b8d8" strokeWidth="3"/>
-      <circle cx="24" cy="8" r="4" fill="#f8e060" opacity="0.9"/>
-    </svg>),
-    aurora: (<svg viewBox="0 0 52 40" width={s} height={s*0.77}>
-      <path d="M0 30 Q13 10 26 25 Q39 15 52 28" fill="none" stroke="#88d8a8" strokeWidth="4" opacity="0.6" strokeLinecap="round"/>
-      <path d="M0 34 Q13 18 26 30 Q39 22 52 32" fill="none" stroke="#a8c8e8" strokeWidth="3" opacity="0.5" strokeLinecap="round"/>
-      <path d="M0 26 Q13 6 26 20 Q39 10 52 24" fill="none" stroke="#c8a8e8" strokeWidth="3" opacity="0.4" strokeLinecap="round"/>
     </svg>),
     // Decoración
     lantern: (<svg viewBox="0 0 32 50" width={s} height={s}><rect x="14" y="2" width="4" height="7" rx="2" fill="#9a7848"/><rect x="10" y="12" width="12" height="22" rx="6" fill="#e86030"/><rect x="12" y="12" width="8" height="22" rx="4" fill="#f08050" opacity="0.7"/><ellipse cx="16" cy="12" rx="7" ry="3" fill="#9a7848"/><ellipse cx="16" cy="34" rx="7" ry="3" fill="#9a7848"/><rect x="14" y="34" width="4" height="8" rx="2" fill="#9a7848"/><circle cx="16" cy="23" r="4" fill="#f8e060" opacity="0.5"/></svg>),
@@ -1665,33 +1479,15 @@ function GardenScene({ garden, waterLevel }) {
     Object.entries(garden || {}).map(([k, v]) => [k, v === true])
   );
   const w = waterLevel || 0;
-  const isNight = isNightTime();
-  
   // 5 watercolor levels: 0-20 drought, 20-40 dry, 40-60 ok, 60-80 lush, 80-100 thriving
   const lvl = w < 20 ? 0 : w < 40 ? 1 : w < 60 ? 2 : w < 80 ? 3 : 4;
 
-  // Colores de DÍA
-  const SKY_DAY = ["#e8cfa0","#dde8c8","#c8e8f0","#b0ddf8","#90d0f8"];
-  const SKY2_DAY = ["#f0e4c0","#e8f0d8","#d8f0e8","#c8eef8","#b8e4ff"];
-  const GROUND1_DAY = ["#c89848","#b8c060","#88b830","#60a828","#48a020"];
-  const GROUND2_DAY = ["#b07830","#98a840","#68980c","#488810","#308808"];
-  const HILL_DAY = ["#c0b060","#a0c058","#78b848","#58a840","#40a038"];
-  const MIST_DAY = ["#d0b870","#b8c870","#90c890","#78c8a8","#60c8b8"];
-  
-  // Colores de NOCHE
-  const SKY_NIGHT = ["#2a1f4a","#3a2a5e","#4a3a72","#5a4a86","#6a5a9a"];
-  const SKY2_NIGHT = ["#1a1030","#2a1f40","#3a2e50","#4a3d60","#5a4c70"];
-  const GROUND1_NIGHT = ["#3a3020","#4a4030","#5a5040","#6a6050","#7a7060"];
-  const GROUND2_NIGHT = ["#2a2010","#3a3020","#4a4030","#5a5040","#6a6050"];
-  const HILL_NIGHT = ["#3a3050","#4a4060","#5a5070","#6a6080","#7a7090"];
-  const MIST_NIGHT = ["#2a2040","#3a3050","#4a4060","#5a5070","#6a6080"];
-  
-  const SKY = isNight ? SKY_NIGHT : SKY_DAY;
-  const SKY2 = isNight ? SKY2_NIGHT : SKY2_DAY;
-  const GROUND1 = isNight ? GROUND1_NIGHT : GROUND1_DAY;
-  const GROUND2 = isNight ? GROUND2_NIGHT : GROUND2_DAY;
-  const HILL = isNight ? HILL_NIGHT : HILL_DAY;
-  const MIST = isNight ? MIST_NIGHT : MIST_DAY;
+  const SKY = ["#e8cfa0","#dde8c8","#c8e8f0","#b0ddf8","#90d0f8"];
+  const SKY2 = ["#f0e4c0","#e8f0d8","#d8f0e8","#c8eef8","#b8e4ff"];
+  const GROUND1 = ["#c89848","#b8c060","#88b830","#60a828","#48a020"];
+  const GROUND2 = ["#b07830","#98a840","#68980c","#488810","#308808"];
+  const HILL = ["#c0b060","#a0c058","#78b848","#58a840","#40a038"];
+  const MIST = ["#d0b870","#b8c870","#90c890","#78c8a8","#60c8b8"];
 
   // Grass blade color per level
   const grassC = ["#c8a830","#a8b840","#78a828","#509820","#388810"];
@@ -1745,20 +1541,7 @@ function GardenScene({ garden, waterLevel }) {
       </g>}
 
       {/* Sun / Moon */}
-      {isNight ? (
-        // LUNA - modo noche
-        g.moon ? <>
-          <circle cx="330" cy="55" r="24" fill="#f8e8c0" opacity="0.95"/>
-          <circle cx="330" cy="55" r="22" fill="#f5e0a8"/>
-          <circle cx="324" cy="52" r="4" fill="#e8d090" opacity="0.5"/>
-          <circle cx="336" cy="58" r="5" fill="#e8d090" opacity="0.4"/>
-          {g.stars && [12,28,42,58,72,88,102,118,132,148,162,178,192,208,222,238,252,268,282,298,312,328,342,358].map((a,i)=>(
-            <circle key={i} cx={330+Math.cos(a*Math.PI/180)*(35+i%3*8)} cy={55+Math.sin(a*Math.PI/180)*(25+i%2*6)} r={[1.5,2,1,2.5,1.2,2.2,1,1.8][i%8]} fill="#f8e060" opacity={[0.9,0.7,0.85,0.6,0.8,0.5,0.9,0.65][i%8]}/>
-          ))}
-        </> : <circle cx="330" cy="55" r="14" fill="#f8e8c0" opacity="0.6"/>
-      ) : (
-        // SOL - modo día
-        g.sun ? <>
+      {g.sun ? <>
         <circle cx="330" cy="55" r="28" fill="#f0b030" opacity="0.95"/>
         {[0,30,60,90,120,150,180,210,240,270,300,330].map(a=>(
           <line key={a} x1={330+Math.cos(a*Math.PI/180)*32} y1={55+Math.sin(a*Math.PI/180)*32}
@@ -2012,7 +1795,7 @@ function GardenScene({ garden, waterLevel }) {
 // ═══════════════════════════════════════════════
 function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pandaBubble, onPet, onBuy, onWater, onBuyAccessory }) {
   const [shopTab, setShopTab] = useState("plantas");
-  const cats = [{id:"plantas",label:"🌿 Plantas"},{id:"agua",label:"🐟 Agua"},{id:"cielo",label:"☁️ Cielo"},{id:"nocturno",label:"🌙 Nocturno"},{id:"deco",label:"🏮 Deco"},{id:"especial",label:"✨ Especiales"},{id:"accesorios",label:"🐼 Pandas"}];
+  const cats = [{id:"plantas",label:"🌿 Plantas"},{id:"agua",label:"🐟 Agua"},{id:"cielo",label:"☁️ Cielo"},{id:"deco",label:"🏮 Deco"},{id:"especial",label:"✨ Especiales"},{id:"accesorios",label:"🐼 Pandas"}];
   const shopItems = (shopTab === "accesorios"
     ? PANDA_ACCESSORIES
     : GARDEN_ITEMS.filter(i => i.cat === shopTab)).filter(i => i && i.id && typeof i.cost === "number");
@@ -2034,13 +1817,15 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
           <div style={{ background: C.olive, borderRadius: 10, padding: "8px 16px", fontFamily: "'Fredoka One',cursive", fontSize: "1.05rem", color: C.cream2, boxShadow: "0 3px 0 rgba(0,0,0,0.2)" }}>🌿 {bamboo}</div>
         </div>
         {/* Bars */}
-        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
-          <span style={{ fontSize:"0.68rem", color:`${C.cream}88`, fontWeight:800, minWidth:54, letterSpacing:"0.5px" }}>💧 AGUA</span>
-          <div style={{ flex:1, height:9, background:"rgba(255,255,255,0.14)", borderRadius:50, overflow:"hidden" }}>
-            <div style={{ height:"100%", width:water+"%", background:dry?"#e86030":withering?"#e8a030":C.sky, borderRadius:50, transition:"width 0.8s" }}/>
+        {[{l:"♡ AMOR",v:happiness,c:C.salmon},{l:"💧 AGUA",v:water,c:dry?"#e86030":withering?"#e8a030":C.sky}].map(b => (
+          <div key={b.l} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
+            <span style={{ fontSize:"0.68rem", color:`${C.cream}88`, fontWeight:800, minWidth:54, letterSpacing:"0.5px" }}>{b.l}</span>
+            <div style={{ flex:1, height:9, background:"rgba(255,255,255,0.14)", borderRadius:50, overflow:"hidden" }}>
+              <div style={{ height:"100%", width:b.v+"%", background:b.c, borderRadius:50, transition:"width 0.8s" }}/>
+            </div>
+            <span style={{ fontSize:"0.68rem", color:`${C.cream}88`, fontWeight:800, minWidth:28, textAlign:"right" }}>{b.v}%</span>
           </div>
-          <span style={{ fontSize:"0.68rem", color:`${C.cream}88`, fontWeight:800, minWidth:28, textAlign:"right" }}>{water}%</span>
-        </div>
+        ))}
         {dry && <div style={{ background:"#e86030", borderRadius:8, padding:"6px 12px", fontSize:"0.76rem", color:"white", fontWeight:800, textAlign:"center", marginTop:6 }}>⚠️ ¡El jardín se está secando! Riégalo pronto</div>}
         {!dry && withering && <div style={{ background:"#e8a030", borderRadius:8, padding:"6px 12px", fontSize:"0.76rem", color:"white", fontWeight:800, textAlign:"center", marginTop:6 }}>🌱 El jardín necesita agua</div>}
       </div>
@@ -2151,46 +1936,6 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
               </div>
             );
           })}
-        </div>
-      </div>
-
-      {/* JUEGOS - Botón debajo de la tienda */}
-      <div style={{ margin: "16px 14px 20px" }}>
-        <div style={{ background: "linear-gradient(135deg, #f7f1ff 0%, #e8e0f8 100%)", borderRadius: 18, padding: "18px 20px", boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-            <div style={{ fontSize: "2.5rem" }}>🎮</div>
-            <div>
-              <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", color: C.dark }}>Juegos de Pareja</div>
-              <div style={{ fontSize: "0.8rem", color: C.inkM }}>Diviértete y gana bambú juntos</div>
-            </div>
-          </div>
-          
-          <button 
-            onClick={() => window.open('/juegos', '_self')}
-            style={{
-              width: "100%",
-              background: C.dark,
-              color: C.cream2,
-              border: "none",
-              borderRadius: 14,
-              padding: "14px 20px",
-              fontFamily: "'Fredoka One',cursive",
-              fontSize: "1rem",
-              cursor: "pointer",
-              boxShadow: "0 4px 0 rgba(0,0,0,0.2)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8
-            }}
-          >
-            <span>🎯</span>
-            <span>Jugar "¿Quién lo dijo?"</span>
-          </button>
-          
-          <div style={{ marginTop: 10, fontSize: "0.75rem", color: C.inkL, textAlign: "center" }}>
-            50 preguntas · 5 bambú por acierto
-          </div>
         </div>
       </div>
     </div>
@@ -4745,232 +4490,6 @@ const NAV = [
 // ═══════════════════════════════════════════════
 // ROOT APP — updated state + decay logic
 // ═══════════════════════════════════════════════
-
-// ═══════════════════════════════════════════════════════════
-// JUEGO: ¿QUIÉN LO DIJO?
-// ═══════════════════════════════════════════════════════════
-function TriviaJuego({ user, onComplete, onAddBamboo }) {
-  const parsedNames = parseCoupleNames(user?.names);
-  const nameA = parsedNames.a;
-  const nameB = parsedNames.b;
-  const myRole = user?.isOwner === false ? 1 : 0;
-  const partnerRole = myRole === 0 ? 1 : 0;
-  
-  const [gameState, setGameState] = useState("intro"); // intro, playing, waiting, results
-  const [currentQ, setCurrentQ] = useState(0);
-  const [myAnswers, setMyAnswers] = useState({});
-  const [partnerAnswers, setPartnerAnswers] = useState({});
-  const [selectedQuestions, setSelectedQuestions] = useState([]);
-  const [score, setScore] = useState(0);
-  
-  // Seleccionar 10 preguntas aleatorias al inicio
-  useEffect(() => {
-    const shuffled = [...TRIVIA_PREGUNTAS].sort(() => Math.random() - 0.5);
-    setSelectedQuestions(shuffled.slice(0, 10));
-  }, []);
-  
-  const startGame = () => {
-    setGameState("playing");
-    setCurrentQ(0);
-    setMyAnswers({});
-    setPartnerAnswers({});
-    setScore(0);
-  };
-  
-  const answerQuestion = (who) => {
-    const newAnswers = { ...myAnswers, [selectedQuestions[currentQ].id]: who };
-    setMyAnswers(newAnswers);
-    
-    if (currentQ < selectedQuestions.length - 1) {
-      setCurrentQ(currentQ + 1);
-    } else {
-      // Guardar en Firebase y esperar al otro
-      setGameState("waiting");
-      // Aquí iría la lógica de Firebase
-      // Por ahora simulamos que el otro ya respondió
-      setTimeout(() => {
-        const mockPartnerAnswers = {};
-        selectedQuestions.forEach(q => {
-          mockPartnerAnswers[q.id] = Math.random() > 0.5 ? 0 : 1;
-        });
-        setPartnerAnswers(mockPartnerAnswers);
-        
-        // Calcular puntaje
-        let matches = 0;
-        selectedQuestions.forEach(q => {
-          if (newAnswers[q.id] === mockPartnerAnswers[q.id]) {
-            matches++;
-          }
-        });
-        setScore(matches);
-        setGameState("results");
-        
-        // Dar bambú
-        const bambooEarned = matches * 5; // 5 bambú por acierto
-        onAddBamboo?.(bambooEarned);
-        onComplete?.({ score: matches, total: 10, bamboo: bambooEarned });
-      }, 2000);
-    }
-  };
-  
-  if (gameState === "intro") {
-    return (
-      <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
-        <ScreenTop title="¿Quién lo dijo?" sub="Juego de parejas" />
-        <div style={{ margin: "20px 14px", background: C.white, borderRadius: 20, padding: "24px 20px", boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
-          <div style={{ textAlign: "center", marginBottom: 24 }}>
-            <div style={{ fontSize: "4rem", marginBottom: 10 }}>🎮</div>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.4rem", color: C.dark, marginBottom: 12 }}>¿Quién lo dijo?</div>
-            <div style={{ fontSize: "0.9rem", color: C.inkM, lineHeight: 1.7 }}>
-              Responde 10 preguntas sobre ustedes. <br/>
-              Tu pareja hace lo mismo. <br/>
-              ¡Ganan bambú por cada respuesta que coincida!
-            </div>
-          </div>
-          
-          <div style={{ background: C.cream, borderRadius: 14, padding: "16px", marginBottom: 20, border: `1.5px solid ${C.border}` }}>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark, marginBottom: 10, textAlign: "center" }}>🎁 Recompensas</div>
-            <div style={{ display: "flex", justifyContent: "space-around" }}>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "1.5rem" }}>5🌿</div>
-                <div style={{ fontSize: "0.75rem", color: C.inkM }}>por acierto</div>
-              </div>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "1.5rem" }}>50🌿</div>
-                <div style={{ fontSize: "0.75rem", color: C.inkM }}>si aciertan 10</div>
-              </div>
-            </div>
-          </div>
-          
-          <Btn onClick={startGame} variant="dark" style={{ width: "100%", padding: "16px", fontSize: "1.1rem" }}>
-            ¡Empezar a jugar! 🚀
-          </Btn>
-        </div>
-      </div>
-    );
-  }
-  
-  if (gameState === "playing") {
-    const q = selectedQuestions[currentQ];
-    return (
-      <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
-        <ScreenTop title="¿Quién lo dijo?" sub={`Pregunta ${currentQ + 1} de ${selectedQuestions.length}`} />
-        <div style={{ margin: "20px 14px" }}>
-          {/* Progreso */}
-          <div style={{ marginBottom: 16 }}>
-            <ProgBar value={currentQ} max={selectedQuestions.length} color={C.olive} height={8} />
-          </div>
-          
-          {/* Pregunta */}
-          <div style={{ background: C.white, borderRadius: 20, padding: "28px 24px", marginBottom: 16, boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
-            <div style={{ fontSize: "1.3rem", color: C.dark, fontWeight: 800, textAlign: "center", lineHeight: 1.5 }}>
-              {q.texto}
-            </div>
-          </div>
-          
-          {/* Opciones */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <button
-              onClick={() => answerQuestion(0)}
-              style={{
-                background: "linear-gradient(135deg, #e8f5ec 0%, #d4e8c4 100%)",
-                border: `2px solid ${C.border}`,
-                borderRadius: 16,
-                padding: "20px 24px",
-                fontFamily: "'Fredoka One',cursive",
-                fontSize: "1.1rem",
-                color: C.dark,
-                cursor: "pointer",
-                boxShadow: `0 3px 0 ${C.border}`,
-                transition: "transform 0.15s"
-              }}
-              onMouseDown={e => e.currentTarget.style.transform = "scale(0.98)"}
-              onMouseUp={e => e.currentTarget.style.transform = "scale(1)"}
-            >
-              {nameA}
-            </button>
-            
-            <button
-              onClick={() => answerQuestion(1)}
-              style={{
-                background: "linear-gradient(135deg, #f0e8f8 0%, #e4d8f0 100%)",
-                border: `2px solid ${C.border}`,
-                borderRadius: 16,
-                padding: "20px 24px",
-                fontFamily: "'Fredoka One',cursive",
-                fontSize: "1.1rem",
-                color: C.dark,
-                cursor: "pointer",
-                boxShadow: `0 3px 0 ${C.border}`,
-                transition: "transform 0.15s"
-              }}
-              onMouseDown={e => e.currentTarget.style.transform = "scale(0.98)"}
-              onMouseUp={e => e.currentTarget.style.transform = "scale(1)"}
-            >
-              {nameB}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
-  if (gameState === "waiting") {
-    return (
-      <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ textAlign: "center", padding: 20 }}>
-          <div style={{ fontSize: "4rem", marginBottom: 20, animation: "float 2s ease-in-out infinite" }}>⏳</div>
-          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.3rem", color: C.dark, marginBottom: 12 }}>¡Listo!</div>
-          <div style={{ fontSize: "0.95rem", color: C.inkM }}>Esperando las respuestas de tu pareja...</div>
-        </div>
-      </div>
-    );
-  }
-  
-  if (gameState === "results") {
-    const percentage = Math.round((score / selectedQuestions.length) * 100);
-    const bambooEarned = score * 5;
-    
-    return (
-      <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
-        <ScreenTop title="Resultados" sub="¿Quién lo dijo?" />
-        <div style={{ margin: "20px 14px" }}>
-          <div style={{ background: C.white, borderRadius: 20, padding: "28px 24px", boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}`, textAlign: "center" }}>
-            <div style={{ fontSize: "5rem", marginBottom: 16 }}>
-              {percentage >= 80 ? "🏆" : percentage >= 60 ? "🎉" : percentage >= 40 ? "👍" : "💪"}
-            </div>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "2.5rem", color: C.olive, marginBottom: 8 }}>
-              {score}/{selectedQuestions.length}
-            </div>
-            <div style={{ fontSize: "1.1rem", color: C.dark, fontWeight: 700, marginBottom: 20 }}>
-              {percentage >= 80 ? "¡Se conocen perfectamente! 💕" : 
-               percentage >= 60 ? "¡Muy buena conexión! 💚" : 
-               percentage >= 40 ? "Van por buen camino 💛" : 
-               "¡Hay que practicar más! 💪"}
-            </div>
-            <div style={{ background: C.cream, borderRadius: 14, padding: "20px", marginBottom: 24, border: `1.5px solid ${C.border}` }}>
-              <div style={{ fontSize: "0.85rem", color: C.inkM, marginBottom: 8 }}>Han ganado</div>
-              <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "2rem", color: C.olive }}>
-                +{bambooEarned} 🌿
-              </div>
-            </div>
-            
-            <Btn onClick={startGame} variant="dark" style={{ width: "100%", padding: "16px", fontSize: "1.05rem", marginBottom: 12 }}>
-              Jugar otra vez 🔄
-            </Btn>
-            
-            <Btn onClick={() => setGameState("intro")} variant="sand" style={{ width: "100%", padding: "14px", fontSize: "0.95rem" }}>
-              Volver al menú
-            </Btn>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
-  return null;
-}
-
 export default function App() {
   const [screen, setScreen] = useState("login");
   const [user, setUser] = useState(null);
