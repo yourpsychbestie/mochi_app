@@ -3683,7 +3683,7 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
           <CouplePandaSVG happy size={130} />
         </div>
         <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.75rem", color: C.cream2 }}>{user?.names || "Nosotros"}</div>
-        <div style={{ color: `${C.cream}88`, fontSize: "0.85rem", fontWeight: 700, marginTop: 3 }}>{user?.since || ""}</div>
+        <div style={{ color: `${C.cream}88`, fontSize: "0.85rem", fontWeight: 700, marginTop: 3 }}>{user?.since && user.since !== "Juntos desde hoy" ? user.since : ""}</div>
         {coupleInfo.anniversary && <div style={{ color: C.gold, fontSize: "0.82rem", fontWeight: 700, marginTop: 4 }}>💑 {coupleInfo.anniversary}</div>}
       </div>
 
@@ -3695,6 +3695,24 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
           </div>
         ))}
       </div>
+
+      {/* Estadísticas del Test */}
+      {testScores && (
+        <div style={{ margin: "10px 14px 12px", background: C.white, borderRadius: 18, padding: 16, boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
+          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark, marginBottom: 10 }}>📊 Resultados del Test de Pareja</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            {Object.entries(testScores).map(([area, score]) => (
+              <div key={area} style={{ background: C.cream, borderRadius: 10, padding: "8px 10px", border: `1px solid ${C.border}` }}>
+                <div style={{ fontSize: "0.65rem", color: C.inkL, fontWeight: 700, textTransform: "uppercase" }}>{area}</div>
+                <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", color: C.olive }}>{score}/10</div>
+              </div>
+            ))}
+          </div>
+          <button onClick={onRetakeTest} style={{ width: "100%", marginTop: 10, background: C.sand, color: C.ink, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "8px 12px", fontFamily: "'Fredoka One',cursive", fontSize: "0.85rem", cursor: "pointer" }}>
+            Volver a hacer el test
+          </button>
+        </div>
+      )}
       <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:16, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
         <button onClick={() => setShowLoveModal(true)} style={{ width:"100%", background:"#c05068", color:C.cream2, border:"none", borderRadius:12, padding:"12px 16px", fontFamily:"'Fredoka One',cursive", fontSize:"1rem", cursor:"pointer", boxShadow:"0 3px 0 rgba(0,0,0,0.18)" }}>
           Manda un mensaje de amor
@@ -4580,7 +4598,7 @@ export default function App() {
           ...resolvedUser,
           code: found.code,
           names: resolvedUser.names || found.names || resolvedUser.names,
-          since: resolvedUser.since || found.since || "Juntos desde hoy",
+          since: resolvedUser.since || found.since || null,
         };
         await fbSaveUser(resolvedUser.uid, {
           code: found.code,
@@ -4590,7 +4608,7 @@ export default function App() {
       } else if (resolvedUser?.isOwner !== false) {
         const baseName = String(resolvedUser?.email || "nosotros").split("@")[0] || "Nosotros";
         const names = resolvedUser.names || `${baseName} & ?`;
-        const since = resolvedUser.since || "Juntos desde hoy";
+        const since = resolvedUser.since || null;
         let provisionedCode = null;
 
         for (let i = 0; i < 8; i += 1) {
@@ -5068,9 +5086,30 @@ export default function App() {
     }
   };
 
+  const shouldShowTest = () => {
+    if (!testScores) return true;
+    
+    // Verificar si han pasado 7 días desde el último test
+    if (testScores.date) {
+      const lastTest = new Date(testScores.date);
+      const now = new Date();
+      const daysSinceLastTest = Math.floor((now - lastTest) / (1000 * 60 * 60 * 24));
+      if (daysSinceLastTest >= 7) return true;
+    }
+    
+    // Verificar si la racha llegó a 6 días
+    if (streakData?.currentStreak >= 6) return true;
+    
+    return false;
+  };
+
   const finishTest = (scores) => {
-    setTestScores(scores);
-    save(null, { bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit, testScores:scores, lessonsDone, gratitud, momentos });
+    const testData = {
+      scores,
+      date: new Date().toISOString()
+    };
+    setTestScores(testData);
+    save(null, { bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit, testScores: testData, lessonsDone, gratitud, momentos });
     setScreen("main");
   };
 
@@ -5436,7 +5475,7 @@ export default function App() {
   );
 
   if (screen === "reltest") return <><style>{STYLES}</style><SectionErrorBoundary fallback={relTestFallback}><RelTest user={user} onDone={finishTest}/></SectionErrorBoundary></>;
-  if (user && !user?.isGuest && user?.code && !testScores) return <><style>{STYLES}</style><SectionErrorBoundary fallback={relTestFallback}><RelTest user={user} onDone={finishTest}/></SectionErrorBoundary></>;
+  if (user && !user?.isGuest && user?.code && shouldShowTest()) return <><style>{STYLES}</style><SectionErrorBoundary fallback={relTestFallback}><RelTest user={user} onDone={finishTest}/></SectionErrorBoundary></>;
 
   return (
     <div style={{ fontFamily:"'Nunito',sans-serif", maxWidth:480, margin:"0 auto", minHeight:"100vh", background:C.sandL, position:"relative" }}>
