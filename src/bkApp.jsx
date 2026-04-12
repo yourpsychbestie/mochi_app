@@ -3255,6 +3255,7 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
   const [offset, setOffset] = useState(0);
   const [open, setOpen] = useState(false);
   const [showFavs, setShowFavs] = useState(false);
+  const [selectedFav, setSelectedFav] = useState(null);
   const [favs, setFavs] = useState(() => ls.get(favKey) || []);
   const dayKey = getDateKeyLocal();
 
@@ -3262,6 +3263,7 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
     setOffset(0);
     setOpen(false);
     setShowFavs(false);
+    setSelectedFav(null);
   }, [dayKey, ownerKey]);
 
   useEffect(() => {
@@ -3280,6 +3282,7 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
 
   const removeFav = (id) => {
     setFavs(prev => prev.filter(fid => fid !== id));
+    if (selectedFav?.id === id) setSelectedFav(null);
   };
 
   const handleOpen = () => {
@@ -3525,14 +3528,102 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
                 <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", marginBottom: 8 }}>No tienes favoritos aún</div>
                 <div style={{ fontSize: "0.85rem" }}>Guarda los consejos que más te gusten para verlos aquí</div>
               </div>
+            ) : selectedFav ? (
+              /* Vista individual del favorito seleccionado */
+              <div>
+                <button 
+                  onClick={() => setSelectedFav(null)}
+                  style={{ 
+                    background: "none", 
+                    border: "none", 
+                    color: C.olive, 
+                    fontSize: "0.85rem", 
+                    cursor: "pointer",
+                    fontWeight: 700,
+                    marginBottom: 16,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6
+                  }}
+                >
+                  ← Volver a favoritos
+                </button>
+
+                {/* Header */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: "1.8rem" }}>💡</span>
+                    <div>
+                      <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.2rem", color: C.dark }}>Consejo #{selectedFav.id}</div>
+                      <div style={{ fontSize: "0.75rem", color: C.inkL, fontWeight: 700 }}>Guardado en favoritos</div>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => removeFav(selectedFav.id)}
+                    style={{ 
+                      width: 40, 
+                      height: 40, 
+                      borderRadius: "50%", 
+                      border: "none", 
+                      background: "#ffe8e8", 
+                      color: "#e86040", 
+                      fontWeight: 900, 
+                      fontSize: "1.1rem", 
+                      cursor: "pointer" 
+                    }}
+                  >
+                    🗑️
+                  </button>
+                </div>
+
+                {/* El consejo principal */}
+                <div style={{ background: "linear-gradient(130deg, #f7f1ff 0%, #eee3ff 100%)", borderRadius: 18, padding: "18px 20px", border: `2px solid ${C.border}`, marginBottom: 14 }}>
+                  <div style={{ fontSize: "1.15rem", color: C.dark, lineHeight: 1.6, fontWeight: 800, textAlign: "center" }}>
+                    {selectedFav.texto}
+                  </div>
+                </div>
+
+                {/* Por qué funciona */}
+                <div style={{ background: C.sandL, borderRadius: 14, padding: "14px 16px", marginBottom: 12, border: `1.5px solid ${C.border}` }}>
+                  <div style={{ fontSize: "0.8rem", fontWeight: 800, color: C.olive, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>💜 Por qué funciona</div>
+                  <div style={{ fontSize: "0.9rem", color: C.ink, lineHeight: 1.7 }}>{selectedFav.explicacion}</div>
+                </div>
+
+                {/* Qué puedes hacer hoy */}
+                <div style={{ background: "#f0f8ff", borderRadius: 14, padding: "14px 16px", marginBottom: 12, border: `1.5px solid #d0e0f0` }}>
+                  <div style={{ fontSize: "0.8rem", fontWeight: 800, color: "#4a6fa5", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>✨ Qué puedes hacer hoy</div>
+                  <div style={{ fontSize: "0.9rem", color: C.ink, lineHeight: 1.7 }}>{selectedFav.practica}</div>
+                </div>
+
+                {/* Quién lo dice */}
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 12, background: C.cream, borderRadius: 14, padding: "14px 16px", marginBottom: 16, border: `1.5px solid ${C.border}` }}>
+                  <div style={{ fontSize: "1.6rem" }}>👤</div>
+                  <div>
+                    <div style={{ fontSize: "0.9rem", fontWeight: 800, color: C.dark, marginBottom: 3 }}>{selectedFav.autor}</div>
+                    <div style={{ fontSize: "0.8rem", color: C.inkM, lineHeight: 1.5 }}>{selectedFav.quienEs}</div>
+                  </div>
+                </div>
+              </div>
             ) : (
+              /* Lista de favoritos - vista resumida */
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {favsList.map((favConsejo) => (
-                  <div key={favConsejo.id} style={{ background: C.sandL, borderRadius: 16, padding: "14px 16px", border: `1.5px solid ${C.border}` }}>
+                  <div 
+                    key={favConsejo.id} 
+                    onClick={() => setSelectedFav(favConsejo)}
+                    style={{ 
+                      background: C.sandL, 
+                      borderRadius: 16, 
+                      padding: "14px 16px", 
+                      border: `1.5px solid ${C.border}`,
+                      cursor: "pointer",
+                      transition: "all 0.2s"
+                    }}
+                  >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                       <div style={{ fontSize: "0.7rem", fontWeight: 800, color: C.inkL }}>#{favConsejo.id}</div>
                       <button 
-                        onClick={() => removeFav(favConsejo.id)}
+                        onClick={(e) => { e.stopPropagation(); removeFav(favConsejo.id); }}
                         style={{ 
                           background: "none", 
                           border: "none", 
@@ -3549,7 +3640,7 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
                       {favConsejo.texto}
                     </div>
                     <div style={{ fontSize: "0.75rem", color: C.inkM, fontWeight: 700 }}>
-                      {favConsejo.autor}
+                      {favConsejo.autor} · Toca para ver completo →
                     </div>
                   </div>
                 ))}
@@ -3815,14 +3906,7 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
 
       <ConsejoDelDiaSection user={user} onClaimReward={onClaimDailyTip} />
 
-      {/* ── ESTADÍSTICAS DEL TEST ── */}
-      {testScores && Object.keys(testScores).length > 0 && (
-        <div style={{ margin: "0 14px 12px" }}>
-          <TestStatsSection testScores={testScores} onRetakeTest={onRetakeTest} />
-        </div>
-      )}
-
-            {/* ── BAÚL DE GRATITUD ── */}
+      {/* ── BAÚL DE GRATITUD ── */}
       <div style={{ margin:"0 14px 12px" }}>
         <BaulSection
           gratitud={gratitud} momentos={momentos}
@@ -3830,6 +3914,13 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
           user={user}
         />
       </div>
+
+      {/* ── ESTADÍSTICAS DEL TEST ── */}
+      {testScores && Object.keys(testScores).length > 0 && (
+        <div style={{ margin: "0 14px 12px" }}>
+          <TestStatsSection testScores={testScores} onRetakeTest={onRetakeTest} />
+        </div>
+      )}
 
       <div style={{ padding: "0 14px 20px" }}>
 
