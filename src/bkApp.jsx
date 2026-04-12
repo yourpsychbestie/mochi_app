@@ -1817,13 +1817,15 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
           <div style={{ background: C.olive, borderRadius: 10, padding: "8px 16px", fontFamily: "'Fredoka One',cursive", fontSize: "1.05rem", color: C.cream2, boxShadow: "0 3px 0 rgba(0,0,0,0.2)" }}>🌿 {bamboo}</div>
         </div>
         {/* Bars */}
-        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
-          <span style={{ fontSize:"0.68rem", color:`${C.cream}88`, fontWeight:800, minWidth:54, letterSpacing:"0.5px" }}>💧 AGUA</span>
-          <div style={{ flex:1, height:9, background:"rgba(255,255,255,0.14)", borderRadius:50, overflow:"hidden" }}>
-            <div style={{ height:"100%", width:water+"%", background:dry?"#e86030":withering?"#e8a030":C.sky, borderRadius:50, transition:"width 0.8s" }}/>
+        {[{l:"♡ AMOR",v:happiness,c:C.salmon},{l:"💧 AGUA",v:water,c:dry?"#e86030":withering?"#e8a030":C.sky}].map(b => (
+          <div key={b.l} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
+            <span style={{ fontSize:"0.68rem", color:`${C.cream}88`, fontWeight:800, minWidth:54, letterSpacing:"0.5px" }}>{b.l}</span>
+            <div style={{ flex:1, height:9, background:"rgba(255,255,255,0.14)", borderRadius:50, overflow:"hidden" }}>
+              <div style={{ height:"100%", width:b.v+"%", background:b.c, borderRadius:50, transition:"width 0.8s" }}/>
+            </div>
+            <span style={{ fontSize:"0.68rem", color:`${C.cream}88`, fontWeight:800, minWidth:28, textAlign:"right" }}>{b.v}%</span>
           </div>
-          <span style={{ fontSize:"0.68rem", color:`${C.cream}88`, fontWeight:800, minWidth:28, textAlign:"right" }}>{water}%</span>
-        </div>
+        ))}
         {dry && <div style={{ background:"#e86030", borderRadius:8, padding:"6px 12px", fontSize:"0.76rem", color:"white", fontWeight:800, textAlign:"center", marginTop:6 }}>⚠️ ¡El jardín se está secando! Riégalo pronto</div>}
         {!dry && withering && <div style={{ background:"#e8a030", borderRadius:8, padding:"6px 12px", fontSize:"0.76rem", color:"white", fontWeight:800, textAlign:"center", marginTop:6 }}>🌱 El jardín necesita agua</div>}
       </div>
@@ -2074,7 +2076,7 @@ function Login({ onLogin }) {
     _pendingLocalAuth = true;
     let createdAuthUser = false;
     try {
-      const since = durN ? `Juntos ${durN} ${durU}` : null;
+      const since = durN ? `Juntos ${durN} ${durU}` : "Juntos desde hoy";
       const cred = await fbRegister(cleanEmail, pass);
       createdAuthUser = true;
       const uid = cred.user.uid;
@@ -2140,7 +2142,7 @@ function Login({ onLogin }) {
         partnerName: cleanPartnerName,
       }));
       const names = claim.names || "Nosotros";
-      const since = claim.since || null;
+      const since = claim.since || "Juntos desde hoy";
       await retryFirestore(() => fbSaveUser(uid, { email: cleanPartnerEmail, names, code: cleanCode, since, isOwner: false }));
       // Also update owner's user record with new names
       if (claim.ownerUid) await retryFirestore(() => fbSaveUser(claim.ownerUid, { names }));
@@ -3580,6 +3582,101 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
   );
 }
 
+// ═══════════════════════════════════════════════════════
+// TEST STATS SECTION — Muestra estadísticas del test en el perfil
+// ═══════════════════════════════════════════════════════
+function TestStatsSection({ testScores, onRetakeTest }) {
+  const [expanded, setExpanded] = useState(false);
+
+  // Calcular promedios
+  const areas = TEST_AREAS.map(area => {
+    const scores = testScores[area.id];
+    if (!scores) return { ...area, avg: 0, hasData: false };
+    const sA = scores.a || scores.A || 0;
+    const sB = scores.b || scores.B || 0;
+    const avg = (sA + sB) / 2;
+    return { ...area, avg, hasData: true, sA, sB };
+  }).filter(a => a.hasData);
+
+  if (areas.length === 0) return null;
+
+  const total = areas.reduce((s, a) => s + a.avg, 0) / areas.length;
+
+  let prognosis, progColor, progEmoji;
+  if (total >= 4.2) { prognosis = "¡Excelente! Su relación tiene bases muy sólidas."; progColor = "#4a9a40"; progEmoji = "🌟"; }
+  else if (total >= 3.2) { prognosis = "Tienen mucho amor y algunas áreas para trabajar juntos."; progColor = "#7ab848"; progEmoji = "🌿"; }
+  else if (total >= 2.2) { prognosis = "Su relación tiene potencial real. ¡Sigan trabajando!"; progColor = "#e8a030"; progEmoji = "🌱"; }
+  else { prognosis = "Se necesita valentía para ser honestos. Mochi está aquí para ayudar."; progColor = "#e86040"; progEmoji = "💪"; }
+
+  return (
+    <div style={{ background: C.white, borderRadius: 18, padding: 16, border: `1.5px solid ${C.border}`, boxShadow: `0 3px 0 ${C.border}` }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark }}>
+          📊 Estadísticas del test
+        </div>
+        <button 
+          onClick={() => setExpanded(!expanded)}
+          style={{ background: "none", border: "none", color: C.olive, fontSize: "0.8rem", cursor: "pointer", fontWeight: 700 }}
+        >
+          {expanded ? "Ocultar ▲" : "Ver detalles ▼"}
+        </button>
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+        <div style={{ fontSize: "2.2rem" }}>{progEmoji}</div>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+            <div style={{ background: progColor, color: "white", borderRadius: 50, padding: "4px 14px", fontFamily: "'Fredoka One',cursive", fontSize: "1rem" }}>
+              {total.toFixed(1)} / 5.0
+            </div>
+          </div>
+          <div style={{ fontSize: "0.78rem", color: C.inkM, lineHeight: 1.5 }}>{prognosis}</div>
+        </div>
+      </div>
+
+      {expanded && (
+        <div style={{ marginTop: 14 }}>
+          <div style={{ fontSize: "0.7rem", fontWeight: 800, color: C.inkL, letterSpacing: "0.6px", marginBottom: 10 }}>
+            RESULTADO POR ÁREA
+          </div>
+          {areas.map(a => (
+            <div key={a.id} style={{ marginBottom: 12 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                <div style={{ fontWeight: 700, fontSize: "0.82rem", color: C.ink }}>{a.emoji} {a.label}</div>
+                <div style={{ fontSize: "0.72rem", color: C.inkL, fontWeight: 700 }}>
+                  {a.avg.toFixed(1)} / 5
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 3 }}>
+                {[1, 2, 3, 4, 5].map(i => (
+                  <div key={i} style={{ flex: 1, height: 6, borderRadius: 50,
+                    background: i <= Math.round(a.avg) ? TEST_COLORS[Math.round(a.avg) - 1] : C.sand }} />
+                ))}
+              </div>
+            </div>
+          ))}
+
+          <div style={{ background: "#e8f4e8", borderRadius: 12, padding: 12, marginTop: 12, marginBottom: 12, border: `1px solid ${C.olive}30` }}>
+            <div style={{ fontSize: "0.7rem", fontWeight: 800, color: C.olive, marginBottom: 6 }}>💡 ÁREAS PRIORITARIAS</div>
+            {[...areas].sort((a, b) => a.avg - b.avg).slice(0, 2).map(a => (
+              <div key={a.id} style={{ fontSize: "0.78rem", color: C.inkM, marginBottom: 3 }}>
+                → {a.emoji} <strong>{a.label}</strong>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <button 
+        onClick={onRetakeTest}
+        style={{ width: "100%", background: C.sand, color: C.dark, border: "none", borderRadius: 12, padding: "10px 14px", fontFamily: "'Fredoka One',cursive", fontSize: "0.85rem", cursor: "pointer", marginTop: 8 }}
+      >
+        🔄 Volver a hacer el test
+      </button>
+    </div>
+  );
+}
+
 // PROFILE — Enhanced with more info fields
 function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, conoce, lessonsDone, coupleInfo, streakInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento, onSendMessage, onClaimDailyTip }) {
   const [editMode, setEditMode] = useState(false);
@@ -3695,24 +3792,6 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
           </div>
         ))}
       </div>
-
-      {/* Estadísticas del Test */}
-      {testScores && (
-        <div style={{ margin: "10px 14px 12px", background: C.white, borderRadius: 18, padding: 16, boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
-          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark, marginBottom: 10 }}>📊 Resultados del Test de Pareja</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            {Object.entries(testScores).map(([area, score]) => (
-              <div key={area} style={{ background: C.cream, borderRadius: 10, padding: "8px 10px", border: `1px solid ${C.border}` }}>
-                <div style={{ fontSize: "0.65rem", color: C.inkL, fontWeight: 700, textTransform: "uppercase" }}>{area}</div>
-                <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", color: C.olive }}>{score}/10</div>
-              </div>
-            ))}
-          </div>
-          <button onClick={onRetakeTest} style={{ width: "100%", marginTop: 10, background: C.sand, color: C.ink, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "8px 12px", fontFamily: "'Fredoka One',cursive", fontSize: "0.85rem", cursor: "pointer" }}>
-            Volver a hacer el test
-          </button>
-        </div>
-      )}
       <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:16, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
         <button onClick={() => setShowLoveModal(true)} style={{ width:"100%", background:"#c05068", color:C.cream2, border:"none", borderRadius:12, padding:"12px 16px", fontFamily:"'Fredoka One',cursive", fontSize:"1rem", cursor:"pointer", boxShadow:"0 3px 0 rgba(0,0,0,0.18)" }}>
           Manda un mensaje de amor
@@ -3735,6 +3814,13 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
       </div>
 
       <ConsejoDelDiaSection user={user} onClaimReward={onClaimDailyTip} />
+
+      {/* ── ESTADÍSTICAS DEL TEST ── */}
+      {testScores && Object.keys(testScores).length > 0 && (
+        <div style={{ margin: "0 14px 12px" }}>
+          <TestStatsSection testScores={testScores} onRetakeTest={onRetakeTest} />
+        </div>
+      )}
 
             {/* ── BAÚL DE GRATITUD ── */}
       <div style={{ margin:"0 14px 12px" }}>
@@ -3804,16 +3890,13 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
         <div style={{ background: C.cream, borderRadius: 16, padding: "14px 16px", border: `1.5px solid ${C.border}`, marginBottom: 8 }}>
           <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.inkL, letterSpacing: "0.6px", marginBottom: 8 }}>AVISO LEGAL Y PRIVACIDAD</div>
           <div style={{ fontSize: "0.72rem", color: C.inkM, lineHeight: 1.65 }}>
-            <b>Mochi</b> es una aplicación de bienestar para parejas desarrollada por <b>Johana Heidi Fragoso Blendl</b> en colaboración con inteligencia artificial. Todos los derechos reservados © {new Date().getFullYear()}. El nombre, diseño, concepto, personajes y contenido de Mochi están protegidos por las leyes de propiedad intelectual. Queda prohibida su reproducción, distribución o uso comercial sin autorización expresa por escrito.
+            <b>Mochi</b> es una aplicación de bienestar para parejas desarrollada por Johana Fragoso. Todos los derechos reservados © {new Date().getFullYear()}. El nombre, diseño, concepto, personajes y contenido de Mochi están protegidos por las leyes de propiedad intelectual. Queda prohibida su reproducción, distribución o uso comercial sin autorización expresa por escrito.
           </div>
           <div style={{ fontSize: "0.72rem", color: C.inkM, lineHeight: 1.65, marginTop: 8 }}>
             <b>Privacidad de datos:</b> Tu información personal (correo, nombre y progreso) se almacena de forma segura y cifrada. No se vende ni comparte con terceros. Puedes eliminar tu cuenta y todos tus datos en cualquier momento usando el botón de arriba. Al usar Mochi, aceptas estos términos.
           </div>
-          <div style={{ fontSize: "0.72rem", color: C.inkM, lineHeight: 1.65, marginTop: 8 }}>
-            <b>Uso responsable:</b> El uso de esta aplicación es responsabilidad exclusiva de la pareja. Mochi es una herramienta de apoyo al bienestar emocional y no sustituye la terapia profesional. Los ejercicios y consejos son sugerencias basadas en investigación psicológica; cada pareja es única y debe adaptar el contenido a sus necesidades específicas.
-          </div>
         </div>
-        <div style={{ fontSize: "0.65rem", color: C.inkL, textAlign: "center", paddingBottom: 4 }}>Mochi v1.0 · Hecho con 🐼 amor por Johana Fragoso</div>
+        <div style={{ fontSize: "0.65rem", color: C.inkL, textAlign: "center", paddingBottom: 4 }}>Mochi v1.0 · Hecho con 🐼 amor</div>
       </div>
 
       {showLoveModal && (
@@ -4529,6 +4612,7 @@ export default function App() {
   const [mochiHappy, setMochiHappy] = useState(false);
   const [lastVisit, setLastVisit] = useState(null);
   const [testScores, setTestScores] = useState(null);
+  const [lastTestDate, setLastTestDate] = useState(null);
   const [lessonsDone, setLessonsDone] = useState({});
   const [gratitud, setGratitud] = useState([]);
   const [momentos, setMomentos] = useState([]);
@@ -4598,7 +4682,7 @@ export default function App() {
           ...resolvedUser,
           code: found.code,
           names: resolvedUser.names || found.names || resolvedUser.names,
-          since: resolvedUser.since || found.since || null,
+          since: resolvedUser.since || found.since || "Juntos desde hoy",
         };
         await fbSaveUser(resolvedUser.uid, {
           code: found.code,
@@ -4608,7 +4692,7 @@ export default function App() {
       } else if (resolvedUser?.isOwner !== false) {
         const baseName = String(resolvedUser?.email || "nosotros").split("@")[0] || "Nosotros";
         const names = resolvedUser.names || `${baseName} & ?`;
-        const since = resolvedUser.since || null;
+        const since = resolvedUser.since || "Juntos desde hoy";
         let provisionedCode = null;
 
         for (let i = 0; i < 8; i += 1) {
@@ -4664,6 +4748,7 @@ export default function App() {
         if (s.burbuja) setBurbuja(s.burbuja);
         if (s.coupleInfo) setCoupleInfo(s.coupleInfo);
         if (s.testScores) setTestScores(s.testScores);
+        if (s.lastTestDate) setLastTestDate(s.lastTestDate);
         if (s.lessonsDone) setLessonsDone(s.lessonsDone);
         if (s.gratitud) setGratitud(s.gratitud);
         if (s.momentos) setMomentos(s.momentos);
@@ -4681,7 +4766,15 @@ export default function App() {
     }
     setLastVisit(new Date().toISOString());
     const introFlowOpen = screenRef.current === "onboarding" || screenRef.current === "reltest";
-    const hasCompletedTest = !!s?.testScores;
+    
+    // Lógica para mostrar el test: cada 7 días o cuando la racha llega a 6
+    const now = new Date();
+    const lastTest = s?.lastTestDate ? new Date(s.lastTestDate) : null;
+    const daysSinceLastTest = lastTest ? Math.floor((now - lastTest) / (1000 * 60 * 60 * 24)) : null;
+    const streakFromLoaded = s?.streakData?.currentStreak || 0;
+    const shouldShowTest = !s?.testScores || daysSinceLastTest >= 7 || streakFromLoaded === 6;
+    const hasCompletedTest = !!s?.testScores && !shouldShowTest;
+    
     if (!isNew && introFlowOpen) {
       setScreen(screenRef.current);
       return;
@@ -5086,30 +5179,11 @@ export default function App() {
     }
   };
 
-  const shouldShowTest = () => {
-    if (!testScores) return true;
-    
-    // Verificar si han pasado 7 días desde el último test
-    if (testScores.date) {
-      const lastTest = new Date(testScores.date);
-      const now = new Date();
-      const daysSinceLastTest = Math.floor((now - lastTest) / (1000 * 60 * 60 * 24));
-      if (daysSinceLastTest >= 7) return true;
-    }
-    
-    // Verificar si la racha llegó a 6 días
-    if (streakData?.currentStreak >= 6) return true;
-    
-    return false;
-  };
-
   const finishTest = (scores) => {
-    const testData = {
-      scores,
-      date: new Date().toISOString()
-    };
-    setTestScores(testData);
-    save(null, { bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit, testScores: testData, lessonsDone, gratitud, momentos });
+    const now = new Date().toISOString();
+    setTestScores(scores);
+    setLastTestDate(now);
+    save(null, { bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit, testScores: scores, lastTestDate: now, lessonsDone, gratitud, momentos });
     setScreen("main");
   };
 
@@ -5378,16 +5452,6 @@ export default function App() {
   const claimDailyTip = async () => {
     const reward = 15;
     const message = `Consejo del día leído +${reward} bambú 🌿`;
-    
-    // Verificar si ya se reclamó hoy
-    const todayKey = getDateKeyLocal();
-    const alreadyClaimed = streakInteractions.some(i => i.type === "consejo" && i.date === todayKey);
-    
-    if (alreadyClaimed) {
-      toast("Ya reclamaste tu consejo del día hoy 🌿 Vuelve mañana para más bambú");
-      return;
-    }
-    
     trigHappy();
     trackDailyInteraction("consejo");
 
@@ -5475,7 +5539,7 @@ export default function App() {
   );
 
   if (screen === "reltest") return <><style>{STYLES}</style><SectionErrorBoundary fallback={relTestFallback}><RelTest user={user} onDone={finishTest}/></SectionErrorBoundary></>;
-  if (user && !user?.isGuest && user?.code && shouldShowTest()) return <><style>{STYLES}</style><SectionErrorBoundary fallback={relTestFallback}><RelTest user={user} onDone={finishTest}/></SectionErrorBoundary></>;
+  if (user && !user?.isGuest && user?.code && !testScores) return <><style>{STYLES}</style><SectionErrorBoundary fallback={relTestFallback}><RelTest user={user} onDone={finishTest}/></SectionErrorBoundary></>;
 
   return (
     <div style={{ fontFamily:"'Nunito',sans-serif", maxWidth:480, margin:"0 auto", minHeight:"100vh", background:C.sandL, position:"relative" }}>
