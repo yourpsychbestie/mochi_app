@@ -5971,6 +5971,7 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
   const [showMForm, setShowMForm] = useState(false);
   const [gText, setGText] = useState(""); const [gWho, setGWho] = useState("A");
   const [mTitle, setMTitle] = useState(""); const [mText, setMText] = useState("");
+  const [showAllModal, setShowAllModal] = useState(false);
 
   const getEntryTime = (entry) => {
     if (entry?.createdAt?.toDate) return entry.createdAt.toDate().getTime();
@@ -5983,6 +5984,9 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
 
   const submitG = () => { if (!gText.trim()) return; onAddGratitud({ text:gText.trim() }); setGText(""); setShowGForm(false); };
   const submitM = () => { if (!mTitle.trim()||!mText.trim()) return; onAddMomento({ title:mTitle.trim(), text:mText.trim() }); setMTitle(""); setMText(""); setShowMForm(false); };
+
+  const allGratitud = [...gratitud].sort((a, b) => getEntryTime(b) - getEntryTime(a));
+  const allMomentos = [...momentos].sort((a, b) => getEntryTime(b) - getEntryTime(a));
 
   return (
     <div style={{ background:C.white, borderRadius:20, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}`, overflow:"hidden" }}>
@@ -6021,7 +6025,11 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
                   <div style={{ fontSize:"0.86rem", color:C.inkM, lineHeight:1.6 }}>{g.text}</div>
                 </div>
               ))}
-            {gratitud.length > 3 && <div style={{ textAlign:"center", fontSize:"0.78rem", color:C.inkL, fontWeight:700, marginTop:4 }}>+{gratitud.length-3} más</div>}
+            {gratitud.length > 3 && (
+              <button onClick={() => setShowAllModal(true)} style={{ width:"100%", marginTop:8, padding:"10px", background:C.cream, border:`1.5px solid ${C.border}`, borderRadius:12, fontFamily:"'Fredoka One',cursive", fontSize:"0.85rem", color:C.dark, cursor:"pointer" }}>
+                Ver todas ({gratitud.length})
+              </button>
+            )}
           </>
         )}
 
@@ -6045,10 +6053,57 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
                   <div style={{ fontSize:"0.85rem", color:C.inkM, lineHeight:1.65 }}>{m.text}</div>
                 </div>
               ))}
-            {momentos.length > 3 && <div style={{ textAlign:"center", fontSize:"0.78rem", color:C.inkL, fontWeight:700, marginTop:4 }}>+{momentos.length-3} más</div>}
+            {momentos.length > 3 && (
+              <button onClick={() => setShowAllModal(true)} style={{ width:"100%", marginTop:8, padding:"10px", background:C.cream, border:`1.5px solid ${C.border}`, borderRadius:12, fontFamily:"'Fredoka One',cursive", fontSize:"0.85rem", color:C.dark, cursor:"pointer" }}>
+                Ver todos ({momentos.length})
+              </button>
+            )}
           </>
         )}
       </div>
+
+      {/* Modal para ver todos */}
+      {showAllModal && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(15,25,15,0.65)", zIndex:6000, display:"flex", alignItems:"flex-end" }} onClick={() => setShowAllModal(false)}>
+          <div onClick={e => e.stopPropagation()} style={{ background:C.sandL, borderRadius:"22px 22px 0 0", width:"100%", maxHeight:"85vh", overflowY:"auto" }}>
+            <div style={{ background:C.dark, padding:"16px 18px 18px", borderRadius:"22px 22px 0 0" }}>
+              <div style={{ width:34, height:5, background:"rgba(255,255,255,0.2)", borderRadius:50, margin:"0 auto 12px" }}/>
+              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.2rem", color:C.cream2 }}>
+                {activeTab === "gratitud" ? "💛 Todas las gratitudes" : "✨ Todos los momentos"}
+              </div>
+              <div style={{ fontSize:"0.75rem", color:`${C.cream}88`, marginTop:3 }}>
+                {activeTab === "gratitud" ? `${allGratitud.length} entradas` : `${allMomentos.length} momentos`}
+              </div>
+            </div>
+            <div style={{ padding:"14px 16px 32px" }}>
+              {activeTab === "gratitud" ? (
+                allGratitud.map((g,i) => (
+                  <div key={g.id||i} style={{ background:"#fffde8", borderRadius:12, padding:"12px 14px", marginBottom:10, border:"1px solid #e8d84030" }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
+                      <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.85rem", color:C.dark }}>🐼 {g.authorName || g.name || "Tú"}</div>
+                      <div style={{ fontSize:"0.7rem", color:C.inkL, fontWeight:700 }}>{g.date}</div>
+                    </div>
+                    <div style={{ fontSize:"0.9rem", color:C.inkM, lineHeight:1.6 }}>{g.text}</div>
+                  </div>
+                ))
+              ) : (
+                allMomentos.map((m,i) => (
+                  <div key={m.id||i} style={{ background:"#f8f0ff", borderRadius:12, padding:"12px 14px", marginBottom:10, border:`1px solid #c8a8f830` }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
+                      <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", color:C.dark }}>✨ {m.title}</div>
+                      <div style={{ fontSize:"0.7rem", color:C.inkL, fontWeight:700 }}>{m.date}</div>
+                    </div>
+                    <div style={{ fontSize:"0.88rem", color:C.inkM, lineHeight:1.65 }}>{m.text}</div>
+                  </div>
+                ))
+              )}
+              <button onClick={() => setShowAllModal(false)} style={{ width:"100%", marginTop:10, padding:"12px", background:C.dark, color:C.cream2, border:"none", borderRadius:14, fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", cursor:"pointer" }}>
+                Cerrar ✕
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
