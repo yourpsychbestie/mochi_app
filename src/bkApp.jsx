@@ -1816,8 +1816,8 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
           </div>
           <div style={{ background: C.olive, borderRadius: 10, padding: "8px 16px", fontFamily: "'Fredoka One',cursive", fontSize: "1.05rem", color: C.cream2, boxShadow: "0 3px 0 rgba(0,0,0,0.2)" }}>🌿 {bamboo}</div>
         </div>
-        {/* Bars */}
-        {[{l:"♡ AMOR",v:happiness,c:C.salmon},{l:"💧 AGUA",v:water,c:dry?"#e86030":withering?"#e8a030":C.sky}].map(b => (
+        {/* Bars - solo AGUA */}
+        {[{l:"💧 AGUA",v:water,c:dry?"#e86030":withering?"#e8a030":C.sky}].map(b => (
           <div key={b.l} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
             <span style={{ fontSize:"0.68rem", color:`${C.cream}88`, fontWeight:800, minWidth:54, letterSpacing:"0.5px" }}>{b.l}</span>
             <div style={{ flex:1, height:9, background:"rgba(255,255,255,0.14)", borderRadius:50, overflow:"hidden" }}>
@@ -3676,8 +3676,16 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
 // ═══════════════════════════════════════════════════════
 // TEST STATS SECTION — Muestra estadísticas del test en el perfil
 // ═══════════════════════════════════════════════════════
-function TestStatsSection({ testScores, onRetakeTest }) {
+function TestStatsSection({ testScores, onRetakeTest, lastTestDate, streakInfo }) {
   const [expanded, setExpanded] = useState(false);
+
+  // Calcular cuándo se puede repetir el test
+  const now = new Date();
+  const lastTest = lastTestDate ? new Date(lastTestDate) : null;
+  const daysSinceLastTest = lastTest ? Math.floor((now - lastTest) / (1000 * 60 * 60 * 24)) : 999;
+  const currentStreak = streakInfo?.currentStreak || 0;
+  const canRetake = daysSinceLastTest >= 7 || currentStreak === 6;
+  const daysRemaining = Math.max(0, 7 - daysSinceLastTest);
 
   // Calcular promedios
   const areas = TEST_AREAS.map(area => {
@@ -3758,18 +3766,250 @@ function TestStatsSection({ testScores, onRetakeTest }) {
         </div>
       )}
 
-      <button 
-        onClick={onRetakeTest}
-        style={{ width: "100%", background: C.sand, color: C.dark, border: "none", borderRadius: 12, padding: "10px 14px", fontFamily: "'Fredoka One',cursive", fontSize: "0.85rem", cursor: "pointer", marginTop: 8 }}
-      >
-        🔄 Volver a hacer el test
-      </button>
+      {canRetake ? (
+        <button 
+          onClick={onRetakeTest}
+          style={{ width: "100%", background: C.dark, color: C.cream2, border: "none", borderRadius: 12, padding: "10px 14px", fontFamily: "'Fredoka One',cursive", fontSize: "0.85rem", cursor: "pointer", marginTop: 8, boxShadow: "0 3px 0 rgba(0,0,0,0.2)" }}
+        >
+          🔄 Volver a hacer el test
+        </button>
+      ) : (
+        <div style={{ width: "100%", background: C.sandL, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: "10px 14px", marginTop: 8, textAlign: "center" }}>
+          <div style={{ fontSize: "0.8rem", color: C.inkM, fontWeight: 700 }}>
+            ⏳ Puedes repetir el test en {daysRemaining} día{daysRemaining !== 1 ? 's' : ''}
+          </div>
+          <div style={{ fontSize: "0.7rem", color: C.inkL, marginTop: 3 }}>
+            o cuando tu racha llegue a 6 días 🔥
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// DIARIO PERSONAL — Con técnicas ABCD y registro de conflictos
+// ═══════════════════════════════════════════════════════
+const DIARIO_TYPES = [
+  {
+    id: "abcd",
+    label: "🧠 ABCD",
+    sub: "Entender cómo te afectó algo que pasó",
+    prompts: [
+      { key:"a", label:"A · Situación activadora", hint:"¿Qué pasó exactamente?" },
+      { key:"b", label:"B · Pensamiento automático", hint:"¿Qué pensé en ese momento?" },
+      { key:"c", label:"C · Emoción y consecuencia", hint:"¿Cómo me sentí? ¿Qué hice?" },
+      { key:"d", label:"D · Perspectiva alternativa", hint:"¿Qué puedo ver de otra manera?" },
+    ]
+  },
+  {
+    id: "discusion",
+    label: "⚡ Discusión",
+    sub: "Registrar y soltar un conflicto",
+    prompts: [
+      { key:"q1", label:"¿Qué pasó?", hint:"Sin culpar, solo los hechos..." },
+      { key:"q2", label:"¿Qué sentí?", hint:"Emociones, sensaciones..." },
+      { key:"q3", label:"¿Qué necesitaba yo?", hint:"La necesidad detrás de la reacción..." },
+      { key:"q4", label:"¿Qué querría decirle?", hint:"Con calma, ¿qué diría ahora?" },
+    ]
+  },
+  {
+    id: "hoy",
+    label: "🌙 Cómo estuve hoy",
+    sub: "Un registro rápido de cómo me sentí",
+    prompts: [
+      { key:"q1", label:"Mi día en una oración", hint:"¿Cómo estuvo?" },
+      { key:"q2", label:"Lo más significativo", hint:"Un momento, una palabra..." },
+      { key:"q3", label:"En mi relación hoy", hint:"¿Cómo me sentí con mi pareja?" },
+    ]
+  },
+  {
+    id: "interpersonal",
+    label: "🫶 Interpersonal",
+    sub: "Reflexionar sobre lo que siento en mi relación",
+    prompts: [
+      { key:"q1", label:"Momento de conexión", hint:"¿Hubo alguno hoy?" },
+      { key:"q2", label:"Lo que me costó expresar", hint:"¿Qué no le dije?" },
+      { key:"q3", label:"Lo que necesito pedirle", hint:"Una petición clara..." },
+    ]
+  },
+];
+
+function DiarioPersonal({ entries, onSave, user }) {
+  const [view, setView] = useState("list"); // "list" | "new" | "detail"
+  const [selType, setSelType] = useState(null);
+  const [draft, setDraft] = useState({});
+  const [selEntry, setSelEntry] = useState(null);
+
+  const sortedEntries = Object.values(entries || {}).sort((a, b) => b.ts.localeCompare(a.ts));
+
+  const fmtDate = ts => {
+    const d = new Date(ts);
+    const today = new Date(); const yesterday = new Date(); yesterday.setDate(today.getDate()-1);
+    if (d.toDateString() === today.toDateString()) return "Hoy";
+    if (d.toDateString() === yesterday.toDateString()) return "Ayer";
+    return d.toLocaleDateString("es-MX", { weekday:"long", day:"numeric", month:"short" });
+  };
+  const fmtTime = ts => new Date(ts).toLocaleTimeString("es-MX", { hour:"2-digit", minute:"2-digit" });
+
+  const handleSave = () => {
+    const type = DIARIO_TYPES.find(t => t.id === selType);
+    if (!type) return;
+    const filled = type.prompts.filter(p => (draft[p.key] || "").trim().length > 0);
+    if (filled.length === 0) return;
+    const ts = new Date().toISOString();
+    onSave({ id: ts, ts, type: selType, prompts: { ...draft } });
+    setDraft({}); setSelType(null); setView("list");
+  };
+
+  if (view === "new" && selType) {
+    const type = DIARIO_TYPES.find(t => t.id === selType);
+    const abcdFieldHelp = {
+      a: "Describe solo el hecho visible, como una camara. Evita interpretar intenciones.",
+      b: "Escribe la frase exacta que se te vino a la mente, incluso si suena extrema.",
+      c: "Nombra emocion + reaccion: por ejemplo ansiedad + me calle / enojo + discuti.",
+      d: "Busca una version mas amplia y realista, sin negar lo que sentiste.",
+    };
+    return (
+      <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
+        <div style={{ background: C.dark, padding: "44px 20px 20px" }}>
+          <button onClick={() => setView("list")} style={{ background: "none", border: "none", color: C.cream2, fontSize: "1.5rem", cursor: "pointer", marginBottom: 10, display: "block" }}>←</button>
+          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.4rem", color: C.cream2, marginBottom: 4 }}>{type.label}</div>
+          <div style={{ fontSize: "0.8rem", color: `${C.cream}88` }}>{type.sub}</div>
+        </div>
+        <div style={{ padding: "10px 14px 0" }}>
+          {selType === "abcd" && (
+            <div style={{ background:"#eef6ea", borderRadius:14, padding:14, marginBottom:10, border:`1.5px solid ${C.border}` }}>
+              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", color:C.dark, marginBottom:6 }}>¿Qué es ABCD y qué significa reestructurar?</div>
+              <div style={{ fontSize:"0.8rem", color:C.inkM, lineHeight:1.6, marginBottom:8 }}>
+                ABCD es una forma simple de ordenar tu mente cuando te activas. Reestructurar no es mentirte:
+                es pasar de un pensamiento automático que duele a una idea más completa y justa.
+              </div>
+              <div style={{ background:C.white, borderRadius:10, padding:"9px 10px", border:`1px solid ${C.border}`, fontSize:"0.75rem", color:C.inkM, lineHeight:1.55 }}>
+                <b>Ejemplo:</b> A: "No respondió en 2 horas". B: "Seguro ya no le importo".
+                C: "Ansiedad, me cerré". D: "Puede estar ocupado/a; cuando pueda, pregunto con calma".
+              </div>
+            </div>
+          )}
+          {type.prompts.map(p => (
+            <div key={p.key} style={{ background: C.white, borderRadius: 14, padding: 14, marginBottom: 10, border: `1.5px solid ${C.border}` }}>
+              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", color:C.dark, marginBottom:7 }}>{p.label}</div>
+              {selType === "abcd" && abcdFieldHelp[p.key] && (
+                <div style={{ fontSize:"0.76rem", color:C.inkL, lineHeight:1.55, marginBottom:8, background:C.cream, border:`1px solid ${C.border}`, borderRadius:9, padding:"7px 9px" }}>
+                  {abcdFieldHelp[p.key]}
+                </div>
+              )}
+              <textarea
+                value={draft[p.key] || ""}
+                onChange={e => setDraft(d => ({ ...d, [p.key]: e.target.value }))}
+                placeholder={p.hint}
+                rows={3}
+                style={{ width:"100%", border:`1.5px solid ${C.border}`, borderRadius:10, padding:"9px 11px", fontSize:"0.84rem", fontFamily:"'Nunito',sans-serif", resize:"none", outline:"none", boxSizing:"border-box", color:C.ink, lineHeight:1.6 }}
+              />
+            </div>
+          ))}
+          <div style={{ display:"flex", gap:10, marginTop:4 }}>
+            <button onClick={() => { setSelType(null); setView("new"); }} style={{ flex:1, padding:13, background:C.cream, border:`1.5px solid ${C.border}`, borderRadius:14, fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", cursor:"pointer", color:C.inkM }}>← Tipo</button>
+            <button onClick={handleSave} style={{ flex:2, padding:13, background:C.dark, color:C.cream2, border:"none", borderRadius:14, fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.2)" }}>Guardar entrada ✓</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === "new") {
+    return (
+      <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
+        <div style={{ background: C.dark, padding: "44px 20px 20px" }}>
+          <button onClick={() => setView("list")} style={{ background: "none", border: "none", color: C.cream2, fontSize: "1.5rem", cursor: "pointer", marginBottom: 10, display: "block" }}>←</button>
+          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.4rem", color: C.cream2, marginBottom: 4 }}>📓 Diario</div>
+          <div style={{ fontSize: "0.8rem", color: `${C.cream}88` }}>¿Qué tipo de entrada?</div>
+        </div>
+        <div style={{ padding: "10px 14px 0" }}>
+          {DIARIO_TYPES.map(t => (
+            <div key={t.id} onClick={() => setSelType(t.id)}
+              style={{ background:C.white, borderRadius:16, padding:"14px 16px", marginBottom:10, cursor:"pointer", border:`1.5px solid ${C.border}`, boxShadow:`0 3px 0 ${C.border}` }}>
+              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.05rem", color:C.dark }}>{t.label}</div>
+              <div style={{ fontSize:"0.8rem", color:C.inkM, marginTop:3 }}>{t.sub}</div>
+            </div>
+          ))}
+          <button onClick={() => setView("list")} style={{ width:"100%", padding:12, background:"transparent", border:`1.5px solid ${C.border}`, borderRadius:14, fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", cursor:"pointer", color:C.inkM, marginTop:4 }}>← Volver</button>
+        </div>
+      </div>
+    );
+  }
+
+  // list view
+  return (
+    <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
+      <div style={{ background: C.dark, padding: "44px 20px 20px" }}>
+        <button onClick={() => {}} style={{ background: "none", border: "none", color: C.cream2, fontSize: "1.5rem", cursor: "pointer", marginBottom: 10, display: "block", opacity: 0 }}>←</button>
+        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.4rem", color: C.cream2, marginBottom: 4 }}>📓 Diario</div>
+        <div style={{ fontSize: "0.8rem", color: `${C.cream}88` }}>Tu espacio personal de reflexión</div>
+      </div>
+      <div style={{ padding: "10px 14px 0" }}>
+        <div style={{ background:C.white, borderRadius:14, padding:12, marginBottom:10, border:`1.5px solid ${C.border}` }}>
+          <div style={{ fontSize:"0.8rem", color:C.inkM, lineHeight:1.55 }}>
+            Este diario es privado: te ayuda a bajar ruido mental, entender lo que sentiste y escribir con claridad antes de reaccionar.
+          </div>
+        </div>
+        <button onClick={() => setView("new")} style={{ width:"100%", background:C.dark, color:C.cream2, border:"none", borderRadius:14, padding:"13px 16px", fontFamily:"'Fredoka One',cursive", fontSize:"1rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.25)", marginBottom:14, textAlign:"left" }}>
+          + Nueva entrada 📝
+        </button>
+        {sortedEntries.length === 0 && (
+          <div style={{ textAlign:"center", padding:"40px 20px", color:C.inkL, fontSize:"0.88rem" }}>
+            <div style={{ fontSize:"2.5rem", marginBottom:10 }}>📓</div>
+            Tu diario está vacío. Empieza con una entrada hoy.
+          </div>
+        )}
+        {sortedEntries.map(entry => {
+          const type = DIARIO_TYPES.find(t => t.id === entry.type);
+          const firstPromptKey = type?.prompts?.[0]?.key;
+          const preview = firstPromptKey ? (entry.prompts?.[firstPromptKey] || "") : "";
+          return (
+            <div key={entry.id} onClick={() => { setSelEntry(entry); }}
+              style={{ background:C.white, borderRadius:16, padding:"13px 15px", marginBottom:9, border:`1.5px solid ${C.border}`, boxShadow:`0 2px 0 ${C.border}`, cursor:"pointer" }}>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:5 }}>
+                <div style={{ background:C.cream, borderRadius:8, padding:"3px 10px", fontSize:"0.72rem", fontWeight:800, color:C.dark }}>{type?.label || entry.type}</div>
+                <div style={{ fontSize:"0.7rem", color:C.inkL, fontWeight:700 }}>{fmtDate(entry.ts)} · {fmtTime(entry.ts)}</div>
+              </div>
+              {preview && <div style={{ fontSize:"0.84rem", color:C.inkM, lineHeight:1.55, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{preview}</div>}
+            </div>
+          );
+        })}
+      </div>
+      {selEntry && (() => {
+        const type = DIARIO_TYPES.find(t => t.id === selEntry.type);
+        return (
+          <div style={{ position:"fixed", inset:0, background:"rgba(15,25,15,0.65)", zIndex:5000, display:"flex", alignItems:"flex-end" }} onClick={() => setSelEntry(null)}>
+            <div onClick={e => e.stopPropagation()} style={{ background:C.sandL, borderRadius:"22px 22px 0 0", width:"100%", maxHeight:"88vh", overflowY:"auto", border:`1.5px solid ${C.border}` }}>
+              <div style={{ background:C.dark, padding:"16px 18px 18px", borderRadius:"22px 22px 0 0" }}>
+                <div style={{ width:34, height:5, background:"rgba(255,255,255,0.2)", borderRadius:50, margin:"0 auto 12px" }}/>
+                <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.1rem", color:C.cream2 }}>{type?.label}</div>
+                <div style={{ fontSize:"0.75rem", color:`${C.cream}88`, marginTop:3 }}>{fmtDate(selEntry.ts)} · {fmtTime(selEntry.ts)}</div>
+              </div>
+              <div style={{ padding:"14px 16px 32px" }}>
+                {(type?.prompts || []).map(p => {
+                  const val = selEntry.prompts?.[p.key];
+                  if (!val) return null;
+                  return (
+                    <div key={p.key} style={{ background:C.white, borderRadius:12, padding:"11px 13px", marginBottom:9, border:`1.5px solid ${C.border}` }}>
+                      <div style={{ fontSize:"0.72rem", fontWeight:800, color:C.inkL, marginBottom:5, textTransform:"uppercase", letterSpacing:"0.5px" }}>{p.label}</div>
+                      <div style={{ fontSize:"0.86rem", color:C.ink, lineHeight:1.65 }}>{val}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
 
 // PROFILE — Enhanced with more info fields
-function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, conoce, lessonsDone, coupleInfo, streakInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento, onSendMessage, onClaimDailyTip }) {
+function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, conoce, lessonsDone, coupleInfo, streakInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento, onSendMessage, onClaimDailyTip, diarioEntries, onSaveDiarioEntry }) {
   const [editMode, setEditMode] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [showLoveModal, setShowLoveModal] = useState(false);
@@ -3795,6 +4035,7 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
     nextAdventure: coupleInfo.nextAdventure || "",
     bucketList: coupleInfo.bucketList || "",
   });
+  const [showDiarioModal, setShowDiarioModal] = useState(false);
 
   const myEmail = user?.email || "guest";
   const myRole = user?.isOwner !== false ? "owner" : "partner";
@@ -3915,10 +4156,25 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
         />
       </div>
 
+      {/* ── DIARIO PERSONAL ── */}
+      <div style={{ margin:"0 14px 12px" }}>
+        <div style={{ background: C.white, borderRadius: 16, padding: "14px 16px", border: `1.5px solid ${C.border}`, boxShadow: `0 2px 0 ${C.border}` }}>
+          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark, marginBottom: 8 }}>
+            📓 Diario personal
+          </div>
+          <div style={{ fontSize: "0.78rem", color: C.inkM, marginBottom: 12, lineHeight: 1.5 }}>
+            Tu espacio privado para reflexionar: técnica ABCD, registrar conflictos, o simplemente cómo te sentiste hoy.
+          </div>
+          <Btn onClick={() => setShowDiarioModal(true)} variant="sand" style={{ width:"100%", fontSize: "0.85rem" }}>
+            Abrir diario 📝
+          </Btn>
+        </div>
+      </div>
+
       {/* ── ESTADÍSTICAS DEL TEST ── */}
       {testScores && Object.keys(testScores).length > 0 && (
         <div style={{ margin: "0 14px 12px" }}>
-          <TestStatsSection testScores={testScores} onRetakeTest={onRetakeTest} />
+          <TestStatsSection testScores={testScores} onRetakeTest={onRetakeTest} lastTestDate={user?.lastTestDate} streakInfo={streakInfo} />
         </div>
       )}
 
@@ -4070,6 +4326,23 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
               >
                 {deletingAccount ? "Eliminando..." : "Eliminar ahora"}
               </Btn>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal del Diario Personal */}
+      {showDiarioModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15,25,15,0.65)", zIndex: 6000, display: "flex", alignItems: "flex-end" }} onClick={() => setShowDiarioModal(false)}>
+          <div onClick={e => e.stopPropagation()} style={{ background: C.sandL, borderRadius: "22px 22px 0 0", width: "100%", maxHeight: "95vh", overflowY: "auto" }}>
+            <DiarioPersonal entries={diarioEntries} onSave={onSaveDiarioEntry} user={user} />
+            <div style={{ padding: "0 16px 20px", background: C.sandL }}>
+              <button 
+                onClick={() => setShowDiarioModal(false)}
+                style={{ width: "100%", background: C.dark, color: C.cream2, border: "none", borderRadius: 14, padding: "14px", fontFamily: "'Fredoka One',cursive", fontSize: "1rem", cursor: "pointer" }}
+              >
+                Cerrar diario ✕
+              </button>
             </div>
           </div>
         </div>
@@ -4707,6 +4980,7 @@ export default function App() {
   const [lessonsDone, setLessonsDone] = useState({});
   const [gratitud, setGratitud] = useState([]);
   const [momentos, setMomentos] = useState([]);
+  const [diarioEntries, setDiarioEntries] = useState({});
   const [streakInteractions, setStreakInteractions] = useState([]);
   const [streakData, setStreakData] = useState({
     currentStreak: 0,
@@ -4843,6 +5117,7 @@ export default function App() {
         if (s.lessonsDone) setLessonsDone(s.lessonsDone);
         if (s.gratitud) setGratitud(s.gratitud);
         if (s.momentos) setMomentos(s.momentos);
+        if (s.diarioEntries) setDiarioEntries(s.diarioEntries);
         if (s.streakInteractions) setStreakInteractions(s.streakInteractions);
         if (s.streakData) setStreakData(prev => ({ ...prev, ...s.streakData }));
       }
@@ -5540,6 +5815,13 @@ export default function App() {
     toast("✨ Guardado en el baúl de momentos +5 bambú 🌿");
   };
 
+  const saveDiarioEntry = (entry) => {
+    const next = { ...(diarioEntries || {}), [entry.id]: entry };
+    setDiarioEntries(next);
+    save(null, { diarioEntries: next });
+    toast("📓 Entrada guardada en tu diario");
+  };
+
   const claimDailyTip = async () => {
     const reward = 15;
     const message = `Consejo del día leído +${reward} bambú 🌿`;
@@ -5565,7 +5847,7 @@ export default function App() {
     ls.set("mochi_last", null); setUser(null); setScreen("login");
     setBamboo(0); setHappiness(20); setWater(40); setGarden({});
     setAccessories({}); setExDone({}); setMessages([]); setConoce({}); setBurbuja({}); setCoupleInfo({});
-    setGratitud([]); setMomentos([]);
+    setGratitud([]); setMomentos([]); setDiarioEntries({});
     setStreakInteractions([]);
     setStreakData({
       currentStreak: 0,
@@ -5640,7 +5922,7 @@ export default function App() {
         {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson}/>}
         {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user}/>}
         {tab==="burbuja" && <Burbuja burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} user={user}/>}
-        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} garden={garden} accessories={accessories} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} lessonsDone={lessonsDone} coupleInfo={coupleInfo} streakInfo={streakData} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} onSendMessage={sendMsg} onClaimDailyTip={claimDailyTip}/>} 
+        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} garden={garden} accessories={accessories} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} lessonsDone={lessonsDone} coupleInfo={coupleInfo} streakInfo={streakData} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} onSendMessage={sendMsg} onClaimDailyTip={claimDailyTip} diarioEntries={diarioEntries} onSaveDiarioEntry={saveDiarioEntry}/>} 
       </div>
       <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:480, background:C.white, borderTop:`1.5px solid ${C.border}`, display:"flex", zIndex:1000, boxShadow:`0 -3px 0 ${C.line}` }}>
         {NAV.map(n => {
