@@ -1793,8 +1793,9 @@ function GardenScene({ garden, waterLevel }) {
 // ═══════════════════════════════════════════════
 // JARDIN SCREEN — updated with accessories + multiple items + decay
 // ═══════════════════════════════════════════════
-function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pandaBubble, onPet, onBuy, onWater, onBuyAccessory }) {
+function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pandaBubble, onPet, onBuy, onWater, onBuyAccessory, user }) {
   const [shopTab, setShopTab] = useState("plantas");
+  const [showJuegos, setShowJuegos] = useState(false);
   const cats = [{id:"plantas",label:"🌿 Plantas"},{id:"agua",label:"🐟 Agua"},{id:"cielo",label:"☁️ Cielo"},{id:"deco",label:"🏮 Deco"},{id:"especial",label:"✨ Especiales"},{id:"accesorios",label:"🐼 Pandas"}];
   const shopItems = (shopTab === "accesorios"
     ? PANDA_ACCESSORIES
@@ -1802,6 +1803,10 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
 
   const dry = water < 20;
   const withering = water < 40;
+
+  if (showJuegos) {
+    return <Juegos onBack={() => setShowJuegos(false)} user={user} />;
+  }
 
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
@@ -1869,11 +1874,16 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
         </SectionErrorBoundary>
       </div>
 
-      {/* Water button */}
-      <div style={{ textAlign:"center", padding:"22px 14px 6px" }}>
-        <button onClick={onWater} style={{ background: dry?"#e86030":C.sky, color:C.white, border:"none", borderRadius:12,
-          padding:"10px 22px", fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", cursor:"pointer",
-          boxShadow:"0 3px 0 rgba(0,0,0,0.18)" }}>💧 Regar el jardín</button>
+      {/* Water button + Games button */}
+      <div style={{ textAlign: "center", padding: "22px 14px 6px" }}>
+        <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+          <button onClick={onWater} style={{ background: dry ? "#e86030" : C.sky, color: C.white, border: "none", borderRadius: 12,
+            padding: "10px 22px", fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", cursor: "pointer",
+            boxShadow: "0 3px 0 rgba(0,0,0,0.18)" }}>💧 Regar el jardín</button>
+          <button onClick={() => setShowJuegos(true)} style={{ background: C.olive, color: C.cream2, border: "none", borderRadius: 12,
+            padding: "10px 22px", fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", cursor: "pointer",
+            boxShadow: "0 3px 0 rgba(0,0,0,0.18)" }}>🎮 Juegos</button>
+        </div>
       </div>
 
       {/* Shop */}
@@ -4945,6 +4955,736 @@ function Onboarding({ onDone }) {
   );
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// JUEGOS — Memoria sincronizada, Scrabble, Adivina la palabra
+// ═══════════════════════════════════════════════════════════════════════════════
+function Juegos({ onBack, user }) {
+  const [selectedGame, setSelectedGame] = useState(null);
+
+  if (selectedGame === "memoria") {
+    return <JuegoMemoria onBack={() => setSelectedGame(null)} user={user} />;
+  }
+  if (selectedGame === "scrabble") {
+    return <JuegoScrabble onBack={() => setSelectedGame(null)} user={user} />;
+  }
+  if (selectedGame === "adivina") {
+    return <JuegoAdivina onBack={() => setSelectedGame(null)} user={user} />;
+  }
+
+  return (
+    <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
+      <div style={{ background: C.dark, padding: "44px 20px 24px" }}>
+        <button onClick={onBack} style={{ background: "none", border: "none", color: C.cream2, fontSize: "1.5rem", cursor: "pointer", marginBottom: 10, display: "block" }}>←</button>
+        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.5rem", color: C.cream2, marginBottom: 4 }}>
+          🎮 Juegos para parejas
+        </div>
+        <div style={{ fontSize: "0.85rem", color: `${C.cream}88` }}>
+          Diviértete y conecta con tu pareja
+        </div>
+      </div>
+
+      <div style={{ padding: "16px 14px 0" }}>
+        {/* Memoria sincronizada */}
+        <div
+          onClick={() => setSelectedGame("memoria")}
+          style={{
+            background: C.white,
+            borderRadius: 18,
+            padding: "18px 16px",
+            marginBottom: 12,
+            border: `1.5px solid ${C.border}`,
+            boxShadow: `0 3px 0 ${C.border}`,
+            cursor: "pointer",
+            transition: "transform 0.2s"
+          }}
+        >
+          <div style={{ fontSize: "2.2rem", marginBottom: 8 }}>🧠</div>
+          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", color: C.dark, marginBottom: 4 }}>
+            Memoria sincronizada
+          </div>
+          <div style={{ fontSize: "0.8rem", color: C.inkM, lineHeight: 1.5 }}>
+            Encuentra pares de cartas juntos. ¡Quien encuentre más gana!
+          </div>
+        </div>
+
+        {/* Scrabble */}
+        <div
+          onClick={() => setSelectedGame("scrabble")}
+          style={{
+            background: C.white,
+            borderRadius: 18,
+            padding: "18px 16px",
+            marginBottom: 12,
+            border: `1.5px solid ${C.border}`,
+            boxShadow: `0 3px 0 ${C.border}`,
+            cursor: "pointer",
+            transition: "transform 0.2s"
+          }}
+        >
+          <div style={{ fontSize: "2.2rem", marginBottom: 8 }}>🔤</div>
+          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", color: C.dark, marginBottom: 4 }}>
+            Scrabble de parejas
+          </div>
+          <div style={{ fontSize: "0.8rem", color: C.inkM, lineHeight: 1.5 }}>
+            Forma palabras con letras limitadas. ¡Más puntos por palabras románticas!
+          </div>
+        </div>
+
+        {/* Adivina la palabra */}
+        <div
+          onClick={() => setSelectedGame("adivina")}
+          style={{
+            background: C.white,
+            borderRadius: 18,
+            padding: "18px 16px",
+            marginBottom: 12,
+            border: `1.5px solid ${C.border}`,
+            boxShadow: `0 3px 0 ${C.border}`,
+            cursor: "pointer",
+            transition: "transform 0.2s"
+          }}
+        >
+          <div style={{ fontSize: "2.2rem", marginBottom: 8 }}>💭</div>
+          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", color: C.dark, marginBottom: 4 }}>
+            Adivina la palabra
+          </div>
+          <div style={{ fontSize: "0.8rem", color: C.inkM, lineHeight: 1.5 }}>
+            Uno da pistas, el otro adivina. ¡Sin decir la palabra!
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// JUEGO 1: MEMORIA SINCRONIZADA
+// ═══════════════════════════════════════════════════════════════════════════════
+const EMOJIS_MEMORIA = ["❤️", "💋", "🌹", "💍", "🎁", "🍫", "🥂", "🌙"];
+
+function JuegoMemoria({ onBack, user }) {
+  const [cards, setCards] = useState([]);
+  const [flipped, setFlipped] = useState([]);
+  const [matched, setMatched] = useState([]);
+  const [turn, setTurn] = useState(0); // 0 = jugador A, 1 = jugador B
+  const [scores, setScores] = useState([0, 0]);
+  const [gameOver, setGameOver] = useState(false);
+
+  useEffect(() => {
+    // Crear pares de cartas
+    const pairs = [...EMOJIS_MEMORIA, ...EMOJIS_MEMORIA];
+    const shuffled = pairs.sort(() => Math.random() - 0.5).map((emoji, i) => ({
+      id: i,
+      emoji,
+      isFlipped: false,
+      isMatched: false
+    }));
+    setCards(shuffled);
+  }, []);
+
+  const handleCardClick = (id) => {
+    if (flipped.length === 2) return;
+    if (matched.includes(id)) return;
+    if (flipped.includes(id)) return;
+
+    const newFlipped = [...flipped, id];
+    setFlipped(newFlipped);
+
+    if (newFlipped.length === 2) {
+      const [first, second] = newFlipped;
+      const firstCard = cards.find(c => c.id === first);
+      const secondCard = cards.find(c => c.id === second);
+
+      if (firstCard.emoji === secondCard.emoji) {
+        // Match!
+        setTimeout(() => {
+          setMatched([...matched, first, second]);
+          setFlipped([]);
+          const newScores = [...scores];
+          newScores[turn]++;
+          setScores(newScores);
+
+          if (matched.length + 2 === cards.length) {
+            setGameOver(true);
+          }
+        }, 500);
+      } else {
+        // No match - cambiar turno
+        setTimeout(() => {
+          setFlipped([]);
+          setTurn(turn === 0 ? 1 : 0);
+        }, 1000);
+      }
+    }
+  };
+
+  const resetGame = () => {
+    const pairs = [...EMOJIS_MEMORIA, ...EMOJIS_MEMORIA];
+    const shuffled = pairs.sort(() => Math.random() - 0.5).map((emoji, i) => ({
+      id: i,
+      emoji,
+      isFlipped: false,
+      isMatched: false
+    }));
+    setCards(shuffled);
+    setFlipped([]);
+    setMatched([]);
+    setTurn(0);
+    setScores([0, 0]);
+    setGameOver(false);
+  };
+
+  return (
+    <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
+      <div style={{ background: C.dark, padding: "44px 20px 20px" }}>
+        <button onClick={onBack} style={{ background: "none", border: "none", color: C.cream2, fontSize: "1.5rem", cursor: "pointer", marginBottom: 10, display: "block" }}>←</button>
+        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.4rem", color: C.cream2 }}>🧠 Memoria</div>
+        <div style={{ fontSize: "0.8rem", color: `${C.cream}88` }}>Turno de: {turn === 0 ? "Jugador 1" : "Jugador 2"}</div>
+      </div>
+
+      <div style={{ padding: "16px 14px" }}>
+        {/* Marcador */}
+        <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+          <div style={{ flex: 1, background: turn === 0 ? C.olive : C.white, borderRadius: 12, padding: "12px", textAlign: "center", border: `1.5px solid ${C.border}` }}>
+            <div style={{ fontSize: "0.75rem", color: turn === 0 ? C.cream : C.inkL }}>Jugador 1</div>
+            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.5rem", color: turn === 0 ? C.cream2 : C.dark }}>{scores[0]}</div>
+          </div>
+          <div style={{ flex: 1, background: turn === 1 ? C.olive : C.white, borderRadius: 12, padding: "12px", textAlign: "center", border: `1.5px solid ${C.border}` }}>
+            <div style={{ fontSize: "0.75rem", color: turn === 1 ? C.cream : C.inkL }}>Jugador 2</div>
+            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.5rem", color: turn === 1 ? C.cream2 : C.dark }}>{scores[1]}</div>
+          </div>
+        </div>
+
+        {/* Grid de cartas */}
+        {!gameOver ? (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+            {cards.map((card) => {
+              const isFlipped = flipped.includes(card.id) || matched.includes(card.id);
+              return (
+                <div
+                  key={card.id}
+                  onClick={() => handleCardClick(card.id)}
+                  style={{
+                    aspectRatio: "1",
+                    background: isFlipped ? C.white : C.olive,
+                    borderRadius: 12,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "2rem",
+                    cursor: matched.includes(card.id) ? "default" : "pointer",
+                    border: `2px solid ${matched.includes(card.id) ? "#4a9a40" : C.border}`,
+                    boxShadow: `0 3px 0 ${matched.includes(card.id) ? "#4a9a40" : C.border}`,
+                    opacity: matched.includes(card.id) ? 0.6 : 1,
+                    transition: "all 0.3s"
+                  }}
+                >
+                  {isFlipped ? card.emoji : "💜"}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div style={{ textAlign: "center", padding: "40px 20px" }}>
+            <div style={{ fontSize: "4rem", marginBottom: 16 }}>🏆</div>
+            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.5rem", color: C.dark, marginBottom: 8 }}>
+              ¡Juego terminado!
+            </div>
+            <div style={{ fontSize: "1.1rem", color: C.inkM, marginBottom: 20 }}>
+              {scores[0] > scores[1] ? "¡Ganó Jugador 1!" : scores[1] > scores[0] ? "¡Ganó Jugador 2!" : "¡Empate!"}
+            </div>
+            <button
+              onClick={resetGame}
+              style={{
+                background: C.dark,
+                color: C.cream2,
+                border: "none",
+                borderRadius: 14,
+                padding: "14px 28px",
+                fontFamily: "'Fredoka One',cursive",
+                fontSize: "1rem",
+                cursor: "pointer"
+              }}
+            >
+              Jugar otra vez 🔄
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// JUEGO 2: SCRABBLE SIMPLIFICADO
+// ═══════════════════════════════════════════════════════════════════════════════
+const LETRAS_SCRABBLE = [
+  { letra: "A", puntos: 1 }, { letra: "E", puntos: 1 }, { letra: "I", puntos: 1 }, { letra: "O", puntos: 1 },
+  { letra: "N", puntos: 2 }, { letra: "R", puntos: 2 }, { letra: "S", puntos: 2 }, { letra: "T", puntos: 2 },
+  { letra: "D", puntos: 3 }, { letra: "G", puntos: 3 }, { letra: "L", puntos: 3 }, { letra: "M", puntos: 3 },
+  { letra: "B", puntos: 4 }, { letra: "C", puntos: 4 }, { letra: "P", puntos: 4 }, { letra: "U", puntos: 4 },
+  { letra: "F", puntos: 5 }, { letra: "H", puntos: 5 }, { letra: "V", puntos: 5 }, { letra: "Y", puntos: 5 },
+  { letra: "J", puntos: 8 }, { letra: "K", puntos: 8 }, { letra: "Q", puntos: 8 }, { letra: "W", puntos: 8 },
+  { letra: "X", puntos: 10 }, { letra: "Z", puntos: 10 }
+];
+
+const PALABRAS_ROMANTICAS = ["AMOR", "BESO", "CORAZON", "DULCE", "ENCANTO", "FELIZ", "GUAPA", "HERMOSO"];
+
+function JuegoScrabble({ onBack, user }) {
+  const [letrasDisponibles, setLetrasDisponibles] = useState([]);
+  const [palabraActual, setPalabraActual] = useState([]);
+  const [palabrasFormadas, setPalabrasFormadas] = useState([]);
+  const [puntuacion, setPuntuacion] = useState(0);
+  const [turno, setTurno] = useState(0);
+  const [mensaje, setMensaje] = useState("");
+
+  useEffect(() => {
+    // Dar 7 letras aleatorias
+    const letras = [];
+    for (let i = 0; i < 7; i++) {
+      const random = LETRAS_SCRABBLE[Math.floor(Math.random() * LETRAS_SCRABBLE.length)];
+      letras.push({ ...random, id: i });
+    }
+    setLetrasDisponibles(letras);
+  }, []);
+
+  const agregarLetra = (letra, index) => {
+    setPalabraActual([...palabraActual, letra]);
+    const nuevasLetras = [...letrasDisponibles];
+    nuevasLetras.splice(index, 1);
+    setLetrasDisponibles(nuevasLetras);
+  };
+
+  const quitarLetra = (index) => {
+    const letra = palabraActual[index];
+    setLetrasDisponibles([...letrasDisponibles, letra]);
+    const nuevaPalabra = [...palabraActual];
+    nuevaPalabra.splice(index, 1);
+    setPalabraActual(nuevaPalabra);
+  };
+
+  const validarPalabra = () => {
+    const palabra = palabraActual.map(l => l.letra).join("");
+    if (palabra.length < 2) {
+      setMensaje("Mínimo 2 letras");
+      return;
+    }
+
+    // Calcular puntos
+    let puntos = palabraActual.reduce((sum, l) => sum + l.puntos, 0);
+
+    // Bonus por palabra romántica
+    if (PALABRAS_ROMANTICAS.includes(palabra)) {
+      puntos *= 2;
+      setMensaje(`¡${palabra}! Palabra romántica 💕 +${puntos} pts`);
+    } else {
+      setMensaje(`+${puntos} puntos`);
+    }
+
+    setPalabrasFormadas([...palabrasFormadas, { palabra, puntos }]);
+    setPuntuacion(puntuacion + puntos);
+    setPalabraActual([]);
+
+    // Reponer letras
+    const nuevasLetras = [...letrasDisponibles];
+    while (nuevasLetras.length < 7) {
+      const random = LETRAS_SCRABBLE[Math.floor(Math.random() * LETRAS_SCRABBLE.length)];
+      nuevasLetras.push({ ...random, id: Date.now() + Math.random() });
+    }
+    setLetrasDisponibles(nuevasLetras);
+  };
+
+  const pasarTurno = () => {
+    setTurno(turno === 0 ? 1 : 0);
+    setPalabraActual([]);
+    setMensaje("");
+    // Devolver letras
+    setLetrasDisponibles([...letrasDisponibles, ...palabraActual]);
+  };
+
+  return (
+    <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
+      <div style={{ background: C.dark, padding: "44px 20px 20px" }}>
+        <button onClick={onBack} style={{ background: "none", border: "none", color: C.cream2, fontSize: "1.5rem", cursor: "pointer", marginBottom: 10, display: "block" }}>←</button>
+        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.4rem", color: C.cream2 }}>🔤 Scrabble</div>
+        <div style={{ fontSize: "0.8rem", color: `${C.cream}88` }}>Turno: Jugador {turno + 1}</div>
+      </div>
+
+      <div style={{ padding: "16px 14px" }}>
+        {/* Puntuación */}
+        <div style={{ background: C.white, borderRadius: 12, padding: "14px", marginBottom: 16, textAlign: "center", border: `1.5px solid ${C.border}` }}>
+          <div style={{ fontSize: "0.8rem", color: C.inkL }}>Puntuación total</div>
+          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "2rem", color: C.dark }}>{puntuacion}</div>
+          {mensaje && <div style={{ fontSize: "0.85rem", color: C.olive, marginTop: 4 }}>{mensaje}</div>}
+        </div>
+
+        {/* Palabra en construcción */}
+        <div style={{ background: C.cream, borderRadius: 12, padding: "14px", marginBottom: 16, minHeight: 60, border: `1.5px solid ${C.border}` }}>
+          <div style={{ fontSize: "0.75rem", color: C.inkL, marginBottom: 8 }}>Tu palabra:</div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", minHeight: 40 }}>
+            {palabraActual.map((letra, i) => (
+              <button
+                key={i}
+                onClick={() => quitarLetra(i)}
+                style={{
+                  width: 36,
+                  height: 36,
+                  background: C.white,
+                  border: `2px solid ${C.olive}`,
+                  borderRadius: 8,
+                  fontFamily: "'Fredoka One',cursive",
+                  fontSize: "1.1rem",
+                  color: C.dark,
+                  cursor: "pointer"
+                }}
+              >
+                {letra.letra}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Letras disponibles */}
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: "0.8rem", color: C.inkL, marginBottom: 8 }}>Tus letras (tocá para usar):</div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {letrasDisponibles.map((letra, i) => (
+              <button
+                key={i}
+                onClick={() => agregarLetra(letra, i)}
+                style={{
+                  width: 40,
+                  height: 40,
+                  background: C.white,
+                  border: `2px solid ${C.border}`,
+                  borderRadius: 8,
+                  fontFamily: "'Fredoka One',cursive",
+                  fontSize: "1.2rem",
+                  color: C.dark,
+                  cursor: "pointer",
+                  position: "relative"
+                }}
+              >
+                {letra.letra}
+                <span style={{ position: "absolute", bottom: 2, right: 2, fontSize: "0.6rem", color: C.inkL }}>{letra.puntos}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Botones */}
+        <div style={{ display: "flex", gap: 10 }}>
+          <button
+            onClick={validarPalabra}
+            style={{
+              flex: 1,
+              background: C.olive,
+              color: C.cream2,
+              border: "none",
+              borderRadius: 12,
+              padding: "12px",
+              fontFamily: "'Fredoka One',cursive",
+              fontSize: "0.95rem",
+              cursor: "pointer"
+            }}
+          >
+            ✓ Validar
+          </button>
+          <button
+            onClick={pasarTurno}
+            style={{
+              flex: 1,
+              background: C.sand,
+              color: C.dark,
+              border: `2px solid ${C.border}`,
+              borderRadius: 12,
+              padding: "12px",
+              fontFamily: "'Fredoka One',cursive",
+              fontSize: "0.95rem",
+              cursor: "pointer"
+            }}
+          >
+            → Pasar
+          </button>
+        </div>
+
+        {/* Palabras formadas */}
+        {palabrasFormadas.length > 0 && (
+          <div style={{ marginTop: 20 }}>
+            <div style={{ fontSize: "0.8rem", color: C.inkL, marginBottom: 8 }}>Palabras formadas:</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {palabrasFormadas.map((p, i) => (
+                <div key={i} style={{ background: C.white, borderRadius: 8, padding: "6px 12px", border: `1px solid ${C.border}` }}>
+                  <span style={{ fontWeight: 700 }}>{p.palabra}</span>
+                  <span style={{ color: C.olive, marginLeft: 4 }}>+{p.puntos}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// JUEGO 3: ADIVINA LA PALABRA
+// ═══════════════════════════════════════════════════════════════════════════════
+const PALABRAS_ADIVINAR = [
+  { palabra: "AMOR", pista: "Lo que sientes por tu pareja" },
+  { palabra: "BESO", pista: "Lo que das con los labios" },
+  { palabra: "ABRAZO", pista: "Te envuelve con los brazos" },
+  { palabra: "FELIZ", pista: "Estado cuando estás con quien quieres" },
+  { palabra: "FUTURO", pista: "Lo que planeas juntos" },
+  { palabra: "CONFIANZA", pista: "Base de toda relación" },
+  { palabra: "COMPAÑERO", pista: "Quién está a tu lado" },
+  { palabra: "CORAZON", pista: "Late más rápido cuando te ve" },
+  { palabra: "SONRISA", pista: "Lo que provocas en tu pareja" },
+  { palabra: "DESTINO", pista: "Lo que os unió" }
+];
+
+function JuegoAdivina({ onBack, user }) {
+  const [modo, setModo] = useState("menu"); // menu, darPista, adivinar
+  const [palabraActual, setPalabraActual] = useState(null);
+  const [intentos, setIntentos] = useState(3);
+  const [adivinanza, setAdivinanza] = useState("");
+  const [resultado, setResultado] = useState(null); // null, acierto, fallo
+  const [puntuacion, setPuntuacion] = useState(0);
+  const [ronda, setRonda] = useState(1);
+
+  const iniciarRonda = () => {
+    const random = PALABRAS_ADIVINAR[Math.floor(Math.random() * PALABRAS_ADIVINAR.length)];
+    setPalabraActual(random);
+    setIntentos(3);
+    setAdivinanza("");
+    setResultado(null);
+    setModo("darPista");
+  };
+
+  const verificarAdivinanza = () => {
+    if (adivinanza.toUpperCase().trim() === palabraActual.palabra) {
+      setResultado("acierto");
+      setPuntuacion(puntuacion + intentos * 10);
+    } else {
+      const nuevosIntentos = intentos - 1;
+      setIntentos(nuevosIntentos);
+      if (nuevosIntentos === 0) {
+        setResultado("fallo");
+      }
+    }
+    setAdivinanza("");
+  };
+
+  const siguienteRonda = () => {
+    if (ronda < 5) {
+      setRonda(ronda + 1);
+      iniciarRonda();
+    } else {
+      setModo("fin");
+    }
+  };
+
+  return (
+    <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
+      <div style={{ background: C.dark, padding: "44px 20px 20px" }}>
+        <button onClick={onBack} style={{ background: "none", border: "none", color: C.cream2, fontSize: "1.5rem", cursor: "pointer", marginBottom: 10, display: "block" }}>←</button>
+        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.4rem", color: C.cream2 }}>💭 Adivina la palabra</div>
+        <div style={{ fontSize: "0.8rem", color: `${C.cream}88` }}>Ronda {ronda} de 5</div>
+      </div>
+
+      <div style={{ padding: "16px 14px" }}>
+        {modo === "menu" && (
+          <div style={{ textAlign: "center", padding: "40px 20px" }}>
+            <div style={{ fontSize: "4rem", marginBottom: 20 }}>🤔</div>
+            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.2rem", color: C.dark, marginBottom: 12 }}>
+              ¿Cómo jugar?
+            </div>
+            <div style={{ fontSize: "0.9rem", color: C.inkM, lineHeight: 1.6, marginBottom: 24 }}>
+              Uno de ustedes verá la palabra y la pista. Debe dar pistas SIN decir la palabra. El otro intenta adivinar.
+            </div>
+            <button
+              onClick={iniciarRonda}
+              style={{
+                background: C.dark,
+                color: C.cream2,
+                border: "none",
+                borderRadius: 14,
+                padding: "16px 32px",
+                fontFamily: "'Fredoka One',cursive",
+                fontSize: "1.1rem",
+                cursor: "pointer"
+              }}
+            >
+              Empezar a jugar 🎮
+            </button>
+          </div>
+        )}
+
+        {modo === "darPista" && (
+          <div>
+            {/* Pantalla para dar pista */}
+            <div style={{ background: C.olive, borderRadius: 16, padding: "20px", marginBottom: 16, textAlign: "center" }}>
+              <div style={{ fontSize: "0.8rem", color: C.cream, marginBottom: 8 }}>La palabra secreta es:</div>
+              <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "2rem", color: C.cream2, letterSpacing: 4 }}>
+                {palabraActual.palabra}
+              </div>
+            </div>
+
+            <div style={{ background: C.white, borderRadius: 16, padding: "20px", marginBottom: 16, border: `1.5px solid ${C.border}` }}>
+              <div style={{ fontSize: "0.8rem", color: C.inkL, marginBottom: 8 }}>Pista oficial:</div>
+              <div style={{ fontSize: "1.1rem", color: C.dark, fontStyle: "italic" }}>
+                "{palabraActual.pista}"
+              </div>
+            </div>
+
+            <div style={{ fontSize: "0.85rem", color: C.inkM, textAlign: "center", marginBottom: 16 }}>
+              👆 Dale el celular a tu pareja para que adivine
+            </div>
+
+            <button
+              onClick={() => setModo("adivinar")}
+              style={{
+                width: "100%",
+                background: C.dark,
+                color: C.cream2,
+                border: "none",
+                borderRadius: 14,
+                padding: "14px",
+                fontFamily: "'Fredoka One',cursive",
+                fontSize: "1rem",
+                cursor: "pointer"
+              }}
+            >
+              Listo, a adivinar →
+            </button>
+          </div>
+        )}
+
+        {modo === "adivinar" && (
+          <div>
+            {/* Pantalla para adivinar */}
+            <div style={{ background: C.white, borderRadius: 16, padding: "20px", marginBottom: 16, border: `1.5px solid ${C.border}`, textAlign: "center" }}>
+              <div style={{ fontSize: "0.8rem", color: C.inkL, marginBottom: 8 }}>La pista es:</div>
+              <div style={{ fontSize: "1.2rem", color: C.dark, fontStyle: "italic", marginBottom: 16 }}>
+                "{palabraActual.pista}"
+              </div>
+              <div style={{ fontSize: "0.75rem", color: C.inkL }}>
+                Intentos restantes: {intentos} ❤️
+              </div>
+            </div>
+
+            {!resultado ? (
+              <div>
+                <input
+                  type="text"
+                  value={adivinanza}
+                  onChange={(e) => setAdivinanza(e.target.value)}
+                  placeholder="Escribe tu respuesta..."
+                  style={{
+                    width: "100%",
+                    padding: "14px",
+                    borderRadius: 12,
+                    border: `2px solid ${C.border}`,
+                    fontSize: "1.1rem",
+                    textAlign: "center",
+                    textTransform: "uppercase",
+                    marginBottom: 12,
+                    boxSizing: "border-box"
+                  }}
+                  onKeyPress={(e) => e.key === "Enter" && verificarAdivinanza()}
+                />
+                <button
+                  onClick={verificarAdivinanza}
+                  style={{
+                    width: "100%",
+                    background: C.olive,
+                    color: C.cream2,
+                    border: "none",
+                    borderRadius: 14,
+                    padding: "14px",
+                    fontFamily: "'Fredoka One',cursive",
+                    fontSize: "1rem",
+                    cursor: "pointer"
+                  }}
+                >
+                  Adivinar 🤔
+                </button>
+              </div>
+            ) : (
+              <div style={{ textAlign: "center", padding: "20px" }}>
+                {resultado === "acierto" ? (
+                  <>
+                    <div style={{ fontSize: "4rem", marginBottom: 12 }}>🎉</div>
+                    <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.5rem", color: "#4a9a40", marginBottom: 8 }}>
+                      ¡Correcto!
+                    </div>
+                    <div style={{ fontSize: "1rem", color: C.inkM }}>
+                      +{intentos * 10} puntos
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ fontSize: "4rem", marginBottom: 12 }}>😅</div>
+                    <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.3rem", color: "#e86040", marginBottom: 8 }}>
+                      ¡Se acabaron los intentos!
+                    </div>
+                    <div style={{ fontSize: "1rem", color: C.inkM }}>
+                      La palabra era: <strong>{palabraActual.palabra}</strong>
+                    </div>
+                  </>
+                )}
+                <button
+                  onClick={siguienteRonda}
+                  style={{
+                    marginTop: 20,
+                    background: C.dark,
+                    color: C.cream2,
+                    border: "none",
+                    borderRadius: 14,
+                    padding: "14px 28px",
+                    fontFamily: "'Fredoka One',cursive",
+                    fontSize: "1rem",
+                    cursor: "pointer"
+                  }}
+                >
+                  {ronda < 5 ? "Siguiente ronda →" : "Ver resultado final"}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {modo === "fin" && (
+          <div style={{ textAlign: "center", padding: "40px 20px" }}>
+            <div style={{ fontSize: "4rem", marginBottom: 16 }}>🏆</div>
+            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.8rem", color: C.dark, marginBottom: 8 }}>
+              ¡Juego terminado!
+            </div>
+            <div style={{ fontSize: "1.2rem", color: C.inkM, marginBottom: 24 }}>
+              Puntuación final: <strong style={{ color: C.olive }}>{puntuacion}</strong> puntos
+            </div>
+            <button
+              onClick={() => { setModo("menu"); setRonda(1); setPuntuacion(0); }}
+              style={{
+                background: C.dark,
+                color: C.cream2,
+                border: "none",
+                borderRadius: 14,
+                padding: "16px 32px",
+                fontFamily: "'Fredoka One',cursive",
+                fontSize: "1.1rem",
+                cursor: "pointer"
+              }}
+            >
+              Jugar otra vez 🔄
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 const NAV = [
   { id: "jardin", emoji: "🌿", label: "Jardín" },
   { id: "ejerc", emoji: "⭐", label: "Ejerc." },
@@ -5918,7 +6658,7 @@ export default function App() {
     <div style={{ fontFamily:"'Nunito',sans-serif", maxWidth:480, margin:"0 auto", minHeight:"100vh", background:C.sandL, position:"relative" }}>
       <style>{STYLES}</style>
       <div style={{ paddingBottom:72 }}>
-        {tab==="jardin" && <Jardin bamboo={bamboo} happiness={happiness} water={water} garden={garden} accessories={accessories} mochiHappy={mochiHappy} pandaBubble={pandaBubble} onPet={petMochi} onBuy={buyItem} onWater={waterGarden} onBuyAccessory={buyAccessory}/>}
+        {tab==="jardin" && <Jardin bamboo={bamboo} happiness={happiness} water={water} garden={garden} accessories={accessories} mochiHappy={mochiHappy} pandaBubble={pandaBubble} onPet={petMochi} onBuy={buyItem} onWater={waterGarden} onBuyAccessory={buyAccessory} user={user}/>}
         {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson}/>}
         {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user}/>}
         {tab==="burbuja" && <Burbuja burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} user={user}/>}
