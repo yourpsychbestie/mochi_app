@@ -3840,7 +3840,13 @@ function DiarioPersonal({ entries, onSave, user }) {
   const [draft, setDraft] = useState({});
   const [selEntry, setSelEntry] = useState(null);
 
-  const sortedEntries = Object.values(entries || {}).sort((a, b) => b.ts.localeCompare(a.ts));
+  // Filtrar solo las entradas del usuario actual (privadas)
+  const userKey = user?.email || user?.uid || 'guest';
+  const myEntries = Object.values(entries || {}).filter(entry => 
+    entry.authorEmail === user?.email || entry.authorUid === user?.uid || !entry.authorEmail
+  );
+  
+  const sortedEntries = myEntries.sort((a, b) => b.ts.localeCompare(a.ts));
 
   const fmtDate = ts => {
     const d = new Date(ts);
@@ -3877,6 +3883,15 @@ function DiarioPersonal({ entries, onSave, user }) {
           <div style={{ fontSize: "0.8rem", color: `${C.cream}88` }}>{type.sub}</div>
         </div>
         <div style={{ padding: "10px 14px 0" }}>
+          {/* Mensaje de privacidad */}
+          <div style={{ background:"#fff3cd", borderRadius:14, padding:14, marginBottom:10, border:`1.5px solid #ffc107` }}>
+            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", color:"#856404", marginBottom:6 }}>🔒 Solo tú puedes ver esto</div>
+            <div style={{ fontSize:"0.8rem", color:"#856404", lineHeight:1.6 }}>
+              Este diario es 100% privado. Tu pareja NO tiene acceso a estas entradas. 
+              Si escribes algo negativo, solo se guardará tu conclusión positiva final.
+            </div>
+          </div>
+          
           {selType === "abcd" && (
             <div style={{ background:"#eef6ea", borderRadius:14, padding:14, marginBottom:10, border:`1.5px solid ${C.border}` }}>
               <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", color:C.dark, marginBottom:6 }}>¿Qué es ABCD y qué significa reestructurar?</div>
@@ -3943,13 +3958,14 @@ function DiarioPersonal({ entries, onSave, user }) {
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
       <div style={{ background: C.dark, padding: "44px 20px 20px" }}>
         <button onClick={() => {}} style={{ background: "none", border: "none", color: C.cream2, fontSize: "1.5rem", cursor: "pointer", marginBottom: 10, display: "block", opacity: 0 }}>←</button>
-        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.4rem", color: C.cream2, marginBottom: 4 }}>📓 Diario</div>
-        <div style={{ fontSize: "0.8rem", color: `${C.cream}88` }}>Tu espacio personal de reflexión</div>
+        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.4rem", color: C.cream2, marginBottom: 4 }}>📓 Diario Privado</div>
+        <div style={{ fontSize: "0.8rem", color: `${C.cream}88` }}>Solo tú puedes ver esto 🔒</div>
       </div>
       <div style={{ padding: "10px 14px 0" }}>
-        <div style={{ background:C.white, borderRadius:14, padding:12, marginBottom:10, border:`1.5px solid ${C.border}` }}>
-          <div style={{ fontSize:"0.8rem", color:C.inkM, lineHeight:1.55 }}>
-            Este diario es privado: te ayuda a bajar ruido mental, entender lo que sentiste y escribir con claridad antes de reaccionar.
+        <div style={{ background:"#fff3cd", borderRadius:14, padding:12, marginBottom:10, border:`1.5px solid #ffc107` }}>
+          <div style={{ fontSize:"0.8rem", color:"#856404", lineHeight:1.55 }}>
+            <strong>🔒 100% Privado:</strong> Tu pareja NO tiene acceso a este diario. 
+            Las entradas negativas se guardan solo con tu conclusión positiva final.
           </div>
         </div>
         <button onClick={() => setView("new")} style={{ width:"100%", background:C.dark, color:C.cream2, border:"none", borderRadius:14, padding:"13px 16px", fontFamily:"'Fredoka One',cursive", fontSize:"1rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.25)", marginBottom:14, textAlign:"left" }}>
@@ -5667,7 +5683,12 @@ export default function App() {
   const [lessonsDone, setLessonsDone] = useState({});
   const [gratitud, setGratitud] = useState([]);
   const [momentos, setMomentos] = useState([]);
-  const [diarioEntries, setDiarioEntries] = useState({});
+  const [diarioEntries, setDiarioEntries] = useState(() => {
+    // Cargar solo las entradas del usuario actual (privado)
+    const userKey = user?.email || user?.uid || 'guest';
+    const saved = localStorage.getItem(`mochi_diario_privado_${userKey}`);
+    return saved ? JSON.parse(saved) : {};
+  });
   const [streakInteractions, setStreakInteractions] = useState([]);
   const [streakData, setStreakData] = useState({
     currentStreak: 0,
@@ -6511,10 +6532,56 @@ export default function App() {
   };
 
   const saveDiarioEntry = (entry) => {
-    const next = { ...(diarioEntries || {}), [entry.id]: entry };
+    // Procesar entrada: si es negativa, extraer solo la conclusión positiva
+    let processedEntry = { ...entry };
+    
+    // Detectar si es una entrada de conflicto o negativa (ABCD tipo D o Discusión)
+    if (entry.type === 'abcd' || entry.type === 'discusion') {
+      const prompts = entry.prompts || {};
+      
+      // Para ABCD, solo guardar la parte D (perspectiva alternativa/reestructuración)
+      if (entry.type === 'abcd' && prompts.d) {
+        processedEntry = {
+          ...entry,
+          prompts: { d: prompts.d }, // Solo guardar la conclusión positiva
+          isPositiveOnly: true,
+          originalType: entry.type
+        };
+      }
+      
+      // Para discusión, crear una conclusión positiva resumida
+      if (entry.type === 'discusion') {
+        const conclusion = prompts.q4 || prompts.q3 || 'Reflexión guardada';
+        processedEntry = {
+          ...entry,
+          prompts: { 
+            conclusion: `💡 Aprendizaje: ${conclusion}`,
+            fecha: new Date().toLocaleDateString('es-MX')
+          },
+          isPositiveOnly: true,
+          originalType: entry.type
+        };
+      }
+    }
+    
+    // Marcar como privado del usuario actual
+    const userKey = user?.email || user?.uid || 'guest';
+    const privateEntry = {
+      ...processedEntry,
+      isPrivate: true,
+      authorEmail: user?.email,
+      authorUid: user?.uid,
+      visibleToPartner: false // La pareja NUNCA puede ver esto
+    };
+    
+    const next = { ...(diarioEntries || {}), [entry.id]: privateEntry };
     setDiarioEntries(next);
-    save(null, { diarioEntries: next });
-    toast("📓 Entrada guardada en tu diario");
+    
+    // Guardar SOLO en localStorage con clave privada del usuario
+    localStorage.setItem(`mochi_diario_privado_${userKey}`, JSON.stringify(next));
+    
+    // NO guardar en Firebase para mantener privacidad
+    toast("📓 Entrada guardada en tu diario privado");
   };
 
   const claimDailyTip = async () => {
