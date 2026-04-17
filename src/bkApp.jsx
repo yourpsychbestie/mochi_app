@@ -4539,7 +4539,66 @@ const DAILY_LESSONS = [
     { title:"¿Qué cuenta como interacción positiva?", body:"No hacen falta grandes gestos: un beso antes de salir, preguntar cómo estuvo el día y escuchar de verdad, un mensaje de 'te pienso', reírse juntos, decir gracias mirando a los ojos." },
     { title:"Cómo practicarlo hoy", body:"Pongan una alarma diaria llamada '5:1'. Cada vez que suene, busquen hacer una interacción positiva. No tiene que ser grandioso — los pequeños momentos son los más poderosos." },
   ],
-  reflect:"¿Cuántas interacciones positivas creen que tienen al día? ¿Qué pequeño acto podrían agregar mañana?" }
+  reflect:"¿Cuántas interacciones positivas creen que tienen al día? ¿Qué pequeño acto podrían agregar mañana?" },
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // NUEVAS 5 LECCIONES BASADAS EN EVIDENCIA TERAPÉUTICA
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  { id:"cognitive_restructuring", emoji:"🧠", title:"Reestructuración Cognitiva",
+  tag:"TCC · Terapia Cognitivo-Conductual",
+  intro:"Nuestros pensamientos crean nuestras emociones. No es lo que pasa lo que nos hace sentir mal, sino cómo lo interpretamos. Aprender a cuestionar pensamientos automáticos cambia todo.",
+  sections:[
+    { title:"El triángulo TCC", icon:"🔺", body:"Pensamientos → Emociones → Comportamientos. Si cambias el pensamiento, cambia todo lo demás. Ejemplo: 'No me respondió' → 'Me ignora' → Enojo. Versión alternativa: 'No me respondió' → 'Está ocupado/a' → Calma." },
+    { title:"Distorsiones cognitivas comunes", icon:"👓", body:"Lectura de mente: 'Sé lo que piensa'. Generalización: 'Siempre/Nunca'. Personalización: 'Es mi culpa'. Catastrofismo: 'Esto es un desastre'. Etiquetado: 'Es un egoísta'." },
+    { title:"La técnica del detective", icon:"🔍", body:"Cuando tengas un pensamiento negativo, pregúntate: ¿Qué evidencia tengo a favor? ¿Y en contra? ¿Qué le diría a un amigo en esta situación? ¿Hay otra explicación posible?" },
+    { title:"Práctica diaria", icon:"✍️", body:"Durante una semana, anota un pensamiento negativo que tengas sobre tu pareja. Luego busca 3 explicaciones alternativas más benevolentes. Observa cómo cambia tu emoción." },
+  ],
+  reflect:"¿Qué pensamiento negativo recurrente tienes sobre tu pareja? ¿Puedes encontrar 2 explicaciones alternativas más benevolentes?" },
+
+  { id:"acceptance_commitment", emoji:"🌊", title:"Aceptación y Compromiso",
+  tag:"ACT · Terapia de Aceptación y Compromiso",
+  intro:"No podemos controlar nuestras emociones ni las de otros. Lo que sí podemos controlar es nuestra respuesta. ACT nos enseña a aceptar lo incómodo y actuar según nuestros valores.",
+  sections:[
+    { title:"Luchar contra la marea", icon:"🌊", body:"Intentar suprimir emociones negativas es como tratar de mantener una pelota bajo el agua: cansa y al final sale con más fuerza. La aceptación no es resignación — es dejar de gastar energía en lo que no controlas." },
+    { title:"Defusión cognitiva", icon:"💭", body:"Tus pensamientos no son hechos. En lugar de 'mi pareja no me quiere', prueba: 'Tengo el pensamiento de que mi pareja no me quiere'. Crea distancia entre tú y tu pensamiento." },
+    { title:"Valores vs metas", icon:"🎯", body:"Una meta es: 'Que mi pareja me hable más'. Un valor es: 'Ser alguien que escucha con empatía'. Los valores son tu brújula — guían tus acciones independientemente de lo que haga el otro." },
+    { title:"El ejercicio de los 5 años", icon:"⏳", body:"Imagina que es tu aniversario de 5 años. ¿Qué tipo de pareja quieres haber sido? ¿Cómo quieres que te recuerden? Actúa desde ese lugar hoy, aunque sea difícil." },
+  ],
+  reflect:"¿En qué situación has estado luchando contra emociones? ¿Qué pasaría si simplemente las aceptaras y actuaras desde tus valores?" },
+
+  { id:"emotional_regulation", emoji:"🎭", title:"Regulación Emocional",
+  tag:"DBT · Terapia Dialéctica Conductual",
+  intro:"Las emociones intensas pueden hacer que digamos o hagamos cosas que dañan la relación. DBT nos da herramientas concretas para bajar la intensidad y responder con sabiduría.",
+  sections:[
+    { title:"STOP: La técnica de emergencia", icon:"🛑", body:"S - Stop (detente). T - Take a breath (respira). O - Observe (observa qué pasa en ti). P - Proceed mindfully (actúa con consciencia). Úsala cuando sientas que vas a explotar." },
+    { title:"La regla de los 20 minutos", icon:"⏱️", body:"Cuando estás emocionalmente activado, tu cuerpo necesita 20 minutos para volver a la normalidad. No intentes resolver nada antes. Sal, camina, respira. Vuelve cuando puedas pensar claro." },
+    { title:"TIPP para crisis", icon:"🧊", body:"T - Temperatura (agua fría en la cara activa el buceo reflejo y calma). I - Intenso ejercicio (30 saltos, correr). P - Paced breathing (4-7-8). P - Progressive muscle relaxation (tensar y soltar músculos)." },
+    { title:"Validación antes de cambiar", icon:"💚", body:"Antes de intentar solucionar un problema, valida: 'Entiendo que estás molesto/a, tiene sentido'. La validación no es acuerdo — es reconocer que las emociones tienen razón de ser. Baja la defensiva instantáneamente." },
+  ],
+  reflect:"¿Qué técnica de regulación crees que te serviría más? ¿Puedes practicarla esta semana?" },
+
+  { id:"couples_communication", emoji:"💬", title:"Comunicación No Violenta",
+  tag:"Rosenberg · Terapia de Pareja",
+  intro:"Marshall Rosenberg creó un método para expresar lo que necesitamos sin atacar ni culpar. Cuatro pasos que transforman cualquier conversación difícil.",
+  sections:[
+    { title:"1. Observar sin evaluar", icon:"👁️", body:"Describe hechos sin juicio. NO: 'Nunca me ayudas'. SÍ: 'Esta semana lavé los platos 5 veces'. La evaluación genera defensiva; la observación abre espacio para escuchar." },
+    { title:"2. Identificar sentimientos", icon:"💙", body:"Expresa cómo te sientes. NO: 'Me haces sentir ignorado'. SÍ: 'Me siento sola cuando pasamos poco tiempo juntos'. Los sentimientos son tuyos, no culpas al otro." },
+    { title:"3. Reconocer necesidades", icon:"🌱", body:"Detrás de cada emoción hay una necesidad. 'Me siento sola' = necesito conexión. 'Me siento frustrado' = necesito apoyo. Expresa tu necesidad sin exigir que sea ella/él quien la satisfaga." },
+    { title:"4. Pedir concretamente", icon:"🙏", body:"Pide algo específico, accionable y negociable. NO: 'Quiero que me quieras más'. SÍ: '¿Podríamos tener 20 minutos de charla sin teléfonos esta noche?'" },
+  ],
+  reflect:"Piensa en algo que te molesta de tu pareja. ¿Puedes reformularlo usando los 4 pasos de la CNV?" },
+
+  { id:"intimacy_vulnerability", emoji:"🔓", title:"La Valentía de Ser Vulnerable",
+  tag:"Brené Brown · Terapia Emocional",
+  intro:"La intimidad no es física — es emocional. Es dejarse ver tal como somos, con miedos e imperfecciones. Brené Brown dice que la vulnerabilidad es el birthplace de la conexión, la empatía y el amor.",
+  sections:[
+    { title:"El mito de la fortaleza", icon:"🏰", body:"Creemos que mostrar debilidad nos hace menos atractivos. Lo opuesto es verdad: la vulnerabilidad genera cercanía. Cuando dices 'tengo miedo de perderte', no te haces débil — te haces humano y accesible." },
+    { title:"Micro-momentos de vulnerabilidad", icon:"✨", body:"No hace falta una confesión dramática. Compartir: 'Hoy me sentí inseguro en el trabajo', 'Me da miedo envejecer', 'A veces pienso que no soy suficiente para ti'. Pequeñas ventanas que invitan a acercarse." },
+    { title:"Responder a la vulnerabilidad", icon:"🤲", body:"Cuando tu pareja se abre, responde con presencia, no con soluciones. No digas 'no es para tanto'. Di: 'Gracias por contarme', 'Entiendo por qué eso es difícil', 'Estoy aquí'." },
+    { title:"El ciclo de la intimidad", icon:"🔄", body:"Me abro → Me respondes con empatía → Siento que puedo confiar → Me abro más → Nos acercamos más. Romper el ciclo en cualquier punto lo frena todo. La clave: arriesgarse a ser el primero en abrirse." },
+  ],
+  reflect:"¿Cuándo fue la última vez que te mostraste vulnerable con tu pareja? ¿Cómo respondió? ¿Qué pequeña cosa podrías compartir hoy?" }
 ];
 
 // ═══════════════════════════════════════════════
