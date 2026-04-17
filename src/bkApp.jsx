@@ -3776,23 +3776,12 @@ function TestStatsSection({ testScores, onRetakeTest, lastTestDate, streakInfo }
         </div>
       )}
 
-      {canRetake ? (
-        <button 
-          onClick={onRetakeTest}
-          style={{ width: "100%", background: C.dark, color: C.cream2, border: "none", borderRadius: 12, padding: "10px 14px", fontFamily: "'Fredoka One',cursive", fontSize: "0.85rem", cursor: "pointer", marginTop: 8, boxShadow: "0 3px 0 rgba(0,0,0,0.2)" }}
-        >
-          🔄 Volver a hacer el test
-        </button>
-      ) : (
-        <div style={{ width: "100%", background: C.sandL, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: "10px 14px", marginTop: 8, textAlign: "center" }}>
-          <div style={{ fontSize: "0.8rem", color: C.inkM, fontWeight: 700 }}>
-            ⏳ Puedes repetir el test en {daysRemaining} día{daysRemaining !== 1 ? 's' : ''}
-          </div>
-          <div style={{ fontSize: "0.7rem", color: C.inkL, marginTop: 3 }}>
-            o cuando tu racha llegue a 6 días 🔥
-          </div>
-        </div>
-      )}
+      <button 
+        onClick={onRetakeTest}
+        style={{ width: "100%", background: C.dark, color: C.cream2, border: "none", borderRadius: 12, padding: "10px 14px", fontFamily: "'Fredoka One',cursive", fontSize: "0.85rem", cursor: "pointer", marginTop: 8, boxShadow: "0 3px 0 rgba(0,0,0,0.2)" }}
+      >
+        🔄 Volver a hacer el test
+      </button>
     </div>
   );
 }
@@ -6251,6 +6240,14 @@ export default function App() {
     setScreen("main");
   };
 
+  const retakeTest = () => {
+    // Resetear el test para poder hacerlo de nuevo
+    setTestScores(null);
+    setLastTestDate(null);
+    save(null, { bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit, testScores: null, lastTestDate: null, lessonsDone, gratitud, momentos });
+    setScreen("reltest");
+  };
+
   const completeEx = async (ex, pts) => {
     const nd = { ...exDone, [ex.id]: (exDone[ex.id] || 0) + 1 };
     const bonus = nd[ex.id] === 3 ? 30 : 0;
@@ -6620,7 +6617,7 @@ export default function App() {
         {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson}/>}
         {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user}/>}
         {tab==="burbuja" && <Burbuja burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} user={user}/>}
-        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} garden={garden} accessories={accessories} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} lessonsDone={lessonsDone} coupleInfo={coupleInfo} streakInfo={streakData} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} onSendMessage={sendMsg} onClaimDailyTip={claimDailyTip} diarioEntries={diarioEntries} onSaveDiarioEntry={saveDiarioEntry}/>} 
+        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} garden={garden} accessories={accessories} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} lessonsDone={lessonsDone} coupleInfo={coupleInfo} streakInfo={streakData} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={retakeTest} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} onSendMessage={sendMsg} onClaimDailyTip={claimDailyTip} diarioEntries={diarioEntries} onSaveDiarioEntry={saveDiarioEntry}/>} 
       </div>
       <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:480, background:C.white, borderTop:`1.5px solid ${C.border}`, display:"flex", zIndex:1000, boxShadow:`0 -3px 0 ${C.line}` }}>
         {NAV.map(n => {
