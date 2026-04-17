@@ -6679,6 +6679,55 @@ export default function App() {
     toast("📓 Entrada guardada en tu diario privado");
   };
 
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // NIGHT MODE FUNCTIONS
+  // ═══════════════════════════════════════════════════════════════════════════════
+  const buyNightMode = () => {
+    const NIGHT_MODE_COST = 200;
+    
+    if (nightModeUnlocked) {
+      toast("¡Ya tienes el Modo Noche desbloqueado! 🌙");
+      return;
+    }
+    
+    if (bamboo < NIGHT_MODE_COST) {
+      toast(`Necesitas ${NIGHT_MODE_COST} bambú para desbloquear el Modo Noche 🎋`);
+      return;
+    }
+    
+    // Descontar bambú
+    const nb = bamboo - NIGHT_MODE_COST;
+    setBamboo(nb);
+    
+    // Desbloquear modo noche
+    setNightModeUnlocked(true);
+    setNightModeActive(true);
+    
+    // Guardar en localStorage
+    localStorage.setItem('mochi_night_mode_unlocked', 'true');
+    localStorage.setItem('mochi_night_mode_active', 'true');
+    
+    toast("¡🌙 Modo Noche desbloqueado! Ahora tienes items exclusivos nocturnos en la tienda ✨");
+    
+    save(null, { 
+      bamboo: nb, happiness, water, garden, accessories, exDone, messages, conoce, burbuja, 
+      coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos 
+    });
+  };
+
+  const toggleNightMode = () => {
+    if (!nightModeUnlocked) {
+      toast("Primero debes comprar el Modo Noche en la tienda 🌙");
+      return;
+    }
+    
+    const newState = !nightModeActive;
+    setNightModeActive(newState);
+    localStorage.setItem('mochi_night_mode_active', newState ? 'true' : 'false');
+    
+    toast(newState ? "🌙 Modo Noche activado" : "☀️ Modo Día activado");
+  };
+
   const claimDailyTip = async () => {
     const reward = 15;
     const message = `Consejo del día leído +${reward} bambú 🌿`;
