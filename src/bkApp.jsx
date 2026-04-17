@@ -314,30 +314,7 @@ const GARDEN_ITEMS = [
   {id:"firefly",  cat:"especial",name:"Luciérnagas",   cost:65,  desc:"Magia nocturna"},
   {id:"moongate", cat:"especial",name:"Luna Llena",    cost:120, desc:"Romance bajo la luna"},
   // Modo Noche - desbloqueable
-  {id:"night_mode", cat:"especial", name:"🌙 Modo Noche", cost:200, desc:"¡Desbloquea el jardín nocturno con items exclusivos!", isNightMode:true},
-];
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// NIGHT MODE ITEMS — Solo disponibles cuando se compra el Modo Noche
-// ═══════════════════════════════════════════════════════════════════════════════
-const NIGHT_MODE_ITEMS = [
-  // Iluminación
-  {id:"fireflies_swarm", cat:"noche", name:"Enjambre de Luciérnagas", cost:45, desc:"Miles de luces danzantes"},
-  {id:"neon_lanterns", cat:"noche", name:"Farolitos de Neón", cost:60, desc:"Colores brillantes en la oscuridad"},
-  {id:"moonlight_beam", cat:"noche", name:"Rayo de Luna", cost:80, desc:"Luz plateada mágica"},
-  {id:"star_projector", cat:"noche", name:"Proyector de Estrellas", cost:70, desc:"Cielo estrellado en tu jardín"},
-  // Fuegos artificiales
-  {id:"fireworks_small", cat:"noche", name:"Fuegos Artificiales", cost:55, desc:"Explosión de colores"},
-  {id:"fireworks_heart", cat:"noche", name:"Corazón de Fuego", cost:90, desc:"Amor en el cielo"},
-  {id:"sparklers", cat:"noche", name:"Luces de Bengala", cost:35, desc:"Chispas mágicas"},
-  // Elementos mágicos
-  {id:"glowing_mushrooms", cat:"noche", name:"Hongos Luminosos", cost:40, desc:"Brillo natural"},
-  {id:"crystal_lights", cat:"noche", name:"Cristales de Luz", cost:65, desc:"Reflejos prismáticos"},
-  {id:"aurora_borealis", cat:"noche", name:"Aurora Boreal", cost:150, desc:"Danza de colores celestiales"},
-  // Animales nocturnos
-  {id:"owl", cat:"noche", name:"Búho Sabio", cost:50, desc:"Guardián de la noche"},
-  {id:"night_butterflies", cat:"noche", name:"Mariposas Nocturnas", cost:45, desc:"Alas brillantes"},
-  {id:"sleepy_panda", cat:"noche", name:"Panda Dormilón", cost:85, desc:"Descansando bajo las estrellas"},
+  {id:"night_mode", cat:"especial", name:"🌙 Modo Noche", cost:200, desc:"¡Desbloquea el jardín nocturno!", isNightMode:true},
 ];
 
 // Regar sigue siendo acción especial
@@ -1499,54 +1476,33 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
 // ═══════════════════════════════════════════════
 // NEW GARDEN SCENE — koi/lotus watercolor aesthetic
 // ═══════════════════════════════════════════════
-function GardenScene({ garden, waterLevel, nightMode }) {
+function GardenScene({ garden, waterLevel }) {
   const g = Object.fromEntries(
     Object.entries(garden || {}).map(([k, v]) => [k, v === true])
   );
   const w = waterLevel || 0;
-  const isNight = nightMode || false;
   // 5 watercolor levels: 0-20 drought, 20-40 dry, 40-60 ok, 60-80 lush, 80-100 thriving
   const lvl = w < 20 ? 0 : w < 40 ? 1 : w < 60 ? 2 : w < 80 ? 3 : 4;
 
-  // DAY colors
-  const SKY_DAY = ["#e8cfa0","#dde8c8","#c8e8f0","#b0ddf8","#90d0f8"];
-  const SKY2_DAY = ["#f0e4c0","#e8f0d8","#d8f0e8","#c8eef8","#b8e4ff"];
-  const GROUND1_DAY = ["#c89848","#b8c060","#88b830","#60a828","#48a020"];
-  const GROUND2_DAY = ["#b07830","#98a840","#68980c","#488810","#308808"];
-  const HILL_DAY = ["#c0b060","#a0c058","#78b848","#58a840","#40a038"];
-  const MIST_DAY = ["#d0b870","#b8c870","#90c890","#78c8a8","#60c8b8"];
-  const grassC_DAY = ["#c8a830","#a8b840","#78a828","#509820","#388810"];
+  const SKY = ["#e8cfa0","#dde8c8","#c8e8f0","#b0ddf8","#90d0f8"];
+  const SKY2 = ["#f0e4c0","#e8f0d8","#d8f0e8","#c8eef8","#b8e4ff"];
+  const GROUND1 = ["#c89848","#b8c060","#88b830","#60a828","#48a020"];
+  const GROUND2 = ["#b07830","#98a840","#68980c","#488810","#308808"];
+  const HILL = ["#c0b060","#a0c058","#78b848","#58a840","#40a038"];
+  const MIST = ["#d0b870","#b8c870","#90c890","#78c8a8","#60c8b8"];
 
-  // NIGHT colors
-  const SKY_NIGHT = ["#1a1a2e","#16213e","#1e3a5f","#2d4a6f","#3d5a7f"];
-  const SKY2_NIGHT = ["#0f0f23","#1a1a3e","#243b55","#2e4a65","#385a75"];
-  const GROUND1_NIGHT = ["#2d1b0e","#1e3a28","#2d5a3a","#3d7a4a","#4d9a5a"];
-  const GROUND2_NIGHT = ["#1d0b05","#0e2a18","#1d4a2a","#2d6a3a","#3d8a4a"];
-  const HILL_NIGHT = ["#1a1520","#1e2a3e","#2e4a5e","#3e5a6e","#4e6a7e"];
-  const MIST_NIGHT = ["#2a2035","#3a3050","#4a4065","#5a5080","#6a6095"];
-  const grassC_NIGHT = ["#1a2a1a","#2a3a2a","#3a5a3a","#4a7a4a","#5a9a5a"];
-
-  // Select colors based on night mode
-  const SKY = isNight ? SKY_NIGHT : SKY_DAY;
-  const SKY2 = isNight ? SKY2_NIGHT : SKY2_DAY;
-  const GROUND1 = isNight ? GROUND1_NIGHT : GROUND1_DAY;
-  const GROUND2 = isNight ? GROUND2_NIGHT : GROUND2_DAY;
-  const HILL = isNight ? HILL_NIGHT : HILL_DAY;
-  const MIST = isNight ? MIST_NIGHT : MIST_DAY;
-  const grassC = isNight ? grassC_NIGHT : grassC_DAY;
-
+  // Grass blade color per level
+  const grassC = ["#c8a830","#a8b840","#78a828","#509820","#388810"];
   // Crack lines on dry ground
   const showCracks = lvl === 0;
-  // Flower dots on lush/thriving - only during day
-  const showFlowers = lvl >= 3 && !isNight;
-  // Water shimmer on thriving - only during day
-  const showDew = lvl === 4 && !isNight;
-  // Fireflies at night when garden is healthy
-  const showFireflies = isNight && lvl >= 2;
+  // Flower dots on lush/thriving
+  const showFlowers = lvl >= 3;
+  // Water shimmer on thriving
+  const showDew = lvl === 4;
 
   const dry = lvl === 0;
   const withering = w < 40;
-  const waterCol = dry ? (isNight ? "#4a5a6a" : "#c8b870") : (isNight ? "#2a4a5a" : "#88c8c8");
+  const waterCol = dry ? "#c8b870" : "#88c8c8";
 
   return (
     <svg viewBox="0 0 390 290" style={{ width:"100%", display:"block", borderRadius: "0 0 20px 20px" }}>
@@ -1570,44 +1526,34 @@ function GardenScene({ garden, waterLevel, nightMode }) {
       </defs>
       <rect width="390" height="290" fill="url(#skyGrad)"/>
 
-      {/* Stars at night */}
-      {isNight && <g>
-        {[30,80,120,160,200,240,280,320,360].map((x,i) => (
-          <circle key={i} cx={x} cy={20+(i%5)*15} r={1+(i%2)} fill="white" opacity={0.3+(i%5)*0.15}/>
-        ))}
-        {/* Moon */}
-        <circle cx="330" cy="55" r="25" fill="#f0e8d0" opacity="0.9"/>
-        <circle cx="325" cy="50" r="20" fill="#e8e0c8" opacity="0.6"/>
-      </g>}
-
       {/* Level indicator — subtle watercolor wash */}
       {lvl >= 3 && <ellipse cx="195" cy="260" rx="195" ry="50" fill={MIST[lvl]} opacity="0.15" filter="url(#watercolor)"/>}
 
-      {/* Clouds - only during day */}
-      {!isNight && g.clouds && <g>
+      {/* Clouds */}
+      {g.clouds && <g>
         <ellipse cx="80" cy="45" rx="40" ry="20" fill="white" opacity="0.85"/>
         <ellipse cx="100" cy="38" rx="28" ry="18" fill="white" opacity="0.9"/>
         <ellipse cx="60" cy="42" rx="22" ry="14" fill="white" opacity="0.8"/>
         <ellipse cx="280" cy="55" rx="34" ry="16" fill="white" opacity="0.75"/>
         <ellipse cx="300" cy="48" rx="22" ry="14" fill="white" opacity="0.8"/>
       </g>}
-      {!isNight && !g.clouds && <g>
+      {!g.clouds && <g>
         <ellipse cx="90" cy="50" rx="28" ry="12" fill="white" opacity="0.5"/>
         <ellipse cx="280" cy="42" rx="20" ry="9" fill="white" opacity="0.4"/>
       </g>}
 
-      {/* Sun - only during day */}
-      {!isNight && (g.sun ? <>
+      {/* Sun / Moon */}
+      {g.sun ? <>
         <circle cx="330" cy="55" r="28" fill="#f0b030" opacity="0.95"/>
         {[0,30,60,90,120,150,180,210,240,270,300,330].map(a=>(
           <line key={a} x1={330+Math.cos(a*Math.PI/180)*32} y1={55+Math.sin(a*Math.PI/180)*32}
             x2={330+Math.cos(a*Math.PI/180)*40} y2={55+Math.sin(a*Math.PI/180)*40}
             stroke="#f0b030" strokeWidth="2.5" strokeLinecap="round" opacity="0.7"/>
         ))}
-      </> : <circle cx="330" cy="55" r="18" fill="#e8c860" opacity="0.5"/>)}
+      </> : <circle cx="330" cy="55" r="18" fill="#e8c860" opacity="0.5"/>}
 
-      {/* Rainbow - only during day */}
-      {!isNight && g.rainbow && [["#e87878",0],["#e8a858",7],["#e8d860",14],["#8ac868",21],["#5ab8c8",28]].map(([c,o],i)=>(
+      {/* Rainbow */}
+      {g.rainbow && [["#e87878",0],["#e8a858",7],["#e8d860",14],["#8ac868",21],["#5ab8c8",28]].map(([c,o],i)=>(
         <path key={i} d={`M${10+o/2} 280 Q200 ${80+o} ${380-o/2} 280`} fill="none" stroke={c} strokeWidth="5" strokeLinecap="round" opacity="0.6"/>
       ))}
 
@@ -1658,18 +1604,6 @@ function GardenScene({ garden, waterLevel, nightMode }) {
       {showDew && [30,80,140,200,260,330,370].map((x,i)=>(
         <circle key={i} cx={x} cy={224+(i%3)*6} r="2" fill="white" opacity="0.6"/>
       ))}
-
-      {/* Fireflies at night */}
-      {showFireflies && <g>
-        {[50,120,200,280,340].map((x,i)=><g key={i}>
-          <circle cx={x} cy={180+(i%3)*20} r="2" fill="#ffff88" opacity="0.8">
-            <animate attributeName="opacity" values="0.8;0.2;0.8" dur={`${2+i%3}s`} repeatCount="indefinite"/>
-          </circle>
-          <circle cx={x+20} cy={200+(i%2)*15} r="1.5" fill="#aaff88" opacity="0.6">
-            <animate attributeName="opacity" values="0.6;0.1;0.6" dur={`${3+i%2}s`} repeatCount="indefinite"/>
-          </circle>
-        </g>)}
-      </g>}
 
       {/* Willow tree */}
       {g.willow && <g>
@@ -1864,37 +1798,10 @@ function GardenScene({ garden, waterLevel, nightMode }) {
 function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pandaBubble, onPet, onBuy, onWater, onBuyAccessory, user, nightModeUnlocked, nightModeActive, onBuyNightMode, onToggleNightMode }) {
   const [shopTab, setShopTab] = useState("plantas");
   const [showJuegos, setShowJuegos] = useState(false);
-  
-  // Categorías base
-  const baseCats = [
-    {id:"plantas",label:"🌿 Plantas"},
-    {id:"agua",label:"🐟 Agua"},
-    {id:"cielo",label:"☁️ Cielo"},
-    {id:"deco",label:"🏮 Deco"},
-    {id:"especial",label:"✨ Especiales"},
-    {id:"accesorios",label:"🐼 Pandas"}
-  ];
-  
-  // Agregar categoría noche si está desbloqueado
-  const cats = nightModeUnlocked 
-    ? [...baseCats.slice(0, 5), {id:"noche",label:"🌙 Noche"}, ...baseCats.slice(5)]
-    : baseCats;
-    
-  // Items de la tienda según categoría
-  const getShopItems = () => {
-    if (shopTab === "accesorios") return PANDA_ACCESSORIES;
-    if (shopTab === "noche" && nightModeUnlocked) return NIGHT_MODE_ITEMS;
-    if (shopTab === "especial") {
-      // Si no está desbloqueado, mostrar el modo noche como item especial
-      if (!nightModeUnlocked) {
-        return [...GARDEN_ITEMS.filter(i => i.cat === "especial"), GARDEN_ITEMS.find(i => i.id === "night_mode")];
-      }
-      return GARDEN_ITEMS.filter(i => i.cat === "especial" && i.id !== "night_mode");
-    }
-    return GARDEN_ITEMS.filter(i => i.cat === shopTab);
-  };
-  
-  const shopItems = getShopItems().filter(i => i && i.id && typeof i.cost === "number");
+  const cats = [{id:"plantas",label:"🌿 Plantas"},{id:"agua",label:"🐟 Agua"},{id:"cielo",label:"☁️ Cielo"},{id:"deco",label:"🏮 Deco"},{id:"especial",label:"✨ Especiales"},{id:"accesorios",label:"🐼 Pandas"}];
+  const shopItems = (shopTab === "accesorios"
+    ? PANDA_ACCESSORIES
+    : GARDEN_ITEMS.filter(i => i.cat === shopTab)).filter(i => i && i.id && typeof i.cost === "number");
 
   const dry = water < 20;
   const withering = water < 40;
@@ -1933,7 +1840,21 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
       {/* Garden scene */}
       <div style={{ position:"relative" }}>
         <SectionErrorBoundary fallback={<div style={{ background:C.white, border:`1.5px solid ${C.border}`, borderRadius:16, margin:12, padding:12, textAlign:"center", color:C.inkM, fontWeight:700 }}>No se pudo cargar esta vista del jardín. Cambia de pestaña y vuelve a intentar.</div>}>
-          <GardenScene garden={garden} waterLevel={water} nightMode={nightModeActive}/>
+          <div style={{ position: "relative" }}>
+            <GardenScene garden={garden} waterLevel={water}/>
+            {nightModeActive && (
+              <div style={{ 
+                position: "absolute", 
+                top: 0, 
+                left: 0, 
+                right: 0, 
+                bottom: 0, 
+                background: "linear-gradient(180deg, rgba(20,20,40,0.4) 0%, rgba(10,10,30,0.6) 100%)",
+                borderRadius: "0 0 20px 20px",
+                pointerEvents: "none"
+              }}/>
+            )}
+          </div>
           <div onClick={onPet} style={{ position:"absolute", bottom:-5, left:"50%", transform:"translateX(-50%)", cursor:"pointer",
             animation: mochiHappy ? "floatHappy 1.6s ease-in-out infinite" : "float 3s ease-in-out infinite" }}>
             <div style={{ position:"relative", display:"inline-block" }}>
