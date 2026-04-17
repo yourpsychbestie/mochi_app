@@ -5774,6 +5774,17 @@ export default function App() {
     return saved ? JSON.parse(saved) : {};
   });
   const [streakInteractions, setStreakInteractions] = useState([]);
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // NIGHT MODE STATES
+  // ═══════════════════════════════════════════════════════════════════════════════
+  const [nightModeUnlocked, setNightModeUnlocked] = useState(() => {
+    const saved = localStorage.getItem('mochi_night_mode_unlocked');
+    return saved === 'true';
+  });
+  const [nightModeActive, setNightModeActive] = useState(() => {
+    const saved = localStorage.getItem('mochi_night_mode_active');
+    return saved === 'true';
+  });
   const [streakData, setStreakData] = useState({
     currentStreak: 0,
     longestStreak: 0,
