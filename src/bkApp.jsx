@@ -1499,7 +1499,7 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
 // ═══════════════════════════════════════════════
 // NEW GARDEN SCENE — koi/lotus watercolor aesthetic
 // ═══════════════════════════════════════════════
-function GardenScene({ garden, waterLevel, nightMode }) {
+function GardenScene({ garden, waterLevel }) {
   const g = Object.fromEntries(
     Object.entries(garden || {}).map(([k, v]) => [k, v === true])
   );
@@ -1818,40 +1818,13 @@ function GardenScene({ garden, waterLevel, nightMode }) {
 // ═══════════════════════════════════════════════
 // JARDIN SCREEN — updated with accessories + multiple items + decay
 // ═══════════════════════════════════════════════
-function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pandaBubble, onPet, onBuy, onWater, onBuyAccessory, user, nightModeUnlocked, nightModeActive, onBuyNightMode, onToggleNightMode }) {
+function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pandaBubble, onPet, onBuy, onWater, onBuyAccessory, user }) {
   const [shopTab, setShopTab] = useState("plantas");
   const [showJuegos, setShowJuegos] = useState(false);
-  
-  // Categorías base
-  const baseCats = [
-    {id:"plantas",label:"🌿 Plantas"},
-    {id:"agua",label:"🐟 Agua"},
-    {id:"cielo",label:"☁️ Cielo"},
-    {id:"deco",label:"🏮 Deco"},
-    {id:"especial",label:"✨ Especiales"},
-    {id:"accesorios",label:"🐼 Pandas"}
-  ];
-  
-  // Agregar categoría noche si está desbloqueado
-  const cats = nightModeUnlocked 
-    ? [...baseCats.slice(0, 5), {id:"noche",label:"🌙 Noche"}, ...baseCats.slice(5)]
-    : baseCats;
-    
-  // Items de la tienda según categoría
-  const getShopItems = () => {
-    if (shopTab === "accesorios") return PANDA_ACCESSORIES;
-    if (shopTab === "noche" && nightModeUnlocked) return NIGHT_MODE_ITEMS;
-    if (shopTab === "especial") {
-      // Si no está desbloqueado, mostrar el modo noche como item especial
-      if (!nightModeUnlocked) {
-        return [...GARDEN_ITEMS.filter(i => i.cat === "especial"), GARDEN_ITEMS.find(i => i.id === "night_mode")];
-      }
-      return GARDEN_ITEMS.filter(i => i.cat === "especial" && i.id !== "night_mode");
-    }
-    return GARDEN_ITEMS.filter(i => i.cat === shopTab);
-  };
-  
-  const shopItems = getShopItems().filter(i => i && i.id && typeof i.cost === "number");
+  const cats = [{id:"plantas",label:"🌿 Plantas"},{id:"agua",label:"🐟 Agua"},{id:"cielo",label:"☁️ Cielo"},{id:"deco",label:"🏮 Deco"},{id:"especial",label:"✨ Especiales"},{id:"accesorios",label:"🐼 Pandas"}];
+  const shopItems = (shopTab === "accesorios"
+    ? PANDA_ACCESSORIES
+    : GARDEN_ITEMS.filter(i => i.cat === shopTab)).filter(i => i && i.id && typeof i.cost === "number");
 
   const dry = water < 20;
   const withering = water < 40;
@@ -1890,7 +1863,7 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
       {/* Garden scene */}
       <div style={{ position:"relative" }}>
         <SectionErrorBoundary fallback={<div style={{ background:C.white, border:`1.5px solid ${C.border}`, borderRadius:16, margin:12, padding:12, textAlign:"center", color:C.inkM, fontWeight:700 }}>No se pudo cargar esta vista del jardín. Cambia de pestaña y vuelve a intentar.</div>}>
-          <GardenScene garden={garden} waterLevel={water} nightMode={nightModeActive}/>
+          <GardenScene garden={garden} waterLevel={water}/>
           <div onClick={onPet} style={{ position:"absolute", bottom:-5, left:"50%", transform:"translateX(-50%)", cursor:"pointer",
             animation: mochiHappy ? "floatHappy 1.6s ease-in-out infinite" : "float 3s ease-in-out infinite" }}>
             <div style={{ position:"relative", display:"inline-block" }}>
@@ -1926,22 +1899,15 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
         </SectionErrorBoundary>
       </div>
 
-      {/* Water button + Games button + Night Mode button */}
+      {/* Water button + Games button */}
       <div style={{ textAlign: "center", padding: "22px 14px 6px" }}>
-        <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
           <button onClick={onWater} style={{ background: dry ? "#e86030" : C.sky, color: C.white, border: "none", borderRadius: 12,
             padding: "10px 22px", fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", cursor: "pointer",
             boxShadow: "0 3px 0 rgba(0,0,0,0.18)" }}>💧 Regar el jardín</button>
           <button onClick={() => setShowJuegos(true)} style={{ background: C.olive, color: C.cream2, border: "none", borderRadius: 12,
             padding: "10px 22px", fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", cursor: "pointer",
             boxShadow: "0 3px 0 rgba(0,0,0,0.18)" }}>🎮 Juegos</button>
-          {nightModeUnlocked && (
-            <button onClick={onToggleNightMode} style={{ background: nightModeActive ? "#4a4a6a" : "#e8d060", color: nightModeActive ? C.cream2 : C.dark, border: "none", borderRadius: 12,
-              padding: "10px 22px", fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", cursor: "pointer",
-              boxShadow: "0 3px 0 rgba(0,0,0,0.18)" }}>
-              {nightModeActive ? "🌙 Noche" : "☀️ Día"}
-            </button>
-          )}
         </div>
       </div>
 
@@ -5808,14 +5774,6 @@ export default function App() {
     return saved ? JSON.parse(saved) : {};
   });
   const [streakInteractions, setStreakInteractions] = useState([]);
-  const [nightModeUnlocked, setNightModeUnlocked] = useState(() => {
-    const saved = localStorage.getItem('mochi_night_mode_unlocked');
-    return saved === 'true';
-  });
-  const [nightModeActive, setNightModeActive] = useState(() => {
-    const saved = localStorage.getItem('mochi_night_mode_active');
-    return saved === 'true';
-  });
   const [streakData, setStreakData] = useState({
     currentStreak: 0,
     longestStreak: 0,
@@ -6710,55 +6668,6 @@ export default function App() {
     toast("📓 Entrada guardada en tu diario privado");
   };
 
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // NIGHT MODE FUNCTIONS
-  // ═══════════════════════════════════════════════════════════════════════════════
-  const buyNightMode = () => {
-    const NIGHT_MODE_COST = 200;
-    
-    if (nightModeUnlocked) {
-      toast("¡Ya tienes el Modo Noche desbloqueado! 🌙");
-      return;
-    }
-    
-    if (bamboo < NIGHT_MODE_COST) {
-      toast(`Necesitas ${NIGHT_MODE_COST} bambú para desbloquear el Modo Noche 🎋`);
-      return;
-    }
-    
-    // Descontar bambú
-    const nb = bamboo - NIGHT_MODE_COST;
-    setBamboo(nb);
-    
-    // Desbloquear modo noche
-    setNightModeUnlocked(true);
-    setNightModeActive(true);
-    
-    // Guardar en localStorage
-    localStorage.setItem('mochi_night_mode_unlocked', 'true');
-    localStorage.setItem('mochi_night_mode_active', 'true');
-    
-    toast("¡🌙 Modo Noche desbloqueado! Ahora tienes items exclusivos nocturnos en la tienda ✨");
-    
-    save(null, { 
-      bamboo: nb, happiness, water, garden, accessories, exDone, messages, conoce, burbuja, 
-      coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos 
-    });
-  };
-
-  const toggleNightMode = () => {
-    if (!nightModeUnlocked) {
-      toast("Primero debes comprar el Modo Noche en la tienda 🌙");
-      return;
-    }
-    
-    const newState = !nightModeActive;
-    setNightModeActive(newState);
-    localStorage.setItem('mochi_night_mode_active', newState ? 'true' : 'false');
-    
-    toast(newState ? "🌙 Modo Noche activado" : "☀️ Modo Día activado");
-  };
-
   const claimDailyTip = async () => {
     const reward = 15;
     const message = `Consejo del día leído +${reward} bambú 🌿`;
@@ -6855,7 +6764,7 @@ export default function App() {
     <div style={{ fontFamily:"'Nunito',sans-serif", maxWidth:480, margin:"0 auto", minHeight:"100vh", background:C.sandL, position:"relative" }}>
       <style>{STYLES}</style>
       <div style={{ paddingBottom:72 }}>
-        {tab==="jardin" && <Jardin bamboo={bamboo} happiness={happiness} water={water} garden={garden} accessories={accessories} mochiHappy={mochiHappy} pandaBubble={pandaBubble} onPet={petMochi} onBuy={buyItem} onWater={waterGarden} onBuyAccessory={buyAccessory} user={user} nightModeUnlocked={nightModeUnlocked} nightModeActive={nightModeActive} onBuyNightMode={buyNightMode} onToggleNightMode={toggleNightMode}/>}
+        {tab==="jardin" && <Jardin bamboo={bamboo} happiness={happiness} water={water} garden={garden} accessories={accessories} mochiHappy={mochiHappy} pandaBubble={pandaBubble} onPet={petMochi} onBuy={buyItem} onWater={waterGarden} onBuyAccessory={buyAccessory} user={user}/>}
         {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson}/>}
         {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user}/>}
         {tab==="burbuja" && <Burbuja burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} user={user}/>}
