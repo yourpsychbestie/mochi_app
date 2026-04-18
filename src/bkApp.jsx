@@ -1930,6 +1930,8 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
         <div style={{ display:"flex", gap:10, overflowX:"auto", padding:"8px 14px 20px" }}>
           {shopItems.map(item => {
             const owned = shopTab === "accesorios" ? accessories?.[item.id] : garden?.[item.id];
+            const isNightModeItem = item.id === "night_mode";
+            const nightModeOwned = isNightModeItem && nightModeUnlocked;
             const POND_DEPS = ["koi1", "koi2", "lotus_pad"];
             const pondReady = garden?.pond === true || garden?.pond === "owned";
             const locked = shopTab !== "accesorios" && POND_DEPS.includes(item.id) && !pondReady && !owned;
@@ -1957,7 +1959,10 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
                 <div style={{ fontSize:"0.67rem", fontWeight:800, color:C.ink, marginBottom:2, lineHeight:1.2 }}>{item.name}</div>
                 <div style={{ fontSize:"0.62rem", color:C.inkL, marginBottom:5, lineHeight:1.2 }}>{locked ? "🔒 Requiere Estanque" : item.desc}</div>
                 {shopTab !== "accesorios" ? (
-                  owned === true
+                  // Para items del jardín (incluyendo modo noche)
+                  nightModeOwned
+                    ? <div style={{ background:C.olive, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>✓ Desbloqueado</div>
+                    : owned === true
                     ? <div style={{ background:C.olive, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>Quitar</div>
                     : owned === "owned"
                     ? <div style={{ background:C.dark, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>Poner</div>
@@ -1965,6 +1970,7 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
                     ? <div style={{ background:C.sand, color:C.inkL, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>🔒</div>
                     : <div style={{ background:C.dark, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>{item.cost} 🌿</div>
                 ) : (
+                  // Para accesorios
                   owned
                     ? <div style={{ background:C.olive, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>✓</div>
                     : locked
