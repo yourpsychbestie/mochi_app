@@ -708,83 +708,17 @@ const CONSEJOS_DIARIOS = [
 
 function CouplePandaSVG({ happy = false, size = 160 }) {
   const s = size;
+  // NEW: Using external image for pandas
   return (
     <svg viewBox="0 0 260 220" width={s} height={s * 0.846} style={{ display: "block" }}>
-      <defs>
-        <radialGradient id="bodyL" cx="45%" cy="35%" r="60%"><stop offset="0%" stopColor="#fdf9f0"/><stop offset="100%" stopColor="#ede4d0"/></radialGradient>
-        <radialGradient id="bodyR" cx="55%" cy="35%" r="60%"><stop offset="0%" stopColor="#fdf9f0"/><stop offset="100%" stopColor="#ede4d0"/></radialGradient>
-        <radialGradient id="patchL" cx="40%" cy="30%" r="65%"><stop offset="0%" stopColor="#2d3d2d"/><stop offset="100%" stopColor="#1a261a"/></radialGradient>
-        <radialGradient id="patchR" cx="60%" cy="30%" r="65%"><stop offset="0%" stopColor="#2d3d2d"/><stop offset="100%" stopColor="#1a261a"/></radialGradient>
-        <radialGradient id="tummy" cx="50%" cy="40%" r="55%"><stop offset="0%" stopColor="#fefcf6"/><stop offset="100%" stopColor="#f5eede"/></radialGradient>
-        <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="#1a261a" floodOpacity="0.12"/></filter>
-        <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#f8d0e8" floodOpacity="0.6"/></filter>
-      </defs>
-
-      <ellipse cx="82" cy="208" rx="42" ry="7" fill="#1a261a" opacity="0.08"/>
-      <path d="M52 205 C35 205 28 185 30 165 C32 145 42 132 62 128 C72 126 82 126 92 128 C112 132 122 145 122 165 C124 185 117 205 100 205 Z" fill="url(#bodyL)" filter="url(#softShadow)"/>
-      <ellipse cx="76" cy="168" rx="18" ry="22" fill="url(#tummy)" opacity="0.9"/>
-      <path d="M116 150 C128 142 142 140 150 145 C155 148 152 158 145 158 C138 158 130 155 120 158" fill="none" stroke="#1a261a" strokeWidth="16" strokeLinecap="round"/>
-      <path d="M116 150 C128 142 142 140 150 145 C155 148 152 158 145 158" fill="none" stroke="#2d3d2d" strokeWidth="13" strokeLinecap="round"/>
-      <path d="M38 158 C28 165 24 178 28 188" fill="none" stroke="#1a261a" strokeWidth="15" strokeLinecap="round"/>
-      <path d="M38 158 C28 165 24 178 28 188" fill="none" stroke="#2d3d2d" strokeWidth="12" strokeLinecap="round"/>
-      <ellipse cx="57" cy="198" rx="20" ry="12" fill="#1a261a"/>
-      <ellipse cx="57" cy="196" rx="17" ry="10" fill="#2d3d2d"/>
-      <ellipse cx="98" cy="198" rx="20" ry="12" fill="#1a261a"/>
-      <ellipse cx="98" cy="196" rx="17" ry="10" fill="#2d3d2d"/>
-      <ellipse cx="57" cy="205" rx="11" ry="6" fill="#f0e8d8" opacity="0.6"/>
-      <ellipse cx="98" cy="205" rx="11" ry="6" fill="#f0e8d8" opacity="0.6"/>
-
-      <g transform="rotate(6, 76, 95)">
-        <ellipse cx="76" cy="88" rx="44" ry="42" fill="url(#bodyL)" filter="url(#softShadow)"/>
-        <circle cx="42" cy="54" r="16" fill="#1a261a"/>
-        <circle cx="42" cy="54" r="10" fill="#2d3d2d"/>
-        <circle cx="110" cy="54" r="16" fill="#1a261a"/>
-        <circle cx="110" cy="54" r="10" fill="#2d3d2d"/>
-        <circle cx="42" cy="54" r="6" fill="#d87888" opacity="0.25"/>
-        <circle cx="110" cy="54" r="6" fill="#d87888" opacity="0.25"/>
-        <ellipse cx="60" cy="85" rx="13" ry="11" fill="url(#patchL)" transform="rotate(-10 60 85)"/>
-        <ellipse cx="92" cy="85" rx="13" ry="11" fill="url(#patchR)" transform="rotate(10 92 85)"/>
-        {happy ? <><path d="M53 85 Q60 92 67 85" fill="none" stroke="#fdf9f0" strokeWidth="3" strokeLinecap="round"/><path d="M85 85 Q92 92 99 85" fill="none" stroke="#fdf9f0" strokeWidth="3" strokeLinecap="round"/></> : <><ellipse cx="60" cy="86" rx="7" ry="6" fill="#fdf9f0"/><ellipse cx="92" cy="86" rx="7" ry="6" fill="#fdf9f0"/><ellipse cx="61" cy="87" rx="4.5" ry="4" fill="#1a1a2a"/><ellipse cx="93" cy="87" rx="4.5" ry="4" fill="#1a1a2a"/><circle cx="63" cy="85" r="1.6" fill="white"/><circle cx="95" cy="85" r="1.6" fill="white"/></>}
-        <ellipse cx="76" cy="97" rx="4" ry="2.8" fill="#1a261a" opacity="0.7"/>
-        {happy ? <path d="M68 104 Q72 110 76 106 Q80 110 84 104" fill="none" stroke="#1a261a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/> : <path d="M70 103 Q73 107 76 104 Q79 107 82 103" fill="none" stroke="#1a261a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>}
-        <ellipse cx="44" cy="98" rx="10" ry="6" fill="#f0907a" opacity={happy ? "0.4" : "0.15"}/>
-        <ellipse cx="108" cy="98" rx="10" ry="6" fill="#f0907a" opacity={happy ? "0.4" : "0.15"}/>
-      </g>
-
-      <ellipse cx="182" cy="208" rx="44" ry="7" fill="#1a261a" opacity="0.08"/>
-      <path d="M148 205 C131 205 124 185 126 165 C128 144 138 131 160 128 C170 126 182 126 194 128 C214 131 224 145 224 165 C226 185 219 205 202 205 Z" fill="url(#bodyR)" filter="url(#softShadow)"/>
-      <ellipse cx="176" cy="168" rx="19" ry="23" fill="url(#tummy)" opacity="0.9"/>
-      <path d="M134 148 C126 140 118 138 112 142 C108 145 110 155 116 156" fill="none" stroke="#1a261a" strokeWidth="16" strokeLinecap="round"/>
-      <path d="M134 148 C126 140 118 138 112 142 C108 145 110 155 116 156" fill="none" stroke="#2d3d2d" strokeWidth="13" strokeLinecap="round"/>
-      <path d="M218 158 C228 165 232 178 228 188" fill="none" stroke="#1a261a" strokeWidth="15" strokeLinecap="round"/>
-      <path d="M218 158 C228 165 232 178 228 188" fill="none" stroke="#2d3d2d" strokeWidth="12" strokeLinecap="round"/>
-      <ellipse cx="157" cy="198" rx="21" ry="12" fill="#1a261a"/>
-      <ellipse cx="157" cy="196" rx="18" ry="10" fill="#2d3d2d"/>
-      <ellipse cx="198" cy="198" rx="21" ry="12" fill="#1a261a"/>
-      <ellipse cx="198" cy="196" rx="18" ry="10" fill="#2d3d2d"/>
-      <ellipse cx="157" cy="205" rx="12" ry="6" fill="#f0e8d8" opacity="0.6"/>
-      <ellipse cx="198" cy="205" rx="12" ry="6" fill="#f0e8d8" opacity="0.6"/>
-
-      <g transform="rotate(-4, 176, 90)">
-        <ellipse cx="176" cy="88" rx="46" ry="44" fill="url(#bodyR)" filter="url(#softShadow)"/>
-        <circle cx="140" cy="52" r="17" fill="#1a261a"/>
-        <circle cx="140" cy="52" r="11" fill="#2d3d2d"/>
-        <circle cx="212" cy="52" r="17" fill="#1a261a"/>
-        <circle cx="212" cy="52" r="11" fill="#2d3d2d"/>
-        <ellipse cx="162" cy="87" rx="14" ry="12" fill="url(#patchL)" transform="rotate(-8 162 87)"/>
-        <ellipse cx="190" cy="87" rx="14" ry="12" fill="url(#patchR)" transform="rotate(8 190 87)"/>
-        {happy ? <><path d="M155 87 Q162 94 169 87" fill="none" stroke="#fdf9f0" strokeWidth="3" strokeLinecap="round"/><path d="M183 87 Q190 94 197 87" fill="none" stroke="#fdf9f0" strokeWidth="3" strokeLinecap="round"/></> : <><ellipse cx="162" cy="88" rx="7" ry="6" fill="#fdf9f0"/><ellipse cx="190" cy="88" rx="7" ry="6" fill="#fdf9f0"/><ellipse cx="163" cy="89" rx="4.5" ry="4" fill="#1a1a2a"/><ellipse cx="191" cy="89" rx="4.5" ry="4" fill="#1a1a2a"/><circle cx="165" cy="87" r="1.6" fill="white"/><circle cx="193" cy="87" r="1.6" fill="white"/></>}
-        <ellipse cx="176" cy="100" rx="4" ry="2.8" fill="#1a261a" opacity="0.7"/>
-        {happy ? <path d="M168 107 Q172 113 176 109 Q180 113 184 107" fill="none" stroke="#1a261a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/> : <path d="M170 106 Q173 110 176 107 Q179 110 182 106" fill="none" stroke="#1a261a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>}
-      </g>
-
-      {happy && (
-        <>
-          <g filter="url(#softGlow)"><path d="M122 100 C122 95 126 93 130 97 C134 93 138 95 138 100 C138 106 130 115 130 115 C130 115 122 106 122 100Z" fill="#e8607a" opacity="0.95"/></g>
-          <path d="M106 78 C106 75 108 74 110 76 C112 74 114 75 114 78 C114 81 110 85 110 85 C110 85 106 81 106 78Z" fill="#f4a0b8" opacity="0.7"/>
-          <path d="M144 72 C144 70 145.5 69 147 71 C148.5 69 150 70 150 72 C150 74.5 147 78 147 78 C147 78 144 74.5 144 72Z" fill="#f4a0b8" opacity="0.6"/>
-        </>
-      )}
+      <image 
+        href="/pandas/couple-new.png" 
+        x="10" 
+        y="10" 
+        width="240" 
+        height="200"
+        preserveAspectRatio="xMidYMid meet"
+      />
     </svg>
   );
 }
@@ -1793,9 +1727,8 @@ function GardenScene({ garden, waterLevel }) {
 // ═══════════════════════════════════════════════
 // JARDIN SCREEN — updated with accessories + multiple items + decay
 // ═══════════════════════════════════════════════
-function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pandaBubble, onPet, onBuy, onWater, onBuyAccessory, user }) {
+function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pandaBubble, onPet, onBuy, onWater, onBuyAccessory }) {
   const [shopTab, setShopTab] = useState("plantas");
-  const [showJuegos, setShowJuegos] = useState(false);
   const cats = [{id:"plantas",label:"🌿 Plantas"},{id:"agua",label:"🐟 Agua"},{id:"cielo",label:"☁️ Cielo"},{id:"deco",label:"🏮 Deco"},{id:"especial",label:"✨ Especiales"},{id:"accesorios",label:"🐼 Pandas"}];
   const shopItems = (shopTab === "accesorios"
     ? PANDA_ACCESSORIES
@@ -1803,10 +1736,6 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
 
   const dry = water < 20;
   const withering = water < 40;
-
-  if (showJuegos) {
-    return <Juegos onBack={() => setShowJuegos(false)} user={user} />;
-  }
 
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
@@ -1821,8 +1750,8 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
           </div>
           <div style={{ background: C.olive, borderRadius: 10, padding: "8px 16px", fontFamily: "'Fredoka One',cursive", fontSize: "1.05rem", color: C.cream2, boxShadow: "0 3px 0 rgba(0,0,0,0.2)" }}>🌿 {bamboo}</div>
         </div>
-        {/* Bars - solo AGUA */}
-        {[{l:"💧 AGUA",v:water,c:dry?"#e86030":withering?"#e8a030":C.sky}].map(b => (
+        {/* Bars */}
+        {[{l:"♡ AMOR",v:happiness,c:C.salmon},{l:"💧 AGUA",v:water,c:dry?"#e86030":withering?"#e8a030":C.sky}].map(b => (
           <div key={b.l} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
             <span style={{ fontSize:"0.68rem", color:`${C.cream}88`, fontWeight:800, minWidth:54, letterSpacing:"0.5px" }}>{b.l}</span>
             <div style={{ flex:1, height:9, background:"rgba(255,255,255,0.14)", borderRadius:50, overflow:"hidden" }}>
@@ -1874,16 +1803,11 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
         </SectionErrorBoundary>
       </div>
 
-      {/* Water button + Games button */}
-      <div style={{ textAlign: "center", padding: "22px 14px 6px" }}>
-        <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
-          <button onClick={onWater} style={{ background: dry ? "#e86030" : C.sky, color: C.white, border: "none", borderRadius: 12,
-            padding: "10px 22px", fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", cursor: "pointer",
-            boxShadow: "0 3px 0 rgba(0,0,0,0.18)" }}>💧 Regar el jardín</button>
-          <button onClick={() => setShowJuegos(true)} style={{ background: C.olive, color: C.cream2, border: "none", borderRadius: 12,
-            padding: "10px 22px", fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", cursor: "pointer",
-            boxShadow: "0 3px 0 rgba(0,0,0,0.18)" }}>🎮 Juegos</button>
-        </div>
+      {/* Water button */}
+      <div style={{ textAlign:"center", padding:"22px 14px 6px" }}>
+        <button onClick={onWater} style={{ background: dry?"#e86030":C.sky, color:C.white, border:"none", borderRadius:12,
+          padding:"10px 22px", fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", cursor:"pointer",
+          boxShadow:"0 3px 0 rgba(0,0,0,0.18)" }}>💧 Regar el jardín</button>
       </div>
 
       {/* Shop */}
@@ -3265,7 +3189,6 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
   const [offset, setOffset] = useState(0);
   const [open, setOpen] = useState(false);
   const [showFavs, setShowFavs] = useState(false);
-  const [selectedFav, setSelectedFav] = useState(null);
   const [favs, setFavs] = useState(() => ls.get(favKey) || []);
   const dayKey = getDateKeyLocal();
 
@@ -3273,7 +3196,6 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
     setOffset(0);
     setOpen(false);
     setShowFavs(false);
-    setSelectedFav(null);
   }, [dayKey, ownerKey]);
 
   useEffect(() => {
@@ -3292,7 +3214,6 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
 
   const removeFav = (id) => {
     setFavs(prev => prev.filter(fid => fid !== id));
-    if (selectedFav?.id === id) setSelectedFav(null);
   };
 
   const handleOpen = () => {
@@ -3538,102 +3459,14 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
                 <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", marginBottom: 8 }}>No tienes favoritos aún</div>
                 <div style={{ fontSize: "0.85rem" }}>Guarda los consejos que más te gusten para verlos aquí</div>
               </div>
-            ) : selectedFav ? (
-              /* Vista individual del favorito seleccionado */
-              <div>
-                <button 
-                  onClick={() => setSelectedFav(null)}
-                  style={{ 
-                    background: "none", 
-                    border: "none", 
-                    color: C.olive, 
-                    fontSize: "0.85rem", 
-                    cursor: "pointer",
-                    fontWeight: 700,
-                    marginBottom: 16,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6
-                  }}
-                >
-                  ← Volver a favoritos
-                </button>
-
-                {/* Header */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ fontSize: "1.8rem" }}>💡</span>
-                    <div>
-                      <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.2rem", color: C.dark }}>Consejo #{selectedFav.id}</div>
-                      <div style={{ fontSize: "0.75rem", color: C.inkL, fontWeight: 700 }}>Guardado en favoritos</div>
-                    </div>
-                  </div>
-                  <button 
-                    onClick={() => removeFav(selectedFav.id)}
-                    style={{ 
-                      width: 40, 
-                      height: 40, 
-                      borderRadius: "50%", 
-                      border: "none", 
-                      background: "#ffe8e8", 
-                      color: "#e86040", 
-                      fontWeight: 900, 
-                      fontSize: "1.1rem", 
-                      cursor: "pointer" 
-                    }}
-                  >
-                    🗑️
-                  </button>
-                </div>
-
-                {/* El consejo principal */}
-                <div style={{ background: "linear-gradient(130deg, #f7f1ff 0%, #eee3ff 100%)", borderRadius: 18, padding: "18px 20px", border: `2px solid ${C.border}`, marginBottom: 14 }}>
-                  <div style={{ fontSize: "1.15rem", color: C.dark, lineHeight: 1.6, fontWeight: 800, textAlign: "center" }}>
-                    {selectedFav.texto}
-                  </div>
-                </div>
-
-                {/* Por qué funciona */}
-                <div style={{ background: C.sandL, borderRadius: 14, padding: "14px 16px", marginBottom: 12, border: `1.5px solid ${C.border}` }}>
-                  <div style={{ fontSize: "0.8rem", fontWeight: 800, color: C.olive, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>💜 Por qué funciona</div>
-                  <div style={{ fontSize: "0.9rem", color: C.ink, lineHeight: 1.7 }}>{selectedFav.explicacion}</div>
-                </div>
-
-                {/* Qué puedes hacer hoy */}
-                <div style={{ background: "#f0f8ff", borderRadius: 14, padding: "14px 16px", marginBottom: 12, border: `1.5px solid #d0e0f0` }}>
-                  <div style={{ fontSize: "0.8rem", fontWeight: 800, color: "#4a6fa5", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>✨ Qué puedes hacer hoy</div>
-                  <div style={{ fontSize: "0.9rem", color: C.ink, lineHeight: 1.7 }}>{selectedFav.practica}</div>
-                </div>
-
-                {/* Quién lo dice */}
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 12, background: C.cream, borderRadius: 14, padding: "14px 16px", marginBottom: 16, border: `1.5px solid ${C.border}` }}>
-                  <div style={{ fontSize: "1.6rem" }}>👤</div>
-                  <div>
-                    <div style={{ fontSize: "0.9rem", fontWeight: 800, color: C.dark, marginBottom: 3 }}>{selectedFav.autor}</div>
-                    <div style={{ fontSize: "0.8rem", color: C.inkM, lineHeight: 1.5 }}>{selectedFav.quienEs}</div>
-                  </div>
-                </div>
-              </div>
             ) : (
-              /* Lista de favoritos - vista resumida */
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {favsList.map((favConsejo) => (
-                  <div 
-                    key={favConsejo.id} 
-                    onClick={() => setSelectedFav(favConsejo)}
-                    style={{ 
-                      background: C.sandL, 
-                      borderRadius: 16, 
-                      padding: "14px 16px", 
-                      border: `1.5px solid ${C.border}`,
-                      cursor: "pointer",
-                      transition: "all 0.2s"
-                    }}
-                  >
+                  <div key={favConsejo.id} style={{ background: C.sandL, borderRadius: 16, padding: "14px 16px", border: `1.5px solid ${C.border}` }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                       <div style={{ fontSize: "0.7rem", fontWeight: 800, color: C.inkL }}>#{favConsejo.id}</div>
                       <button 
-                        onClick={(e) => { e.stopPropagation(); removeFav(favConsejo.id); }}
+                        onClick={() => removeFav(favConsejo.id)}
                         style={{ 
                           background: "none", 
                           border: "none", 
@@ -3650,7 +3483,7 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
                       {favConsejo.texto}
                     </div>
                     <div style={{ fontSize: "0.75rem", color: C.inkM, fontWeight: 700 }}>
-                      {favConsejo.autor} · Toca para ver completo →
+                      {favConsejo.autor}
                     </div>
                   </div>
                 ))}
@@ -3683,348 +3516,8 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
   );
 }
 
-// ═══════════════════════════════════════════════════════
-// TEST STATS SECTION — Muestra estadísticas del test en el perfil
-// ═══════════════════════════════════════════════════════
-function TestStatsSection({ testScores, onRetakeTest, lastTestDate, streakInfo }) {
-  const [expanded, setExpanded] = useState(false);
-
-  // Calcular cuándo se puede repetir el test
-  const now = new Date();
-  const lastTest = lastTestDate ? new Date(lastTestDate) : null;
-  const daysSinceLastTest = lastTest ? Math.floor((now - lastTest) / (1000 * 60 * 60 * 24)) : 999;
-  const currentStreak = streakInfo?.currentStreak || 0;
-  const canRetake = daysSinceLastTest >= 7 || currentStreak === 6;
-  const daysRemaining = Math.max(0, 7 - daysSinceLastTest);
-
-  // Calcular promedios
-  const areas = TEST_AREAS.map(area => {
-    const scores = testScores[area.id];
-    if (!scores) return { ...area, avg: 0, hasData: false };
-    const sA = scores.a || scores.A || 0;
-    const sB = scores.b || scores.B || 0;
-    const avg = (sA + sB) / 2;
-    return { ...area, avg, hasData: true, sA, sB };
-  }).filter(a => a.hasData);
-
-  if (areas.length === 0) return null;
-
-  const total = areas.reduce((s, a) => s + a.avg, 0) / areas.length;
-
-  let prognosis, progColor, progEmoji;
-  if (total >= 4.2) { prognosis = "¡Excelente! Su relación tiene bases muy sólidas."; progColor = "#4a9a40"; progEmoji = "🌟"; }
-  else if (total >= 3.2) { prognosis = "Tienen mucho amor y algunas áreas para trabajar juntos."; progColor = "#7ab848"; progEmoji = "🌿"; }
-  else if (total >= 2.2) { prognosis = "Su relación tiene potencial real. ¡Sigan trabajando!"; progColor = "#e8a030"; progEmoji = "🌱"; }
-  else { prognosis = "Se necesita valentía para ser honestos. Mochi está aquí para ayudar."; progColor = "#e86040"; progEmoji = "💪"; }
-
-  return (
-    <div style={{ background: C.white, borderRadius: 18, padding: 16, border: `1.5px solid ${C.border}`, boxShadow: `0 3px 0 ${C.border}` }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark }}>
-          📊 Estadísticas del test
-        </div>
-        <button 
-          onClick={() => setExpanded(!expanded)}
-          style={{ background: "none", border: "none", color: C.olive, fontSize: "0.8rem", cursor: "pointer", fontWeight: 700 }}
-        >
-          {expanded ? "Ocultar ▲" : "Ver detalles ▼"}
-        </button>
-      </div>
-
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-        <div style={{ fontSize: "2.2rem" }}>{progEmoji}</div>
-        <div style={{ flex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-            <div style={{ background: progColor, color: "white", borderRadius: 50, padding: "4px 14px", fontFamily: "'Fredoka One',cursive", fontSize: "1rem" }}>
-              {total.toFixed(1)} / 5.0
-            </div>
-          </div>
-          <div style={{ fontSize: "0.78rem", color: C.inkM, lineHeight: 1.5 }}>{prognosis}</div>
-        </div>
-      </div>
-
-      {expanded && (
-        <div style={{ marginTop: 14 }}>
-          <div style={{ fontSize: "0.7rem", fontWeight: 800, color: C.inkL, letterSpacing: "0.6px", marginBottom: 10 }}>
-            RESULTADO POR ÁREA
-          </div>
-          {areas.map(a => (
-            <div key={a.id} style={{ marginBottom: 12 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                <div style={{ fontWeight: 700, fontSize: "0.82rem", color: C.ink }}>{a.emoji} {a.label}</div>
-                <div style={{ fontSize: "0.72rem", color: C.inkL, fontWeight: 700 }}>
-                  {a.avg.toFixed(1)} / 5
-                </div>
-              </div>
-              <div style={{ display: "flex", gap: 3 }}>
-                {[1, 2, 3, 4, 5].map(i => (
-                  <div key={i} style={{ flex: 1, height: 6, borderRadius: 50,
-                    background: i <= Math.round(a.avg) ? TEST_COLORS[Math.round(a.avg) - 1] : C.sand }} />
-                ))}
-              </div>
-            </div>
-          ))}
-
-          <div style={{ background: "#e8f4e8", borderRadius: 12, padding: 12, marginTop: 12, marginBottom: 12, border: `1px solid ${C.olive}30` }}>
-            <div style={{ fontSize: "0.7rem", fontWeight: 800, color: C.olive, marginBottom: 6 }}>💡 ÁREAS PRIORITARIAS</div>
-            {[...areas].sort((a, b) => a.avg - b.avg).slice(0, 2).map(a => (
-              <div key={a.id} style={{ fontSize: "0.78rem", color: C.inkM, marginBottom: 3 }}>
-                → {a.emoji} <strong>{a.label}</strong>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <button 
-        onClick={onRetakeTest}
-        style={{ width: "100%", background: C.dark, color: C.cream2, border: "none", borderRadius: 12, padding: "10px 14px", fontFamily: "'Fredoka One',cursive", fontSize: "0.85rem", cursor: "pointer", marginTop: 8, boxShadow: "0 3px 0 rgba(0,0,0,0.2)" }}
-      >
-        🔄 Volver a hacer el test
-      </button>
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════
-// DIARIO PERSONAL — Con técnicas ABCD y registro de conflictos
-// ═══════════════════════════════════════════════════════
-const DIARIO_TYPES = [
-  {
-    id: "abcd",
-    label: "🧠 ABCD",
-    sub: "Entender cómo te afectó algo que pasó",
-    prompts: [
-      { key:"a", label:"A · Situación activadora", hint:"¿Qué pasó exactamente?" },
-      { key:"b", label:"B · Pensamiento automático", hint:"¿Qué pensé en ese momento?" },
-      { key:"c", label:"C · Emoción y consecuencia", hint:"¿Cómo me sentí? ¿Qué hice?" },
-      { key:"d", label:"D · Perspectiva alternativa", hint:"¿Qué puedo ver de otra manera?" },
-    ]
-  },
-  {
-    id: "discusion",
-    label: "⚡ Discusión",
-    sub: "Registrar y soltar un conflicto",
-    prompts: [
-      { key:"q1", label:"¿Qué pasó?", hint:"Sin culpar, solo los hechos..." },
-      { key:"q2", label:"¿Qué sentí?", hint:"Emociones, sensaciones..." },
-      { key:"q3", label:"¿Qué necesitaba yo?", hint:"La necesidad detrás de la reacción..." },
-      { key:"q4", label:"¿Qué querría decirle?", hint:"Con calma, ¿qué diría ahora?" },
-    ]
-  },
-  {
-    id: "hoy",
-    label: "🌙 Cómo estuve hoy",
-    sub: "Un registro rápido de cómo me sentí",
-    prompts: [
-      { key:"q1", label:"Mi día en una oración", hint:"¿Cómo estuvo?" },
-      { key:"q2", label:"Lo más significativo", hint:"Un momento, una palabra..." },
-      { key:"q3", label:"En mi relación hoy", hint:"¿Cómo me sentí con mi pareja?" },
-    ]
-  },
-  {
-    id: "interpersonal",
-    label: "🫶 Interpersonal",
-    sub: "Reflexionar sobre lo que siento en mi relación",
-    prompts: [
-      { key:"q1", label:"Momento de conexión", hint:"¿Hubo alguno hoy?" },
-      { key:"q2", label:"Lo que me costó expresar", hint:"¿Qué no le dije?" },
-      { key:"q3", label:"Lo que necesito pedirle", hint:"Una petición clara..." },
-    ]
-  },
-];
-
-function DiarioPersonal({ entries, onSave, user }) {
-  const [view, setView] = useState("list"); // "list" | "new" | "detail"
-  const [selType, setSelType] = useState(null);
-  const [draft, setDraft] = useState({});
-  const [selEntry, setSelEntry] = useState(null);
-
-  // Filtrar solo las entradas del usuario actual (privadas)
-  const userKey = user?.email || user?.uid || 'guest';
-  const myEntries = Object.values(entries || {}).filter(entry => 
-    entry.authorEmail === user?.email || entry.authorUid === user?.uid || !entry.authorEmail
-  );
-  
-  const sortedEntries = myEntries.sort((a, b) => b.ts.localeCompare(a.ts));
-
-  const fmtDate = ts => {
-    const d = new Date(ts);
-    const today = new Date(); const yesterday = new Date(); yesterday.setDate(today.getDate()-1);
-    if (d.toDateString() === today.toDateString()) return "Hoy";
-    if (d.toDateString() === yesterday.toDateString()) return "Ayer";
-    return d.toLocaleDateString("es-MX", { weekday:"long", day:"numeric", month:"short" });
-  };
-  const fmtTime = ts => new Date(ts).toLocaleTimeString("es-MX", { hour:"2-digit", minute:"2-digit" });
-
-  const handleSave = () => {
-    const type = DIARIO_TYPES.find(t => t.id === selType);
-    if (!type) return;
-    const filled = type.prompts.filter(p => (draft[p.key] || "").trim().length > 0);
-    if (filled.length === 0) return;
-    const ts = new Date().toISOString();
-    onSave({ id: ts, ts, type: selType, prompts: { ...draft } });
-    setDraft({}); setSelType(null); setView("list");
-  };
-
-  if (view === "new" && selType) {
-    const type = DIARIO_TYPES.find(t => t.id === selType);
-    const abcdFieldHelp = {
-      a: "Describe solo el hecho visible, como una camara. Evita interpretar intenciones.",
-      b: "Escribe la frase exacta que se te vino a la mente, incluso si suena extrema.",
-      c: "Nombra emocion + reaccion: por ejemplo ansiedad + me calle / enojo + discuti.",
-      d: "Busca una version mas amplia y realista, sin negar lo que sentiste.",
-    };
-    return (
-      <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
-        <div style={{ background: C.dark, padding: "44px 20px 20px" }}>
-          <button onClick={() => setView("list")} style={{ background: "none", border: "none", color: C.cream2, fontSize: "1.5rem", cursor: "pointer", marginBottom: 10, display: "block" }}>←</button>
-          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.4rem", color: C.cream2, marginBottom: 4 }}>{type.label}</div>
-          <div style={{ fontSize: "0.8rem", color: `${C.cream}88` }}>{type.sub}</div>
-        </div>
-        <div style={{ padding: "10px 14px 0" }}>
-          {/* Mensaje de privacidad */}
-          <div style={{ background:"#fff3cd", borderRadius:14, padding:14, marginBottom:10, border:`1.5px solid #ffc107` }}>
-            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", color:"#856404", marginBottom:6 }}>🔒 Solo tú puedes ver esto</div>
-            <div style={{ fontSize:"0.8rem", color:"#856404", lineHeight:1.6 }}>
-              Este diario es 100% privado. Tu pareja NO tiene acceso a estas entradas. 
-              Si escribes algo negativo, solo se guardará tu conclusión positiva final.
-            </div>
-          </div>
-          
-          {selType === "abcd" && (
-            <div style={{ background:"#eef6ea", borderRadius:14, padding:14, marginBottom:10, border:`1.5px solid ${C.border}` }}>
-              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", color:C.dark, marginBottom:6 }}>¿Qué es ABCD y qué significa reestructurar?</div>
-              <div style={{ fontSize:"0.8rem", color:C.inkM, lineHeight:1.6, marginBottom:8 }}>
-                ABCD es una forma simple de ordenar tu mente cuando te activas. Reestructurar no es mentirte:
-                es pasar de un pensamiento automático que duele a una idea más completa y justa.
-              </div>
-              <div style={{ background:C.white, borderRadius:10, padding:"9px 10px", border:`1px solid ${C.border}`, fontSize:"0.75rem", color:C.inkM, lineHeight:1.55 }}>
-                <b>Ejemplo:</b> A: "No respondió en 2 horas". B: "Seguro ya no le importo".
-                C: "Ansiedad, me cerré". D: "Puede estar ocupado/a; cuando pueda, pregunto con calma".
-              </div>
-            </div>
-          )}
-          {type.prompts.map(p => (
-            <div key={p.key} style={{ background: C.white, borderRadius: 14, padding: 14, marginBottom: 10, border: `1.5px solid ${C.border}` }}>
-              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", color:C.dark, marginBottom:7 }}>{p.label}</div>
-              {selType === "abcd" && abcdFieldHelp[p.key] && (
-                <div style={{ fontSize:"0.76rem", color:C.inkL, lineHeight:1.55, marginBottom:8, background:C.cream, border:`1px solid ${C.border}`, borderRadius:9, padding:"7px 9px" }}>
-                  {abcdFieldHelp[p.key]}
-                </div>
-              )}
-              <textarea
-                value={draft[p.key] || ""}
-                onChange={e => setDraft(d => ({ ...d, [p.key]: e.target.value }))}
-                placeholder={p.hint}
-                rows={3}
-                style={{ width:"100%", border:`1.5px solid ${C.border}`, borderRadius:10, padding:"9px 11px", fontSize:"0.84rem", fontFamily:"'Nunito',sans-serif", resize:"none", outline:"none", boxSizing:"border-box", color:C.ink, lineHeight:1.6 }}
-              />
-            </div>
-          ))}
-          <div style={{ display:"flex", gap:10, marginTop:4 }}>
-            <button onClick={() => { setSelType(null); setView("new"); }} style={{ flex:1, padding:13, background:C.cream, border:`1.5px solid ${C.border}`, borderRadius:14, fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", cursor:"pointer", color:C.inkM }}>← Tipo</button>
-            <button onClick={handleSave} style={{ flex:2, padding:13, background:C.dark, color:C.cream2, border:"none", borderRadius:14, fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.2)" }}>Guardar entrada ✓</button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (view === "new") {
-    return (
-      <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
-        <div style={{ background: C.dark, padding: "44px 20px 20px" }}>
-          <button onClick={() => setView("list")} style={{ background: "none", border: "none", color: C.cream2, fontSize: "1.5rem", cursor: "pointer", marginBottom: 10, display: "block" }}>←</button>
-          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.4rem", color: C.cream2, marginBottom: 4 }}>📓 Diario</div>
-          <div style={{ fontSize: "0.8rem", color: `${C.cream}88` }}>¿Qué tipo de entrada?</div>
-        </div>
-        <div style={{ padding: "10px 14px 0" }}>
-          {DIARIO_TYPES.map(t => (
-            <div key={t.id} onClick={() => setSelType(t.id)}
-              style={{ background:C.white, borderRadius:16, padding:"14px 16px", marginBottom:10, cursor:"pointer", border:`1.5px solid ${C.border}`, boxShadow:`0 3px 0 ${C.border}` }}>
-              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.05rem", color:C.dark }}>{t.label}</div>
-              <div style={{ fontSize:"0.8rem", color:C.inkM, marginTop:3 }}>{t.sub}</div>
-            </div>
-          ))}
-          <button onClick={() => setView("list")} style={{ width:"100%", padding:12, background:"transparent", border:`1.5px solid ${C.border}`, borderRadius:14, fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", cursor:"pointer", color:C.inkM, marginTop:4 }}>← Volver</button>
-        </div>
-      </div>
-    );
-  }
-
-  // list view
-  return (
-    <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
-      <div style={{ background: C.dark, padding: "44px 20px 20px" }}>
-        <button onClick={() => {}} style={{ background: "none", border: "none", color: C.cream2, fontSize: "1.5rem", cursor: "pointer", marginBottom: 10, display: "block", opacity: 0 }}>←</button>
-        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.4rem", color: C.cream2, marginBottom: 4 }}>📓 Diario Privado</div>
-        <div style={{ fontSize: "0.8rem", color: `${C.cream}88` }}>Solo tú puedes ver esto 🔒</div>
-      </div>
-      <div style={{ padding: "10px 14px 0" }}>
-        <div style={{ background:"#fff3cd", borderRadius:14, padding:12, marginBottom:10, border:`1.5px solid #ffc107` }}>
-          <div style={{ fontSize:"0.8rem", color:"#856404", lineHeight:1.55 }}>
-            <strong>🔒 100% Privado:</strong> Tu pareja NO tiene acceso a este diario. 
-            Las entradas negativas se guardan solo con tu conclusión positiva final.
-          </div>
-        </div>
-        <button onClick={() => setView("new")} style={{ width:"100%", background:C.dark, color:C.cream2, border:"none", borderRadius:14, padding:"13px 16px", fontFamily:"'Fredoka One',cursive", fontSize:"1rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.25)", marginBottom:14, textAlign:"left" }}>
-          + Nueva entrada 📝
-        </button>
-        {sortedEntries.length === 0 && (
-          <div style={{ textAlign:"center", padding:"40px 20px", color:C.inkL, fontSize:"0.88rem" }}>
-            <div style={{ fontSize:"2.5rem", marginBottom:10 }}>📓</div>
-            Tu diario está vacío. Empieza con una entrada hoy.
-          </div>
-        )}
-        {sortedEntries.map(entry => {
-          const type = DIARIO_TYPES.find(t => t.id === entry.type);
-          const firstPromptKey = type?.prompts?.[0]?.key;
-          const preview = firstPromptKey ? (entry.prompts?.[firstPromptKey] || "") : "";
-          return (
-            <div key={entry.id} onClick={() => { setSelEntry(entry); }}
-              style={{ background:C.white, borderRadius:16, padding:"13px 15px", marginBottom:9, border:`1.5px solid ${C.border}`, boxShadow:`0 2px 0 ${C.border}`, cursor:"pointer" }}>
-              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:5 }}>
-                <div style={{ background:C.cream, borderRadius:8, padding:"3px 10px", fontSize:"0.72rem", fontWeight:800, color:C.dark }}>{type?.label || entry.type}</div>
-                <div style={{ fontSize:"0.7rem", color:C.inkL, fontWeight:700 }}>{fmtDate(entry.ts)} · {fmtTime(entry.ts)}</div>
-              </div>
-              {preview && <div style={{ fontSize:"0.84rem", color:C.inkM, lineHeight:1.55, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{preview}</div>}
-            </div>
-          );
-        })}
-      </div>
-      {selEntry && (() => {
-        const type = DIARIO_TYPES.find(t => t.id === selEntry.type);
-        return (
-          <div style={{ position:"fixed", inset:0, background:"rgba(15,25,15,0.65)", zIndex:5000, display:"flex", alignItems:"flex-end" }} onClick={() => setSelEntry(null)}>
-            <div onClick={e => e.stopPropagation()} style={{ background:C.sandL, borderRadius:"22px 22px 0 0", width:"100%", maxHeight:"88vh", overflowY:"auto", border:`1.5px solid ${C.border}` }}>
-              <div style={{ background:C.dark, padding:"16px 18px 18px", borderRadius:"22px 22px 0 0" }}>
-                <div style={{ width:34, height:5, background:"rgba(255,255,255,0.2)", borderRadius:50, margin:"0 auto 12px" }}/>
-                <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.1rem", color:C.cream2 }}>{type?.label}</div>
-                <div style={{ fontSize:"0.75rem", color:`${C.cream}88`, marginTop:3 }}>{fmtDate(selEntry.ts)} · {fmtTime(selEntry.ts)}</div>
-              </div>
-              <div style={{ padding:"14px 16px 32px" }}>
-                {(type?.prompts || []).map(p => {
-                  const val = selEntry.prompts?.[p.key];
-                  if (!val) return null;
-                  return (
-                    <div key={p.key} style={{ background:C.white, borderRadius:12, padding:"11px 13px", marginBottom:9, border:`1.5px solid ${C.border}` }}>
-                      <div style={{ fontSize:"0.72rem", fontWeight:800, color:C.inkL, marginBottom:5, textTransform:"uppercase", letterSpacing:"0.5px" }}>{p.label}</div>
-                      <div style={{ fontSize:"0.86rem", color:C.ink, lineHeight:1.65 }}>{val}</div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        );
-      })()}
-    </div>
-  );
-}
-
 // PROFILE — Enhanced with more info fields
-function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, conoce, lessonsDone, coupleInfo, streakInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento, onSendMessage, onClaimDailyTip, diarioEntries, onSaveDiarioEntry }) {
+function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, conoce, lessonsDone, coupleInfo, streakInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento, onSendMessage, onClaimDailyTip }) {
   const [editMode, setEditMode] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [showLoveModal, setShowLoveModal] = useState(false);
@@ -4050,7 +3543,6 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
     nextAdventure: coupleInfo.nextAdventure || "",
     bucketList: coupleInfo.bucketList || "",
   });
-  const [showDiarioModal, setShowDiarioModal] = useState(false);
 
   const myEmail = user?.email || "guest";
   const myRole = user?.isOwner !== false ? "owner" : "partner";
@@ -4127,7 +3619,7 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
           <CouplePandaSVG happy size={130} />
         </div>
         <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.75rem", color: C.cream2 }}>{user?.names || "Nosotros"}</div>
-        <div style={{ color: `${C.cream}88`, fontSize: "0.85rem", fontWeight: 700, marginTop: 3 }}>{user?.since && user.since !== "Juntos desde hoy" ? user.since : ""}</div>
+        <div style={{ color: `${C.cream}88`, fontSize: "0.85rem", fontWeight: 700, marginTop: 3 }}>{user?.since || ""}</div>
         {coupleInfo.anniversary && <div style={{ color: C.gold, fontSize: "0.82rem", fontWeight: 700, marginTop: 4 }}>💑 {coupleInfo.anniversary}</div>}
       </div>
 
@@ -4162,7 +3654,7 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
 
       <ConsejoDelDiaSection user={user} onClaimReward={onClaimDailyTip} />
 
-      {/* ── BAÚL DE GRATITUD ── */}
+            {/* ── BAÚL DE GRATITUD ── */}
       <div style={{ margin:"0 14px 12px" }}>
         <BaulSection
           gratitud={gratitud} momentos={momentos}
@@ -4170,28 +3662,6 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
           user={user}
         />
       </div>
-
-      {/* ── DIARIO PERSONAL ── */}
-      <div style={{ margin:"0 14px 12px" }}>
-        <div style={{ background: C.white, borderRadius: 16, padding: "14px 16px", border: `1.5px solid ${C.border}`, boxShadow: `0 2px 0 ${C.border}` }}>
-          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark, marginBottom: 8 }}>
-            📓 Diario personal
-          </div>
-          <div style={{ fontSize: "0.78rem", color: C.inkM, marginBottom: 12, lineHeight: 1.5 }}>
-            Tu espacio privado para reflexionar: técnica ABCD, registrar conflictos, o simplemente cómo te sentiste hoy.
-          </div>
-          <Btn onClick={() => setShowDiarioModal(true)} variant="sand" style={{ width:"100%", fontSize: "0.85rem" }}>
-            Abrir diario 📝
-          </Btn>
-        </div>
-      </div>
-
-      {/* ── ESTADÍSTICAS DEL TEST ── */}
-      {testScores && Object.keys(testScores).length > 0 && (
-        <div style={{ margin: "0 14px 12px" }}>
-          <TestStatsSection testScores={testScores} onRetakeTest={onRetakeTest} lastTestDate={user?.lastTestDate} streakInfo={streakInfo} />
-        </div>
-      )}
 
       <div style={{ padding: "0 14px 20px" }}>
 
@@ -4341,23 +3811,6 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
               >
                 {deletingAccount ? "Eliminando..." : "Eliminar ahora"}
               </Btn>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal del Diario Personal */}
-      {showDiarioModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(15,25,15,0.65)", zIndex: 6000, display: "flex", alignItems: "flex-end" }} onClick={() => setShowDiarioModal(false)}>
-          <div onClick={e => e.stopPropagation()} style={{ background: C.sandL, borderRadius: "22px 22px 0 0", width: "100%", maxHeight: "95vh", overflowY: "auto" }}>
-            <DiarioPersonal entries={diarioEntries} onSave={onSaveDiarioEntry} user={user} />
-            <div style={{ padding: "0 16px 20px", background: C.sandL }}>
-              <button 
-                onClick={() => setShowDiarioModal(false)}
-                style={{ width: "100%", background: C.dark, color: C.cream2, border: "none", borderRadius: 14, padding: "14px", fontFamily: "'Fredoka One',cursive", fontSize: "1rem", cursor: "pointer" }}
-              >
-                Cerrar diario ✕
-              </button>
             </div>
           </div>
         </div>
@@ -4539,66 +3992,7 @@ const DAILY_LESSONS = [
     { title:"¿Qué cuenta como interacción positiva?", body:"No hacen falta grandes gestos: un beso antes de salir, preguntar cómo estuvo el día y escuchar de verdad, un mensaje de 'te pienso', reírse juntos, decir gracias mirando a los ojos." },
     { title:"Cómo practicarlo hoy", body:"Pongan una alarma diaria llamada '5:1'. Cada vez que suene, busquen hacer una interacción positiva. No tiene que ser grandioso — los pequeños momentos son los más poderosos." },
   ],
-  reflect:"¿Cuántas interacciones positivas creen que tienen al día? ¿Qué pequeño acto podrían agregar mañana?" },
-
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // NUEVAS 5 LECCIONES BASADAS EN EVIDENCIA TERAPÉUTICA
-  // ═══════════════════════════════════════════════════════════════════════════════
-
-  { id:"cognitive_restructuring", emoji:"🧠", title:"Reestructuración Cognitiva",
-  tag:"TCC · Terapia Cognitivo-Conductual",
-  intro:"Nuestros pensamientos crean nuestras emociones. No es lo que pasa lo que nos hace sentir mal, sino cómo lo interpretamos. Aprender a cuestionar pensamientos automáticos cambia todo.",
-  sections:[
-    { title:"El triángulo TCC", icon:"🔺", body:"Pensamientos → Emociones → Comportamientos. Si cambias el pensamiento, cambia todo lo demás. Ejemplo: 'No me respondió' → 'Me ignora' → Enojo. Versión alternativa: 'No me respondió' → 'Está ocupado/a' → Calma." },
-    { title:"Distorsiones cognitivas comunes", icon:"👓", body:"Lectura de mente: 'Sé lo que piensa'. Generalización: 'Siempre/Nunca'. Personalización: 'Es mi culpa'. Catastrofismo: 'Esto es un desastre'. Etiquetado: 'Es un egoísta'." },
-    { title:"La técnica del detective", icon:"🔍", body:"Cuando tengas un pensamiento negativo, pregúntate: ¿Qué evidencia tengo a favor? ¿Y en contra? ¿Qué le diría a un amigo en esta situación? ¿Hay otra explicación posible?" },
-    { title:"Práctica diaria", icon:"✍️", body:"Durante una semana, anota un pensamiento negativo que tengas sobre tu pareja. Luego busca 3 explicaciones alternativas más benevolentes. Observa cómo cambia tu emoción." },
-  ],
-  reflect:"¿Qué pensamiento negativo recurrente tienes sobre tu pareja? ¿Puedes encontrar 2 explicaciones alternativas más benevolentes?" },
-
-  { id:"acceptance_commitment", emoji:"🌊", title:"Aceptación y Compromiso",
-  tag:"ACT · Terapia de Aceptación y Compromiso",
-  intro:"No podemos controlar nuestras emociones ni las de otros. Lo que sí podemos controlar es nuestra respuesta. ACT nos enseña a aceptar lo incómodo y actuar según nuestros valores.",
-  sections:[
-    { title:"Luchar contra la marea", icon:"🌊", body:"Intentar suprimir emociones negativas es como tratar de mantener una pelota bajo el agua: cansa y al final sale con más fuerza. La aceptación no es resignación — es dejar de gastar energía en lo que no controlas." },
-    { title:"Defusión cognitiva", icon:"💭", body:"Tus pensamientos no son hechos. En lugar de 'mi pareja no me quiere', prueba: 'Tengo el pensamiento de que mi pareja no me quiere'. Crea distancia entre tú y tu pensamiento." },
-    { title:"Valores vs metas", icon:"🎯", body:"Una meta es: 'Que mi pareja me hable más'. Un valor es: 'Ser alguien que escucha con empatía'. Los valores son tu brújula — guían tus acciones independientemente de lo que haga el otro." },
-    { title:"El ejercicio de los 5 años", icon:"⏳", body:"Imagina que es tu aniversario de 5 años. ¿Qué tipo de pareja quieres haber sido? ¿Cómo quieres que te recuerden? Actúa desde ese lugar hoy, aunque sea difícil." },
-  ],
-  reflect:"¿En qué situación has estado luchando contra emociones? ¿Qué pasaría si simplemente las aceptaras y actuaras desde tus valores?" },
-
-  { id:"emotional_regulation", emoji:"🎭", title:"Regulación Emocional",
-  tag:"DBT · Terapia Dialéctica Conductual",
-  intro:"Las emociones intensas pueden hacer que digamos o hagamos cosas que dañan la relación. DBT nos da herramientas concretas para bajar la intensidad y responder con sabiduría.",
-  sections:[
-    { title:"STOP: La técnica de emergencia", icon:"🛑", body:"S - Stop (detente). T - Take a breath (respira). O - Observe (observa qué pasa en ti). P - Proceed mindfully (actúa con consciencia). Úsala cuando sientas que vas a explotar." },
-    { title:"La regla de los 20 minutos", icon:"⏱️", body:"Cuando estás emocionalmente activado, tu cuerpo necesita 20 minutos para volver a la normalidad. No intentes resolver nada antes. Sal, camina, respira. Vuelve cuando puedas pensar claro." },
-    { title:"TIPP para crisis", icon:"🧊", body:"T - Temperatura (agua fría en la cara activa el buceo reflejo y calma). I - Intenso ejercicio (30 saltos, correr). P - Paced breathing (4-7-8). P - Progressive muscle relaxation (tensar y soltar músculos)." },
-    { title:"Validación antes de cambiar", icon:"💚", body:"Antes de intentar solucionar un problema, valida: 'Entiendo que estás molesto/a, tiene sentido'. La validación no es acuerdo — es reconocer que las emociones tienen razón de ser. Baja la defensiva instantáneamente." },
-  ],
-  reflect:"¿Qué técnica de regulación crees que te serviría más? ¿Puedes practicarla esta semana?" },
-
-  { id:"couples_communication", emoji:"💬", title:"Comunicación No Violenta",
-  tag:"Rosenberg · Terapia de Pareja",
-  intro:"Marshall Rosenberg creó un método para expresar lo que necesitamos sin atacar ni culpar. Cuatro pasos que transforman cualquier conversación difícil.",
-  sections:[
-    { title:"1. Observar sin evaluar", icon:"👁️", body:"Describe hechos sin juicio. NO: 'Nunca me ayudas'. SÍ: 'Esta semana lavé los platos 5 veces'. La evaluación genera defensiva; la observación abre espacio para escuchar." },
-    { title:"2. Identificar sentimientos", icon:"💙", body:"Expresa cómo te sientes. NO: 'Me haces sentir ignorado'. SÍ: 'Me siento sola cuando pasamos poco tiempo juntos'. Los sentimientos son tuyos, no culpas al otro." },
-    { title:"3. Reconocer necesidades", icon:"🌱", body:"Detrás de cada emoción hay una necesidad. 'Me siento sola' = necesito conexión. 'Me siento frustrado' = necesito apoyo. Expresa tu necesidad sin exigir que sea ella/él quien la satisfaga." },
-    { title:"4. Pedir concretamente", icon:"🙏", body:"Pide algo específico, accionable y negociable. NO: 'Quiero que me quieras más'. SÍ: '¿Podríamos tener 20 minutos de charla sin teléfonos esta noche?'" },
-  ],
-  reflect:"Piensa en algo que te molesta de tu pareja. ¿Puedes reformularlo usando los 4 pasos de la CNV?" },
-
-  { id:"intimacy_vulnerability", emoji:"🔓", title:"La Valentía de Ser Vulnerable",
-  tag:"Brené Brown · Terapia Emocional",
-  intro:"La intimidad no es física — es emocional. Es dejarse ver tal como somos, con miedos e imperfecciones. Brené Brown dice que la vulnerabilidad es el birthplace de la conexión, la empatía y el amor.",
-  sections:[
-    { title:"El mito de la fortaleza", icon:"🏰", body:"Creemos que mostrar debilidad nos hace menos atractivos. Lo opuesto es verdad: la vulnerabilidad genera cercanía. Cuando dices 'tengo miedo de perderte', no te haces débil — te haces humano y accesible." },
-    { title:"Micro-momentos de vulnerabilidad", icon:"✨", body:"No hace falta una confesión dramática. Compartir: 'Hoy me sentí inseguro en el trabajo', 'Me da miedo envejecer', 'A veces pienso que no soy suficiente para ti'. Pequeñas ventanas que invitan a acercarse." },
-    { title:"Responder a la vulnerabilidad", icon:"🤲", body:"Cuando tu pareja se abre, responde con presencia, no con soluciones. No digas 'no es para tanto'. Di: 'Gracias por contarme', 'Entiendo por qué eso es difícil', 'Estoy aquí'." },
-    { title:"El ciclo de la intimidad", icon:"🔄", body:"Me abro → Me respondes con empatía → Siento que puedo confiar → Me abro más → Nos acercamos más. Romper el ciclo en cualquier punto lo frena todo. La clave: arriesgarse a ser el primero en abrirse." },
-  ],
-  reflect:"¿Cuándo fue la última vez que te mostraste vulnerable con tu pareja? ¿Cómo respondió? ¿Qué pequeña cosa podrías compartir hoy?" }
+  reflect:"¿Cuántas interacciones positivas creen que tienen al día? ¿Qué pequeño acto podrían agregar mañana?" }
 ];
 
 // ═══════════════════════════════════════════════
@@ -5019,319 +4413,1003 @@ function Onboarding({ onDone }) {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// JUEGOS — Memoria sincronizada y Scrabble
-// ═══════════════════════════════════════════════════════════════════════════════
-function Juegos({ onBack, user }) {
-  const [selectedGame, setSelectedGame] = useState(null);
+const NAV = [
+  { id: "jardin", emoji: "🌿", label: "Jardín" },
+  { id: "ejerc", emoji: "⭐", label: "Ejerc." },
+  { id: "conocete", emoji: "💬", label: "Conócete" },
+  { id: "burbuja", emoji: "🫧", label: "Burbuja" },
+  { id: "perfil", emoji: "👤", label: "Nosotros" },
+];
 
-  if (selectedGame === "memoria") {
-    return <JuegoMemoria onBack={() => setSelectedGame(null)} user={user} />;
-  }
-
-  return (
-    <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
-      <div style={{ background: C.dark, padding: "44px 20px 24px" }}>
-        <button onClick={onBack} style={{ background: "none", border: "none", color: C.cream2, fontSize: "1.5rem", cursor: "pointer", marginBottom: 10, display: "block" }}>←</button>
-        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.5rem", color: C.cream2, marginBottom: 4 }}>
-          🎮 Juegos para parejas
-        </div>
-        <div style={{ fontSize: "0.85rem", color: `${C.cream}88` }}>
-          Diviértete y conecta con tu pareja
-        </div>
-      </div>
-
-      <div style={{ padding: "16px 14px 0" }}>
-        {/* Memoria sincronizada */}
-        <div
-          onClick={() => setSelectedGame("memoria")}
-          style={{
-            background: C.white,
-            borderRadius: 18,
-            padding: "18px 16px",
-            marginBottom: 12,
-            border: `1.5px solid ${C.border}`,
-            boxShadow: `0 3px 0 ${C.border}`,
-            cursor: "pointer",
-            transition: "transform 0.2s"
-          }}
-        >
-          <div style={{ fontSize: "2.2rem", marginBottom: 8 }}>🧠</div>
-          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", color: C.dark, marginBottom: 4 }}>
-            Memoria sincronizada
-          </div>
-          <div style={{ fontSize: "0.8rem", color: C.inkM, lineHeight: 1.5 }}>
-            Encuentra pares de cartas juntos. ¡Quien encuentre más gana!
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// JUEGO 1: MEMORIA SINCRONIZADA
-// ═══════════════════════════════════════════════════════════════════════════════
-const EMOJIS_MEMORIA = ["❤️", "💋", "🌹", "💍", "🎁", "🍫", "🥂", "🌙"];
-
-function JuegoMemoria({ onBack, user }) {
-  const names = user?.names?.split("&") || ["Jugador 1", "Jugador 2"];
-  const nameA = names[0]?.trim() || "Jugador 1";
-  const nameB = names[1]?.trim() || "Jugador 2";
-
-  const [cards, setCards] = useState([]);
-  const [flipped, setFlipped] = useState([]);
-  const [matched, setMatched] = useState([]);
-  const [turn, setTurn] = useState(0); // 0 = jugador A, 1 = jugador B
-  const [scores, setScores] = useState([0, 0]);
-  const [gameOver, setGameOver] = useState(false);
-  const [showInstrucciones, setShowInstrucciones] = useState(true);
-  const [historial, setHistorial] = useState(() => {
-    const saved = localStorage.getItem(`mochi_memoria_historial_${user?.email || 'guest'}`);
-    return saved ? JSON.parse(saved) : { [nameA]: 0, [nameB]: 0 };
+// ═══════════════════════════════════════════════
+// ROOT APP — updated state + decay logic
+// ═══════════════════════════════════════════════
+export default function App() {
+  const [screen, setScreen] = useState("login");
+  const [user, setUser] = useState(null);
+  const [tab, setTab] = useState("jardin");
+  const [toastMsg, setToastMsg] = useState(null);
+  const [bamboo, setBamboo] = useState(0);
+  const [happiness, setHappiness] = useState(20);
+  const [water, setWater] = useState(40);
+  const [garden, setGarden] = useState({});
+  const [accessories, setAccessories] = useState({});
+  const [exDone, setExDone] = useState({});
+  const [messages, setMessages] = useState([]);
+  const [conoce, setConoce] = useState({});
+  const [burbuja, setBurbuja] = useState({});
+  const [coupleInfo, setCoupleInfo] = useState({});
+  const [notifs, setNotifs] = useState([]);
+  const [pandaBubble, setPandaBubble] = useState(null); // {nameA, textA, nameB, textB}
+  const [mochiHappy, setMochiHappy] = useState(false);
+  const [lastVisit, setLastVisit] = useState(null);
+  const [testScores, setTestScores] = useState(null);
+  const [lessonsDone, setLessonsDone] = useState({});
+  const [gratitud, setGratitud] = useState([]);
+  const [momentos, setMomentos] = useState([]);
+  const [streakInteractions, setStreakInteractions] = useState([]);
+  const [streakData, setStreakData] = useState({
+    currentStreak: 0,
+    longestStreak: 0,
+    unlockedMilestones: [],
+    nextMilestone: STREAK_MILESTONES[0],
+    progressPct: 0,
+    settings: { reminderEnabled: true, reminderHour: "20:00", reminderTone: "suave" },
+    rewards: [],
+    todayDone: false,
+    celebrationText: "",
   });
+  const happyTimer = useRef(null);
+  const screenRef = useRef("login");
+  const streakAnalytics = useMemo(() => computeStreakAnalytics(streakInteractions), [streakInteractions]);
+  const makeCode = () => "MO" + Math.random().toString(36).slice(2, 6).toUpperCase();
 
-  // Guardar historial cuando cambia
-  useEffect(() => {
-    localStorage.setItem(`mochi_memoria_historial_${user?.email || 'guest'}`, JSON.stringify(historial));
-  }, [historial, user?.email]);
-
-  useEffect(() => {
-    // Crear pares de cartas
-    const pairs = [...EMOJIS_MEMORIA, ...EMOJIS_MEMORIA];
-    const shuffled = pairs.sort(() => Math.random() - 0.5).map((emoji, i) => ({
-      id: i,
-      emoji,
-      isFlipped: false,
-      isMatched: false
-    }));
-    setCards(shuffled);
+  const saveKey = u => u?.email ? "mochi_prog_" + u.email : null;
+  const toast = msg => { setToastMsg(msg); setTimeout(() => setToastMsg(null), 3000); };
+  const trigHappy = useCallback(() => {
+    setMochiHappy(true);
+    clearTimeout(happyTimer.current);
+    happyTimer.current = setTimeout(() => setMochiHappy(false), 4000);
   }, []);
 
-  const handleCardClick = (id) => {
-    if (flipped.length === 2) return;
-    if (matched.includes(id)) return;
-    if (flipped.includes(id)) return;
+  const save = useCallback((u, s) => {
+    const payload = {
+      ...s,
+      streakInteractions: s?.streakInteractions ?? streakInteractions,
+      streakData: s?.streakData ?? streakData,
+    };
+    const k = saveKey(u || user);
+    if (k) ls.set(k, payload); // keep local backup
+    const uid = (u || user)?.uid;
+    if (uid) fbSaveProgress(uid, payload).catch(() => {});
+  }, [streakData, streakInteractions, user]);
 
-    const newFlipped = [...flipped, id];
-    setFlipped(newFlipped);
+  useEffect(() => {
+    screenRef.current = screen;
+  }, [screen]);
 
-    if (newFlipped.length === 2) {
-      const [first, second] = newFlipped;
-      const firstCard = cards.find(c => c.id === first);
-      const secondCard = cards.find(c => c.id === second);
+  // Garden decay on login: -5 water per day away, -2 happiness per day
+  const applyDecay = (savedState) => {
+    const last = savedState.lastVisit ? new Date(savedState.lastVisit) : new Date();
+    const now = new Date();
+    const daysDiff = Math.floor((now - last) / (1000 * 60 * 60 * 24));
+    if (daysDiff < 3) return savedState; // Only decay after 3+ days away
+    const periods = Math.floor(daysDiff / 3); // Each 3-day block = one decay tick
+    const waterLoss = Math.min(periods * 20, 80);
+    const happyLoss = Math.min(periods * 8, 30);
+    return {
+      ...savedState,
+      water: Math.max(0, (savedState.water || 40) - waterLoss),
+      happiness: Math.max(5, (savedState.happiness || 20) - happyLoss),
+    };
+  };
 
-      if (firstCard.emoji === secondCard.emoji) {
-        // Match!
-        setTimeout(() => {
-          setMatched([...matched, first, second]);
-          setFlipped([]);
-          const newScores = [...scores];
-          newScores[turn]++;
-          setScores(newScores);
+  const afterLogin = async (u, isNew) => {
+    let resolvedUser = { ...u };
+    if (!resolvedUser?.isGuest && resolvedUser?.uid && !resolvedUser?.code) {
+      const found = await fbFindCodeByUid(resolvedUser.uid).catch(() => null);
+      if (found?.code) {
+        resolvedUser = {
+          ...resolvedUser,
+          code: found.code,
+          names: resolvedUser.names || found.names || resolvedUser.names,
+          since: resolvedUser.since || found.since || "Juntos desde hoy",
+        };
+        await fbSaveUser(resolvedUser.uid, {
+          code: found.code,
+          names: resolvedUser.names,
+          since: resolvedUser.since,
+        }).catch(() => {});
+      } else if (resolvedUser?.isOwner !== false) {
+        const baseName = String(resolvedUser?.email || "nosotros").split("@")[0] || "Nosotros";
+        const names = resolvedUser.names || `${baseName} & ?`;
+        const since = resolvedUser.since || "Juntos desde hoy";
+        let provisionedCode = null;
 
-          if (matched.length + 2 === cards.length) {
-            setGameOver(true);
-            // Actualizar historial
-            const winner = newScores[0] > newScores[1] ? nameA : newScores[1] > newScores[0] ? nameB : null;
-            if (winner) {
-              setHistorial(prev => ({ ...prev, [winner]: (prev[winner] || 0) + 1 }));
+        for (let i = 0; i < 8; i += 1) {
+          const candidate = makeCode();
+          try {
+            await fbCreateCodeOwner(candidate, {
+              ownerEmail: resolvedUser.email || "",
+              ownerUid: resolvedUser.uid,
+              names,
+              since,
+            });
+            provisionedCode = candidate;
+            break;
+          } catch (e) {
+            if (!String(e?.message || "").includes("CODE_TAKEN")) break;
+          }
+        }
+
+        if (provisionedCode) {
+          resolvedUser = {
+            ...resolvedUser,
+            code: provisionedCode,
+            names,
+            since,
+            isOwner: true,
+          };
+          await fbSaveUser(resolvedUser.uid, {
+            code: provisionedCode,
+            names,
+            since,
+            isOwner: true,
+          }).catch(() => {});
+        }
+      }
+    }
+
+    setUser(resolvedUser);
+    ls.set("mochi_last", resolvedUser.email || "guest");
+    let s = null;
+    if (!isNew && resolvedUser.uid) {
+      // Try Firebase first, fallback to localStorage
+      try { s = await fbGetProgress(resolvedUser.uid); } catch(e) {}
+      if (!s) s = ls.get(saveKey(resolvedUser));
+      if (s) {
+        s = applyDecay(s);
+        if (s.bamboo != null) setBamboo(s.bamboo);
+        if (s.happiness != null) setHappiness(s.happiness);
+        if (s.water != null) setWater(s.water);
+        if (s.garden) setGarden(s.garden);
+        if (s.accessories) setAccessories(s.accessories);
+        if (s.exDone) setExDone(s.exDone);
+        if (s.conoce) setConoce(s.conoce);
+        if (s.burbuja) setBurbuja(s.burbuja);
+        if (s.coupleInfo) setCoupleInfo(s.coupleInfo);
+        if (s.testScores) setTestScores(s.testScores);
+        if (s.lessonsDone) setLessonsDone(s.lessonsDone);
+        if (s.gratitud) setGratitud(s.gratitud);
+        if (s.momentos) setMomentos(s.momentos);
+        if (s.streakInteractions) setStreakInteractions(s.streakInteractions);
+        if (s.streakData) setStreakData(prev => ({ ...prev, ...s.streakData }));
+      }
+    }
+    // Listen to real-time messages if couple code exists
+    if (resolvedUser.code && !resolvedUser.isGuest) {
+      const unsub = fbListenMessages(resolvedUser.code, msgs => setMessages(msgs));
+      window._mochiMsgUnsub = unsub;
+    } else {
+      const sharedMsgs = resolvedUser.code ? (ls.get("mochi_msgs_" + resolvedUser.code) || []) : [];
+      setMessages(sharedMsgs);
+    }
+    setLastVisit(new Date().toISOString());
+    const introFlowOpen = screenRef.current === "onboarding" || screenRef.current === "reltest";
+    const hasCompletedTest = !!s?.testScores;
+    if (!isNew && introFlowOpen) {
+      setScreen(screenRef.current);
+      return;
+    }
+    setScreen(isNew ? "onboarding" : (hasCompletedTest ? "main" : "reltest"));
+  };
+
+  // Keep messages in sync whenever user/code changes
+  useEffect(() => {
+    if (!user?.code || user?.isGuest) return;
+    if (window._mochiMsgUnsub) window._mochiMsgUnsub();
+    const unsub = fbListenMessages(user.code, msgs => {
+      setMessages(prev => {
+        // Merge: keep any optimistic messages not yet in Firebase, plus all Firebase msgs
+        const firebaseIds = new Set(msgs.map(m => String(m.id)));
+        const optimistic = prev.filter(m => !firebaseIds.has(String(m.id)) && (Date.now() - Number(m.id)) < 10000);
+        const merged = [...optimistic, ...msgs];
+        merged.sort((a, b) => new Date(b.time) - new Date(a.time));
+        return merged;
+      });
+    });
+    window._mochiMsgUnsub = unsub;
+    return () => unsub();
+  }, [user?.code]);
+
+  // ─── Sync gratitud, momentos, conoce, lessons, bamboo, notifs ───
+  useEffect(() => {
+    if (!user?.code || user?.isGuest) return;
+    const code = user.code;
+    const unsubs = [];
+
+    // Shared bamboo bank
+    unsubs.push(fbListenBamboo(code, total => {
+      if (total !== null) setBamboo(total);
+    }));
+
+    // Shared garden state (plants/accessories/water/happiness)
+    unsubs.push(fbListenGardenState(code, data => {
+      if (!data) return;
+      if (data.garden && typeof data.garden === "object") setGarden(data.garden);
+      if (data.accessories && typeof data.accessories === "object") setAccessories(data.accessories);
+      if (typeof data.water === "number") setWater(data.water);
+      if (typeof data.happiness === "number") setHappiness(data.happiness);
+    }));
+
+    // Gratitud entries (real-time both ways)
+    unsubs.push(fbListenGratitud(code, items => setGratitud(items)));
+
+    // Momentos entries (real-time both ways)
+    unsubs.push(fbListenMomentos(code, items => setMomentos(items)));
+
+    // Conocete answers (real-time both ways)
+    unsubs.push(fbListenConoce(code, map => setConoce(map)));
+
+    // Burbuja agreements (real-time workflow)
+    unsubs.push(fbListenBurbuja(code, map => setBurbuja(map)));
+
+    // Lessons (both must read)
+    unsubs.push(fbListenLessons(code, map => setLessonsDone(map)));
+
+    // Notifications
+    unsubs.push(fbListenNotifs(code, items => {
+      setNotifs(items);
+    }));
+
+    // Daily streak interactions and summary profile
+    unsubs.push(fbListenStreakInteractions(code, items => setStreakInteractions(items)));
+    unsubs.push(fbListenStreakProfile(code, data => {
+      if (data) {
+        setStreakData(prev => ({ ...prev, ...data }));
+      }
+    }));
+
+    return () => unsubs.forEach(u => u && u());
+  }, [user?.code]);
+
+  useEffect(() => {
+    // Use Firebase Auth state to keep session alive
+    const unsub = fbOnAuthChange(async (firebaseUser) => {
+      if (firebaseUser) {
+        // If doReg/doJoin is actively handling a fresh registration, skip —
+        // they will call afterLogin themselves once all Firestore writes are done.
+        if (_pendingLocalAuth) return;
+        try {
+          let userData = await fbGetUser(firebaseUser.uid);
+          if (!userData) {
+            // Fallback to localStorage
+            const u = ls.get("mochi_users") || {};
+            userData = u[firebaseUser.email] || { email: firebaseUser.email, names: firebaseUser.email.split("@")[0] + " & ?", isOwner: true };
+          }
+          afterLogin({ uid: firebaseUser.uid, email: firebaseUser.email, ...userData, isGuest: false }, false);
+        } catch(e) {
+          // Fallback to localStorage
+          const last = ls.get("mochi_last");
+          if (last && last !== "guest") {
+            const u = ls.get("mochi_users") || {};
+            if (u[last]) {
+              afterLogin({ uid: firebaseUser.uid, email: firebaseUser.email || last, ...u[last], isGuest: false }, false);
             }
           }
-        }, 500);
+        }
       } else {
-        // No match - cambiar turno
-        setTimeout(() => {
-          setFlipped([]);
-          setTurn(turn === 0 ? 1 : 0);
-        }, 1000);
+        // If Firebase session is gone, ensure app state returns to login.
+        setUser(null);
+        setScreen("login");
       }
+    });
+    return () => unsub();
+  }, []); // eslint-disable-line
+
+  const trackDailyInteraction = useCallback(async (type) => {
+    if (!STREAK_TYPES[type]) return;
+    const date = getDateKeyLocal();
+    const item = {
+      id: `${user?.code || "guest"}_${date}_${type}`,
+      date,
+      type,
+      completed: true,
+      completedBy: user?.uid || "guest",
+      updatedAt: new Date().toISOString(),
+      coupleCode: user?.code || "guest",
+    };
+
+    setStreakInteractions(prev => {
+      const idx = prev.findIndex(p => p.date === date && p.type === type);
+      if (idx === -1) return [item, ...prev];
+      const next = [...prev];
+      next[idx] = { ...next[idx], ...item };
+      return next;
+    });
+
+    if (user?.code && !user?.isGuest) {
+      await fbSaveStreakInteraction(user.code, date, type, true, { completedBy: user?.uid || "unknown" }).catch(() => {});
+    }
+  }, [user?.code, user?.isGuest, user?.uid]);
+
+  const updateStreakSettings = useCallback(async (settingsPatch) => {
+    const nextSettings = {
+      ...(streakData.settings || { reminderEnabled: true, reminderHour: "20:00", reminderTone: "suave" }),
+      ...settingsPatch,
+    };
+    setStreakData(prev => ({ ...prev, settings: nextSettings }));
+    if (user?.code && !user?.isGuest) {
+      await fbSaveStreakProfile(user.code, { settings: nextSettings }).catch(() => {});
+    }
+  }, [streakData.settings, user?.code, user?.isGuest]);
+
+  useEffect(() => {
+    const defaultSettings = streakData.settings || { reminderEnabled: true, reminderHour: "20:00", reminderTone: "suave" };
+    const computed = computeDailyStreakData(streakInteractions, streakData.longestStreak || 0);
+    const prevUnlocked = streakData.unlockedMilestones || [];
+    const newlyUnlocked = computed.unlockedMilestones.filter(m => !prevUnlocked.includes(m));
+    const nextRewards = [...(streakData.rewards || [])];
+
+    newlyUnlocked.forEach(m => {
+      if (!nextRewards.find(r => r.id === `mochi-${m}`)) {
+        nextRewards.push({
+          id: `mochi-${m}`,
+          milestone: m,
+          name: `Mochi de ${m} dias`,
+          unlockedAt: new Date().toISOString(),
+        });
+      }
+    });
+
+    const celebrationText = newlyUnlocked.length
+      ? `Nuevo hito desbloqueado: Mochi ${newlyUnlocked[newlyUnlocked.length - 1]} 🐼`
+      : streakData.celebrationText || "";
+
+    const changed =
+      computed.currentStreak !== streakData.currentStreak
+      || computed.longestStreak !== streakData.longestStreak
+      || computed.todayDone !== streakData.todayDone
+      || computed.nextMilestone !== streakData.nextMilestone
+      || computed.progressPct !== streakData.progressPct
+      || JSON.stringify(computed.unlockedMilestones) !== JSON.stringify(prevUnlocked)
+      || JSON.stringify(nextRewards) !== JSON.stringify(streakData.rewards || []);
+
+    if (!changed && !newlyUnlocked.length) return;
+
+    const merged = {
+      ...streakData,
+      ...computed,
+      unlockedMilestones: computed.unlockedMilestones,
+      rewards: nextRewards,
+      settings: defaultSettings,
+      celebrationText,
+    };
+
+    setStreakData(merged);
+
+    if (newlyUnlocked.length) {
+      trigHappy();
+      toast(`Hito de racha: ${newlyUnlocked[newlyUnlocked.length - 1]} dias. Recompensa Mochi desbloqueada 🐼`);
+      if (user?.code && !user?.isGuest && user?.uid) {
+        const myName = getMyName(user, "Tu pareja");
+        fbSendNotif(user.code, {
+          type: "racha",
+          msg: `${myName} alcanzo un nuevo hito de racha 🐼`,
+          forUid: user?.isOwner !== false ? "partner" : "owner",
+          fromUid: user.uid,
+        }).catch(() => {});
+      }
+    }
+
+    if (user?.code && !user?.isGuest) {
+      fbSaveStreakProfile(user.code, {
+        currentStreak: merged.currentStreak,
+        longestStreak: merged.longestStreak,
+        todayDone: merged.todayDone,
+        unlockedMilestones: merged.unlockedMilestones,
+        nextMilestone: merged.nextMilestone,
+        progressPct: merged.progressPct,
+        rewards: merged.rewards,
+        settings: merged.settings,
+        celebrationText: merged.celebrationText,
+      }).catch(() => {});
+    }
+  }, [streakInteractions, streakData, user?.code, user?.isGuest, user?.uid, trigHappy]);
+
+  const buyItem = item => {
+    try {
+      if (!item?.id || typeof item?.cost !== "number") {
+        toast("Este item no está disponible ahora");
+        return;
+      }
+      const safeGarden = garden && typeof garden === "object" ? garden : {};
+      if (safeGarden[item.id] === true) {
+        const ng = { ...safeGarden, [item.id]: "owned" };
+        setGarden(ng);
+        if (user?.code && !user?.isGuest) {
+          fbSaveGardenState(user.code, { garden: ng, accessories, water, happiness }).catch(() => {});
+        }
+        save(null, { bamboo, happiness, water, garden:ng, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit: new Date().toISOString(), testScores, lessonsDone, gratitud, momentos });
+        toast(`${item.name} guardado`);
+        return;
+      }
+
+      if (safeGarden[item.id] === "owned") {
+        const POND_DEPS = ["koi1", "koi2", "lotus_pad"];
+        if (POND_DEPS.includes(item.id) && safeGarden.pond !== true) {
+          toast("Primero coloca el Estanque para usar este objeto 🪷");
+          return;
+        }
+        const ng = { ...safeGarden, [item.id]: true };
+        setGarden(ng);
+        if (user?.code && !user?.isGuest) {
+          fbSaveGardenState(user.code, { garden: ng, accessories, water, happiness }).catch(() => {});
+        }
+        save(null, { bamboo, happiness, water, garden:ng, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit: new Date().toISOString(), testScores, lessonsDone, gratitud, momentos });
+        toast(`${item.name} colocado 🌿`);
+        return;
+      }
+
+      // Pond-dependent items require pond first
+      const POND_DEPS = ["koi1", "koi2", "lotus_pad"];
+      if (POND_DEPS.includes(item.id) && safeGarden.pond !== true && safeGarden.pond !== "owned") {
+        toast("Necesitas el Estanque primero 🪷");
+        return;
+      }
+      if (bamboo < item.cost) { toast("Necesitas más bambú — completa ejercicios"); return; }
+      const nb = bamboo - item.cost, ng = { ...safeGarden, [item.id]: true }, nh = Math.min(100, happiness + 10);
+      const nv = new Date().toISOString();
+      if (user?.code && !user?.isGuest) {
+        fbPurchaseGardenUpdate(user.code, item.cost, { garden: ng, accessories, water, happiness: nh })
+          .then((newTotal) => {
+            setBamboo(newTotal);
+            setGarden(ng);
+            setHappiness(nh);
+            setLastVisit(nv);
+            trigHappy();
+            toast(`${item.name} plantado 🌿`);
+            save(null, { bamboo:newTotal, happiness:nh, water, garden:ng, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit:nv, testScores, lessonsDone, gratitud, momentos });
+          })
+          .catch((e) => {
+            if (String(e?.message || "").includes("INSUFFICIENT_BAMBOO")) {
+              toast("Necesitas más bambú — completa ejercicios");
+              return;
+            }
+            console.error("buyItem error:", e);
+            toast("No se pudo comprar ese item");
+          });
+        return;
+      }
+      setBamboo(nb); setGarden(ng); setHappiness(nh); setLastVisit(nv); trigHappy();
+      toast(`${item.name} plantado 🌿`);
+      save(null, { bamboo:nb, happiness:nh, water, garden:ng, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit:nv, testScores, lessonsDone, gratitud, momentos });
+    } catch (e) {
+      console.error("buyItem error:", e);
+      toast("No se pudo comprar ese item");
     }
   };
 
-  const resetGame = () => {
-    const pairs = [...EMOJIS_MEMORIA, ...EMOJIS_MEMORIA];
-    const shuffled = pairs.sort(() => Math.random() - 0.5).map((emoji, i) => ({
-      id: i,
-      emoji,
-      isFlipped: false,
-      isMatched: false
-    }));
-    setCards(shuffled);
-    setFlipped([]);
-    setMatched([]);
-    setTurn(0);
-    setScores([0, 0]);
-    setGameOver(false);
+  const buyAccessory = item => {
+    try {
+      if (!item?.id || typeof item?.cost !== "number") {
+        toast("Este accesorio no está disponible ahora");
+        return;
+      }
+      const safeAccessories = accessories && typeof accessories === "object" ? accessories : {};
+
+      // If already owned, toggle it on/off (equip/unequip)
+      if (safeAccessories[item.id] === "owned") {
+        const na = { ...safeAccessories, [item.id]: true };
+        setAccessories(na);
+        if (user?.code && !user?.isGuest) {
+          fbSaveGardenState(user.code, { garden, accessories: na, water, happiness }).catch(() => {});
+        }
+        save(null, { bamboo, happiness, water, garden, accessories: na, exDone, messages, conoce, burbuja, coupleInfo, lastVisit: new Date().toISOString(), testScores, lessonsDone });
+        toast(`${item.name} puesto 🐼`);
+        return;
+      }
+      if (safeAccessories[item.id] === true) {
+        const na = { ...safeAccessories, [item.id]: "owned" };
+        setAccessories(na);
+        if (user?.code && !user?.isGuest) {
+          fbSaveGardenState(user.code, { garden, accessories: na, water, happiness }).catch(() => {});
+        }
+        save(null, { bamboo, happiness, water, garden, accessories: na, exDone, messages, conoce, burbuja, coupleInfo, lastVisit: new Date().toISOString(), testScores, lessonsDone });
+        toast(`${item.name} quitado`);
+        return;
+      }
+      if (bamboo < item.cost) { toast("Necesitas más bambú"); return; }
+      const nb = bamboo - item.cost, na = { ...safeAccessories, [item.id]: true }, nh = Math.min(100, happiness + 5);
+      const nv = new Date().toISOString();
+      if (user?.code && !user?.isGuest) {
+        fbPurchaseGardenUpdate(user.code, item.cost, { garden, accessories: na, water, happiness: nh })
+          .then((newTotal) => {
+            setBamboo(newTotal);
+            setAccessories(na);
+            setHappiness(nh);
+            setLastVisit(nv);
+            trigHappy();
+            toast(`${item.name} puesto ${item.emoji} +5 amor`);
+            save(null, { bamboo:newTotal, happiness:nh, water, garden, accessories:na, exDone, messages, conoce, burbuja, coupleInfo, lastVisit:nv, testScores, lessonsDone, gratitud, momentos });
+          })
+          .catch((e) => {
+            if (String(e?.message || "").includes("INSUFFICIENT_BAMBOO")) {
+              toast("Necesitas más bambú");
+              return;
+            }
+            console.error("buyAccessory error:", e);
+            toast("No se pudo comprar ese accesorio");
+          });
+        return;
+      }
+      setBamboo(nb); setAccessories(na); setHappiness(nh); setLastVisit(nv); trigHappy();
+      toast(`${item.name} puesto ${item.emoji} +5 amor`);
+      save(null, { bamboo:nb, happiness:nh, water, garden, accessories:na, exDone, messages, conoce, burbuja, coupleInfo, lastVisit:nv, testScores, lessonsDone, gratitud, momentos });
+    } catch (e) {
+      console.error("buyAccessory error:", e);
+      toast("No se pudo comprar ese accesorio");
+    }
   };
 
-  if (showInstrucciones) {
-    return (
-      <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
-        <div style={{ background: C.dark, padding: "44px 20px 20px" }}>
-          <button onClick={onBack} style={{ background: "none", border: "none", color: C.cream2, fontSize: "1.5rem", cursor: "pointer", marginBottom: 10, display: "block" }}>←</button>
-          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.4rem", color: C.cream2 }}>🧠 Memoria</div>
-        </div>
+  const waterGarden = () => {
+    const nw = Math.min(100, water + 10), nh = Math.min(100, happiness + 2);
+    const nv = new Date().toISOString();
+    setWater(nw); setHappiness(nh); setLastVisit(nv); trigHappy();
+    if (user?.code && !user?.isGuest) {
+      fbSaveGardenState(user.code, { garden, accessories, water: nw, happiness: nh }).catch(() => {});
+    }
+    toast("Jardín regado 💧 ¡Gracias por volver!");
+    save(null, { bamboo, happiness:nh, water:nw, garden, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit:nv, testScores, lessonsDone, gratitud, momentos });
+  };
 
-        <div style={{ padding: "20px 16px" }}>
-          <div style={{ background: C.white, borderRadius: 16, padding: "20px", marginBottom: 16, border: `1.5px solid ${C.border}` }}>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", color: C.dark, marginBottom: 12 }}>
-              📋 Cómo jugar
-            </div>
-            <div style={{ fontSize: "0.9rem", color: C.inkM, lineHeight: 1.7 }}>
-              <p>1. <strong>Juegan juntos:</strong> Este juego es para jugar los dos en el mismo celular, cuando estén juntos.</p>
-              <p>2. <strong>Turnos alternados:</strong> {nameA} y {nameB} se turnan para voltear cartas.</p>
-              <p>3. <strong>Encuentra pares:</strong> Voltea dos cartas. Si son iguales, ¡sumas punto y sigues!</p>
-              <p>4. <strong>Cambia turno:</strong> Si no coinciden, pasa el celular a tu pareja.</p>
-              <p>5. <strong>Gana:</strong> Quien encuentre más pares al final.</p>
-            </div>
-          </div>
+  const petMochi = () => {
+    trigHappy();
+    const nameA = user?.names ? user.names.split("&")[0].trim() : "Panda A";
+    const nameB = user?.names ? user.names.split("&")[1]?.trim() || "Panda B" : "Panda B";
+    const myEmail = user?.email || "guest";
+    const partnerName = user?.isOwner !== false ? nameB : nameA;
+    const partnerMsgs = [...messages].filter(m => m.senderEmail !== myEmail);
+    const partnerMsg = partnerMsgs[0];
+    const textB = partnerMsg
+      ? partnerMsg.text.slice(0, BUBBLE_PREVIEW_LENGTH) + (partnerMsg.text.length > BUBBLE_PREVIEW_LENGTH ? "..." : "")
+      : "¡Los quiero mucho! 🐼";
+    // Show speech bubbles over pandas for 5 seconds
+    setPandaBubble({ nameA: null, textA: null, nameB: partnerName, textB });
+    setTimeout(() => setPandaBubble(null), 5000);
+    const nh = Math.min(100, happiness + 2);
+    setHappiness(nh);
+  };
 
-          {/* Historial */}
-          <div style={{ background: C.cream, borderRadius: 16, padding: "16px", marginBottom: 16, border: `1.5px solid ${C.border}` }}>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark, marginBottom: 10 }}>
-              🏆 Victorias
-            </div>
-            <div style={{ display: "flex", gap: 10 }}>
-              <div style={{ flex: 1, textAlign: "center", background: C.white, borderRadius: 10, padding: "10px" }}>
-                <div style={{ fontSize: "0.8rem", color: C.inkL }}>{nameA}</div>
-                <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.5rem", color: C.dark }}>{historial[nameA] || 0}</div>
-              </div>
-              <div style={{ flex: 1, textAlign: "center", background: C.white, borderRadius: 10, padding: "10px" }}>
-                <div style={{ fontSize: "0.8rem", color: C.inkL }}>{nameB}</div>
-                <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.5rem", color: C.dark }}>{historial[nameB] || 0}</div>
-              </div>
-            </div>
-          </div>
+  const completeLesson = async (lessonId) => {
+    const myKey = user?.isOwner !== false ? "owner" : "partner";
+    const myName = getMyName(user, "Yo");
+    if (lessonsDone[lessonId]?.[myKey]) return; // already done by me
+    if (user?.code && !user?.isGuest) {
+      await fbSaveLessonRead(user.code, lessonId, myKey).catch(() => {});
+      const nb = await fbIncrementBamboo(user.code, 10).catch(() => bamboo + 10);
+      setBamboo(nb); trigHappy();
+      toast("Lección completada ✓ +10 bambú 🌿");
+      trackDailyInteraction("exercise");
+      fbSendNotif(user.code, { type:"leccion", msg:`${myName} leyó una lección — ¡léela tú también! 📖`, forUid:user?.isOwner !== false ? "partner" : "owner", fromUid: user.uid }).catch(()=>{});
+    } else {
+      const nl = { ...lessonsDone, [lessonId]: { ...(lessonsDone[lessonId] || {}), [myKey]: true } };
+      setLessonsDone(nl);
+      const nb = bamboo + 10; setBamboo(nb); trigHappy();
+      toast("Lección completada ✓ +10 bambú 🌿");
+      trackDailyInteraction("exercise");
+    }
+  };
 
-          <button
-            onClick={() => setShowInstrucciones(false)}
-            style={{
-              width: "100%",
-              background: C.dark,
-              color: C.cream2,
-              border: "none",
-              borderRadius: 14,
-              padding: "16px",
-              fontFamily: "'Fredoka One',cursive",
-              fontSize: "1.1rem",
-              cursor: "pointer"
-            }}
-          >
-            ¡Empezar a jugar! 🎮
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const finishTest = (scores) => {
+    setTestScores(scores);
+    save(null, { bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit, testScores:scores, lessonsDone, gratitud, momentos });
+    setScreen("main");
+  };
+
+  const completeEx = async (ex, pts) => {
+    const nd = { ...exDone, [ex.id]: (exDone[ex.id] || 0) + 1 };
+    const bonus = nd[ex.id] === 3 ? 30 : 0;
+    const total = pts + bonus;
+    const nh = Math.min(100, happiness + 8);
+    setHappiness(nh); setExDone(nd); trigHappy();
+    const myName = getMyName(user, "Yo");
+    if (user?.code && !user?.isGuest) {
+      const nb = await fbIncrementBamboo(user.code, total).catch(() => bamboo + total);
+      setBamboo(nb);
+      trackDailyInteraction("exercise");
+      fbSendNotif(user.code, { type:"ejercicio", msg:`${myName} completó un ejercicio — ¡complétalo tú también! 🌿`, forUid:user?.isOwner !== false ? "partner" : "owner", fromUid: user.uid }).catch(()=>{});
+    } else {
+      setBamboo(b => b + total);
+      trackDailyInteraction("exercise");
+    }
+    toast(bonus ? `¡Maestría! +${total} bambú 🌟` : `+${total} bambú 🌿`);
+    save(null, { bamboo: bamboo + total, happiness:nh, water, garden, accessories, exDone:nd, messages, conoce, burbuja, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
+  };
+
+  const sendMsg = text => {
+    if (!text || !text.trim()) return;
+    const trimmedText = text.trim();
+    if (trimmedText.length > MAX_MESSAGE_LENGTH) {
+      toast(`Máximo ${MAX_MESSAGE_LENGTH} caracteres por mensaje`);
+      return;
+    }
+    const nextMessages = [{
+      id: Date.now(), text: trimmedText,
+      sender: getMyName(user, "Yo"),
+      senderEmail: user?.email || "guest",
+      time: new Date().toISOString(), read: false
+    }, ...messages];
+    const msg = {
+      id: nextMessages[0].id, text: trimmedText,
+      sender: getMyName(user, "Yo"),
+      senderEmail: user?.email || "guest",
+      time: new Date().toISOString(), read: false
+    };
+    // Always update local state first so UI doesn't freeze
+    setMessages(nextMessages);
+    if (user?.code && !user?.isGuest) {
+      // Fire and forget — listener will sync
+      fbSendMessage(user.code, msg).catch(e => console.warn("Send failed:", e));
+      if (user?.uid) {
+        const me = getMyName(user, "Tu pareja");
+        fbSendNotif(user.code, { type:"mensaje", msg:`${me} te envió un mensajito 💌`, forUid:user?.isOwner !== false ? "partner" : "owner", fromUid: user.uid }).catch(()=>{});
+      }
+    } else {
+      const key = user?.code ? "mochi_msgs_" + user.code : "mochi_msgs_guest";
+      const prev = ls.get(key) || [];
+      ls.set(key, [msg, ...prev]);
+    }
+    const nb = bamboo + 5; setBamboo(nb); trigHappy();
+    toast("Mensajito enviado 💌 +5 bambú");
+    trackDailyInteraction("message");
+    save(null, { bamboo:nb, happiness, water, garden, accessories, exDone, messages:nextMessages, conoce, burbuja, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
+  };
+
+  const saveConoce = async (cat, qIdx, myAnswer, _b, isNew) => {
+    const key = `${cat}-${qIdx}`;
+    const myRole = user?.isOwner !== false ? "owner" : "partner";
+    const myName = getMyName(user, "Yo");
+    if (user?.code && !user?.isGuest) {
+      // Save my answer to Firebase (keyed by role)
+      await fbSaveConoce(user.code, key, { [myRole]: myAnswer, updatedAt: new Date().toISOString() }).catch(() => {});
+      // Check if partner already answered
+      const existing = conoce[key] || {};
+      const partnerRole = myRole === "owner" ? "partner" : "owner";
+      const bothAnswered = isNew && existing[partnerRole];
+      if (bothAnswered) {
+        // Both answered — award bamboo to shared bank
+        const nb = await fbIncrementBamboo(user.code, 15).catch(() => bamboo + 15);
+        setBamboo(nb); trigHappy();
+        toast("+15 bambú por conocerse más 🌿");
+        trackDailyInteraction("conoce");
+      } else if (isNew) {
+        // I answered first — notify partner
+        trigHappy();
+        toast("¡Guardado! Esperando que tu pareja responda para ganar bambú 🌿");
+        trackDailyInteraction("conoce");
+        fbSendNotif(user.code, { type:"conoce", msg:`${myName} respondió una pregunta — ¡tu turno! 🌿`, forUid:user?.isOwner !== false ? "partner" : "owner", fromUid: user.uid }).catch(()=>{});
+      }
+    } else {
+      // Local mode
+      const nc = { ...conoce, [key]: { ...( conoce[key] || {}), [myRole]: myAnswer } };
+      setConoce(nc);
+      if (isNew) { setBamboo(b => b + 15); trigHappy(); toast("+15 bambú por conocerse más 🌿"); trackDailyInteraction("conoce"); }
+    }
+  };
+
+  const saveBurbujaMine = async (id, myText) => {
+    const clean = (myText || "").trim();
+    if (!clean) return;
+    const myRole = user?.isOwner !== false ? "owner" : "partner";
+    const meta = BURBUJA_ITEM_MAP[id] || {};
+    const prev = burbuja[id] || {};
+    const next = { ...prev, key:id, question:meta.question || "", section:meta.section || "", [myRole]: clean };
+    const map = { ...burbuja, [id]: next };
+    setBurbuja(map);
+    trigHappy();
+    toast("Tu parte quedó guardada ✓");
+    if (user?.code && !user?.isGuest) {
+      await fbSaveBurbuja(user.code, id, next).catch(() => {});
+      if (user?.uid) {
+        const me = getMyName(user, "Tu pareja");
+        fbSendNotif(user.code, { type:"acuerdo", msg:`${me} actualizó su parte de un acuerdo 🫧`, forUid:user?.isOwner !== false ? "partner" : "owner", fromUid: user.uid }).catch(()=>{});
+      }
+    }
+    save(null, { bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja:map, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
+  };
+
+  const proposeBurbuja = async (id, text, isCounter = false) => {
+    const clean = (text || "").trim();
+    if (!clean) return;
+    const myRole = user?.isOwner !== false ? "owner" : "partner";
+    const prev = burbuja[id] || {};
+    if (!prev.owner || !prev.partner) {
+      toast("Primero ambos deben escribir su parte");
+      return;
+    }
+    const history = [...(prev.history || []), { id: Date.now(), type: isCounter ? "counter" : "proposal", by: myRole, text: clean, at: new Date().toISOString() }];
+    const next = {
+      ...prev,
+      status: "pending",
+      proposalText: clean,
+      proposalBy: myRole,
+      history,
+      approvedText: null,
+      approvedBy: null,
+      approvedAt: null,
+    };
+    const map = { ...burbuja, [id]: next };
+    setBurbuja(map);
+    trigHappy();
+    toast(isCounter ? "Contraoferta enviada ↔" : "Propuesta enviada ✉️");
+
+    if (user?.code && !user?.isGuest) {
+      await fbSaveBurbuja(user.code, id, next).catch(() => {});
+      if (user?.uid) {
+        const me = getMyName(user, "Tu pareja");
+        fbSendNotif(user.code, {
+          type: "acuerdo",
+          msg: isCounter ? `${me} envió una contraoferta de acuerdo ↔` : `${me} te envió una propuesta de acuerdo ✉️`,
+          forUid: user?.isOwner !== false ? "partner" : "owner",
+          fromUid: user.uid
+        }).catch(() => {});
+      }
+    }
+
+    save(null, { bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja:map, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
+  };
+
+  const approveBurbuja = async (id) => {
+    const myRole = user?.isOwner !== false ? "owner" : "partner";
+    const prev = burbuja[id] || {};
+    if (prev.status !== "pending" || !prev.proposalText) return;
+    if (prev.proposalBy === myRole) {
+      toast("Tu pareja debe aprobar esta propuesta");
+      return;
+    }
+    const wasApproved = prev.status === "approved";
+    const history = [...(prev.history || []), { id: Date.now(), type: "approved", by: myRole, text: prev.proposalText, at: new Date().toISOString() }];
+    const next = {
+      ...prev,
+      status: "approved",
+      approvedText: prev.proposalText,
+      approvedBy: myRole,
+      approvedAt: new Date().toISOString(),
+      history,
+    };
+    const map = { ...burbuja, [id]: next };
+    setBurbuja(map);
+
+    let nextBamboo = bamboo;
+    if (!wasApproved) {
+      if (user?.code && !user?.isGuest) {
+        nextBamboo = await fbIncrementBamboo(user.code, 10).catch(() => bamboo + 10);
+      } else {
+        nextBamboo = bamboo + 10;
+      }
+      setBamboo(nextBamboo);
+    }
+
+    trigHappy();
+    toast("Acuerdo aprobado ✓ +10 bambú 🌿");
+    trackDailyInteraction("agreement");
+
+    if (user?.code && !user?.isGuest) {
+      await fbSaveBurbuja(user.code, id, next).catch(() => {});
+      if (user?.uid) {
+        const me = getMyName(user, "Tu pareja");
+        fbSendNotif(user.code, {
+          type: "acuerdo",
+          msg: `${me} aprobó su acuerdo ✅`,
+          forUid: user?.isOwner !== false ? "partner" : "owner",
+          fromUid: user.uid
+        }).catch(() => {});
+      }
+    }
+
+    save(null, { bamboo:nextBamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja:map, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
+  };
+
+  const saveCoupleInfo = (info) => {
+    const isNew = Object.keys(coupleInfo).length === 0;
+    setCoupleInfo(info);
+    const nb = isNew ? bamboo + 20 : bamboo;
+    if (isNew) { setBamboo(nb); trigHappy(); toast("Historia guardada 💚 +20 bambú"); }
+    else toast("Historia actualizada 💚");
+    save(null, { bamboo:nb, happiness, water, garden, accessories, exDone, messages, conoce, burbuja, coupleInfo:info, lastVisit, testScores, lessonsDone, gratitud, momentos });
+  };
+
+  const saveNames = async (newNames) => {
+    if (!newNames.trim()) return;
+    const formatted = newNames.trim();
+    setUser(u => ({ ...u, names: formatted }));
+    if (user?.uid && !user?.isGuest) {
+      await fbSaveUser(user.uid, { names: formatted }).catch(() => {});
+    }
+    toast("✏️ Nombre actualizado");
+  };
+
+  const addGratitud = async (entry) => {
+    const myName = getMyName(user, "Yo");
+    const enriched = { ...entry, authorName: myName, authorUid: user?.uid, date: new Date().toLocaleDateString("es", {day:"numeric",month:"short"}) };
+    trigHappy();
+    if (user?.code && !user?.isGuest) {
+      await fbAddGratitud(user.code, enriched).catch(() => {});
+      const nb = await fbIncrementBamboo(user.code, 5).catch(() => bamboo + 5);
+      setBamboo(nb);
+      trackDailyInteraction("gratitude");
+      // Notify partner
+      if (user?.uid) fbSendNotif(user.code, { type:"gratitud", msg:`${myName} escribió algo de gratitud 💛`, forUid:user?.isOwner !== false ? "partner" : "owner", fromUid: user.uid }).catch(()=>{});
+    } else {
+      const ng = [{ ...enriched, id: Date.now() }, ...gratitud];
+      setGratitud(ng);
+      setBamboo(b => b + 5);
+      trackDailyInteraction("gratitude");
+    }
+    toast("💛 Guardado en el baúl de gratitud +5 bambú 🌿");
+  };
+
+  const addMomento = async (entry) => {
+    const myName = getMyName(user, "Yo");
+    const enriched = { ...entry, authorName: myName, authorUid: user?.uid, date: new Date().toLocaleDateString("es", {day:"numeric",month:"short",year:"numeric"}) };
+    trigHappy();
+    if (user?.code && !user?.isGuest) {
+      await fbAddMomento(user.code, enriched).catch(() => {});
+      const nb = await fbIncrementBamboo(user.code, 5).catch(() => bamboo + 5);
+      setBamboo(nb);
+      trackDailyInteraction("moment");
+      if (user?.uid) fbSendNotif(user.code, { type:"momento", msg:`${myName} guardó un momento especial ✨`, forUid:user?.isOwner !== false ? "partner" : "owner", fromUid: user.uid }).catch(()=>{});
+    } else {
+      const nm = [{ ...enriched, id: Date.now() }, ...momentos];
+      setMomentos(nm);
+      setBamboo(b => b + 5);
+      trackDailyInteraction("moment");
+    }
+    toast("✨ Guardado en el baúl de momentos +5 bambú 🌿");
+  };
+
+  const claimDailyTip = async () => {
+    const reward = 15;
+    const message = `Consejo del día leído +${reward} bambú 🌿`;
+    trigHappy();
+    trackDailyInteraction("consejo");
+
+    if (user?.code && !user?.isGuest) {
+      const nb = await fbIncrementBamboo(user.code, reward).catch(() => bamboo + reward);
+      setBamboo(nb);
+      toast(message);
+      save(null, { bamboo:nb, happiness, water, garden, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
+      return;
+    }
+
+    const nb = bamboo + reward;
+    setBamboo(nb);
+    toast(message);
+    save(null, { bamboo:nb, happiness, water, garden, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
+  };
+
+  const logout = async () => {
+    await fbLogout().catch(() => {});
+    ls.set("mochi_last", null); setUser(null); setScreen("login");
+    setBamboo(0); setHappiness(20); setWater(40); setGarden({});
+    setAccessories({}); setExDone({}); setMessages([]); setConoce({}); setBurbuja({}); setCoupleInfo({});
+    setGratitud([]); setMomentos([]);
+    setStreakInteractions([]);
+    setStreakData({
+      currentStreak: 0,
+      longestStreak: 0,
+      unlockedMilestones: [],
+      nextMilestone: STREAK_MILESTONES[0],
+      progressPct: 0,
+      settings: { reminderEnabled: true, reminderHour: "20:00", reminderTone: "suave" },
+      rewards: [],
+      todayDone: false,
+      celebrationText: "",
+    });
+  };
+
+  const deleteAccount = async (confirmText = "") => {
+    if (String(confirmText).trim().toUpperCase() !== "ELIMINAR") {
+      toast("Eliminación cancelada");
+      return;
+    }
+
+    try {
+      if (user?.uid && !user?.isGuest) {
+        await fbCleanupBeforeAccountDelete({
+          uid: user.uid,
+          code: user.code || "",
+          isOwner: user?.isOwner !== false,
+        });
+        await fbDeleteCurrentUser();
+      }
+    } catch (e) {
+      const errCode = e?.code || "";
+      if (errCode === "auth/requires-recent-login") {
+        toast("Por seguridad, vuelve a iniciar sesión y repite la eliminación de cuenta.");
+        return;
+      }
+      console.error("deleteAccount error:", e);
+      toast("No se pudo eliminar la cuenta completa. Intenta de nuevo.");
+      return;
+    }
+
+    const u = ls.get("mochi_users") || {};
+    const c = ls.get("mochi_codes") || {};
+    if (user?.email) delete u[user.email];
+    if (user?.code) {
+      ls.remove ? ls.remove("mochi_msgs_" + user.code) : ls.set("mochi_msgs_" + user.code, null);
+      delete c[user.code];
+    }
+    ls.set("mochi_users", u); ls.set("mochi_codes", c);
+    ls.set("mochi_prog_" + (user?.email || ""), null);
+    toast("Cuenta eliminada correctamente");
+    await logout();
+  };
+
+  if (screen === "login") return <><style>{STYLES}</style><Login onLogin={afterLogin}/></>;
+  if (screen === "onboarding") return <><style>{STYLES}</style><Onboarding onDone={()=>setScreen("reltest")}/></>;
+  const relTestFallback = (
+    <div style={{ minHeight:"100vh", background:C.sandL, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"24px 20px", fontFamily:"'Nunito',sans-serif" }}>
+      <div style={{ fontFamily:"'Fredoka One',cursive", color:C.dark, fontSize:"1.2rem", marginBottom:8 }}>Hubo un error en el test</div>
+      <div style={{ fontSize:"0.9rem", color:C.inkM, textAlign:"center", lineHeight:1.6, maxWidth:320, marginBottom:14 }}>No te preocupes, tus datos siguen guardados. Puedes reintentar sin cerrar sesión.</div>
+      <Btn onClick={() => setScreen("reltest")}>Reintentar test</Btn>
+    </div>
+  );
+
+  if (screen === "reltest") return <><style>{STYLES}</style><SectionErrorBoundary fallback={relTestFallback}><RelTest user={user} onDone={finishTest}/></SectionErrorBoundary></>;
+  if (user && !user?.isGuest && user?.code && !testScores) return <><style>{STYLES}</style><SectionErrorBoundary fallback={relTestFallback}><RelTest user={user} onDone={finishTest}/></SectionErrorBoundary></>;
 
   return (
-    <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
-      <div style={{ background: C.dark, padding: "44px 20px 20px" }}>
-        <button onClick={onBack} style={{ background: "none", border: "none", color: C.cream2, fontSize: "1.5rem", cursor: "pointer", marginBottom: 10, display: "block" }}>←</button>
-        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.4rem", color: C.cream2 }}>🧠 Memoria</div>
-        <div style={{ fontSize: "0.8rem", color: `${C.cream}88` }}>Turno de: {turn === 0 ? nameA : nameB}</div>
+    <div style={{ fontFamily:"'Nunito',sans-serif", maxWidth:480, margin:"0 auto", minHeight:"100vh", background:C.sandL, position:"relative" }}>
+      <style>{STYLES}</style>
+      <div style={{ paddingBottom:72 }}>
+        {tab==="jardin" && <Jardin bamboo={bamboo} happiness={happiness} water={water} garden={garden} accessories={accessories} mochiHappy={mochiHappy} pandaBubble={pandaBubble} onPet={petMochi} onBuy={buyItem} onWater={waterGarden} onBuyAccessory={buyAccessory}/>}
+        {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson}/>}
+        {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user}/>}
+        {tab==="burbuja" && <Burbuja burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} user={user}/>}
+        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} garden={garden} accessories={accessories} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} lessonsDone={lessonsDone} coupleInfo={coupleInfo} streakInfo={streakData} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} onSendMessage={sendMsg} onClaimDailyTip={claimDailyTip}/>} 
       </div>
-
-      <div style={{ padding: "16px 14px" }}>
-        {/* Marcador */}
-        <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-          <div style={{ flex: 1, background: turn === 0 ? C.olive : C.white, borderRadius: 12, padding: "12px", textAlign: "center", border: `1.5px solid ${C.border}` }}>
-            <div style={{ fontSize: "0.75rem", color: turn === 0 ? C.cream : C.inkL }}>{nameA}</div>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.5rem", color: turn === 0 ? C.cream2 : C.dark }}>{scores[0]}</div>
-          </div>
-          <div style={{ flex: 1, background: turn === 1 ? C.olive : C.white, borderRadius: 12, padding: "12px", textAlign: "center", border: `1.5px solid ${C.border}` }}>
-            <div style={{ fontSize: "0.75rem", color: turn === 1 ? C.cream : C.inkL }}>{nameB}</div>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.5rem", color: turn === 1 ? C.cream2 : C.dark }}>{scores[1]}</div>
-          </div>
-        </div>
-
-        {/* Grid de cartas */}
-        {!gameOver ? (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
-            {cards.map((card) => {
-              const isFlipped = flipped.includes(card.id) || matched.includes(card.id);
-              return (
-                <div
-                  key={card.id}
-                  onClick={() => handleCardClick(card.id)}
-                  style={{
-                    aspectRatio: "1",
-                    background: isFlipped ? C.white : C.olive,
-                    borderRadius: 12,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "2rem",
-                    cursor: matched.includes(card.id) ? "default" : "pointer",
-                    border: `2px solid ${matched.includes(card.id) ? "#4a9a40" : C.border}`,
-                    boxShadow: `0 3px 0 ${matched.includes(card.id) ? "#4a9a40" : C.border}`,
-                    opacity: matched.includes(card.id) ? 0.6 : 1,
-                    transition: "all 0.3s"
-                  }}
-                >
-                  {isFlipped ? card.emoji : "💜"}
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div style={{ textAlign: "center", padding: "40px 20px" }}>
-            <div style={{ fontSize: "4rem", marginBottom: 16 }}>🏆</div>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.5rem", color: C.dark, marginBottom: 8 }}>
-              ¡Juego terminado!
-            </div>
-            <div style={{ fontSize: "1.1rem", color: C.inkM, marginBottom: 12 }}>
-              {scores[0] > scores[1] ? `¡Ganó ${nameA}!` : scores[1] > scores[0] ? `¡Ganó ${nameB}!` : "¡Empate!"}
-            </div>
-            {/* Historial actualizado */}
-            <div style={{ background: C.cream, borderRadius: 12, padding: "12px", marginBottom: 20, border: `1.5px solid ${C.border}` }}>
-              <div style={{ fontSize: "0.8rem", color: C.inkL, marginBottom: 6 }}>Victorias totales:</div>
-              <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
-                <div><strong>{nameA}:</strong> {historial[nameA] || 0}</div>
-                <div>|</div>
-                <div><strong>{nameB}:</strong> {historial[nameB] || 0}</div>
+      <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:480, background:C.white, borderTop:`1.5px solid ${C.border}`, display:"flex", zIndex:1000, boxShadow:`0 -3px 0 ${C.line}` }}>
+        {NAV.map(n => {
+          const active = tab === n.id;
+          const myNotifRole = user?.isOwner !== false ? "owner" : "partner";
+          const isNotifForMe = (x) => {
+            if (!x || x.read) return false;
+            if (x.fromUid && user?.uid && x.fromUid === user.uid) return false;
+            return x.forUid === user?.uid || x.forUid === myNotifRole || (x.forUid === "partner" && myNotifRole === "partner");
+          };
+          const notifTypes = { "ejerc":["ejercicio","leccion"], "conocete":["conoce"], "burbuja":["gratitud","momento","acuerdo"], "perfil":["racha","mensaje"] };
+          const nBadge = notifTypes[n.id] ? notifs.filter(x => isNotifForMe(x) && notifTypes[n.id].includes(x.type)).length : 0;
+          const badge = nBadge > 0 ? nBadge : null;
+          return (
+            <div key={n.id} onClick={()=>{
+              setTab(n.id);
+              // Mark related notifs as read
+              const tabTypes = notifTypes[n.id] || [];
+              notifs
+                .filter(x => isNotifForMe(x) && tabTypes.includes(x.type))
+                .forEach(x => fbMarkNotifRead(x.id).catch(()=>{}));
+            }} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", padding:"8px 0 7px", cursor:"pointer" }}>
+              <div style={{ position:"relative" }}>
+                <div style={{ fontSize:active?"1.3rem":"1.1rem", transition:"all 0.15s", filter:active?"none":"opacity(0.45)", transform:active?"scale(1.15) translateY(-2px)":"none" }}>{n.emoji}</div>
+                {badge && <div style={{ position:"absolute", top:-4, right:-6, background:"#c05068", color:C.white, borderRadius:5, width:15, height:15, fontSize:"0.6rem", fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center" }}>{badge}</div>}
               </div>
+              <div style={{ fontSize:"0.58rem", fontWeight:active?800:600, color:active?C.dark:C.inkL, marginTop:2, letterSpacing:"0.3px" }}>{n.label}</div>
+              {active && <div style={{ width:16, height:3, borderRadius:50, background:C.dark, marginTop:2 }}/>}
             </div>
-            <button
-              onClick={resetGame}
-              style={{
-                background: C.dark,
-                color: C.cream2,
-                border: "none",
-                borderRadius: 14,
-                padding: "14px 28px",
-                fontFamily: "'Fredoka One',cursive",
-                fontSize: "1rem",
-                cursor: "pointer"
-              }}
-            >
-              Jugar otra vez 🔄
-            </button>
-          </div>
-        )}
+          );
+        })}
       </div>
+      <Toast msg={toastMsg}/>
     </div>
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// JUEGO 2: SCRABBLE MEJORADO
-// ═══════════════════════════════════════════════════════════════════════════════
-// Diccionario básico de palabras válidas (las más comunes en español)
-const DICCIONARIO_PALABRAS = [
-  "AMOR", "BESO", "CASA", "DIA", "FLOR", "GATO", "HOLA", "ISLA", "JUGO", "LUNA",
-  "MANO", "NIÑO", "OSO", "PAZ", "QUESO", "ROSA", "SOL", "TE", "UNO", "VIDA",
-  "AGUA", "BARCO", "CIELO", "DULCE", "ESTRELLA", "FUEGO", "GUITARRA", "HIELO",
-  "IGLESIA", "JARDIN", "KIWI", "LIMON", "MONTAÑA", "NUBE", "OCEANO", "PALMA",
-  "QUESADILLA", "RATON", "SILLA", "TIGRE", "UVA", "VACA", "WIFI", "XILOFONO",
-  "YOGUR", "ZAPATO", "ABRAZO", "CORAZON", "FELIZ", "FAMILIA", "AMIGO", "NOVIO",
-  "NOVIA", "PAREJA", "BODA", "REGALO", "FLORES", "CENA", "BESOS", "CARIÑO",
-  "TEAMO", "BELLA", "GUAPO", "LINDA", "HERMOSA", "DIVINA", "ENCANTO", "SUEÑO",
-  "FUTURO", "HOGAR", "NIÑOS", "PERRO", "GATO", "PLAYA", "VIAJE", "MUSICA",
-  "BAILE", "CANTO", "RISA", "ALEgria", "SUERTE", "EXITO", "META", "LOGRO"
-];
-
+// ═══════════════════════════════════════════════
+// BAUL SECTION — embedded in Perfil
+// ═══════════════════════════════════════════════
 function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) {
   const nameA = user?.names ? user.names.split("&")[0].trim() : "Panda A";
   const nameB = user?.names ? user.names.split("&")[1]?.trim() || "Panda B" : "Panda B";
@@ -5340,7 +5418,6 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
   const [showMForm, setShowMForm] = useState(false);
   const [gText, setGText] = useState(""); const [gWho, setGWho] = useState("A");
   const [mTitle, setMTitle] = useState(""); const [mText, setMText] = useState("");
-  const [showAllModal, setShowAllModal] = useState(false);
 
   const getEntryTime = (entry) => {
     if (entry?.createdAt?.toDate) return entry.createdAt.toDate().getTime();
@@ -5353,9 +5430,6 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
 
   const submitG = () => { if (!gText.trim()) return; onAddGratitud({ text:gText.trim() }); setGText(""); setShowGForm(false); };
   const submitM = () => { if (!mTitle.trim()||!mText.trim()) return; onAddMomento({ title:mTitle.trim(), text:mText.trim() }); setMTitle(""); setMText(""); setShowMForm(false); };
-
-  const allGratitud = [...gratitud].sort((a, b) => getEntryTime(b) - getEntryTime(a));
-  const allMomentos = [...momentos].sort((a, b) => getEntryTime(b) - getEntryTime(a));
 
   return (
     <div style={{ background:C.white, borderRadius:20, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}`, overflow:"hidden" }}>
@@ -5394,11 +5468,7 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
                   <div style={{ fontSize:"0.86rem", color:C.inkM, lineHeight:1.6 }}>{g.text}</div>
                 </div>
               ))}
-            {gratitud.length > 3 && (
-              <button onClick={() => setShowAllModal(true)} style={{ width:"100%", marginTop:8, padding:"10px", background:C.cream, border:`1.5px solid ${C.border}`, borderRadius:12, fontFamily:"'Fredoka One',cursive", fontSize:"0.85rem", color:C.dark, cursor:"pointer" }}>
-                Ver todas ({gratitud.length})
-              </button>
-            )}
+            {gratitud.length > 3 && <div style={{ textAlign:"center", fontSize:"0.78rem", color:C.inkL, fontWeight:700, marginTop:4 }}>+{gratitud.length-3} más</div>}
           </>
         )}
 
@@ -5422,57 +5492,10 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
                   <div style={{ fontSize:"0.85rem", color:C.inkM, lineHeight:1.65 }}>{m.text}</div>
                 </div>
               ))}
-            {momentos.length > 3 && (
-              <button onClick={() => setShowAllModal(true)} style={{ width:"100%", marginTop:8, padding:"10px", background:C.cream, border:`1.5px solid ${C.border}`, borderRadius:12, fontFamily:"'Fredoka One',cursive", fontSize:"0.85rem", color:C.dark, cursor:"pointer" }}>
-                Ver todos ({momentos.length})
-              </button>
-            )}
+            {momentos.length > 3 && <div style={{ textAlign:"center", fontSize:"0.78rem", color:C.inkL, fontWeight:700, marginTop:4 }}>+{momentos.length-3} más</div>}
           </>
         )}
       </div>
-
-      {/* Modal para ver todos */}
-      {showAllModal && (
-        <div style={{ position:"fixed", inset:0, background:"rgba(15,25,15,0.65)", zIndex:6000, display:"flex", alignItems:"flex-end" }} onClick={() => setShowAllModal(false)}>
-          <div onClick={e => e.stopPropagation()} style={{ background:C.sandL, borderRadius:"22px 22px 0 0", width:"100%", maxHeight:"85vh", overflowY:"auto" }}>
-            <div style={{ background:C.dark, padding:"16px 18px 18px", borderRadius:"22px 22px 0 0" }}>
-              <div style={{ width:34, height:5, background:"rgba(255,255,255,0.2)", borderRadius:50, margin:"0 auto 12px" }}/>
-              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.2rem", color:C.cream2 }}>
-                {activeTab === "gratitud" ? "💛 Todas las gratitudes" : "✨ Todos los momentos"}
-              </div>
-              <div style={{ fontSize:"0.75rem", color:`${C.cream}88`, marginTop:3 }}>
-                {activeTab === "gratitud" ? `${allGratitud.length} entradas` : `${allMomentos.length} momentos`}
-              </div>
-            </div>
-            <div style={{ padding:"14px 16px 32px" }}>
-              {activeTab === "gratitud" ? (
-                allGratitud.map((g,i) => (
-                  <div key={g.id||i} style={{ background:"#fffde8", borderRadius:12, padding:"12px 14px", marginBottom:10, border:"1px solid #e8d84030" }}>
-                    <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
-                      <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.85rem", color:C.dark }}>🐼 {g.authorName || g.name || "Tú"}</div>
-                      <div style={{ fontSize:"0.7rem", color:C.inkL, fontWeight:700 }}>{g.date}</div>
-                    </div>
-                    <div style={{ fontSize:"0.9rem", color:C.inkM, lineHeight:1.6 }}>{g.text}</div>
-                  </div>
-                ))
-              ) : (
-                allMomentos.map((m,i) => (
-                  <div key={m.id||i} style={{ background:"#f8f0ff", borderRadius:12, padding:"12px 14px", marginBottom:10, border:`1px solid #c8a8f830` }}>
-                    <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
-                      <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", color:C.dark }}>✨ {m.title}</div>
-                      <div style={{ fontSize:"0.7rem", color:C.inkL, fontWeight:700 }}>{m.date}</div>
-                    </div>
-                    <div style={{ fontSize:"0.88rem", color:C.inkM, lineHeight:1.65 }}>{m.text}</div>
-                  </div>
-                ))
-              )}
-              <button onClick={() => setShowAllModal(false)} style={{ width:"100%", marginTop:10, padding:"12px", background:C.dark, color:C.cream2, border:"none", borderRadius:14, fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", cursor:"pointer" }}>
-                Cerrar ✕
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
