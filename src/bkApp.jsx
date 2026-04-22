@@ -2738,7 +2738,7 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
 
 
 // CONOCETE
-function Conocete({ conoce, onSave, user }) {
+function Conocete({ conoce, onSave, onResetQuiz, user }) {
   const { nameA, nameB } = getCoupleNames(user);
   const myRole = user?.isOwner !== false ? "owner" : "partner";
   const partnerRole = myRole === "owner" ? "partner" : "owner";
@@ -2854,7 +2854,7 @@ function Conocete({ conoce, onSave, user }) {
         })}
       </div>
       <div style={{ margin: "0 14px 0" }}>
-        <Cuestionarios conoce={conoce} onSave={onSave} user={user} />
+        <Cuestionarios conoce={conoce} onSave={onSave} onReset={onResetQuiz} user={user} />
       </div>
     </div>
   );
@@ -2882,12 +2882,137 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
       .map(item => ({ item, entry: burbuja[item.id] || {} }))
   );
 
+  // Calcular notificaciones pendientes
+  const pendingNotifications = BURBUJA_SECTIONS.flatMap(sec =>
+    sec.items
+      .map(item => {
+        const entry = burbuja[item.id] || {};
+        const bothDone = !!entry.owner && !!entry.partner;
+        const hasPending = entry.status === "pending" && !!entry.proposalText;
+        const pendingByMe = hasPending && entry.proposalBy === myRole;
+        
+        if (bothDone && hasPending && !pendingByMe) {
+          return {
+            id: item.id,
+            question: item.q,
+            proposalText: entry.proposalText,
+            proposalBy: entry.proposalBy,
+            section: sec.title,
+          };
+        }
+        return null;
+      })
+      .filter(Boolean)
+  );
+
+  // Items donde falta que el usuario escriba su parte
+  const myPendingItems = BURBUJA_SECTIONS.flatMap(sec =>
+    sec.items
+      .map(item => {
+        const entry = burbuja[item.id] || {};
+        const myText = entry[myRole];
+        const partnerText = entry[partnerRole];
+        
+        if (!myText && partnerText) {
+          return {
+            id: item.id,
+            question: item.q,
+            section: sec.title,
+          };
+        }
+        return null;
+      })
+      .filter(Boolean)
+  );
+
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
       <div style={{ background: C.olive, padding: "48px 20px 24px", textAlign: "center" }}>
         <h1 style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.9rem", color: C.cream2, margin: 0 }}>La Burbuja</h1>
         <p style={{ color: `${C.cream}88`, fontSize: "0.86rem", fontWeight: 600, margin: "4px 0 0" }}>Sus reglas, acuerdos y mundo compartido · +10 bambú c/u</p>
       </div>
+
+      {/* SECCIÓN DE NOTIFICACIONES */}
+      {(pendingNotifications.length > 0 || myPendingItems.length > 0) && (
+        <div style={{ margin: "14px 14px 8px" }}>
+          <div style={{ background: C.white, borderRadius: 18, padding: 16, border: `1.5px solid ${C.border}`, boxShadow: `0 3px 0 ${C.border}` }}>
+            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark, marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}>
+              🔔 Notificaciones
+              {(pendingNotifications.length + myPendingItems.length) > 0 && (
+                <span style={{ background: C.rose, color: C.white, borderRadius: 999, padding: "2px 8px", fontSize: "0.7rem" }}>
+                  {pendingNotifications.length + myPendingItems.length}
+                </span>
+              )}
+            </div>
+
+            {/* Propuestas pendientes de aprobación */}
+            {pendingNotifications.map((notif) => (
+              <div key={notif.id} style={{ background: "#fff8e0", borderRadius: 12, padding: 12, marginBottom: 10, border: "1.5px solid #f0d040" }}>
+                <div style={{ fontSize: "0.7rem", fontWeight: 800, color: C.inkL, marginBottom: 4 }}>
+                  📨 PROPUESTA DE {notif.proposalBy === "owner" ? nameA.toUpperCase() : nameB.toUpperCase()}
+                </div>
+                <div style={{ fontSize: "0.8rem", fontWeight: 700, color: C.dark, marginBottom: 6 }}>
+                  {notif.question}
+                </div>
+                <div style={{ fontSize: "0.85rem", color: C.ink, lineHeight: 1.5, background: C.white, padding: 10, borderRadius: 8, marginBottom: 10 }}>
+                  "{notif.proposalText}"
+                </div>
+                <button
+                  onClick={() => {
+                    setBurbujaTab("negociacion");
+                    setOpen(p => ({ ...p, [BURBUJA_SECTIONS.find(s => s.items.some(i => i.id === notif.id))?.id]: true }));
+                  }}
+                  style={{
+                    width: "100%",
+                    background: C.olive,
+                    color: C.cream2,
+                    border: "none",
+                    borderRadius: 10,
+                    padding: "10px",
+                    fontFamily: "'Fredoka One',cursive",
+                    fontSize: "0.85rem",
+                    cursor: "pointer",
+                  }}
+                >
+                  Responder ahora →
+                </button>
+              </div>
+            ))}
+
+            {/* Items donde falta mi respuesta */}
+            {myPendingItems.map((item) => (
+              <div key={item.id} style={{ background: "#e8f4ff", borderRadius: 12, padding: 12, marginBottom: 10, border: "1.5px solid #90c8f0" }}>
+                <div style={{ fontSize: "0.7rem", fontWeight: 800, color: C.inkL, marginBottom: 4 }}>
+                  ✏️ TE ESPERAN
+                </div>
+                <div style={{ fontSize: "0.85rem", color: C.dark, marginBottom: 8 }}>
+                  Tu pareja ya respondió: "{item.question}"
+                </div>
+                <button
+                  onClick={() => {
+                    setBurbujaTab("negociacion");
+                    setOpen(p => ({ ...p, [BURBUJA_SECTIONS.find(s => s.items.some(i => i.id === item.id))?.id]: true }));
+                  }}
+                  style={{
+                    width: "100%",
+                    background: C.dark,
+                    color: C.cream2,
+                    border: "none",
+                    borderRadius: 10,
+                    padding: "10px",
+                    fontFamily: "'Fredoka One',cursive",
+                    fontSize: "0.85rem",
+                    cursor: "pointer",
+                  }}
+                >
+                  Escribir mi parte →
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div style={{ background: C.cream, borderRadius: 18, margin: "14px 14px 8px", padding: 16, border: `1.5px solid ${C.border}`, boxShadow: `0 3px 0 ${C.border}` }}>
         <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.05rem", color: C.dark, marginBottom: 5 }}>🫧 ¿Qué es la Burbuja?</div>
         <div style={{ fontSize: "0.85rem", color: C.inkM, lineHeight: 1.7 }}>
@@ -3295,55 +3420,66 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
 
   return (
     <div style={{ margin: "0 14px 12px" }}>
-      {/* Botón para abrir el modal */}
-      <button
-        onClick={handleOpen}
+      {/* Área rectangular unificada */}
+      <div
         style={{
-          width: "100%",
           background: "linear-gradient(130deg, #f7f1ff 0%, #eee3ff 100%)",
-          color: C.dark,
           border: `1.5px solid ${C.border}`,
           borderRadius: 14,
           padding: "14px 16px",
-          fontFamily: "'Fredoka One',cursive",
-          fontSize: "1rem",
-          cursor: "pointer",
           boxShadow: `0 3px 0 ${C.border}`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 8,
         }}
       >
-        <span>💡 Consejo del Día · +15 bambú</span>
-        <span style={{ fontSize: "0.9rem" }}>🐼</span>
-      </button>
-
-      {/* Botón para ver favoritos (solo si hay favoritos) */}
-      {favs.length > 0 && (
+        {/* Botón principal - Consejo del Día */}
         <button
-          onClick={() => setShowFavs(true)}
+          onClick={handleOpen}
           style={{
             width: "100%",
-            marginTop: 8,
-            background: C.cream,
-            color: C.dark,
-            border: `1.5px solid ${C.border}`,
+            background: C.dark,
+            color: C.cream2,
+            border: "none",
             borderRadius: 12,
-            padding: "10px 14px",
+            padding: "14px 16px",
             fontFamily: "'Fredoka One',cursive",
-            fontSize: "0.85rem",
+            fontSize: "1rem",
             cursor: "pointer",
+            boxShadow: "0 3px 0 rgba(0,0,0,0.18)",
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
-            gap: 6,
+            justifyContent: "space-between",
+            gap: 8,
+            marginBottom: favs.length > 0 ? 10 : 0,
           }}
         >
-          <span>💜</span>
-          <span>Ver {favs.length} favorito{favs.length !== 1 ? 's' : ''}</span>
+          <span>💡 Consejo del Día · +15 bambú</span>
+          <span style={{ fontSize: "0.9rem" }}>🐼</span>
         </button>
-      )}
+
+        {/* Botón para ver favoritos (integrado en el mismo área) */}
+        {favs.length > 0 && (
+          <button
+            onClick={() => setShowFavs(true)}
+            style={{
+              width: "100%",
+              background: C.white,
+              color: C.dark,
+              border: `1.5px solid ${C.border}`,
+              borderRadius: 10,
+              padding: "10px 14px",
+              fontFamily: "'Fredoka One',cursive",
+              fontSize: "0.85rem",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+            }}
+          >
+            <span>💜</span>
+            <span>Ver {favs.length} favorito{favs.length !== 1 ? 's' : ''}</span>
+          </button>
+        )}
+      </div>
 
       {/* Modal Pop-up del Consejo */}
       {open && (
@@ -5164,6 +5300,32 @@ export default function App() {
     }
   };
 
+  const resetQuiz = async () => {
+    // Reset all quiz-related entries from conoce
+    const quizPrefixes = ["quizFortalezas", "quizValores", "quizSternberg"];
+    const newConoce = { ...conoce };
+    
+    // Remove all quiz-related keys
+    Object.keys(newConoce).forEach(key => {
+      if (quizPrefixes.some(prefix => key.startsWith(prefix))) {
+        delete newConoce[key];
+      }
+    });
+    
+    setConoce(newConoce);
+    
+    if (user?.code && !user?.isGuest) {
+      // Reset in Firebase
+      for (const prefix of quizPrefixes) {
+        for (let i = 0; i < 10; i++) {
+          await fbSaveConoce(user.code, `${prefix}-${i}`, { owner: "", partner: "", updatedAt: new Date().toISOString() }).catch(() => {});
+        }
+      }
+    }
+    
+    toast("Tests reiniciados 🔄 Pueden volver a responder");
+  };
+
   const saveBurbujaMine = async (id, myText) => {
     const clean = (myText || "").trim();
     if (!clean) return;
@@ -5433,7 +5595,7 @@ export default function App() {
       <div style={{ paddingBottom:72 }}>
         {tab==="jardin" && <Jardin bamboo={bamboo} happiness={happiness} water={water} garden={garden} accessories={accessories} mochiHappy={mochiHappy} pandaBubble={pandaBubble} onPet={petMochi} onBuy={buyItem} onWater={waterGarden} onBuyAccessory={buyAccessory}/>}
         {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson}/>}
-        {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user}/>}
+        {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} onResetQuiz={resetQuiz} user={user}/>}
         {tab==="burbuja" && <Burbuja burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} user={user}/>}
         {tab==="perfil" && <Perfil user={user} bamboo={bamboo} garden={garden} accessories={accessories} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} lessonsDone={lessonsDone} coupleInfo={coupleInfo} streakInfo={streakData} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} onSendMessage={sendMsg} onClaimDailyTip={claimDailyTip}/>} 
       </div>
@@ -5484,6 +5646,7 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
   const [showMForm, setShowMForm] = useState(false);
   const [gText, setGText] = useState(""); const [gWho, setGWho] = useState("A");
   const [mTitle, setMTitle] = useState(""); const [mText, setMText] = useState("");
+  const [showAllHistory, setShowAllHistory] = useState(false);
 
   const getEntryTime = (entry) => {
     if (entry?.createdAt?.toDate) return entry.createdAt.toDate().getTime();
@@ -5493,9 +5656,79 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
   };
   const recentGratitud = [...gratitud].sort((a, b) => getEntryTime(b) - getEntryTime(a)).slice(0, 3);
   const recentMomentos = [...momentos].sort((a, b) => getEntryTime(b) - getEntryTime(a)).slice(0, 3);
+  const allGratitud = [...gratitud].sort((a, b) => getEntryTime(b) - getEntryTime(a));
+  const allMomentos = [...momentos].sort((a, b) => getEntryTime(b) - getEntryTime(a));
 
   const submitG = () => { if (!gText.trim()) return; onAddGratitud({ text:gText.trim() }); setGText(""); setShowGForm(false); };
   const submitM = () => { if (!mTitle.trim()||!mText.trim()) return; onAddMomento({ title:mTitle.trim(), text:mText.trim() }); setMTitle(""); setMText(""); setShowMForm(false); };
+
+  // Modal de historial completo
+  if (showAllHistory) {
+    return (
+      <div style={{ background:C.white, borderRadius:20, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}`, overflow:"hidden" }}>
+        {/* Tab bar */}
+        <div style={{ display:"flex", background:C.sandL, borderBottom:`1.5px solid ${C.border}` }}>
+          {[["gratitud","💛 Gratitud"],["momentos","✨ Momentos"]].map(([id,label]) => (
+            <div key={id} onClick={() => setActiveTab(id)}
+              style={{ flex:1, padding:"11px 0", textAlign:"center", fontFamily:"'Fredoka One',cursive",
+                fontSize:"0.88rem", cursor:"pointer",
+                background: activeTab===id ? C.white : "transparent",
+                color: activeTab===id ? C.dark : C.inkL,
+                borderBottom: activeTab===id ? `2.5px solid ${C.dark}` : "2.5px solid transparent",
+                transition:"all 0.15s" }}>
+              {label}
+            </div>
+          ))}
+        </div>
+
+        <div style={{ padding:16, maxHeight:400, overflowY:"auto" }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark }}>
+              {activeTab === "gratitud" ? `💛 Historial de gratitud (${allGratitud.length})` : `✨ Historial de momentos (${allMomentos.length})`}
+            </div>
+            <button 
+              onClick={() => setShowAllHistory(false)}
+              style={{ background:C.sand, border:`1.5px solid ${C.border}`, borderRadius:8, padding:"6px 12px", fontSize:"0.8rem", cursor:"pointer", color:C.inkM }}
+            >
+              ✕ Cerrar
+            </button>
+          </div>
+
+          {activeTab === "gratitud" && (
+            <>
+              {allGratitud.length === 0
+                ? <div style={{ textAlign:"center", padding:"20px 0", color:C.inkL, fontSize:"0.84rem" }}>💛 Todavía no hay entradas</div>
+                : allGratitud.map((g,i) => (
+                  <div key={g.id||i} style={{ background:"#fffde8", borderRadius:12, padding:"10px 14px", marginBottom:8, border:"1px solid #e8d84030" }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
+                      <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.8rem", color:C.dark }}>🐼 {g.authorName || g.name || "Tú"}</div>
+                      <div style={{ fontSize:"0.68rem", color:C.inkL, fontWeight:700 }}>{g.date}</div>
+                    </div>
+                    <div style={{ fontSize:"0.86rem", color:C.inkM, lineHeight:1.6 }}>{g.text}</div>
+                  </div>
+                ))}
+            </>
+          )}
+
+          {activeTab === "momentos" && (
+            <>
+              {allMomentos.length === 0
+                ? <div style={{ textAlign:"center", padding:"20px 0", color:C.inkL, fontSize:"0.84rem" }}>✨ Todavía no hay momentos guardados</div>
+                : allMomentos.map((m,i) => (
+                  <div key={m.id||i} style={{ background:"#f8f0ff", borderRadius:12, padding:"10px 14px", marginBottom:8, border:`1px solid #c8a8f830` }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
+                      <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.88rem", color:C.dark }}>✨ {m.title}</div>
+                      <div style={{ fontSize:"0.68rem", color:C.inkL, fontWeight:700 }}>{m.date}</div>
+                    </div>
+                    <div style={{ fontSize:"0.85rem", color:C.inkM, lineHeight:1.65 }}>{m.text}</div>
+                  </div>
+                ))}
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ background:C.white, borderRadius:20, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}`, overflow:"hidden" }}>
@@ -5534,7 +5767,14 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
                   <div style={{ fontSize:"0.86rem", color:C.inkM, lineHeight:1.6 }}>{g.text}</div>
                 </div>
               ))}
-            {gratitud.length > 3 && <div style={{ textAlign:"center", fontSize:"0.78rem", color:C.inkL, fontWeight:700, marginTop:4 }}>+{gratitud.length-3} más</div>}
+            {gratitud.length > 3 && (
+              <button 
+                onClick={() => setShowAllHistory(true)}
+                style={{ width:"100%", marginTop:8, background:C.sandL, border:`1.5px solid ${C.border}`, borderRadius:10, padding:"10px", fontSize:"0.8rem", fontWeight:800, color:C.dark, cursor:"pointer" }}
+              >
+                📜 Ver historial completo ({gratitud.length} entradas)
+              </button>
+            )}
           </>
         )}
 
@@ -5558,7 +5798,14 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
                   <div style={{ fontSize:"0.85rem", color:C.inkM, lineHeight:1.65 }}>{m.text}</div>
                 </div>
               ))}
-            {momentos.length > 3 && <div style={{ textAlign:"center", fontSize:"0.78rem", color:C.inkL, fontWeight:700, marginTop:4 }}>+{momentos.length-3} más</div>}
+            {momentos.length > 3 && (
+              <button 
+                onClick={() => setShowAllHistory(true)}
+                style={{ width:"100%", marginTop:8, background:C.sandL, border:`1.5px solid ${C.border}`, borderRadius:10, padding:"10px", fontSize:"0.8rem", fontWeight:800, color:C.dark, cursor:"pointer" }}
+              >
+                📜 Ver historial completo ({momentos.length} momentos)
+              </button>
+            )}
           </>
         )}
       </div>

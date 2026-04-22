@@ -1,0 +1,51 @@
+POLÍTICA DE PRIVACIDAD - MOCHI
+================================
+
+Última actualización: 21 de abril de 2026
+
+1. DATOS QUE RECOPILAMOS
+------------------------
+• Correo electrónico (para autenticación)
+• Nombre de usuario
+• Mensajes entre parejas (encriptados)
+• Progreso del jardín virtual
+• Respuestas a cuestionarios
+
+2. CÓMO USAMOS TUS DATOS
+------------------------
+• Sincronización entre dispositivos
+• Funcionamiento offline
+• Mejoras de la app
+• Notificaciones (opcionales)
+
+3. ALMACENAMIENTO
+-----------------
+• Firebase (Google Cloud) - servidores seguros
+• Dispositivo local - datos encriptados
+• Conexiones HTTPS/TLS en todo momento
+
+4. COMPARTIR DATOS
+------------------
+❌ NO vendemos datos a terceros
+❌ NO compartimos información personal
+✅ Solo si es requerido por ley
+
+5. TUS DERECHOS
+---------------
+• Acceder a tus datos
+• Eliminar tu cuenta
+• Exportar información
+• Corrección de datos
+
+6. SEGURIDAD
+------------
+• Encriptación de extremo a extremo
+• Autenticación segura
+• Acceso restringido
+• Eliminación en 30 días tras cerrar cuenta
+
+7. CONTACTO
+-----------
+📧 soporte@mochi.app
+
+Al usar Mochi aceptas esta política.

@@ -204,7 +204,7 @@ export function getQuizAdviceFromConoce(conoce, role) {
   return { complete, tips, progress: { answered: totalAnswered, total: totalNeeded } };
 }
 
-export default function Cuestionarios({ conoce, onSave, onQuizComplete, user }) {
+export default function Cuestionarios({ conoce, onSave, onQuizComplete, onReset, user }) {
   const myRole = user?.isOwner !== false ? "owner" : "partner";
   const partnerRole = myRole === "owner" ? "partner" : "owner";
   const nameParts = String(user?.names || "").split("&").map((s) => s.trim()).filter(Boolean);
@@ -393,7 +393,30 @@ export default function Cuestionarios({ conoce, onSave, onQuizComplete, user }) 
           </div>
         ))}
 
-        <div style={{ fontSize: "0.72rem", color: "#5f4d7f" }}>
+        {/* Botón para rehacer los tests */}
+        <button
+          onClick={() => {
+            if (confirm("¿Quieren rehacer los tests? Se borrarán las respuestas actuales.")) {
+              onReset?.();
+            }
+          }}
+          style={{
+            width: "100%",
+            marginTop: 8,
+            background: "#6f56b8",
+            color: "#f8f3ff",
+            border: "none",
+            borderRadius: 10,
+            padding: "10px 14px",
+            fontSize: "0.8rem",
+            fontWeight: 800,
+            cursor: "pointer",
+          }}
+        >
+          🔄 Rehacer tests
+        </button>
+
+        <div style={{ fontSize: "0.72rem", color: "#5f4d7f", marginTop: 8 }}>
           Aquí se muestran los resultados y consejos de los tests, dentro de Conócete.
         </div>
       </div>

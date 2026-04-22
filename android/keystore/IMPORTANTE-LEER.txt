@@ -1,0 +1,26 @@
+🐼 MOCHI - INFORMACIÓN DEL KEYSTORE
+===================================
+
+⚠️  GUARDA ESTE ARCHIVO EN UN LUGAR SEGURO
+⚠️  SIN ESTOS DATOS NO PODRÁS ACTUALIZAR TU APP
+
+Archivo del keystore: mochi-release-key.jks
+Alias de la clave: mochi
+Contraseña del almacén: MochiPanda2026!
+Contraseña de la clave: MochiPanda2026!
+
+Ubicación: android/keystore/mochi-release-key.jks
+
+¿Qué es esto?
+-------------
+Este keystore es la "firma digital" de tu app. Google Play usa esto para
+verificar que tú eres el dueño de la app. Si pierdes este archivo o las
+contraseñas, NO podrás actualizar tu app nunca más.
+
+Recomendaciones:
+----------------
+1. Haz copias de seguridad en múltiples lugares (USB, nube, etc.)
+2. No compartas estas contraseñas
+3. Guarda este archivo junto con el .jks
+
+Fecha de creación: Sun Apr 19 20:56:41 CST 2026
