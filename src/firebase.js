@@ -159,35 +159,38 @@ export const fbCreateCodeOwner = async (code, data) => {
 };
 
 // Claim partner slot atomically, preventing accidental overwrite by a third account.
+// Note: Using getDoc + setDoc instead of runTransaction to avoid permission issues
+// with unauthenticated users trying to join.
 export const fbClaimPartnerCode = async (code, partner) => {
   const ref = doc(db, "codes", code);
-  return runTransaction(db, async (tx) => {
-    const snap = await tx.get(ref);
-    if (!snap.exists()) throw new Error("CODE_NOT_FOUND");
+  
+  // First, read the document (public read is allowed)
+  const snap = await getDoc(ref);
+  if (!snap.exists()) throw new Error("CODE_NOT_FOUND");
 
-    const data = snap.data() || {};
-    if (data.partnerUid && data.partnerUid !== partner.partnerUid) {
-      throw new Error("CODE_ALREADY_LINKED");
-    }
+  const data = snap.data() || {};
+  if (data.partnerUid && data.partnerUid !== partner.partnerUid) {
+    throw new Error("CODE_ALREADY_LINKED");
+  }
 
-    const ownerName = String(data.names || "?").split(" & ")[0].trim() || "?";
-    const partnerName = String(partner.partnerName || "?").trim() || "?";
-    const names = `${ownerName} & ${partnerName}`;
+  const ownerName = String(data.names || "?").split(" & ")[0].trim() || "?";
+  const partnerName = String(partner.partnerName || "?").trim() || "?";
+  const names = `${ownerName} & ${partnerName}`;
 
-    tx.set(ref, {
-      names,
-      partnerEmail: partner.partnerEmail,
-      partnerUid: partner.partnerUid,
-      updatedAt: serverTimestamp(),
-    }, { merge: true });
+  // Then, write the update (this will be allowed by the rules for new partners)
+  await setDoc(ref, {
+    names,
+    partnerEmail: partner.partnerEmail,
+    partnerUid: partner.partnerUid,
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
 
-    return {
-      ...data,
-      names,
-      ownerUid: data.ownerUid || null,
-      since: data.since || "Juntos desde hoy",
-    };
-  });
+  return {
+    ...data,
+    names,
+    ownerUid: data.ownerUid || null,
+    since: data.since || "Juntos desde hoy",
+  };
 };
 
 // ─── PROGRESS ──────────────────────────────────────────

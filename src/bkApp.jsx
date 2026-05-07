@@ -4,7 +4,7 @@ import {
   fbDeleteCurrentUser,
   fbCleanupBeforeAccountDelete,
   fbSaveUser, fbGetUser,
-  fbGetCode, fbCreateCodeOwner, fbClaimPartnerCode, fbFindCodeByUid,
+  fbGetCode, fbListenCode, fbCreateCodeOwner, fbClaimPartnerCode, fbFindCodeByUid,
   fbSaveProgress, fbGetProgress,
   fbSendMessage, fbListenMessages,
   fbSaveTestAnswers, fbListenTest, fbResetTest,
@@ -2007,19 +2007,23 @@ function Login({ onLogin }) {
   const normalizeEmail = (value) => String(value || "").trim().toLowerCase();
 
   const ensureAuthReady = async (firebaseUser) => {
+    // Force token refresh and wait longer for auth to propagate
     await firebaseUser?.getIdToken(true).catch(() => {});
-    await wait(350);
+    await wait(800);
   };
 
   const retryFirestore = async (fn) => {
     let lastErr;
-    for (const delay of [0, 500, 1000]) {
+    // Increased delays and more retries for permission errors
+    for (const delay of [0, 500, 1000, 2000]) {
       if (delay) await wait(delay);
       try {
         return await fn();
       } catch (e) {
         lastErr = e;
+        // Only retry on permission errors
         if (!isPermissionError(e)) throw e;
+        console.warn(`Permission error, retrying after ${delay}ms...`, e?.message);
       }
     }
     throw lastErr;
@@ -2144,10 +2148,11 @@ function Login({ onLogin }) {
       const names = claim.names || "Nosotros";
       const since = claim.since || "Juntos desde hoy";
       await retryFirestore(() => fbSaveUser(uid, { email: cleanPartnerEmail, names, code: cleanCode, since, isOwner: false }));
-      // Also update owner's user record with new names
-      if (claim.ownerUid) await retryFirestore(() => fbSaveUser(claim.ownerUid, { names }));
+      // Note: We don't update owner's user doc here because of Firestore rules.
+      // The owner will see the updated names through the code document listener.
       onLogin({ uid, email: cleanPartnerEmail, names, code: cleanCode, since, isOwner: false, isGuest: false }, true);
     } catch(e) {
+      console.error("Error en doJoin (primer intento):", { code: e?.code, message: e?.message, fullError: e });
       if (e.code === "auth/email-already-in-use") {
         // Account exists — try logging them in instead
         try {
@@ -2161,23 +2166,35 @@ function Login({ onLogin }) {
           }));
           const names2 = claim2.names || "Nosotros";
           await retryFirestore(() => fbSaveUser(uid2, { email: cleanPartnerEmail, names: names2, code: cleanCode, isOwner: false }));
-          if (claim2.ownerUid) await retryFirestore(() => fbSaveUser(claim2.ownerUid, { names: names2 }));
+          // Note: We don't update owner's user doc here because of Firestore rules.
+          // The owner will see the updated names through the code document listener.
           onLogin({ uid: uid2, email: cleanPartnerEmail, names: names2, code: cleanCode, since: claim2.since || "Juntos", isOwner: false, isGuest: false }, false);
           _pendingLocalAuth = false;
           setLoading(false); return;
         } catch(e2) {
           const code2 = e2?.code || "";
           const msg2 = String(e2?.message || "");
-          if (code2 === "auth/invalid-credential" || code2 === "auth/wrong-password") {
-            setErr("Ese correo ya existe. Verifica la contraseña para vincularlo.");
+          console.error("Error en vinculación (login existente):", { code: code2, message: msg2, fullError: e2 });
+          if (code2 === "auth/invalid-credential" || code2 === "auth/wrong-password" || code2 === "auth/user-mismatch") {
+            setErr("Ese correo ya existe. Verifica que la contraseña sea correcta para vincular la cuenta.");
           } else if (msg2.includes("CODE_ALREADY_LINKED")) {
             setErr("Ese código ya está vinculado con otra cuenta de pareja.");
           } else if (msg2.includes("CODE_NOT_FOUND")) {
             setErr("Código no encontrado — revisa que esté bien escrito");
           } else if (isPermissionError(e2)) {
-            setErr("No se pudo vincular la cuenta con ese código por permisos de Firebase.");
+            setErr("Firebase bloqueó el acceso (segundo intento). Código: " + (code2 || "unknown"));
+          } else if (code2 === "auth/user-not-found") {
+            setErr("No existe una cuenta con ese correo. Intenta crear una nueva cuenta.");
+          } else if (code2 === "auth/invalid-email") {
+            setErr("El formato del correo no es válido.");
+          } else if (code2 === "auth/network-request-failed") {
+            setErr("Error de red. Revisa tu conexión a internet.");
+          } else if (code2 === "auth/too-many-requests") {
+            setErr("Demasiados intentos. Espera unos minutos e intenta de nuevo.");
+          } else if (code2 === "auth/internal-error") {
+            setErr("Error interno de autenticación. Intenta de nuevo más tarde.");
           } else {
-            setErr(authErrMsg(e2, "No se pudo iniciar y vincular esta cuenta. Revisa correo, contraseña y código."));
+            setErr("Error al vincular: " + (msg2 || code2 || "error desconocido") + ". Revisa correo, contraseña y código.");
           }
           _pendingLocalAuth = false;
           setLoading(false); return;
@@ -2188,9 +2205,10 @@ function Login({ onLogin }) {
         setErr("La contraseña debe tener al menos 6 caracteres");
       } else if (isPermissionError(e)) {
         if (justCreated) await fbDeleteCurrentUser().catch(() => {});
-        setErr("Firebase bloqueó el acceso al código de pareja. Revisa Firestore Rules para la colección codes.");
+        setErr("Firebase bloqueó el acceso (primer intento). Código: " + (e?.code || "unknown") + " - " + String(e?.message || "").substring(0, 100));
       } else {
         const msg = String(e?.message || "");
+        console.error("Error en doJoin (registro inicial):", e?.code, msg, e);
         if (justCreated) await fbDeleteCurrentUser().catch(() => {});
         if (msg.includes("CODE_ALREADY_LINKED")) {
           setErr("Ese código ya está vinculado con otra cuenta de pareja.");
@@ -2302,6 +2320,8 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
   const [val, setVal] = useState("");
   const [sending, setSending] = useState(false);
   const [started, setStarted] = useState(false);
+  const [starting, setStarting] = useState(false);
+  const [error, setError] = useState(null);
   const messagesEndRef = useRef(null);
 
   const messages = session?.messages || [];
@@ -2334,24 +2354,48 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
   }, [messages.length]);
 
   const startSession = async () => {
+    setStarting(true);
+    setError(null);
+    
     if (isGuest || !user?.code) {
       // Local mode — just set session directly
       setSession({ messages: [], step: 0, totalSteps: ex.phases.length, done: false, starterRole: myRole });
       setStarted(true);
+      setStarting(false);
       return;
     }
+    
     try {
+      console.log("Iniciando sesión de ejercicio...", { code: user.code, exId: ex.id });
       await fbStartExSession(user.code, ex.id, ex.phases.length, myRole);
+      console.log("Sesión iniciada correctamente");
+      
+      // Notificar a la pareja
       fbSendNotif(user.code, {
         type: "ejercicio",
         msg: `${myName} inició "${ex.title}" — te toca continuar 🌿`,
         forUid: user?.isOwner !== false ? "partner" : "owner",
         fromUid: user.uid,
       }).catch(() => {});
+      
+      // El listener debería detectar la sesión y actualizar started automáticamente
+      // Pero por si acaso, esperamos un momento
+      setTimeout(() => {
+        if (!started) {
+          console.log("Forzando inicio local por timeout");
+          setSession({ messages: [], step: 0, totalSteps: ex.phases.length, done: false, starterRole: myRole });
+          setStarted(true);
+        }
+        setStarting(false);
+      }, 1500);
+      
     } catch(e) {
+      console.error("Error al iniciar sesión:", e);
+      setError("No se pudo iniciar el ejercicio. Intenta de nuevo.");
       // Fallback to local if Firebase fails
       setSession({ messages: [], step: 0, totalSteps: ex.phases.length, done: false, starterRole: myRole });
       setStarted(true);
+      setStarting(false);
     }
   };
 
@@ -2399,11 +2443,20 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
   if (!started) {
     return (
       <div style={{ textAlign:"center", padding:"20px 0" }}>
+        {error && (
+          <div style={{ background: "#ffe0e0", color: "#c05050", padding: "10px 14px", borderRadius: 10, marginBottom: 12, fontSize: "0.85rem" }}>
+            ⚠️ {error}
+          </div>
+        )}
         <div style={{ fontSize:"0.85rem", color:C.inkM, marginBottom:14 }}>
           Cualquiera puede empezar el ejercicio
         </div>
-        <Btn onClick={startSession} style={{ width:"100%" }}>Empezar ejercicio 🌿</Btn>
-        <div style={{ fontSize:"0.75rem", color:C.inkL, marginTop:8, textAlign:"center" }}>La pantalla se actualizará automáticamente ✨</div>
+        <Btn onClick={startSession} style={{ width:"100%" }} disabled={starting}>
+          {starting ? "Iniciando... 🌿" : "Empezar ejercicio 🌿"}
+        </Btn>
+        <div style={{ fontSize:"0.75rem", color:C.inkL, marginTop:8, textAlign:"center" }}>
+          {starting ? "Conectando con tu pareja..." : "La pantalla se actualizará automáticamente ✨"}
+        </div>
       </div>
     );
   }
@@ -3013,6 +3066,20 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
         </div>
       )}
 
+      {/* Banner de Confidencialidad y Privacidad */}
+      <div style={{ margin: "14px 14px 8px" }}>
+        <div style={{ background: "#f0f8ff", borderRadius: 12, padding: "12px 16px", border: `1.5px solid #90c8f0`, display: "flex", alignItems: "flex-start", gap: 10 }}>
+          <div style={{ fontSize: "1.2rem" }}>🔒</div>
+          <div>
+            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.85rem", color: C.dark, marginBottom: 3 }}>Tus datos son 100% confidenciales</div>
+            <div style={{ fontSize: "0.75rem", color: C.inkM, lineHeight: 1.5 }}>
+              Todas tus conversaciones, acuerdos y momentos compartidos son privados y solo visibles para ti y tu pareja. 
+              Nadie más tiene acceso a esta información. 🔐
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div style={{ background: C.cream, borderRadius: 18, margin: "14px 14px 8px", padding: 16, border: `1.5px solid ${C.border}`, boxShadow: `0 3px 0 ${C.border}` }}>
         <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.05rem", color: C.dark, marginBottom: 5 }}>🫧 ¿Qué es la Burbuja?</div>
         <div style={{ fontSize: "0.85rem", color: C.inkM, lineHeight: 1.7 }}>
@@ -3026,26 +3093,54 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
         </div>
       </div>
       <div style={{ display: "flex", gap: 8, margin: "0 14px 10px" }}>
-        {[ ["negociacion", "Negociación"], ["acuerdos", "Acuerdos hechos"] ].map(([id, label]) => (
-          <button
-            key={id}
-            onClick={() => setBurbujaTab(id)}
-            style={{
-              flex: 1,
-              borderRadius: 12,
-              padding: "10px 12px",
-              border: `1.5px solid ${burbujaTab === id ? C.dark : C.border}`,
-              background: burbujaTab === id ? C.dark : C.white,
-              color: burbujaTab === id ? C.cream2 : C.ink,
-              fontFamily: "'Fredoka One',cursive",
-              fontSize: "0.82rem",
-              cursor: "pointer",
-              boxShadow: burbujaTab === id ? "0 2px 0 rgba(0,0,0,0.18)" : `0 2px 0 ${C.border}`,
-            }}
-          >
-            {label}
-          </button>
-        ))}
+        {[ ["negociacion", "Negociación"], ["acuerdos", "Acuerdos hechos"] ].map(([id, label]) => {
+          // Count pending edits of approved agreements where partner needs to respond (not by me)
+          const pendingBadge = id === "acuerdos"
+            ? Object.values(burbuja).filter(e => e?.status === "pending" && e?.isEditOfApproved === true && e?.proposalBy && e.proposalBy !== myRole).length
+            : 0;
+          return (
+            <button
+              key={id}
+              onClick={() => setBurbujaTab(id)}
+              style={{
+                flex: 1,
+                borderRadius: 12,
+                padding: "10px 12px",
+                border: `1.5px solid ${burbujaTab === id ? C.dark : C.border}`,
+                background: burbujaTab === id ? C.dark : C.white,
+                color: burbujaTab === id ? C.cream2 : C.ink,
+                fontFamily: "'Fredoka One',cursive",
+                fontSize: "0.82rem",
+                cursor: "pointer",
+                boxShadow: burbujaTab === id ? "0 2px 0 rgba(0,0,0,0.18)" : `0 2px 0 ${C.border}`,
+                position: "relative",
+              }}
+            >
+              {label}
+              {pendingBadge > 0 && (
+                <span style={{
+                  position: "absolute",
+                  top: -6,
+                  right: -6,
+                  background: "#d94a5a",
+                  color: C.white,
+                  borderRadius: 999,
+                  minWidth: 20,
+                  height: 20,
+                  padding: "0 6px",
+                  fontSize: "0.7rem",
+                  fontWeight: 800,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  border: `2px solid ${C.sandL}`,
+                }}>
+                  {pendingBadge}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {burbujaTab === "negociacion" && BURBUJA_SECTIONS.map(sec => {
@@ -3147,71 +3242,161 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
         </div>
       )}
 
-      {burbujaTab === "acuerdos" && (
-        <div style={{ margin: "0 14px 10px" }}>
-          {!approvedItems.length ? (
-            <div style={{ background: C.white, borderRadius: 16, padding: 14, border: `1.5px solid ${C.border}` }}>
-              <div style={{ fontSize: "0.82rem", color: C.inkM, fontWeight: 700, lineHeight: 1.6 }}>
-                Aún no tienen acuerdos aprobados. Cuando aprueben uno, aparecerá aquí.
-              </div>
-            </div>
-          ) : approvedItems.map(({ item, entry }) => {
-            const proposalText = get(item.id, "proposalText");
-            const approvedText = entry.approvedText || entry.proposalText || "";
-            return (
-              <div key={item.id} style={{ background: C.white, borderRadius: 13, padding: 13, marginBottom: 9, borderLeft: `3px solid ${C.olive}`, border: `1.5px solid ${C.border}` }}>
-                <div style={{ fontSize: "0.72rem", fontWeight: 800, color: C.inkL, marginBottom: 5, letterSpacing: "0.3px" }}>PROMPT</div>
-                <div style={{ fontSize: "0.82rem", fontWeight: 800, color: C.rose, marginBottom: 7 }}>{item.q}</div>
-                <div style={{ fontSize: "0.72rem", fontWeight: 800, color: C.olive, marginBottom: 3, letterSpacing: "0.3px" }}>ACUERDO</div>
-                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: C.ink, lineHeight: 1.6 }}>
-                  {approvedText}
-                </div>
+      {burbujaTab === "acuerdos" && (() => {
+        // Pending edits of previously-approved agreements (split top/bottom)
+        const pendingEdits = BURBUJA_SECTIONS.flatMap(sec =>
+          sec.items
+            .filter(item => {
+              const e = burbuja[item.id] || {};
+              return e.status === "pending" && e.isEditOfApproved === true && !!e.proposalText;
+            })
+            .map(item => ({ item, entry: burbuja[item.id] || {} }))
+        );
+        const onlyApproved = approvedItems.filter(({ item }) => {
+          const e = burbuja[item.id] || {};
+          return !(e.status === "pending" && e.isEditOfApproved === true);
+        });
 
-                {!editingApproved[item.id] ? (
-                  <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
-                    <Btn
-                      onClick={() => {
-                        set_(item.id, "proposalText", approvedText);
-                        setEditingApproved(p => ({ ...p, [item.id]: true }));
-                      }}
-                      variant="sand"
-                      style={{ padding: "8px 12px", fontSize: "0.8rem" }}
-                    >
-                      Editar acuerdo
-                    </Btn>
+        return (
+          <div style={{ margin: "0 14px 10px" }}>
+            {/* PENDIENTES (arriba, con badge rojo) */}
+            {pendingEdits.length > 0 && (
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, padding: "0 2px" }}>
+                  <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark }}>⏳ Pendientes</div>
+                  <span style={{ background: "#d94a5a", color: C.white, borderRadius: 999, padding: "2px 9px", fontSize: "0.7rem", fontWeight: 800 }}>
+                    {pendingEdits.length}
+                  </span>
+                </div>
+                {pendingEdits.map(({ item, entry }) => {
+                  const byMe = entry.proposalBy === myRole;
+                  return (
+                    <div key={item.id} style={{ background: "#fff5f5", borderRadius: 13, padding: 13, marginBottom: 9, borderLeft: "3px solid #d94a5a", border: `1.5px solid #f0c4cc` }}>
+                      <div style={{ fontSize: "0.72rem", fontWeight: 800, color: "#9b3544", marginBottom: 5, letterSpacing: "0.3px" }}>
+                        {byMe ? "✏️ ESPERANDO A TU PAREJA" : `✏️ ${entry.proposalBy === "owner" ? nameA.toUpperCase() : nameB.toUpperCase()} PROPONE EDITAR`}
+                      </div>
+                      <div style={{ fontSize: "0.82rem", fontWeight: 800, color: C.dark, marginBottom: 8 }}>{item.q}</div>
+
+                      {entry.approvedText && (
+                        <>
+                          <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.inkL, marginBottom: 3, letterSpacing: "0.3px" }}>ACUERDO ACTUAL</div>
+                          <div style={{ fontSize: "0.8rem", color: C.inkM, lineHeight: 1.5, background: C.white, padding: 9, borderRadius: 8, marginBottom: 8, textDecoration: "line-through", opacity: 0.75 }}>
+                            {entry.approvedText}
+                          </div>
+                        </>
+                      )}
+
+                      <div style={{ fontSize: "0.68rem", fontWeight: 800, color: "#9b3544", marginBottom: 3, letterSpacing: "0.3px" }}>PROPUESTA NUEVA</div>
+                      <div style={{ fontSize: "0.85rem", color: C.ink, lineHeight: 1.5, background: C.white, padding: 10, borderRadius: 8, marginBottom: 10, border: "1px solid #f0c4cc" }}>
+                        "{entry.proposalText}"
+                      </div>
+
+                      {!byMe ? (
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <Btn
+                            onClick={() => onApprove(item.id)}
+                            variant="olive"
+                            style={{ flex: 1, padding: "10px 12px", fontSize: "0.85rem" }}
+                          >
+                            ✓ Aprobar edición
+                          </Btn>
+                          <Btn
+                            onClick={() => {
+                              set_(item.id, "proposalText", entry.proposalText);
+                              setBurbujaTab("negociacion");
+                              setOpen(p => ({ ...p, [BURBUJA_SECTIONS.find(s => s.items.some(i => i.id === item.id))?.id]: true }));
+                            }}
+                            variant="sand"
+                            style={{ flex: 1, padding: "10px 12px", fontSize: "0.85rem" }}
+                          >
+                            ↔ Contraoferta
+                          </Btn>
+                        </div>
+                      ) : (
+                        <div style={{ fontSize: "0.78rem", color: C.inkL, fontStyle: "italic", textAlign: "center", padding: "6px 0" }}>
+                          Esperando que tu pareja apruebe o contraoferte...
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* ACUERDOS HECHOS (abajo) */}
+            {pendingEdits.length > 0 && onlyApproved.length > 0 && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, padding: "0 2px" }}>
+                <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark }}>✅ Acuerdos hechos</div>
+                <span style={{ background: C.olive, color: C.white, borderRadius: 999, padding: "2px 9px", fontSize: "0.7rem", fontWeight: 800 }}>
+                  {onlyApproved.length}
+                </span>
+              </div>
+            )}
+
+            {!onlyApproved.length && !pendingEdits.length ? (
+              <div style={{ background: C.white, borderRadius: 16, padding: 14, border: `1.5px solid ${C.border}` }}>
+                <div style={{ fontSize: "0.82rem", color: C.inkM, fontWeight: 700, lineHeight: 1.6 }}>
+                  Aún no tienen acuerdos aprobados. Cuando aprueben uno, aparecerá aquí.
+                </div>
+              </div>
+            ) : onlyApproved.map(({ item, entry }) => {
+              const proposalText = get(item.id, "proposalText");
+              const approvedText = entry.approvedText || entry.proposalText || "";
+              return (
+                <div key={item.id} style={{ background: C.white, borderRadius: 13, padding: 13, marginBottom: 9, borderLeft: `3px solid ${C.olive}`, border: `1.5px solid ${C.border}` }}>
+                  <div style={{ fontSize: "0.72rem", fontWeight: 800, color: C.inkL, marginBottom: 5, letterSpacing: "0.3px" }}>PROMPT</div>
+                  <div style={{ fontSize: "0.82rem", fontWeight: 800, color: C.rose, marginBottom: 7 }}>{item.q}</div>
+                  <div style={{ fontSize: "0.72rem", fontWeight: 800, color: C.olive, marginBottom: 3, letterSpacing: "0.3px" }}>ACUERDO</div>
+                  <div style={{ fontSize: "0.85rem", fontWeight: 700, color: C.ink, lineHeight: 1.6 }}>
+                    {approvedText}
                   </div>
-                ) : (
-                  <div style={{ marginTop: 8 }}>
-                    <TA value={proposalText} onChange={v => set_(item.id, "proposalText", v)} placeholder="Escribe la nueva versión del acuerdo..." rows={2} />
-                    <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
+
+                  {!editingApproved[item.id] ? (
+                    <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
                       <Btn
                         onClick={() => {
-                          setEditingApproved(p => ({ ...p, [item.id]: false }));
                           set_(item.id, "proposalText", approvedText);
+                          setEditingApproved(p => ({ ...p, [item.id]: true }));
                         }}
-                        variant="ghost"
+                        variant="sand"
                         style={{ padding: "8px 12px", fontSize: "0.8rem" }}
                       >
-                        Cancelar
-                      </Btn>
-                      <Btn
-                        onClick={() => {
-                          onPropose(item.id, proposalText, true);
-                          setEditingApproved(p => ({ ...p, [item.id]: false }));
-                        }}
-                        variant="olive"
-                        style={{ padding: "8px 12px", fontSize: "0.8rem" }}
-                      >
-                        Enviar edición
+                        Editar acuerdo
                       </Btn>
                     </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
+                  ) : (
+                    <div style={{ marginTop: 8 }}>
+                      <TA value={proposalText} onChange={v => set_(item.id, "proposalText", v)} placeholder="Escribe la nueva versión del acuerdo..." rows={2} />
+                      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
+                        <Btn
+                          onClick={() => {
+                            setEditingApproved(p => ({ ...p, [item.id]: false }));
+                            set_(item.id, "proposalText", approvedText);
+                          }}
+                          variant="ghost"
+                          style={{ padding: "8px 12px", fontSize: "0.8rem" }}
+                        >
+                          Cancelar
+                        </Btn>
+                        <Btn
+                          onClick={() => {
+                            onPropose(item.id, proposalText, true);
+                            setEditingApproved(p => ({ ...p, [item.id]: false }));
+                          }}
+                          variant="olive"
+                          style={{ padding: "8px 12px", fontSize: "0.8rem" }}
+                        >
+                          Enviar edición
+                        </Btn>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
     </div>
   );
 }
@@ -3756,14 +3941,21 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
   const [connected, setConnected] = useState(false);
   useEffect(() => {
     if (user?.code && !user?.isGuest) {
-      fbGetCode(user.code).then(ci => {
-        setConnected(!!(ci?.partnerUid && ci?.ownerUid));
-      }).catch(() => {
-        // fallback: localStorage
-        const codes = ls.get("mochi_codes") || {};
-        const ci = codes[user.code];
-        setConnected(!!(ci?.partnerEmail && ci?.ownerEmail));
+      // Listen to code changes in real-time so when partner joins, it updates immediately
+      const unsub = fbListenCode(user.code, (ci) => {
+        if (ci) {
+          setConnected(!!(ci?.partnerUid && ci?.ownerUid));
+          // Also update localStorage cache
+          const codes = ls.get("mochi_codes") || {};
+          codes[user.code] = ci;
+          ls.set("mochi_codes", codes);
+        } else {
+          setConnected(false);
+        }
       });
+      return unsub;
+    } else {
+      setConnected(false);
     }
   }, [user?.code]);
 
@@ -4046,37 +4238,55 @@ const OB = [
   { 
     title: "Bienvenidos a Mochi 🐼", 
     body: "Un espacio privado para que su amor crezca. Basada en 40 años de investigación de parejas por el psicólogo John Gottman.",
-    icon: "🐼"
+    icon: "🐼",
+    demo: null
   },
   { 
-    title: "¿Cómo funciona?", 
-    body: "Cada día pueden: leer un consejo de pareja, hacer un ejercicio juntos, responder preguntas para conocerse mejor, y construir acuerdos en pareja.",
-    icon: "💡"
+    title: "Gana bambú con cada interacción 🌿", 
+    body: "Cada vez que interactúan, ganan bambú:",
+    icon: "🎋",
+    demo: "bamboo",
+    rewards: [
+      { emoji: "⭐", text: "Ejercicios", amount: "+15" },
+      { emoji: "💬", text: "Preguntas", amount: "+15" },
+      { emoji: "🫧", text: "Acuerdos", amount: "+10" },
+      { emoji: "📖", text: "Lecciones", amount: "+10" },
+    ]
   },
   { 
-    title: "Ganen bambú juntos 🌿", 
-    body: "Cada interacción les da bambú: +15 por ejercicios, +15 por preguntas, +10 por acuerdos, +10 por lecciones. ¡Usen el bambú para decorar su jardín!",
-    icon: "🌿"
+    title: "Compra en la tienda 🛒", 
+    body: "Usa tu bambú para comprar plantas, flores y accesorios para decorar su jardín juntos.",
+    icon: "🛍️",
+    demo: "shop",
+    shopItems: [
+      { emoji: "🌻", name: "Girasol", price: "50" },
+      { emoji: "🌹", name: "Rosa", price: "80" },
+      { emoji: "🎀", name: "Lazo", price: "30" },
+    ]
   },
   { 
     title: "Mantengan su racha 🔥", 
     body: "Conecten cada día para mantener su racha activa. Cuantos más días seguidos, más bambú extra ganan. ¡No dejen que se apague!",
-    icon: "🔥"
+    icon: "🔥",
+    demo: null
   },
   { 
     title: "Conéctense con un código", 
     body: "Uno de ustedes crea una cuenta y comparte el código con su pareja. Así sus respuestas, mensajes y progreso se sincronizan.",
-    icon: "🔗"
+    icon: "🔗",
+    demo: null
   },
   { 
-    title: "Todo queda entre ustedes", 
+    title: "Todo queda entre ustedes 🔒", 
     body: "Sus respuestas, mensajes y acuerdos son privados. Solo ustedes dos pueden verlos. Sin publicidad, sin vender datos.",
-    icon: "🔒"
+    icon: "🔒",
+    demo: null
   },
   { 
     title: "¡Listos para empezar!", 
     body: "Hagan su primer ejercicio juntos y siembren la primera semilla en su jardín. Su relación vale la inversión.",
-    icon: "🌱"
+    icon: "🌱",
+    demo: null
   },
 ];
 
@@ -4548,6 +4758,84 @@ function Onboarding({ onDone }) {
   const current = OB[i];
   const isLast = i === OB.length - 1;
 
+  // Renderizar demostración según el tipo
+  const renderDemo = () => {
+    if (current.demo === "bamboo" && current.rewards) {
+      return (
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            {current.rewards.map((reward, idx) => (
+              <div key={idx} style={{ 
+                background: C.cream, 
+                borderRadius: 12, 
+                padding: "12px 8px",
+                border: `1.5px solid ${C.border}`,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 4
+              }}>
+                <div style={{ fontSize: "1.5rem" }}>{reward.emoji}</div>
+                <div style={{ fontSize: "0.7rem", fontWeight: 700, color: C.inkM }}>{reward.text}</div>
+                <div style={{ fontSize: "0.9rem", fontWeight: 800, color: C.olive }}>{reward.amount} 🎋</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: 12, fontSize: "0.8rem", color: C.inkL, fontStyle: "italic" }}>
+            💡 Tip: Más interacciones = Más bambú = Más decoraciones
+          </div>
+        </div>
+      );
+    }
+    
+    if (current.demo === "shop" && current.shopItems) {
+      return (
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ 
+            background: C.white, 
+            borderRadius: 14, 
+            padding: 12,
+            border: `1.5px solid ${C.border}`,
+            boxShadow: `0 3px 0 ${C.border}`
+          }}>
+            <div style={{ fontSize: "0.75rem", fontWeight: 700, color: C.inkL, marginBottom: 10, textAlign: "left" }}>
+              🛒 Tienda de decoraciones
+            </div>
+            {current.shopItems.map((item, idx) => (
+              <div key={idx} style={{ 
+                display: "flex", 
+                alignItems: "center", 
+                justifyContent: "space-between",
+                padding: "8px 0",
+                borderBottom: idx < current.shopItems.length - 1 ? `1px solid ${C.border}` : "none"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: "1.3rem" }}>{item.emoji}</span>
+                  <span style={{ fontSize: "0.85rem", color: C.dark, fontWeight: 600 }}>{item.name}</span>
+                </div>
+                <div style={{ 
+                  background: C.olive, 
+                  color: C.white, 
+                  padding: "4px 10px", 
+                  borderRadius: 10,
+                  fontSize: "0.75rem",
+                  fontWeight: 700
+                }}>
+                  {item.price} 🎋
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: 12, fontSize: "0.8rem", color: C.inkL, fontStyle: "italic" }}>
+            🌟 Compra juntos y decora su jardín único
+          </div>
+        </div>
+      );
+    }
+    
+    return null;
+  };
+
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(180deg, #f8f4ff 0%, #f0e8ff 100%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "28px 20px" }}>
       <div style={{ textAlign: "center", maxWidth: 340, width: "100%" }}>
@@ -4562,9 +4850,12 @@ function Onboarding({ onDone }) {
         </div>
 
         {/* Body */}
-        <div style={{ color: C.inkM, lineHeight: 1.7, marginBottom: 28, fontFamily: "'Nunito',sans-serif", fontSize: "1rem" }}>
+        <div style={{ color: C.inkM, lineHeight: 1.7, marginBottom: 20, fontFamily: "'Nunito',sans-serif", fontSize: "1rem" }}>
           {current.body}
         </div>
+
+        {/* Demo visual */}
+        {renderDemo()}
 
         {/* Indicadores de progreso */}
         <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 32 }}>
@@ -4874,6 +5165,24 @@ export default function App() {
 
     return () => unsubs.forEach(u => u && u());
   }, [user?.code]);
+
+  // Listen to code changes to update user when partner joins
+  useEffect(() => {
+    if (!user?.code || user?.isGuest) return;
+    const unsub = fbListenCode(user.code, (codeData) => {
+      if (codeData && codeData.names && codeData.names !== user.names) {
+        // Update user with new names when partner joins
+        setUser(u => ({ ...u, names: codeData.names }));
+        // Also update localStorage
+        const users = ls.get("mochi_users") || {};
+        if (users[user.email]) {
+          users[user.email] = { ...users[user.email], names: codeData.names };
+          ls.set("mochi_users", users);
+        }
+      }
+    });
+    return unsub;
+  }, [user?.code, user?.names]);
 
   useEffect(() => {
     // Use Firebase Auth state to keep session alive
@@ -5356,6 +5665,7 @@ export default function App() {
       toast("Primero ambos deben escribir su parte");
       return;
     }
+    const wasApproved = prev.status === "approved";
     const history = [...(prev.history || []), { id: Date.now(), type: isCounter ? "counter" : "proposal", by: myRole, text: clean, at: new Date().toISOString() }];
     const next = {
       ...prev,
@@ -5363,14 +5673,17 @@ export default function App() {
       proposalText: clean,
       proposalBy: myRole,
       history,
-      approvedText: null,
-      approvedBy: null,
-      approvedAt: null,
+      // Preserve previous approvedText when editing an already-approved agreement
+      // so the partner can compare old vs new, and we don't lose it if they reject.
+      approvedText: wasApproved ? prev.approvedText : null,
+      approvedBy: wasApproved ? prev.approvedBy : null,
+      approvedAt: wasApproved ? prev.approvedAt : null,
+      isEditOfApproved: wasApproved || prev.isEditOfApproved === true,
     };
     const map = { ...burbuja, [id]: next };
     setBurbuja(map);
     trigHappy();
-    toast(isCounter ? "Contraoferta enviada ↔" : "Propuesta enviada ✉️");
+    toast(wasApproved ? "Edición enviada a tu pareja ✉️" : (isCounter ? "Contraoferta enviada ↔" : "Propuesta enviada ✉️"));
 
     if (user?.code && !user?.isGuest) {
       await fbSaveBurbuja(user.code, id, next).catch(() => {});
@@ -5378,7 +5691,9 @@ export default function App() {
         const me = getMyName(user, "Tu pareja");
         fbSendNotif(user.code, {
           type: "acuerdo",
-          msg: isCounter ? `${me} envió una contraoferta de acuerdo ↔` : `${me} te envió una propuesta de acuerdo ✉️`,
+          msg: wasApproved
+            ? `${me} propuso editar un acuerdo aprobado ✏️`
+            : (isCounter ? `${me} envió una contraoferta de acuerdo ↔` : `${me} te envió una propuesta de acuerdo ✉️`),
           forUid: user?.isOwner !== false ? "partner" : "owner",
           fromUid: user.uid
         }).catch(() => {});
@@ -5405,6 +5720,7 @@ export default function App() {
       approvedBy: myRole,
       approvedAt: new Date().toISOString(),
       history,
+      isEditOfApproved: false,
     };
     const map = { ...burbuja, [id]: next };
     setBurbuja(map);
