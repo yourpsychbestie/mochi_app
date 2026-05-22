@@ -260,7 +260,7 @@ export const fbStartExSession = (coupleCode, exId, totalSteps, starterRole) =>
   setDoc(doc(db, "exSessions", `${coupleCode}_${exId}`), {
     coupleCode,
     messages: [], step: 0, totalSteps, done: false, starterRole, startedAt: serverTimestamp()
-  });
+  }, { merge: true });
 export const fbCompleteExSession = (coupleCode, exId) =>
   setDoc(doc(db, "exSessions", `${coupleCode}_${exId}`), { coupleCode, done: true }, { merge: true });
 
@@ -355,6 +355,22 @@ export const fbSaveMomentoEntry = (entryId, coupleCode, data) =>
   setDoc(doc(db, "momentos", entryId), { ...data, coupleCode, updatedAt: serverTimestamp() }, { merge: true });
 export const fbListenMomentos = (coupleCode, cb) => {
   const q = query(collection(db, "momentos"), where("coupleCode", "==", coupleCode));
+  return onSnapshot(q, snap => {
+    const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    items.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    cb(items);
+  }, () => cb([]));
+};
+
+// ─── DIARIO PERSONAL (private — solo para el usuario) ─────────────────────────
+export const fbAddDiarioEntry = (uid, entry) =>
+  addDoc(collection(db, "diario"), { ...entry, uid, createdAt: serverTimestamp() });
+export const fbUpdateDiarioEntry = (entryId, uid, data) =>
+  setDoc(doc(db, "diario", entryId), { ...data, uid, updatedAt: serverTimestamp() }, { merge: true });
+export const fbDeleteDiarioEntry = (entryId) =>
+  deleteDoc(doc(db, "diario", entryId));
+export const fbListenDiario = (uid, cb) => {
+  const q = query(collection(db, "diario"), where("uid", "==", uid));
   return onSnapshot(q, snap => {
     const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     items.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
