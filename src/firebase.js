@@ -159,20 +159,23 @@ export const fbCreateCodeOwner = async (code, data) => {
 };
 
 // Claim partner slot atomically, preventing accidental overwrite by a third account.
+// Note: Using getDoc + setDoc instead of runTransaction to avoid permission issues
+// with unauthenticated users trying to join.
 export const fbClaimPartnerCode = async (code, partner) => {
   const ref = doc(db, "codes", code);
-  return runTransaction(db, async (tx) => {
-    const snap = await tx.get(ref);
-    if (!snap.exists()) throw new Error("CODE_NOT_FOUND");
+  
+  // First, read the document (public read is allowed)
+  const snap = await getDoc(ref);
+  if (!snap.exists()) throw new Error("CODE_NOT_FOUND");
 
-    const data = snap.data() || {};
-    if (data.partnerUid && data.partnerUid !== partner.partnerUid) {
-      throw new Error("CODE_ALREADY_LINKED");
-    }
+  const data = snap.data() || {};
+  if (data.partnerUid && data.partnerUid !== partner.partnerUid) {
+    throw new Error("CODE_ALREADY_LINKED");
+  }
 
-    const ownerName = String(data.names || "?").split(" & ")[0].trim() || "?";
-    const partnerName = String(partner.partnerName || "?").trim() || "?";
-    const names = `${ownerName} & ${partnerName}`;
+  const ownerName = String(data.names || "?").split(" & ")[0].trim() || "?";
+  const partnerName = String(partner.partnerName || "?").trim() || "?";
+  const names = `${ownerName} & ${partnerName}`;
 
     tx.set(ref, {
       names,
@@ -182,14 +185,20 @@ export const fbClaimPartnerCode = async (code, partner) => {
       partnerUid: partner.partnerUid,
       updatedAt: serverTimestamp(),
     }, { merge: true });
+  // Then, write the update (this will be allowed by the rules for new partners)
+  await setDoc(ref, {
+    names,
+    partnerEmail: partner.partnerEmail,
+    partnerUid: partner.partnerUid,
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
 
-    return {
-      ...data,
-      names,
-      ownerUid: data.ownerUid || null,
-      since: data.since || "Juntos desde hoy",
-    };
-  });
+  return {
+    ...data,
+    names,
+    ownerUid: data.ownerUid || null,
+    since: data.since || "Juntos desde hoy",
+  };
 };
 
 // ─── PROGRESS ──────────────────────────────────────────
@@ -259,7 +268,7 @@ export const fbStartExSession = (coupleCode, exId, totalSteps, starterRole) =>
   setDoc(doc(db, "exSessions", `${coupleCode}_${exId}`), {
     coupleCode,
     messages: [], step: 0, totalSteps, done: false, starterRole, startedAt: serverTimestamp()
-  });
+  }, { merge: true });
 export const fbCompleteExSession = (coupleCode, exId) =>
   setDoc(doc(db, "exSessions", `${coupleCode}_${exId}`), { coupleCode, done: true }, { merge: true });
 
@@ -354,6 +363,22 @@ export const fbSaveMomentoEntry = (entryId, coupleCode, data) =>
   setDoc(doc(db, "momentos", entryId), { ...data, coupleCode, updatedAt: serverTimestamp() }, { merge: true });
 export const fbListenMomentos = (coupleCode, cb) => {
   const q = query(collection(db, "momentos"), where("coupleCode", "==", coupleCode));
+  return onSnapshot(q, snap => {
+    const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    items.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    cb(items);
+  }, () => cb([]));
+};
+
+// ─── DIARIO PERSONAL (private — solo para el usuario) ─────────────────────────
+export const fbAddDiarioEntry = (uid, entry) =>
+  addDoc(collection(db, "diario"), { ...entry, uid, createdAt: serverTimestamp() });
+export const fbUpdateDiarioEntry = (entryId, uid, data) =>
+  setDoc(doc(db, "diario", entryId), { ...data, uid, updatedAt: serverTimestamp() }, { merge: true });
+export const fbDeleteDiarioEntry = (entryId) =>
+  deleteDoc(doc(db, "diario", entryId));
+export const fbListenDiario = (uid, cb) => {
+  const q = query(collection(db, "diario"), where("uid", "==", uid));
   return onSnapshot(q, snap => {
     const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     items.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));

@@ -78,8 +78,11 @@ service cloud.firestore {
       allow read:  if true;
       allow create: if isSignedIn() && request.resource.data.ownerUid == request.auth.uid;
       allow update: if isSignedIn() && (
+        // Owner can always update
         resource.data.ownerUid == request.auth.uid
+        // Existing partner can update
         || resource.data.partnerUid == request.auth.uid
+        // New partner can claim if slot is empty and they're setting themselves as partner
         || (
           (
             !(resource.data.partnerUid is string)
@@ -93,10 +96,9 @@ service cloud.firestore {
 
     // ── users ────────────────────────────────────────────────────────────
     // Each user can read/write their own document.
-    // Partners need read access to update shared names.
+    // Users can only read their own data - maximum privacy.
     match /users/{uid} {
-      allow read:  if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == uid;
+      allow read, write: if request.auth != null && request.auth.uid == uid;
     }
 
     // ── progress ─────────────────────────────────────────────────────────
@@ -178,6 +180,13 @@ service cloud.firestore {
       allow create: if canCreateCoupleScoped();
       allow read, delete: if canAccessStoredCoupleScoped();
       allow update: if canAccessStoredCoupleScoped() && keepsCoupleCodeStable();
+    }
+
+    // ── diario (PRIVATE — solo el usuario propietario) ────────────────────
+    match /diario/{docId} {
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow read, delete: if isSignedIn() && resource.data.uid == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.uid == request.auth.uid && request.resource.data.uid == request.auth.uid;
     }
 
     match /{document=**} {

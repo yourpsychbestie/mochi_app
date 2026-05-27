@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eliminar Cuenta - Mochi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f8f3ff 0%, #efe6ff 100%);
+            min-height: 100vh;
+            color: #32264a;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(63, 47, 99, 0.1);
+        }
+        .logo {
+            font-size: 4rem;
+            margin-bottom: 10px;
+        }
+        .app-name {
+            font-family: 'Fredoka One', cursive, sans-serif;
+            font-size: 2.5rem;
+            color: #3f2f63;
+            margin-bottom: 10px;
+        }
+        .developer {
+            color: #6f56b8;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 0 rgba(63, 47, 99, 0.16);
+            border: 1.5px solid rgba(63, 47, 99, 0.12);
+        }
+        h1 {
+            color: #3f2f63;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        h2 {
+            color: #6f56b8;
+            font-size: 1.3rem;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #efe6ff;
+        }
+        h3 {
+            color: #5f4d7f;
+            font-size: 1.1rem;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .warning-box {
+            background: #fff5f5;
+            border: 2px solid #fc8181;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .warning-box h3 {
+            color: #c53030;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .steps-list {
+            counter-reset: steps;
+            list-style: none;
+        }
+        .steps-list li {
+            position: relative;
+            padding-left: 50px;
+            margin-bottom: 20px;
+            padding-top: 5px;
+        }
+        .steps-list li::before {
+            counter-increment: steps;
+            content: counter(steps);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 36px;
+            height: 36px;
+            background: #6f56b8;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .data-category {
+            background: #f8f3ff;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+        .data-category h4 {
+            color: #3f2f63;
+            font-size: 1rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .data-category ul {
+            margin-left: 20px;
+            color: #5f4d7f;
+        }
+        .data-category li {
+            margin-bottom: 5px;
+        }
+        .deleted {
+            border-left: 4px solid #48bb78;
+        }
+        .deleted h4::before {
+            content: "✓";
+            color: #48bb78;
+            font-weight: bold;
+        }
+        .retained {
+            border-left: 4px solid #ed8936;
+            background: #fffaf0;
+        }
+        .retained h4::before {
+            content: "⏱";
+        }
+        .contact-box {
+            background: linear-gradient(130deg, #f7f1ff 0%, #eee3ff 100%);
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            margin-top: 30px;
+        }
+        .contact-box h3 {
+            color: #3f2f63;
+            margin-top: 0;
+        }
+        .email-button {
+            display: inline-block;
+            background: #6f56b8;
+            color: white;
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-weight: 600;
+            margin-top: 15px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .email-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(111, 86, 184, 0.4);
+        }
+        .alternative-method {
+            background: #e6fffa;
+            border: 2px solid #38b2ac;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .alternative-method h3 {
+            color: #234e52;
+            margin-top: 0;
+        }
+        .time-note {
+            background: #fffaf0;
+            border-left: 4px solid #ed8936;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #6f56b8;
+            font-size: 0.9rem;
+        }
+        .footer a {
+            color: #6f56b8;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 600px) {
+            .app-name {
+                font-size: 1.8rem;
+            }
+            .card {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 1.4rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🐼</div>
+            <div class="app-name">Mochi</div>
+            <div class="developer">Desarrollado por Mochi App Team</div>
+        </div>
+
+        <div class="card">
+            <h1>🗑️ Eliminación de Cuenta</h1>
+            <p>En Mochi respetamos tu privacidad y te proporcionamos control total sobre tus datos personales. Esta página explica cómo puedes solicitar la eliminación completa de tu cuenta y todos los datos asociados.</p>
+            
+            <div class="warning-box">
+                <h3>⚠️ Advertencia Importante</h3>
+                <p>La eliminación de tu cuenta es <strong>permanente e irreversible</strong>. Una vez completado el proceso, no podrás recuperar ningún dato, incluyendo:</p>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li>Tu jardín virtual y todos los items adquiridos</li>
+                    <li>Mensajes y conversaciones con tu pareja</li>
+                    <li>Respuestas a cuestionarios y tests</li>
+                    <li>Acuerdos y negociaciones en la Burbuja</li>
+                    <li>Momentos y registros de gratitud</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📋 Pasos para Solicitar la Eliminación</h2>
+            <p>Ofrecemos <strong>tres métodos</strong> para solicitar la eliminación de tu cuenta:</p>
+            
+            <h3>Método 1: Desde la App (Recomendado)</h3>
+            <ol class="steps-list">
+                <li>
+                    <strong>Abre Mochi</strong> en tu dispositivo e inicia sesión en tu cuenta.
+                </li>
+                <li>
+                    <strong>Ve a tu Peril:</strong> Toca en la pestaña "Perfil" en la barra de navegación inferior.
+                </li>
+                <li>
+                    <strong>Configuración:</strong> Desplázate hacia abajo y busca la sección "Configuración de Cuenta".
+                </li>
+                <li>
+                    <strong>Eliminar Cuenta:</strong> Toca en "Eliminar mi cuenta".
+                </li>
+                <li>
+                    <strong>Confirmación:</strong> Lee la información mostrada y confirma tu decisión.
+                </li>
+                <li>
+                    <strong>Verificación:</strong> Ingresa tu contraseña para verificar tu identidad.
+                </li>
+                <li>
+                    <strong>Completado:</strong> Recibirás un correo de confirmación cuando tu cuenta sea eliminada.</li>
+            </ol>
+
+            <div class="alternative-method">
+                <h3>📧 Método 2: Por Correo Electrónico</h3>
+                <p>Si no tienes acceso a la app o prefieres solicitar la eliminación manualmente:</p>
+                <ol style="margin-left: 20px; margin-top: 10px;">
+                    <li>Envía un correo desde la dirección asociada a tu cuenta</li>
+                    <li>Asunto: "Solicitud de Eliminación de Cuenta - Mochi"</li>
+                    <li>Incluye tu nombre de usuario o correo electrónico registrado</li>
+                </ol>
+                <div class="contact-box" style="margin-top: 15px;">
+                    <a href="mailto:soporte@mochi.app?subject=Solicitud%20de%20Eliminaci%C3%B3n%20de%20Cuenta%20-%20Mochi&body=Hola%20equipo%20de%20Mochi,%0A%0ASolicito%20la%20eliminaci%C3%B3n%20permanente%20de%20mi%20cuenta.%0A%0ACorreo%20registrado:%20[TU_CORREO]%0ANombre%20de%20usuario:%20[TU_USUARIO]%0A%0AMotivo%20(opcional):%0A%0AGracias." class="email-button">
+                        📧 Enviar Solicitud por Email
+                    </a>
+                </div>
+            </div>
+
+            <div class="alternative-method" style="background: #fef5ff; border-color: #d6bcfa;">
+                <h3 style="color: #553c9a;">🌐 Método 3: Formulario Web</h3>
+                <p>También puedes completar nuestro formulario de eliminación:</p>
+                <div class="contact-box" style="background: white; margin-top: 15px;">
+                    <p style="margin-bottom: 10px;">Completa el formulario con tu información:</p>
+                    <a href="#" onclick="alert('Formulario de eliminación - Contacta a soporte@mochi.app'); return false;" class="email-button" style="background: #553c9a;">
+                        📝 Abrir Formulario
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📊 Datos que se Eliminarán</h2>
+            <p>Al eliminar tu cuenta, los siguientes datos serán <strong>eliminados permanentemente</strong> de nuestros servidores:</p>
+            
+            <div class="data-category deleted">
+                <h4>Información de Cuenta</h4>
+                <ul>
+                    <li>Dirección de correo electrónico</li>
+                    <li>Nombre de usuario y nombres de la pareja</li>
+                    <li>Contraseña y credenciales de autenticación</li>
+                    <li>Identificador único de usuario (UID)</li>
+                    <li>Código de pareja asociado</li>
+                </ul>
+            </div>
+
+            <div class="data-category deleted">
+                <h4>Datos de la Aplicación</h4>
+                <ul>
+                    <li>Todo el progreso del jardín virtual (bambú, items, decoraciones)</li>
+                    <li>Historial de mensajes y conversaciones</li>
+                    <li>Respuestas a cuestionarios y tests de pareja</li>
+                    <li>Acuerdos y negociaciones en La Burbuja</li>
+                    <li>Momentos especiales guardados</li>
+                    <li>Registros de gratitud</li>
+                    <li>Progreso en ejercicios y lecciones</li>
+                    <li>Notificaciones y preferencias</li>
+                </ul>
+            </div>
+
+            <div class="data-category deleted">
+                <h4>Datos de Uso y Analítica</h4>
+                <ul>
+                    <li>Estadísticas de uso de la aplicación</li>
+                    <li>Registros de interacción</li>
+                    <li>Datos de streak y rachas diarias</li>
+                    <li>Preferencias de configuración</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>⏱️ Período de Retención</h2>
+            
+            <div class="time-note">
+                <strong>⚡ Eliminación Inmediata:</strong> La mayoría de tus datos serán eliminados inmediatamente después de confirmar la solicitud.
+            </div>
+
+            <div class="time-note">
+                <strong>🗄️ Copias de Seguridad:</strong> Algunos datos pueden permanecer en nuestras copias de seguridad automatizadas por hasta <strong>30 días</strong> después de la eliminación, después de lo cual serán eliminados permanentemente.
+            </div>
+
+            <div class="time-note">
+                <strong>📋 Registros Legales:</strong> Podemos retener cierta información anonimizada o agregada para fines estadísticos y de cumplimiento legal, siempre que no pueda identificarte personalmente.
+            </div>
+
+            <h3>¿Qué NO se elimina?</h3>
+            <div class="data-category retained">
+                <h4>Datos Anonimizados</h4>
+                <ul>
+                    <li>Estadísticas agregadas de uso de la app (sin identificación personal)</li>
+                    <li>Datos de rendimiento técnico anonimizados</li>
+                    <li>Registros de seguridad anonimizados</li>
+                </ul>
+                <p style="margin-top: 10px; font-size: 0.9rem; color: #744210;"><em>Estos datos no pueden vincularse a ti personalmente y se utilizan únicamente para mejorar nuestros servicios.</em></p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>❓ Preguntas Frecuentes</h2>
+            
+            <h3>¿Puedo recuperar mi cuenta después de eliminarla?</h3>
+            <p>No. Una vez que tu cuenta es eliminada, todos los datos son borrados permanentemente y no podemos recuperarlos. Si deseas usar Mochi nuevamente, deberás crear una cuenta nueva.</p>
+
+            <h3>¿Qué pasa con los datos de mi pareja?</h3>
+            <p>La eliminación de tu cuenta afecta únicamente a tus datos personales. Tu pareja mantendrá su cuenta y sus propios datos, pero perderán el vínculo de pareja y ya no podrán sincronizarse contigo.</p>
+
+            <h3>¿Cuánto tiempo tarda la eliminación?</h3>
+            <p>La eliminación principal es inmediata. Sin embargo, los datos pueden permanecer en nuestras copias de seguridad por hasta 30 días antes de ser eliminados permanentemente.</p>
+
+            <h3>¿Puedo cancelar una solicitud de eliminación?</h3>
+            <p>Si solicitaste la eliminación por correo electrónico, puedes cancelarla respondiendo al correo de confirmación dentro de las primeras 24 horas. Si eliminaste desde la app, el proceso es inmediato y no se puede revertir.</p>
+        </div>
+
+        <div class="contact-box">
+            <h3>📞 ¿Necesitas Ayuda?</h3>
+            <p>Si tienes alguna pregunta sobre el proceso de eliminación de tu cuenta o necesitas asistencia adicional, nuestro equipo de soporte está aquí para ayudarte.</p>
+            <a href="mailto:soporte@mochi.app" class="email-button">Contactar Soporte</a>
+            <p style="margin-top: 15px; font-size: 0.9rem; color: #5f4d7f;">
+                Tiempo de respuesta: 24-48 horas hábiles
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>© 2026 Mochi App Team. Todos los derechos reservados.</p>
+            <p style="margin-top: 10px;">
+                <a href="privacidad.html">Política de Privacidad</a> | 
+                <a href="eliminar-cuenta.html">Eliminar Cuenta</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

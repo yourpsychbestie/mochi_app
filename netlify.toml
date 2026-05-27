@@ -2,6 +2,18 @@
   command = "npm run build"
   publish = "build"
 
+# Redirecciones para páginas estáticas (deben ir antes que la catch-all)
+[[redirects]]
+  from = "/eliminar-cuenta"
+  to = "/eliminar-cuenta.html"
+  status = 200
+
+[[redirects]]
+  from = "/privacidad"
+  to = "/privacidad.html"
+  status = 200
+
+# Redirección catch-all para la SPA (debe ir al final)
 [[redirects]]
   from = "/*"
   to = "/index.html"

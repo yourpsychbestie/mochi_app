@@ -4,7 +4,7 @@ import {
   fbDeleteCurrentUser,
   fbCleanupBeforeAccountDelete,
   fbSaveUser, fbGetUser,
-  fbGetCode, fbCreateCodeOwner, fbClaimPartnerCode, fbFindCodeByUid,
+  fbGetCode, fbListenCode, fbCreateCodeOwner, fbClaimPartnerCode, fbFindCodeByUid,
   fbSaveProgress, fbGetProgress,
   fbSendMessage, fbListenMessages,
   fbSaveTestAnswers, fbListenTest, fbResetTest,
@@ -13,6 +13,7 @@ import {
   fbSaveGardenState, fbListenGardenState, fbPurchaseGardenUpdate,
   fbAddGratitud, fbListenGratitud,
   fbAddMomento, fbListenMomentos,
+  fbAddDiarioEntry, fbUpdateDiarioEntry, fbDeleteDiarioEntry, fbListenDiario,
   fbSaveConoce, fbListenConoce,
   fbSaveLessonRead, fbListenLessons,
   fbSaveBurbuja, fbListenBurbuja,
@@ -525,10 +526,62 @@ const EXERCISES = [
 ];
 
 const CONOCE_CATS = {
-  infancia:{emoji:"🧸",label:"Infancia",bg:"#f5edda",preguntas:["¿Cuál es tu recuerdo más feliz de la infancia?","¿Cómo era tu relación con tu mamá cuando eras pequeño/a?","¿Cómo era tu relación con tu papá cuando eras pequeño/a?","¿Qué aprendiste sobre el amor en tu familia de origen?","¿Cuál fue el momento más difícil de tu infancia?","¿Qué cosas de tu infancia te gustaría haber tenido?"]},
-  amor: {emoji:"💕",label:"El Amor",bg:"#fce8e0",preguntas:["¿Qué significa para ti sentirte amado/a?","¿Cuál ha sido tu mayor herida en el amor?","¿Qué es lo que más te da miedo en una relación?","¿Qué valoras más de nuestra relación hoy?","¿Hay algo que siempre has querido decirme y no has podido?","¿Qué necesitas de mí que quizás no me has pedido?"]},
-  suenos: {emoji:"🌙",label:"Sueños",bg:"#e4e8f8",preguntas:["¿Cuál es el sueño que sientes que aún no has perseguido?","¿Cómo te imaginas tu vida en 10 años?","¿Qué cosa quisiste lograr y aún no has intentado?","¿Qué nos falta vivir juntos?","Si el dinero no fuera problema, ¿cómo vivirías?","¿Qué legado quieres dejar en el mundo?"]},
-  miedos: {emoji:"🫂",label:"Miedos",bg:"#e4f0e0",preguntas:["¿A qué le tienes más miedo en la vida?","¿Cuándo más necesitas que te abracen?","¿Cuándo te sientes solo/a aunque esté presente?","¿Qué es lo que más te cuesta pedir?","¿Qué es lo que más te cuesta recibir?","¿Cuál es tu mayor inseguridad y cómo puedo apoyarte?"]},
+  infancia: {
+    emoji: "🧸",
+    label: "Infancia",
+    bg: "#f5edda",
+    descripcion: "Conocer de dónde venimos nos ayuda a entender cómo amamos hoy. No hay respuestas correctas, solo tu historia.",
+    preguntas: [
+      "¿Cuál es tu recuerdo más feliz de cuando eras niño/a?",
+      "¿Qué comida te recuerda a tu casa?",
+      "¿Qué tradición familiar te gustaría tener con nosotros?",
+      "¿Cómo se decían 'te quiero' en tu familia?",
+      "¿Qué hacías para divertirte cuando eras pequeño/a?",
+      "¿Qué cosa de tu infancia te gustaría recuperar?"
+    ]
+  },
+  cosasFavoritas: {
+    emoji: "⭐",
+    label: "Cosas Favoritas",
+    bg: "#fff4e0",
+    descripcion: "Las cosas que nos gustan dicen mucho de quiénes somos. Simple, rápido y divertido.",
+    preguntas: [
+      "¿Cuál es tu comida favorita?",
+      "¿Qué película podrías ver mil veces?",
+      "¿Qué música te pone de buen humor?",
+      "¿Cuál es tu lugar favorito del mundo?",
+      "¿Qué harías si tuvieras un día libre sin compromisos?",
+      "¿Qué regalo te ha hecho más ilusión?"
+    ]
+  },
+  sueños: {
+    emoji: "🌙",
+    label: "Sueños",
+    bg: "#e4e8f8",
+    descripcion: "Compartir lo que soñamos nos acerca. No tiene que ser realista, solo honesto.",
+    preguntas: [
+      "¿Qué te gustaría aprender a hacer este año?",
+      "¿A dónde te gustaría viajar conmigo?",
+      "¿Qué te gustaría que hiciéramos más juntos?",
+      "¿Qué trabajo harías si el dinero no importara?",
+      "¿Qué te gustaría lograr en los próximos 5 años?",
+      "¿Qué aventura te gustaría vivir?"
+    ]
+  },
+  miedos: {
+    emoji: "🫂",
+    label: "Miedos & Apoyo",
+    bg: "#e4f0e0",
+    descripcion: "Decir qué nos asusta y cómo nos cuidan es clave para sentirnos seguros juntos.",
+    preguntas: [
+      "¿Qué situación te hace sentir incómodo/a?",
+      "¿Cómo puedo darte ánimos cuando estás mal?",
+      "¿Qué necesitas cuando tienes un día difícil?",
+      "¿Qué te cuesta pedir ayuda?",
+      "¿Qué te hace sentir más querido/a?",
+      "¿Cómo puedo mostrarte que estoy aquí para ti?"
+    ]
+  },
 };
 
 const BURBUJA_SECTIONS = [
@@ -658,6 +711,126 @@ const CONSEJOS_DIARIOS = [
     porQue: "Cuando protestamos, atacamos o nos alejamos, solemos estar pidiendo lo mismo: que el otro se acerque. La EFT llama a esto el 'ciclo negativo' — una danza donde ambos buscan vínculo pero se alejan más.",
     accion: "La próxima vez que sientan tensión, prueben reemplazar la queja por la necesidad real: 'cuando te alejas siento que no importo — necesito que me digas que estás aquí'.",
     experto: "Sue Johnson", corriente: "EFT · Terapia Focalizada en las Emociones" },
+  {
+    id: 1,
+    texto: "Escucha de verdad, no solo esperes tu turno para hablar.",
+    explicacion: "Muchas veces cuando nuestro amor habla, ya estamos pensando en qué vamos a responder. Esto hace que no nos conectemos de verdad.",
+    practica: "Cuando tu pareja te cuente algo, haz una pausa mental y repite con tus palabras lo que escuchaste antes de dar tu opinión. Esto le hace sentir que realmente le importas.",
+    autor: "John Gottman",
+    quienEs: "Psicólogo que estudió parejas por 40 años. Descubrió que las parejas que duran son las que se sienten escuchadas, no las que nunca discuten."
+  },
+  {
+    id: 2,
+    texto: "Agradece algo específico hoy, no solo 'gracias por todo'.",
+    explicacion: "Los 'gracias por todo' se olvidan. Pero cuando dices 'gracias por traerme café esta mañana, me salvaste el día', eso se queda.",
+    practica: "Menciona algo concreto que tu pareja hizo, cuándo lo hizo, y cómo te hizo sentir. Ejemplo: 'Gracias por mandarme ese mensaje antes de mi junta, me dio mucha calma'.",
+    autor: "Martin Seligman",
+    quienEs: "Padre de la Psicología Positiva. Descubrió que las parejas que practican gratitud específica son hasta 25% más felices."
+  },
+  {
+    id: 3,
+    texto: "Pide lo que necesitas, no te quejes de lo que no te gusta.",
+    explicacion: "Decir 'nunca me escuchas' solo hace que el otro se defienda. Pero decir 'necesito 10 minutos de tu atención sin celular cuando llegue a casa' abre una conversación.",
+    practica: "Usa esta fórmula: 'Cuando [pasa algo], yo siento [emoción], porque necesito [necesidad]. ¿Podrías [petición concreta]?'",
+    autor: "Marshall Rosenberg",
+    quienEs: "Creador de la Comunicación No Violenta, una forma de hablar sin herir. Sus técnicas se usan en todo el mundo para resolver conflictos."
+  },
+  {
+    id: 4,
+    texto: "Cuando te equivocas, pide perdón rápido y de corazón.",
+    explicacion: "No importa tanto cuánto peleen las parejas que duran, sino qué tan rápido se reparan. Un 'me equivoqué, lo siento' sincero en las primeras horas vale más que mil explicaciones después.",
+    practica: "Si hubo un malentendido, no esperes a que se enfríe. Di: 'Me equivoqué, lo siento. ¿Cómo puedo hacerlo mejor?' Sin excusas, sin 'pero tú también...'",
+    autor: "John y Julie Gottman",
+    quienEs: "Psicólogos que pueden predecir con 90% de acierto qué parejas se divorciarán. La reparación rápida es su hallazgo más importante."
+  },
+  {
+    id: 5,
+    texto: "Nombra tu emoción antes de reaccionar.",
+    explicacion: "Cuando estamos enojados o ansiosos, nuestro cerebro entra en modo 'supervivencia' y decimos cosas que no queremos. Pero nombrar lo que sentimos calma el cerebro en segundos.",
+    practica: "Antes de responder en calor, di: 'Ahora mismo me siento [frustrado/a, asustado/a, triste...]'. Esto activa la parte racional de tu cerebro y te da control.",
+    autor: "Dan Siegel",
+    quienEs: "Psiquiatra y neurocientífico. Acuñó la frase 'nombrarlo para dominarlo' porque la ciencia muestra que nombrar emociones reduce la activación del miedo."
+  },
+  {
+    id: 6,
+    texto: "Los pequeños momentos diarios valen más que los grandes gestos.",
+    explicacion: "Un viaje romántico una vez al año no sustituye a un 'buenos días' todos los días, o preguntar '¿cómo estuvo tu día?' con atención real.",
+    practica: "Crea un ritual de 2 minutos: un beso de despedida, un mensaje de buenas noches, o preguntar qué fue lo mejor del día. Lo que haces todos los días construye la base de la relación.",
+    autor: "John Gottman",
+    quienEs: "Llama a esto 'Capital Emocional': los pequeños depósitos de cariño diarios que te protegen cuando llegan las crisis."
+  },
+  {
+    id: 7,
+    texto: "Puedes entender a tu pareja sin estar de acuerdo.",
+    explicacion: "Validar no significa decir 'tienes razón'. Significa decir 'entiendo por qué lo sientes así'. Esto hace que tu amor se sienta visto, no atacado.",
+    practica: "Cuando tu pareja exprese algo difícil, responde: 'Tiene sentido que te sientas así dado lo que pasó'. No des tu opinión todavía, solo reconoce su experiencia.",
+    autor: "Sue Johnson",
+    quienEs: "Creadora de EFT, la terapia de pareja más efectiva. Su investigación muestra que el miedo más grande en pareja es no importarle a la otra persona."
+  },
+  {
+    id: 8,
+    texto: "Celebra los logros de tu pareja como si fueran tuyos.",
+    explicacion: "Cuando tu amor te cuenta algo bueno, tu reacción importa más de lo que crees. Responder con entusiasmo genuino fortalece el vínculo más que manejar bien los conflictos.",
+    practica: "Cuando tu pareja comparta una buena noticia, pregunta detalles, celebra con ellos, y di por qué te enorgullece. Evita minimizar ('eso es fácil') o cambiar de tema.",
+    autor: "Shelly Gable",
+    quienEs: "Psicóloga de UCLA que estudió miles de parejas. Descubrió que celebrar juntos libera dopamina (la hormona de la felicidad) en ambos."
+  },
+  {
+    id: 9,
+    texto: "Respeta cuando tu pareja dice 'no tengo energía ahora'.",
+    explicacion: "A veces nuestro amor necesita espacio no porque no nos quiera, sino porque su sistema nervioso está saturado. Cuando alguien está en modo 'supervivencia', no puede conectar emocionalmente.",
+    practica: "Si notas que tu pareja está agotado/a, pregunta: '¿Tienes energía para hablar de esto ahora o mejor lo dejamos para después?' Esto no es rechazo, es cuidado mutuo.",
+    autor: "Stephen Porges",
+    quienEs: "Descubrió el Sistema Nervioso Polivagal, que explica por qué a veces necesitamos pausas para regular nuestro cuerpo antes de poder conectar."
+  },
+  {
+    id: 10,
+    texto: "Usa 'y' en vez de 'pero'.",
+    explicacion: "La palabra 'pero' borra todo lo anterior. 'Te amo, pero...' suena como 'en realidad no te amo tanto'. En cambio, 'y' mantiene ambas verdades: 'Entiendo que estás cansado/a Y necesito hablar contigo'.",
+    practica: "Escucha tus conversaciones. Cuando vayas a decir 'pero', cámbialo por 'y'. Notarás cómo la conversación fluye mejor.",
+    autor: "Marshall Rosenberg",
+    quienEs: "Esta técnica viene de la Comunicación No Violenta, usada en mediaciones de paz en todo el mundo."
+  },
+  {
+    id: 11,
+    texto: "Pregunta antes de asumir lo que piensa tu pareja.",
+    explicacion: "Nuestra mente inventa historias sobre las intenciones del otro, y casi siempre son peores de lo real. 'Seguro ya no le importo' puede ser solo 'está distraído con el trabajo'.",
+    practica: "Cuando notes que estás asumiendo algo negativo, pregunta: '¿Qué quisiste decir cuando...?' o '¿Cómo te sientes?'. La curiosidad cura más que la certeza.",
+    autor: "Aaron Beck",
+    quienEs: "Padre de la Terapia Cognitiva. Identificó la 'lectura de mente' como uno de los pensamientos más dañinos para las relaciones."
+  },
+  {
+    id: 12,
+    texto: "La confianza se construye con pequeñas acciones repetidas.",
+    explicacion: "No son los grandes gestos los que crean seguridad, sino las pequeñas promesas cumplidas: 'Te llamo después', y llamar. 'Llego temprano', y llegar temprano.",
+    practica: "Haz una promesa pequeña y cumplela. La consistencia diaria es la base de sentirse seguro con alguien.",
+    autor: "John Bowlby",
+    quienEs: "Estudió cómo los niños se apegan a sus cuidadores. Sus descubrimientos sobre el apego seguro aplican también a las parejas adultas."
+  },
+  {
+    id: 13,
+    texto: "La mayoría de los problemas de pareja no tienen solución — y eso está bien.",
+    explicacion: "El 69% de los conflictos de pareja son por diferencias de personalidad o valores que nunca desaparecerán. Las parejas que duran no resuelven todo; aprenden a 'bailar' con sus diferencias.",
+    practica: "Cuando surja un tema recurrente, díganle: 'Ah, este es nuestro tema de siempre'. Reconocer el patrón ayuda a no tomarlo personal y buscar compromisos en vez de ganar.",
+    autor: "John Gottman",
+    quienEs: "Descubrió esto en su laboratorio de parejas. El objetivo no es eliminar diferencias, sino mantener la conexión a pesar de ellas."
+  },
+  {
+    id: 14,
+    texto: "Tu cuerpo te avisa cuando necesitas una pausa.",
+    explicacion: "Cuando el corazón late rápido, los músculos se tensan y la mente se nubla, es señal de que tu sistema nervioso está saturado. En ese estado, no puedes conversar bien.",
+    practica: "Acuerden una 'palabra de pausa' (ej: 'necesito un break'). Cuando alguien la diga, ambos toman 20-30 minutos para calmarse antes de seguir hablando. No es huir, es cuidarse.",
+    autor: "John Gottman",
+    quienEs: "Llama a esto 'inundación emocional' y recomienda pausas de 20 minutos para que el cuerpo se regule."
+  },
+  {
+    id: 15,
+    texto: "El amor es algo que haces, no solo algo que sientes.",
+    explicacion: "La pasión sube y baja naturalmente en toda relación larga. Pero la intimidad y el compromiso se eligen todos los días: enviar ese mensaje, hacer esa pregunta, dar ese abrazo.",
+    practica: "Elige un acto de amor consciente hoy, aunque no sientas 'mariposas'. Las acciones renuevan los sentimientos, no al revés.",
+    autor: "Robert Sternberg",
+    quienEs: "Propuso que el amor duradero tiene 3 partes: intimidad, pasión y compromiso. Las parejas que duran cultivan las tres, especialmente cuando la pasión baja."
+  },
 ];
 
 function CouplePandaSVG({ happy = false, size = 160 }) {
@@ -2056,18 +2229,23 @@ function Login({ onLogin }) {
         // keep trying while Auth finishes propagating on slower mobile networks
       }
     }
+    // Force token refresh and wait longer for auth to propagate
+    await firebaseUser?.getIdToken(true).catch(() => {});
+    await wait(800);
   };
 
   const retryFirestore = async (fn, firebaseUser = null) => {
     let lastErr;
+    // Increased delays and more retries for permission errors
     for (const delay of [0, 500, 1000, 2000]) {
       if (delay) await wait(delay);
       try {
         return await fn();
       } catch (e) {
         lastErr = e;
-        if (!isPermissionError(e)) throw e;
-        await ensureAuthReady(firebaseUser).catch(() => {});
+        // Only retry on permission errors
+        if (!isPermissionError(e)) throw e;        await ensureAuthReady(firebaseUser).catch(() => {});
+        console.warn(`Permission error, retrying after ${delay}ms...`, e?.message);
       }
     }
     throw lastErr;
@@ -2210,8 +2388,12 @@ function Login({ onLogin }) {
       // Also update owner's user record with new names
       // Owner profile update is best-effort: partner cannot always write owner's user doc by rules.
       if (claim.ownerUid) await retryFirestore(() => fbSaveUser(claim.ownerUid, { names }), sessionUser).catch(() => {});
+      await retryFirestore(() => fbSaveUser(uid, { email: cleanPartnerEmail, names, code: cleanCode, since, isOwner: false }));
+      // Note: We don't update owner's user doc here because of Firestore rules.
+      // The owner will see the updated names through the code document listener.
       onLogin({ uid, email: cleanPartnerEmail, names, code: cleanCode, since, isOwner: false, isGuest: false }, true);
     } catch(e) {
+      console.error("Error en doJoin (primer intento):", { code: e?.code, message: e?.message, fullError: e });
       if (e.code === "auth/email-already-in-use") {
         // Account exists — try logging them in instead
         try {
@@ -2228,14 +2410,18 @@ function Login({ onLogin }) {
           await retryFirestore(() => fbSaveUser(uid2, { email: cleanPartnerEmail, names: names2, code: cleanCode, isOwner: false }), cred2.user).catch(() => {});
           // Keep join successful even if owner profile write is rejected by Firestore rules.
           if (claim2.ownerUid) await retryFirestore(() => fbSaveUser(claim2.ownerUid, { names: names2 }), cred2.user).catch(() => {});
+          await retryFirestore(() => fbSaveUser(uid2, { email: cleanPartnerEmail, names: names2, code: cleanCode, isOwner: false }));
+          // Note: We don't update owner's user doc here because of Firestore rules.
+          // The owner will see the updated names through the code document listener.
           onLogin({ uid: uid2, email: cleanPartnerEmail, names: names2, code: cleanCode, since: claim2.since || "Juntos", isOwner: false, isGuest: false }, false);
           _pendingLocalAuth = false;
           setLoading(false); return;
         } catch(e2) {
           const code2 = e2?.code || "";
           const msg2 = String(e2?.message || "");
-          if (code2 === "auth/invalid-credential" || code2 === "auth/wrong-password") {
-            setErr("Ese correo ya existe. Verifica la contraseña para vincularlo.");
+          console.error("Error en vinculación (login existente):", { code: code2, message: msg2, fullError: e2 });
+          if (code2 === "auth/invalid-credential" || code2 === "auth/wrong-password" || code2 === "auth/user-mismatch") {
+            setErr("Ese correo ya existe. Verifica que la contraseña sea correcta para vincular la cuenta.");
           } else if (msg2.includes("CODE_ALREADY_LINKED")) {
             setErr("Ese código ya está vinculado con otra cuenta de pareja.");
           } else if (msg2.includes("CODE_NOT_FOUND")) {
@@ -2270,8 +2456,19 @@ function Login({ onLogin }) {
               setLoading(false);
               return;
             }
+            setErr("Firebase bloqueó el acceso (segundo intento). Código: " + (code2 || "unknown"));
+          } else if (code2 === "auth/user-not-found") {
+            setErr("No existe una cuenta con ese correo. Intenta crear una nueva cuenta.");
+          } else if (code2 === "auth/invalid-email") {
+            setErr("El formato del correo no es válido.");
+          } else if (code2 === "auth/network-request-failed") {
+            setErr("Error de red. Revisa tu conexión a internet.");
+          } else if (code2 === "auth/too-many-requests") {
+            setErr("Demasiados intentos. Espera unos minutos e intenta de nuevo.");
+          } else if (code2 === "auth/internal-error") {
+            setErr("Error interno de autenticación. Intenta de nuevo más tarde.");
           } else {
-            setErr(authErrMsg(e2, "No se pudo iniciar y vincular esta cuenta. Revisa correo, contraseña y código."));
+            setErr("Error al vincular: " + (msg2 || code2 || "error desconocido") + ". Revisa correo, contraseña y código.");
           }
           _pendingLocalAuth = false;
           setLoading(false); return;
@@ -2370,8 +2567,10 @@ function Login({ onLogin }) {
         } else {
           setErr("No se pudo vincular por permisos temporales. Inténtalo de nuevo en 10 segundos.");
         }
+        setErr("Firebase bloqueó el acceso (primer intento). Código: " + (e?.code || "unknown") + " - " + String(e?.message || "").substring(0, 100));
       } else {
         const msg = String(e?.message || "");
+        console.error("Error en doJoin (registro inicial):", e?.code, msg, e);
         if (justCreated) await fbDeleteCurrentUser().catch(() => {});
         if (msg.includes("CODE_ALREADY_LINKED")) {
           setErr("Ese código ya está vinculado con otra cuenta de pareja.");
@@ -2483,6 +2682,8 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
   const [val, setVal] = useState("");
   const [sending, setSending] = useState(false);
   const [started, setStarted] = useState(false);
+  const [starting, setStarting] = useState(false);
+  const [error, setError] = useState(null);
   const messagesEndRef = useRef(null);
   // Prevents the partner from double-triggering onDone via the useEffect
   // after the finisher already called it directly in send().
@@ -2502,16 +2703,25 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
   // Start or listen to session
   useEffect(() => {
     if (isGuest) {
-      // Local mode for guests
       setSession({ messages: [], step: 0, totalSteps: ex.phases.length, done: false, starterRole: myRole });
       setStarted(true);
       return;
     }
+    if (!user?.code) return;
+
+    setStarted(false);
     const unsub = fbListenExSession(user.code, ex.id, data => {
-      if (data) { setSession(data); setStarted(true); }
+      if (data) {
+        setSession(data);
+        setStarted(true);
+        setError(null);
+      } else {
+        setSession(null);
+        setStarted(false);
+      }
     });
     return () => unsub();
-  }, [user?.code, ex.id]);
+  }, [user?.code, ex.id, isGuest]);
 
   // When the Firestore listener marks the session done, notify the partner
   // (the finisher already called onDone directly in send()).
@@ -2527,12 +2737,16 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
   }, [messages.length]);
 
   const startSession = async () => {
+    setStarting(true);
+    setError(null);
+    
     if (isGuest || !user?.code) {
-      // Local mode — just set session directly
       setSession({ messages: [], step: 0, totalSteps: ex.phases.length, done: false, starterRole: myRole });
       setStarted(true);
+      setStarting(false);
       return;
     }
+    
     try {
       await fbStartExSession(user.code, ex.id, ex.phases.length, myRole);
       fbSendNotif(user.code, {
@@ -2541,10 +2755,11 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
         forUid: user?.isOwner !== false ? "partner" : "owner",
         fromUid: user.uid,
       }).catch(() => {});
+      // Listener will pick up the new document and set started=true
     } catch(e) {
-      // Fallback to local if Firebase fails
-      setSession({ messages: [], step: 0, totalSteps: ex.phases.length, done: false, starterRole: myRole });
-      setStarted(true);
+      console.error("Error al iniciar sesión:", e);
+      setError("No se pudo iniciar. Intenta de nuevo.");
+      setStarting(false);
     }
   };
 
@@ -2596,11 +2811,20 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
   if (!started) {
     return (
       <div style={{ textAlign:"center", padding:"20px 0" }}>
+        {error && (
+          <div style={{ background: "#ffe0e0", color: "#c05050", padding: "10px 14px", borderRadius: 10, marginBottom: 12, fontSize: "0.85rem" }}>
+            ⚠️ {error}
+          </div>
+        )}
         <div style={{ fontSize:"0.85rem", color:C.inkM, marginBottom:14 }}>
           Cualquiera puede empezar el ejercicio
         </div>
-        <Btn onClick={startSession} style={{ width:"100%" }}>Empezar ejercicio 🌿</Btn>
-        <div style={{ fontSize:"0.75rem", color:C.inkL, marginTop:8, textAlign:"center" }}>La pantalla se actualizará automáticamente ✨</div>
+        <Btn onClick={startSession} style={{ width:"100%" }} disabled={starting}>
+          {starting ? "Iniciando... 🌿" : "Empezar ejercicio 🌿"}
+        </Btn>
+        <div style={{ fontSize:"0.75rem", color:C.inkL, marginTop:8, textAlign:"center" }}>
+          {starting ? "Conectando con tu pareja..." : "La pantalla se actualizará automáticamente ✨"}
+        </div>
       </div>
     );
   }
@@ -2777,6 +3001,16 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
         <div style={{ background: C.dark, padding:"44px 18px 0" }}>
           <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.9rem", color:C.cream2, marginBottom:4 }}>Ejercicios ⭐</div>
           <div style={{ color:`${C.cream}88`, fontSize:"0.84rem", fontWeight:600, marginBottom:14 }}>Actividades y aprendizaje en pareja</div>
+          
+          {/* Instrucciones */}
+          <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 12, padding: "12px 14px", marginBottom: 14, border: "1px solid rgba(255,255,255,0.2)" }}>
+            <div style={{ fontSize: "0.78rem", color: `${C.cream}cc`, lineHeight: 1.6 }}>
+              💡 <strong style={{ color: C.cream2 }}>¿Cómo funciona?</strong> Cada ejercicio está basado en terapia de pareja real. 
+              Pueden hacerlos juntos o por separado. Cada uno gana bambú 🌿 para el jardín. 
+              Repetirlos los hace más profundos.
+            </div>
+          </div>
+          
           <div style={{ display:"flex", gap:4 }}>
             {[["ejerc","🌿 Ejercicios"],["lecciones","📖 Lecciones"]].map(([id,label]) => (
               <div key={id} onClick={() => setEjTab(id)}
@@ -2816,10 +3050,16 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
       </div>
       {ejTab === "lecciones" && (
       <div style={{ background: C.sandL, minHeight:"60vh", paddingBottom:14 }}>
-        <div style={{ margin:"10px 14px 0" }}>
-        <div style={{ background:"#e8f0ff", borderRadius:14, padding:"9px 14px", marginBottom:10, border:`1px solid #a8b8e830` }}>
-          <div style={{ fontSize:"0.8rem", color:"#4050a0", lineHeight:1.5 }}>💡 Herramientas reales de psicología de pareja.</div>
+        {/* Instrucciones de Lecciones */}
+        <div style={{ margin: "12px 14px 0", background: C.white, borderRadius: 16, padding: "14px 16px", boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
+          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark, marginBottom: 6 }}>📖 ¿Qué son las Lecciones?</div>
+          <div style={{ fontSize: "0.8rem", color: C.inkM, lineHeight: 1.6 }}>
+            Herramientas reales de psicología de pareja, explicadas de forma simple. 
+            Lee una al día — cada lección te da +10 bambú 🌿. Las puedes releer cuando quieras.
+          </div>
         </div>
+        
+        <div style={{ margin:"10px 14px 0" }}>
         {(() => {
           const dayOfYear = Math.floor((new Date()-new Date(new Date().getFullYear(),0,0))/86400000);
           const todayId = DAILY_LESSONS[dayOfYear % DAILY_LESSONS.length].id;
@@ -2920,7 +3160,7 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
 
 
 // CONOCETE
-function Conocete({ conoce, onSave, user }) {
+function Conocete({ conoce, onSave, onResetQuiz, user }) {
   const { nameA, nameB } = getCoupleNames(user);
   const myRole = user?.isOwner !== false ? "owner" : "partner";
   const partnerRole = myRole === "owner" ? "partner" : "owner";
@@ -2980,9 +3220,18 @@ function Conocete({ conoce, onSave, user }) {
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
       <ScreenTop title="Conócete" sub="Preguntas para descubrirse" />
       <div style={{ margin: 14 }}>
+        {/* Descripción de la categoría */}
+        <div style={{ background: CONOCE_CATS[cat].bg, borderRadius: 14, padding: "14px 16px", marginBottom: 12, border: `1.5px solid ${C.border}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+            <span style={{ fontSize: "1.6rem" }}>{CONOCE_CATS[cat].emoji}</span>
+            <span style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", color: C.dark }}>{CONOCE_CATS[cat].label}</span>
+          </div>
+          <div style={{ fontSize: "0.82rem", color: C.inkM, lineHeight: 1.6 }}>{CONOCE_CATS[cat].descripcion}</div>
+        </div>
+
         <div style={{ background: C.white, borderRadius: 20, padding: 18, boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", color: C.dark }}>{CONOCE_CATS[cat].emoji} {CONOCE_CATS[cat].label}</div>
+            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", color: C.dark }}>Preguntas</div>
             <button onClick={() => setCat(null)} style={{ background: C.sand, border: `1.5px solid ${C.border}`, borderRadius: 8, width: 30, height: 30, cursor: "pointer", fontSize: "0.85rem", color: C.inkM }}>✕</button>
           </div>
           {CONOCE_CATS[cat].preguntas.map((q, i) => {
@@ -3004,6 +3253,16 @@ function Conocete({ conoce, onSave, user }) {
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
       <ScreenTop title="Conócete" sub="Preguntas para descubrirse" />
+      
+      {/* Instrucciones introductorias */}
+      <div style={{ margin: "12px 14px", background: C.white, borderRadius: 16, padding: "16px 18px", boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
+        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark, marginBottom: 8 }}>💬 ¿Cómo funciona?</div>
+        <div style={{ fontSize: "0.82rem", color: C.inkM, lineHeight: 1.7 }}>
+          Responde las preguntas por separado. Cuando ambos contesten, podrán ver las respuestas del otro. 
+          No hay respuestas correctas — se trata de conocerse mejor. Cada respuesta te da +15 bambú 🌿
+        </div>
+      </div>
+
       <div style={{ padding: "8px 14px 0", fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark }}>Elige una categoría</div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 11, padding: "10px 14px" }}>
         {Object.entries(CONOCE_CATS).map(([key, data]) => {
@@ -3017,7 +3276,7 @@ function Conocete({ conoce, onSave, user }) {
         })}
       </div>
       <div style={{ margin: "0 14px 0" }}>
-        <Cuestionarios conoce={conoce} onSave={onSave} user={user} />
+        <Cuestionarios conoce={conoce} onSave={onSave} onReset={onResetQuiz} user={user} />
       </div>
     </div>
   );
@@ -3025,6 +3284,65 @@ function Conocete({ conoce, onSave, user }) {
 
 // BURBUJA
 function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user, notifs = [], onMarkNotifRead }) {
+function BurbujaHistoryPanel({ history, nameA, nameB, myRole }) {
+  const [open, setOpen] = useState(false);
+  if (!history || !history.length) return null;
+  const formatDate = (iso) => {
+    try {
+      const d = new Date(iso);
+      return d.toLocaleDateString("es-ES", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+    } catch { return iso; }
+  };
+  const typeLabel = {
+    proposal: "📨 Propuesta",
+    counter: "↔ Contraoferta",
+    approved: "✅ Aprobado",
+  };
+  return (
+    <div style={{ marginTop: 10 }}>
+      <button
+        onClick={() => setOpen(p => !p)}
+        style={{
+          background: "transparent",
+          border: "none",
+          color: C.inkL,
+          fontSize: "0.75rem",
+          fontWeight: 800,
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+          padding: 0,
+          fontFamily: "'Nunito',sans-serif",
+        }}
+      >
+        <span style={{ transition: "transform 0.2s", display: "inline-block", transform: open ? "rotate(90deg)" : "none" }}>▶</span>
+        Ver historial ({history.length})
+      </button>
+      {open && (
+        <div style={{ marginTop: 8, background: C.cream2, borderRadius: 10, padding: 10, border: `1px solid ${C.border}` }}>
+          {history.map((h, idx) => {
+            const senderName = h.by === "owner" ? nameA : nameB;
+            const isMe = h.by === myRole;
+            return (
+              <div key={h.id || idx} style={{ marginBottom: 8, paddingBottom: 8, borderBottom: idx < history.length - 1 ? `1px solid ${C.border}` : "none" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                  <span style={{ fontSize: "0.72rem", fontWeight: 800, color: h.type === "approved" ? C.olive : C.inkL }}>
+                    {typeLabel[h.type] || h.type} — {isMe ? "Tú" : senderName}
+                  </span>
+                  <span style={{ fontSize: "0.65rem", color: C.inkL }}>{formatDate(h.at)}</span>
+                </div>
+                <div style={{ fontSize: "0.8rem", color: C.ink, lineHeight: 1.5 }}>"{h.text}"</div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
   const { nameA, nameB } = getCoupleNames(user);
   const myRole = user?.isOwner !== false ? "owner" : "partner";
   const partnerRole = myRole === "owner" ? "partner" : "owner";
@@ -3035,6 +3353,7 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user, notifs = [],
   const [editingApproved, setEditingApproved] = useState({});
   const [burbujaTab, setBurbujaTab] = useState("negociacion");
   const [focusAgreementId, setFocusAgreementId] = useState(null);
+  const [burbujaTab, setBurbujaTab] = useState("inbox");
 
   const get = (id, f) => tmp[id]?.[f] ?? burbuja[id]?.[f] ?? "";
   const set_ = (id, f, v) => setTmp(p => ({ ...p, [id]: { ...p[id], [f]: v } }));
@@ -3090,20 +3409,107 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user, notifs = [],
     if (notif?.id) onMarkNotifRead?.(notif.id);
   };
 
+  // ─── INBOX DATA ───
+  const inboxNeedsAction = BURBUJA_SECTIONS.flatMap(sec =>
+    sec.items
+      .map(item => {
+        const entry = burbuja[item.id] || {};
+        const bothDone = !!entry.owner && !!entry.partner;
+        const hasPending = entry.status === "pending" && !!entry.proposalText;
+        const pendingByMe = hasPending && entry.proposalBy === myRole;
+        const isEdit = entry.isEditOfApproved === true;
+
+        // 1. Propuestas/contraofertas/editions pendientes de mi acción
+        if (bothDone && hasPending && !pendingByMe) {
+          return {
+            id: item.id,
+            type: isEdit ? "edit" : (entry.history?.length > 1 ? "counter" : "proposal"),
+            question: item.q,
+            text: entry.proposalText,
+            by: entry.proposalBy,
+            section: sec.title,
+            isEdit,
+          };
+        }
+        // 2. Items donde falta que yo escriba mi parte
+        const myText = entry[myRole];
+        const partnerText = entry[partnerRole];
+        if (!myText && partnerText) {
+          return {
+            id: item.id,
+            type: "missing",
+            question: item.q,
+            text: null,
+            by: partnerRole,
+            section: sec.title,
+            isEdit: false,
+          };
+        }
+        return null;
+      })
+      .filter(Boolean)
+  );
+
+  const inboxSentByMe = BURBUJA_SECTIONS.flatMap(sec =>
+    sec.items
+      .map(item => {
+        const entry = burbuja[item.id] || {};
+        const hasPending = entry.status === "pending" && !!entry.proposalText;
+        const pendingByMe = hasPending && entry.proposalBy === myRole;
+        const isEdit = entry.isEditOfApproved === true;
+        if (hasPending && pendingByMe) {
+          return {
+            id: item.id,
+            type: isEdit ? "edit" : (entry.history?.length > 1 ? "counter" : "proposal"),
+            question: item.q,
+            text: entry.proposalText,
+            by: myRole,
+            section: sec.title,
+            isEdit,
+          };
+        }
+        return null;
+      })
+      .filter(Boolean)
+  );
+
+  const inboxCount = inboxNeedsAction.length;
+
+  const goToAgreement = (itemId, tab) => {
+    const secId = BURBUJA_SECTIONS.find(s => s.items.some(i => i.id === itemId))?.id;
+    setBurbujaTab(tab);
+    if (secId) setOpen(p => ({ ...p, [secId]: true }));
+  };
+
+  const typeLabels = {
+    proposal: ["📨 Propuesta de acuerdo", "#f0d040", "#fff8e0"],
+    counter: ["↔ Contraoferta", "#c7a35a", "#fff8e0"],
+    edit: ["✏️ Edición de acuerdo", "#d94a5a", "#fff5f5"],
+    missing: ["✏️ Te esperan", "#90c8f0", "#e8f4ff"],
+  };
+
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
       <div style={{ background: C.olive, padding: "48px 20px 24px", textAlign: "center" }}>
         <h1 style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.9rem", color: C.cream2, margin: 0 }}>La Burbuja</h1>
         <p style={{ color: `${C.cream}88`, fontSize: "0.86rem", fontWeight: 600, margin: "4px 0 0" }}>Sus reglas, acuerdos y mundo compartido · +10 bambú c/u</p>
       </div>
+
       <div style={{ background: C.cream, borderRadius: 18, margin: "14px 14px 8px", padding: 16, border: `1.5px solid ${C.border}`, boxShadow: `0 3px 0 ${C.border}` }}>
-        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.05rem", color: C.dark, marginBottom: 5 }}>¿Qué es la burbuja?</div>
-        <div style={{ fontSize: "0.85rem", color: C.inkM, lineHeight: 1.7 }}>Su relación tiene sus propias reglas — únicas para ustedes. Este es el espacio para definirlas juntos, sin juicios.</div>
+        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.05rem", color: C.dark, marginBottom: 5 }}>🫧 ¿Qué es la Burbuja?</div>
+        <div style={{ fontSize: "0.85rem", color: C.inkM, lineHeight: 1.7 }}>
+          Acá construyen juntos las reglas y acuerdos de su relación. En <strong>Inbox</strong> llegan todas las propuestas y ediciones pendientes.
+          En <strong>Negociación</strong>: cada uno propone su respuesta a preguntas clave — si ambos aprueban, se guarda como acuerdo.
+          En <strong>Acuerdos</strong>: ven todo lo que han acordado y pueden editarlo (con autorización de la pareja).
+          Cada acuerdo aprobado da +10 bambú 🌿 a los dos.
+        </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
           <ProgBar value={approvedCount} max={total} color={C.olive} height={7} style={{ flex: 1 }} />
           <div style={{ fontSize: "0.76rem", fontWeight: 800, color: C.olive, whiteSpace: "nowrap" }}>{approvedCount} / {total}</div>
         </div>
       </div>
+
+      {/* TABS */}
       <div style={{ display: "flex", gap: 8, margin: "0 14px 10px" }}>
         {[ ["negociacion", "Negociación"], ["acuerdos", "Acuerdos hechos"], ["inbox", "Inbox"] ].map(([id, label]) => (
           <button
@@ -3130,8 +3536,146 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user, notifs = [],
             )}
           </button>
         ))}
+        {[ ["inbox", "Inbox"], ["negociacion", "Negociación"], ["acuerdos", "Acuerdos hechos"] ].map(([id, label]) => {
+          let badge = 0;
+          if (id === "inbox") badge = inboxCount;
+          if (id === "acuerdos") {
+            badge = Object.values(burbuja).filter(e => e?.status === "pending" && e?.isEditOfApproved === true && e?.proposalBy && e.proposalBy !== myRole).length;
+          }
+          return (
+            <button
+              key={id}
+              onClick={() => setBurbujaTab(id)}
+              style={{
+                flex: 1,
+                borderRadius: 12,
+                padding: "10px 12px",
+                border: `1.5px solid ${burbujaTab === id ? C.dark : C.border}`,
+                background: burbujaTab === id ? C.dark : C.white,
+                color: burbujaTab === id ? C.cream2 : C.ink,
+                fontFamily: "'Fredoka One',cursive",
+                fontSize: "0.82rem",
+                cursor: "pointer",
+                boxShadow: burbujaTab === id ? "0 2px 0 rgba(0,0,0,0.18)" : `0 2px 0 ${C.border}`,
+                position: "relative",
+              }}
+            >
+              {label}
+              {badge > 0 && (
+                <span style={{
+                  position: "absolute",
+                  top: -6,
+                  right: -6,
+                  background: id === "inbox" ? "#d94a5a" : "#d94a5a",
+                  color: C.white,
+                  borderRadius: 999,
+                  minWidth: 20,
+                  height: 20,
+                  padding: "0 6px",
+                  fontSize: "0.7rem",
+                  fontWeight: 800,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  border: `2px solid ${C.sandL}`,
+                }}>
+                  {badge}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
+      {/* ─── INBOX TAB ─── */}
+      {burbujaTab === "inbox" && (
+        <div style={{ margin: "0 14px 10px" }}>
+          {/* NECESITAN MI ACCIÓN */}
+          {inboxNeedsAction.length > 0 && (
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, padding: "0 2px" }}>
+                <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark }}>🔔 Necesitan tu acción</div>
+                <span style={{ background: "#d94a5a", color: C.white, borderRadius: 999, padding: "2px 9px", fontSize: "0.7rem", fontWeight: 800 }}>
+                  {inboxNeedsAction.length}
+                </span>
+              </div>
+              {inboxNeedsAction.map((it) => {
+                const [labelText, borderColor, bgColor] = typeLabels[it.type] || typeLabels.proposal;
+                const senderName = it.by === "owner" ? nameA : nameB;
+                const targetTab = it.isEdit ? "acuerdos" : "negociacion";
+                return (
+                  <div key={it.id} style={{ background: bgColor, borderRadius: 13, padding: 13, marginBottom: 9, border: `1.5px solid ${borderColor}` }}>
+                    <div style={{ fontSize: "0.72rem", fontWeight: 800, color: borderColor, marginBottom: 5, letterSpacing: "0.3px" }}>
+                      {labelText} — {it.by === myRole ? "Tú" : senderName}
+                    </div>
+                    <div style={{ fontSize: "0.82rem", fontWeight: 800, color: C.dark, marginBottom: 8 }}>{it.question}</div>
+                    {it.text && (
+                      <div style={{ fontSize: "0.85rem", color: C.ink, lineHeight: 1.5, background: C.white, padding: 10, borderRadius: 8, marginBottom: 10, border: `1px solid ${borderColor}` }}>
+                        "{it.text}"
+                      </div>
+                    )}
+                    <button
+                      onClick={() => goToAgreement(it.id, targetTab)}
+                      style={{
+                        width: "100%",
+                        background: C.olive,
+                        color: C.cream2,
+                        border: "none",
+                        borderRadius: 10,
+                        padding: "10px",
+                        fontFamily: "'Fredoka One',cursive",
+                        fontSize: "0.85rem",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {it.type === "missing" ? "Escribir mi parte →" : "Responder ahora →"}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* ENVIADOS POR MÍ */}
+          {inboxSentByMe.length > 0 && (
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, padding: "0 2px" }}>
+                <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark }}>📤 Enviados por ti</div>
+                <span style={{ background: C.inkL, color: C.white, borderRadius: 999, padding: "2px 9px", fontSize: "0.7rem", fontWeight: 800 }}>
+                  {inboxSentByMe.length}
+                </span>
+              </div>
+              {inboxSentByMe.map((it) => {
+                const [labelText, borderColor, bgColor] = typeLabels[it.type] || typeLabels.proposal;
+                return (
+                  <div key={it.id} style={{ background: bgColor, borderRadius: 13, padding: 13, marginBottom: 9, border: `1.5px solid ${borderColor}`, opacity: 0.95 }}>
+                    <div style={{ fontSize: "0.72rem", fontWeight: 800, color: borderColor, marginBottom: 5, letterSpacing: "0.3px" }}>
+                      {labelText} — Esperando respuesta
+                    </div>
+                    <div style={{ fontSize: "0.82rem", fontWeight: 800, color: C.dark, marginBottom: 8 }}>{it.question}</div>
+                    <div style={{ fontSize: "0.85rem", color: C.ink, lineHeight: 1.5, background: C.white, padding: 10, borderRadius: 8, marginBottom: 10, border: `1px solid ${borderColor}` }}>
+                      "{it.text}"
+                    </div>
+                    <div style={{ fontSize: "0.75rem", color: C.inkL, fontStyle: "italic", textAlign: "center" }}>
+                      Esperando que {partnerName} responda...
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {inboxNeedsAction.length === 0 && inboxSentByMe.length === 0 && (
+            <div style={{ background: C.white, borderRadius: 16, padding: 14, border: `1.5px solid ${C.border}` }}>
+              <div style={{ fontSize: "0.82rem", color: C.inkM, fontWeight: 700, lineHeight: 1.6 }}>
+                Tu inbox está vacío. Cuando tu pareja envíe una propuesta o contraoferta, aparecerá aquí.
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ─── NEGOCIACIÓN TAB ─── */}
       {burbujaTab === "negociacion" && BURBUJA_SECTIONS.map(sec => {
         const pendingItems = sec.items.filter(item => {
           const entry = burbuja[item.id] || {};
@@ -3217,6 +3761,8 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user, notifs = [],
                   </div>
                 )}
 
+                <BurbujaHistoryPanel history={entry.history} nameA={nameA} nameB={nameB} myRole={myRole} />
+
               </div>;
             })}
           </div>}
@@ -3249,44 +3795,130 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user, notifs = [],
                 <div style={{ fontSize: "0.72rem", fontWeight: 800, color: C.olive, marginBottom: 3, letterSpacing: "0.3px" }}>ACUERDO</div>
                 <div style={{ fontSize: "0.85rem", fontWeight: 700, color: C.ink, lineHeight: 1.6 }}>
                   {approvedText}
-                </div>
+      {/* ─── ACUERDOS TAB ─── */}
+      {burbujaTab === "acuerdos" && (() => {
+        // Pending edits of previously-approved agreements (split top/bottom)
+        const pendingEdits = BURBUJA_SECTIONS.flatMap(sec =>
+          sec.items
+            .filter(item => {
+              const e = burbuja[item.id] || {};
+              return e.status === "pending" && e.isEditOfApproved === true && !!e.proposalText;
+            })
+            .map(item => ({ item, entry: burbuja[item.id] || {} }))
+        );
+        const onlyApproved = approvedItems.filter(({ item }) => {
+          const e = burbuja[item.id] || {};
+          return !(e.status === "pending" && e.isEditOfApproved === true);
+        });
 
-                {!editingApproved[item.id] ? (
-                  <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
-                    <Btn
-                      onClick={() => {
-                        set_(item.id, "proposalText", approvedText);
-                        setEditingApproved(p => ({ ...p, [item.id]: true }));
-                      }}
-                      variant="sand"
-                      style={{ padding: "8px 12px", fontSize: "0.8rem" }}
-                    >
-                      Editar acuerdo
-                    </Btn>
+        return (
+          <div style={{ margin: "0 14px 10px" }}>
+            {/* PENDIENTES (arriba, con badge rojo) */}
+            {pendingEdits.length > 0 && (
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, padding: "0 2px" }}>
+                  <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark }}>⏳ Pendientes</div>
+                  <span style={{ background: "#d94a5a", color: C.white, borderRadius: 999, padding: "2px 9px", fontSize: "0.7rem", fontWeight: 800 }}>
+                    {pendingEdits.length}
+                  </span>
+                </div>
+                {pendingEdits.map(({ item, entry }) => {
+                  const byMe = entry.proposalBy === myRole;
+                  return (
+                    <div key={item.id} style={{ background: "#fff5f5", borderRadius: 13, padding: 13, marginBottom: 9, borderLeft: "3px solid #d94a5a", border: `1.5px solid #f0c4cc` }}>
+                      <div style={{ fontSize: "0.72rem", fontWeight: 800, color: "#9b3544", marginBottom: 5, letterSpacing: "0.3px" }}>
+                        {byMe ? "✏️ ESPERANDO A TU PAREJA" : `✏️ ${entry.proposalBy === "owner" ? nameA.toUpperCase() : nameB.toUpperCase()} PROPONE EDITAR`}
+                      </div>
+                      <div style={{ fontSize: "0.82rem", fontWeight: 800, color: C.dark, marginBottom: 8 }}>{item.q}</div>
+
+                      {entry.approvedText && (
+                        <>
+                          <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.inkL, marginBottom: 3, letterSpacing: "0.3px" }}>ACUERDO ACTUAL</div>
+                          <div style={{ fontSize: "0.8rem", color: C.inkM, lineHeight: 1.5, background: C.white, padding: 9, borderRadius: 8, marginBottom: 8, textDecoration: "line-through", opacity: 0.75 }}>
+                            {entry.approvedText}
+                          </div>
+                        </>
+                      )}
+
+                      <div style={{ fontSize: "0.68rem", fontWeight: 800, color: "#9b3544", marginBottom: 3, letterSpacing: "0.3px" }}>PROPUESTA NUEVA</div>
+                      <div style={{ fontSize: "0.85rem", color: C.ink, lineHeight: 1.5, background: C.white, padding: 10, borderRadius: 8, marginBottom: 10, border: "1px solid #f0c4cc" }}>
+                        "{entry.proposalText}"
+                      </div>
+
+                      {!byMe ? (
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <Btn
+                            onClick={() => onApprove(item.id)}
+                            variant="olive"
+                            style={{ flex: 1, padding: "10px 12px", fontSize: "0.85rem" }}
+                          >
+                            ✓ Aprobar edición
+                          </Btn>
+                          <Btn
+                            onClick={() => {
+                              set_(item.id, "proposalText", entry.proposalText);
+                              setBurbujaTab("negociacion");
+                              setOpen(p => ({ ...p, [BURBUJA_SECTIONS.find(s => s.items.some(i => i.id === item.id))?.id]: true }));
+                            }}
+                            variant="sand"
+                            style={{ flex: 1, padding: "10px 12px", fontSize: "0.85rem" }}
+                          >
+                            ↔ Contraoferta
+                          </Btn>
+                        </div>
+                      ) : (
+                        <div style={{ fontSize: "0.78rem", color: C.inkL, fontStyle: "italic", textAlign: "center", padding: "6px 0" }}>
+                          Esperando que tu pareja apruebe o contraoferte...
+                        </div>
+                      )}
+
+                      <BurbujaHistoryPanel history={entry.history} nameA={nameA} nameB={nameB} myRole={myRole} />
+
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* ACUERDOS HECHOS (abajo) */}
+            {pendingEdits.length > 0 && onlyApproved.length > 0 && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, padding: "0 2px" }}>
+                <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark }}>✅ Acuerdos hechos</div>
+                <span style={{ background: C.olive, color: C.white, borderRadius: 999, padding: "2px 9px", fontSize: "0.7rem", fontWeight: 800 }}>
+                  {onlyApproved.length}
+                </span>
+              </div>
+            )}
+
+            {!onlyApproved.length && !pendingEdits.length ? (
+              <div style={{ background: C.white, borderRadius: 16, padding: 14, border: `1.5px solid ${C.border}` }}>
+                <div style={{ fontSize: "0.82rem", color: C.inkM, fontWeight: 700, lineHeight: 1.6 }}>
+                  Aún no tienen acuerdos aprobados. Cuando aprueben uno, aparecerá aquí.
+                </div>
+              </div>
+            ) : onlyApproved.map(({ item, entry }) => {
+              const proposalText = get(item.id, "proposalText");
+              const approvedText = entry.approvedText || entry.proposalText || "";
+              return (
+                <div key={item.id} style={{ background: C.white, borderRadius: 13, padding: 13, marginBottom: 9, borderLeft: `3px solid ${C.olive}`, border: `1.5px solid ${C.border}` }}>
+                  <div style={{ fontSize: "0.72rem", fontWeight: 800, color: C.inkL, marginBottom: 5, letterSpacing: "0.3px" }}>PROMPT</div>
+                  <div style={{ fontSize: "0.82rem", fontWeight: 800, color: C.rose, marginBottom: 7 }}>{item.q}</div>
+                  <div style={{ fontSize: "0.72rem", fontWeight: 800, color: C.olive, marginBottom: 3, letterSpacing: "0.3px" }}>ACUERDO</div>
+                  <div style={{ fontSize: "0.85rem", fontWeight: 700, color: C.ink, lineHeight: 1.6 }}>
+                    {approvedText}
                   </div>
-                ) : (
-                  <div style={{ marginTop: 8 }}>
-                    <TA value={proposalText} onChange={v => set_(item.id, "proposalText", v)} placeholder="Escribe la nueva versión del acuerdo..." rows={2} />
-                    <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
+
+                  {!editingApproved[item.id] ? (
+                    <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
                       <Btn
                         onClick={() => {
-                          setEditingApproved(p => ({ ...p, [item.id]: false }));
                           set_(item.id, "proposalText", approvedText);
+                          setEditingApproved(p => ({ ...p, [item.id]: true }));
                         }}
-                        variant="ghost"
+                        variant="sand"
                         style={{ padding: "8px 12px", fontSize: "0.8rem" }}
                       >
-                        Cancelar
-                      </Btn>
-                      <Btn
-                        onClick={() => {
-                          onPropose(item.id, proposalText, true);
-                          setEditingApproved(p => ({ ...p, [item.id]: false }));
-                        }}
-                        variant="olive"
-                        style={{ padding: "8px 12px", fontSize: "0.8rem" }}
-                      >
-                        Enviar edición
+                        Editar acuerdo
                       </Btn>
                     </div>
                   </div>
@@ -3374,6 +4006,42 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user, notifs = [],
           )}
         </div>
       )}
+                  ) : (
+                    <div style={{ marginTop: 8 }}>
+                      <TA value={proposalText} onChange={v => set_(item.id, "proposalText", v)} placeholder="Escribe la nueva versión del acuerdo..." rows={2} />
+                      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
+                        <Btn
+                          onClick={() => {
+                            setEditingApproved(p => ({ ...p, [item.id]: false }));
+                            set_(item.id, "proposalText", approvedText);
+                          }}
+                          variant="ghost"
+                          style={{ padding: "8px 12px", fontSize: "0.8rem" }}
+                        >
+                          Cancelar
+                        </Btn>
+                        <Btn
+                          onClick={() => {
+                            onPropose(item.id, proposalText, true);
+                            setEditingApproved(p => ({ ...p, [item.id]: false }));
+                          }}
+                          variant="olive"
+                          style={{ padding: "8px 12px", fontSize: "0.8rem" }}
+                        >
+                          Enviar edición
+                        </Btn>
+                      </div>
+                    </div>
+                  )}
+
+                  <BurbujaHistoryPanel history={entry.history} nameA={nameA} nameB={nameB} myRole={myRole} />
+
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
     </div>
   );
 }
@@ -3541,11 +4209,21 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
   const favKey = `mochi_consejos_fav_${ownerKey}`;
   const [offset, setOffset] = useState(0);
   const [open, setOpen] = useState(false);
+  const [showFavs, setShowFavs] = useState(false);
   const [favs, setFavs] = useState(() => ls.get(favKey) || []);
   const dayKey = getDateKeyLocal();
 
   useEffect(() => { setOffset(0); setOpen(false); }, [dayKey, ownerKey]);
   useEffect(() => { ls.set(favKey, favs); }, [favKey, favs]);
+  useEffect(() => {
+    setOffset(0);
+    setOpen(false);
+    setShowFavs(false);
+  }, [dayKey, ownerKey]);
+
+  useEffect(() => {
+    ls.set(favKey, favs);
+  }, [favKey, favs]);
 
   const dayNumber = getDayNumberLocal();
   const baseIndex = (dayNumber + hashSeed(ownerKey)) % CONSEJOS_DIARIOS.length;
@@ -3558,12 +4236,25 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
 
   const handleToggleOpen = () => {
     setOpen(v => { const next = !v; if (next) onClaimReward?.(); return next; });
+  const removeFav = (id) => {
+    setFavs(prev => prev.filter(fid => fid !== id));
   };
+
+  const handleOpen = () => {
+    setOpen(true);
+    onClaimReward?.();
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const favsList = favs.map(id => CONSEJOS_DIARIOS.find(c => c.id === id)).filter(Boolean);
 
   return (
     <div style={{ margin: "0 14px 12px" }}>
-      <button
-        onClick={handleToggleOpen}
+      {/* Área rectangular unificada */}
+      <div
         style={{
           width: "100%", background: C.white, color: C.dark,
           border: `1.5px solid ${C.border}`, borderRadius: 14,
@@ -3578,7 +4269,65 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
           {open ? "Cerrar" : "Ver"}
         </span>
       </button>
+          background: "linear-gradient(130deg, #f7f1ff 0%, #eee3ff 100%)",
+          border: `1.5px solid ${C.border}`,
+          borderRadius: 14,
+          padding: "14px 16px",
+          boxShadow: `0 3px 0 ${C.border}`,
+        }}
+      >
+        {/* Botón principal - Consejo del Día */}
+        <button
+          onClick={handleOpen}
+          style={{
+            width: "100%",
+            background: C.dark,
+            color: C.cream2,
+            border: "none",
+            borderRadius: 12,
+            padding: "14px 16px",
+            fontFamily: "'Fredoka One',cursive",
+            fontSize: "1rem",
+            cursor: "pointer",
+            boxShadow: "0 3px 0 rgba(0,0,0,0.18)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 8,
+            marginBottom: favs.length > 0 ? 10 : 0,
+          }}
+        >
+          <span>💡 Consejo del Día · +15 bambú</span>
+          <span style={{ fontSize: "0.9rem" }}>🐼</span>
+        </button>
 
+        {/* Botón para ver favoritos (integrado en el mismo área) */}
+        {favs.length > 0 && (
+          <button
+            onClick={() => setShowFavs(true)}
+            style={{
+              width: "100%",
+              background: C.white,
+              color: C.dark,
+              border: `1.5px solid ${C.border}`,
+              borderRadius: 10,
+              padding: "10px 14px",
+              fontFamily: "'Fredoka One',cursive",
+              fontSize: "0.85rem",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+            }}
+          >
+            <span>💜</span>
+            <span>Ver {favs.length} favorito{favs.length !== 1 ? 's' : ''}</span>
+          </button>
+        )}
+      </div>
+
+      {/* Modal Pop-up del Consejo */}
       {open && (
         <div
           style={{ position: "fixed", inset: 0, background: "rgba(44,35,66,0.62)", zIndex: 5100, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}
@@ -3782,6 +4531,116 @@ function DiarioSection({ diario, user, onAddDiaryEntry, onDeleteDiaryEntry }) {
               }}
             >
               ✕
+        <div 
+          style={{ 
+            position: "fixed", 
+            inset: 0, 
+            background: "rgba(45,31,70,0.65)", 
+            zIndex: 6000, 
+            display: "flex", 
+            alignItems: "center", 
+            justifyContent: "center", 
+            padding: "20px" 
+          }} 
+          onClick={handleClose}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()} 
+            style={{ 
+              width: "100%", 
+              maxWidth: 520, 
+              background: C.white, 
+              borderRadius: 28, 
+              padding: "24px 22px 24px", 
+              border: `2px solid ${C.border}`, 
+              boxShadow: "0 20px 60px rgba(0,0,0,0.35)", 
+              maxHeight: "85vh", 
+              overflowY: "auto" 
+            }}
+          >
+            {/* Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: "1.8rem" }}>💡</span>
+                <div>
+                  <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.2rem", color: C.dark }}>Consejo del Día</div>
+                  <div style={{ fontSize: "0.75rem", color: C.inkL, fontWeight: 700 }}>#{consejo.id} · +15 bambú 🌿</div>
+                </div>
+              </div>
+              <button 
+                onClick={handleClose} 
+                style={{ 
+                  width: 40, 
+                  height: 40, 
+                  borderRadius: "50%", 
+                  border: "none", 
+                  background: C.cream, 
+                  color: C.inkM, 
+                  fontWeight: 900, 
+                  fontSize: "1.1rem", 
+                  cursor: "pointer" 
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* El consejo principal */}
+            <div style={{ background: "linear-gradient(130deg, #f7f1ff 0%, #eee3ff 100%)", borderRadius: 18, padding: "18px 20px", border: `2px solid ${C.border}`, marginBottom: 14 }}>
+              <div style={{ fontSize: "1.15rem", color: C.dark, lineHeight: 1.6, fontWeight: 800, textAlign: "center" }}>
+                {consejo.texto}
+              </div>
+            </div>
+
+            {/* Por qué funciona */}
+            <div style={{ background: C.sandL, borderRadius: 14, padding: "14px 16px", marginBottom: 12, border: `1.5px solid ${C.border}` }}>
+              <div style={{ fontSize: "0.8rem", fontWeight: 800, color: C.olive, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>💜 Por qué funciona</div>
+              <div style={{ fontSize: "0.9rem", color: C.ink, lineHeight: 1.7 }}>{consejo.explicacion}</div>
+            </div>
+
+            {/* Qué puedes hacer hoy */}
+            <div style={{ background: "#f0f8ff", borderRadius: 14, padding: "14px 16px", marginBottom: 12, border: `1.5px solid #d0e0f0` }}>
+              <div style={{ fontSize: "0.8rem", fontWeight: 800, color: "#4a6fa5", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>✨ Qué puedes hacer hoy</div>
+              <div style={{ fontSize: "0.9rem", color: C.ink, lineHeight: 1.7 }}>{consejo.practica}</div>
+            </div>
+
+            {/* Quién lo dice */}
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 12, background: C.cream, borderRadius: 14, padding: "14px 16px", marginBottom: 16, border: `1.5px solid ${C.border}` }}>
+              <div style={{ fontSize: "1.6rem" }}>👤</div>
+              <div>
+                <div style={{ fontSize: "0.9rem", fontWeight: 800, color: C.dark, marginBottom: 3 }}>{consejo.autor}</div>
+                <div style={{ fontSize: "0.8rem", color: C.inkM, lineHeight: 1.5 }}>{consejo.quienEs}</div>
+              </div>
+            </div>
+
+            {/* Botones */}
+            <div style={{ display: "flex", gap: 10 }}>
+              <Btn onClick={() => setOffset(v => (v + 1) % CONSEJOS_DIARIOS.length)} variant="sand" style={{ flex: 1, padding: "12px 14px", fontSize: "0.9rem" }}>
+                Ver otro consejo
+              </Btn>
+              <Btn onClick={toggleFav} variant={isFav ? "olive" : "cream"} style={{ flex: 1, padding: "12px 14px", fontSize: "0.9rem" }}>
+                {isFav ? "Guardado ✓" : "Guardar favorito"}
+              </Btn>
+            </div>
+
+            {/* Botón cerrar */}
+            <button 
+              onClick={handleClose}
+              style={{
+                width: "100%",
+                marginTop: 16,
+                background: C.dark,
+                color: C.cream2,
+                border: "none",
+                borderRadius: 14,
+                padding: "14px",
+                fontFamily: "'Fredoka One',cursive",
+                fontSize: "1rem",
+                cursor: "pointer",
+                boxShadow: "0 4px 0 rgba(0,0,0,0.2)"
+              }}
+            >
+              Entendido 💜
             </button>
           </div>
         </div>
@@ -3793,6 +4652,121 @@ function DiarioSection({ diario, user, onAddDiaryEntry, onDeleteDiaryEntry }) {
           <div style={{ fontSize: "1.8rem", marginBottom: 8 }}>📔</div>
           <div style={{ fontSize: "0.9rem", fontFamily: "'Fredoka One',cursive", marginBottom: 6 }}>Tu diario está vacío</div>
           <div style={{ fontSize: "0.78rem", lineHeight: 1.5 }}>Escribe cuando te sientas enojada, confundida o necesites reflexionar. Este es tu espacio seguro.</div>
+
+      {/* Modal de Favoritos */}
+      {showFavs && (
+        <div 
+          style={{ 
+            position: "fixed", 
+            inset: 0, 
+            background: "rgba(45,31,70,0.65)", 
+            zIndex: 6001, 
+            display: "flex", 
+            alignItems: "center", 
+            justifyContent: "center", 
+            padding: "20px" 
+          }} 
+          onClick={() => setShowFavs(false)}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()} 
+            style={{ 
+              width: "100%", 
+              maxWidth: 520, 
+              background: C.white, 
+              borderRadius: 28, 
+              padding: "24px 22px 24px", 
+              border: `2px solid ${C.border}`, 
+              boxShadow: "0 20px 60px rgba(0,0,0,0.35)", 
+              maxHeight: "85vh", 
+              overflowY: "auto" 
+            }}
+          >
+            {/* Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: "1.8rem" }}>💜</span>
+                <div>
+                  <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.2rem", color: C.dark }}>Mis Favoritos</div>
+                  <div style={{ fontSize: "0.75rem", color: C.inkL, fontWeight: 700 }}>{favs.length} consejo{favs.length !== 1 ? 's' : ''} guardado{favs.length !== 1 ? 's' : ''}</div>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowFavs(false)} 
+                style={{ 
+                  width: 40, 
+                  height: 40, 
+                  borderRadius: "50%", 
+                  border: "none", 
+                  background: C.cream, 
+                  color: C.inkM, 
+                  fontWeight: 900, 
+                  fontSize: "1.1rem", 
+                  cursor: "pointer" 
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Lista de favoritos */}
+            {favsList.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "40px 20px", color: C.inkL }}>
+                <div style={{ fontSize: "3rem", marginBottom: 10 }}>💜</div>
+                <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", marginBottom: 8 }}>No tienes favoritos aún</div>
+                <div style={{ fontSize: "0.85rem" }}>Guarda los consejos que más te gusten para verlos aquí</div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {favsList.map((favConsejo) => (
+                  <div key={favConsejo.id} style={{ background: C.sandL, borderRadius: 16, padding: "14px 16px", border: `1.5px solid ${C.border}` }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                      <div style={{ fontSize: "0.7rem", fontWeight: 800, color: C.inkL }}>#{favConsejo.id}</div>
+                      <button 
+                        onClick={() => removeFav(favConsejo.id)}
+                        style={{ 
+                          background: "none", 
+                          border: "none", 
+                          color: "#e86040", 
+                          fontSize: "0.75rem", 
+                          cursor: "pointer",
+                          fontWeight: 700
+                        }}
+                      >
+                        Quitar ✕
+                      </button>
+                    </div>
+                    <div style={{ fontSize: "0.95rem", color: C.dark, fontWeight: 700, marginBottom: 8, lineHeight: 1.5 }}>
+                      {favConsejo.texto}
+                    </div>
+                    <div style={{ fontSize: "0.75rem", color: C.inkM, fontWeight: 700 }}>
+                      {favConsejo.autor}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Botón cerrar */}
+            <button 
+              onClick={() => setShowFavs(false)}
+              style={{
+                width: "100%",
+                marginTop: 20,
+                background: C.dark,
+                color: C.cream2,
+                border: "none",
+                borderRadius: 14,
+                padding: "14px",
+                fontFamily: "'Fredoka One',cursive",
+                fontSize: "1rem",
+                cursor: "pointer",
+                boxShadow: "0 4px 0 rgba(0,0,0,0.2)"
+              }}
+            >
+              Cerrar
+            </button>
+          </div>
         </div>
       ) : (
         <>
@@ -3895,6 +4869,11 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
   const [editingName, setEditingName] = useState(false);
   const [showLoveModal, setShowLoveModal] = useState(false);
   const [showAllMsgs, setShowAllMsgs] = useState(false);
+function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, conoce, lessonsDone, coupleInfo, streakInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento, onSendMessage, onClaimDailyTip, diario, onAddDiario, onUpdateDiario, onDeleteDiario }) {
+  const [editMode, setEditMode] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [showLoveModal, setShowLoveModal] = useState(false);
+  const [showAllMessagesModal, setShowAllMessagesModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteModalClosing, setDeleteModalClosing] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
@@ -3903,6 +4882,16 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
   const [quickLove, setQuickLove] = useState(null);
   const [nameInput, setNameInput] = useState(user?.names || "");
   const deleteCloseTimer = useRef(null);
+
+  // Diario personal states
+  const [showDiarioModal, setShowDiarioModal] = useState(false);
+  const [diarioText, setDiarioText] = useState("");
+  const [diarioTipo, setDiarioTipo] = useState("reflexion"); // reflexion, conflicto, gratitud, meta
+  const [diarioMood, setDiarioMood] = useState(3); // 1-5
+  const [editingDiarioId, setEditingDiarioId] = useState(null);
+  const [showDiarioAnalysis, setShowDiarioAnalysis] = useState(false);
+  const [analysisEntry, setAnalysisEntry] = useState(null);
+
   const [form, setForm] = useState({
     anniversary: coupleInfo.anniversary || "",
     firstDate: coupleInfo.firstDate || "",
@@ -3924,24 +4913,26 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
     .filter(m => m.senderEmail !== myEmail)
     .sort((a, b) => new Date(b?.time || 0).getTime() - new Date(a?.time || 0).getTime());
   const recentPartnerMsgs = partnerMsgs.slice(0, 3);
-  const approvedAgreements = Object.entries(burbuja || {})
-    .filter(([, v]) => v?.status === "approved" && (v?.approvedText || v?.proposalText))
-    .map(([id, v]) => ({
-      id,
-      text: v.approvedText || v.proposalText,
-      question: v.question || BURBUJA_ITEM_MAP[id]?.question || "Acuerdo"
-    }));
+  const allPartnerMsgs = partnerMsgs;
+
   const [connected, setConnected] = useState(false);
   useEffect(() => {
     if (user?.code && !user?.isGuest) {
-      fbGetCode(user.code).then(ci => {
-        setConnected(!!(ci?.partnerUid && ci?.ownerUid));
-      }).catch(() => {
-        // fallback: localStorage
-        const codes = ls.get("mochi_codes") || {};
-        const ci = codes[user.code];
-        setConnected(!!(ci?.partnerEmail && ci?.ownerEmail));
+      // Listen to code changes in real-time so when partner joins, it updates immediately
+      const unsub = fbListenCode(user.code, (ci) => {
+        if (ci) {
+          setConnected(!!(ci?.partnerUid && ci?.ownerUid));
+          // Also update localStorage cache
+          const codes = ls.get("mochi_codes") || {};
+          codes[user.code] = ci;
+          ls.set("mochi_codes", codes);
+        } else {
+          setConnected(false);
+        }
       });
+      return unsub;
+    } else {
+      setConnected(false);
     }
   }, [user?.code]);
 
@@ -4049,6 +5040,36 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
                   {showAllMsgs ? "Ver menos ↑" : `Ver todo (${partnerMsgs.length}) ↓`}
                 </button>
               )}
+              {recentPartnerMsgs.map((msg, i) => (
+                <div key={msg.id || i} style={{ background:C.white, borderRadius:10, padding:"9px 10px", border:`1px solid ${C.border}`, marginBottom:i === recentPartnerMsgs.length - 1 ? 0 : 8 }}>
+                  <div style={{ fontSize:"0.86rem", color:C.ink, lineHeight:1.65, fontWeight:700 }}>{msg.text}</div>
+                  <div style={{ fontSize:"0.7rem", color:C.inkL, fontWeight:700, marginTop:5 }}>
+                    De {msg.sender} · {new Date(msg.time).toLocaleDateString("es", { day:"numeric", month:"short", hour:"2-digit", minute:"2-digit" })}
+                  </div>
+                </div>
+              ))}
+              <button 
+                onClick={() => setShowAllMessagesModal(true)}
+                style={{ 
+                  width: "100%", 
+                  marginTop: 10,
+                  background: C.dark, 
+                  color: C.cream2, 
+                  border: "none", 
+                  borderRadius: 10, 
+                  padding: "10px 14px", 
+                  fontFamily: "'Fredoka One',cursive", 
+                  fontSize: "0.9rem", 
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                  boxShadow: "0 3px 0 rgba(0,0,0,0.18)"
+                }}
+              >
+                📜 Mostrar todos los mensajes
+              </button>
             </>
           )}
         </div>
@@ -4115,6 +5136,14 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
             </div>
           )}
         </div>
+      {/* ── DIARIO PERSONAL ── */}
+      <DiarioSection
+        diario={diario}
+        onAdd={onAddDiario}
+        onUpdate={onUpdateDiario}
+        onDelete={onDeleteDiario}
+        user={user}
+      />
 
         {/* ── TERAPIA DE PAREJA ── */}
         <div style={{ margin:"0 0 12px", background:"#2f1b45", borderRadius:18, padding:16, boxShadow:"0 3px 0 #211132", border:"1.5px solid #4f2f71" }}>
@@ -4239,6 +5268,50 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
         </div>
       )}
 
+      {showAllMessagesModal && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(15,25,15,0.62)", zIndex:5100, display:"flex", alignItems:"flex-end" }} onClick={e => {
+          if (e.target === e.currentTarget) setShowAllMessagesModal(false);
+        }}>
+          <div style={{ background:C.white, borderRadius:"22px 22px 0 0", padding:"16px 18px 44px", width:"100%", maxWidth:480, margin:"0 auto", border:`1.5px solid ${C.border}`, maxHeight:"85vh", display:"flex", flexDirection:"column" }}>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
+              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.2rem", color:C.dark }}>💌 Historial de mensajes</div>
+              <div onClick={() => setShowAllMessagesModal(false)} style={{ width:30, height:30, borderRadius:"50%", background:C.sand, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", fontSize:"1rem", color:C.inkM, fontWeight:800 }}>✕</div>
+            </div>
+            
+            <div style={{ flex:1, overflowY:"auto", padding:"0 4px" }}>
+              {allPartnerMsgs.length === 0 ? (
+                <div style={{ textAlign:"center", padding:"30px 0", color:C.inkL, fontSize:"0.9rem" }}>
+                  Aún no hay mensajes 💕
+                </div>
+              ) : (
+                <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                  {allPartnerMsgs.map((msg, i) => (
+                    <div key={msg.id || i} style={{ 
+                      background: msg.sender === (user?.names?.split(" & ")[0] || "Tú") ? C.cream : "#fce8ec", 
+                      borderRadius:14, 
+                      padding:"11px 13px", 
+                      border:`1.5px solid ${C.border}` 
+                    }}>
+                      <div style={{ fontSize:"0.9rem", color:C.ink, lineHeight:1.6, fontWeight:700 }}>{msg.text}</div>
+                      <div style={{ fontSize:"0.7rem", color:C.inkL, fontWeight:700, marginTop:6, display:"flex", justifyContent:"space-between" }}>
+                        <span>De {msg.sender}</span>
+                        <span>{new Date(msg.time).toLocaleDateString("es", { day:"numeric", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" })}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <div style={{ marginTop:14, paddingTop:10, borderTop:`1px solid ${C.border}` }}>
+              <div style={{ fontSize:"0.75rem", color:C.inkL, textAlign:"center" }}>
+                {allPartnerMsgs.length} mensaje{allPartnerMsgs.length !== 1 ? "s" : ""} en total 💕
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showDeleteModal && (
         <div
           style={{ position:"fixed", inset:0, background:"rgba(15,20,15,0.66)", zIndex:5200, display:"flex", alignItems:"center", justifyContent:"center", padding:"18px", animation: deleteModalClosing ? "fadeOutOverlay 0.18s ease forwards" : "fadeInOverlay 0.2s ease forwards" }}
@@ -4319,9 +5392,59 @@ select { appearance: none; }
 `;
 
 const OB = [
-  { title: "Bienvenidos a Mochi", body: "Una app para que su amor florezca — basada en terapia real." },
-  { title: "Su jardín crece con amor", body: "Completen ejercicios, envíen mensajes y respondan preguntas juntos para ganar bambú 🌿 y plantar cosas en el jardín." },
-  { title: "¡Listos para empezar!", body: "Hagan su primer ejercicio y siembren la primera semilla." },
+  {
+    title: "Todo queda entre ustedes 🔒",
+    body: "Mochi es un espacio 100% privado y exclusivo para ti y tu pareja. Tus conversaciones, acuerdos, ejercicios y momentos compartidos son confidenciales. Nadie más tiene acceso a esta información. Sin publicidad, sin vender datos.",
+    icon: "🔒",
+    demo: null
+  },
+  {
+    title: "Bienvenidos a Mochi 🐼",
+    body: "Un espacio privado para que su amor crezca. Basada en 40 años de investigación de parejas por el psicólogo John Gottman.",
+    icon: "🐼",
+    demo: null
+  },
+  {
+    title: "Gana bambú con cada interacción 🌿",
+    body: "Cada vez que interactúan, ganan bambú:",
+    icon: "🎋",
+    demo: "bamboo",
+    rewards: [
+      { emoji: "⭐", text: "Ejercicios", amount: "+15" },
+      { emoji: "💬", text: "Preguntas", amount: "+15" },
+      { emoji: "🫧", text: "Acuerdos", amount: "+10" },
+      { emoji: "📖", text: "Lecciones", amount: "+10" },
+    ]
+  },
+  {
+    title: "Compra en la tienda 🛒",
+    body: "Usa tu bambú para comprar plantas, flores y accesorios para decorar su jardín juntos.",
+    icon: "🛍️",
+    demo: "shop",
+    shopItems: [
+      { emoji: "🌻", name: "Girasol", price: "50" },
+      { emoji: "🌹", name: "Rosa", price: "80" },
+      { emoji: "🎀", name: "Lazo", price: "30" },
+    ]
+  },
+  {
+    title: "Mantengan su racha 🔥",
+    body: "Conecten cada día para mantener su racha activa. Cuantos más días seguidos, más bambú extra ganan. ¡No dejen que se apague!",
+    icon: "🔥",
+    demo: null
+  },
+  {
+    title: "Conéctense con un código",
+    body: "Uno de ustedes crea una cuenta y comparte el código con su pareja. Así sus respuestas, mensajes y progreso se sincronizan.",
+    icon: "🔗",
+    demo: null
+  },
+  {
+    title: "¡Listos para empezar!",
+    body: "Hagan su primer ejercicio juntos y siembren la primera semilla en su jardín. Su relación vale la inversión.",
+    icon: "🌱",
+    demo: null
+  },
 ];
 
 // ═══════════════════════════════════════════════
@@ -4852,19 +5975,152 @@ function LeccionDia({ lessonsDone, onComplete }) {
 
 function Onboarding({ onDone }) {
   const [i, setI] = useState(0);
-  return (
-    <div style={{ minHeight: "100vh", background: C.sandL, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "28px 20px" }}>
-      <div style={{ textAlign: "center", maxWidth: 320 }}>
-        <div style={{ animation: "float 3s ease-in-out infinite", marginBottom: 16 }}>
-          <CouplePandaSVG size={170} happy />
+  const current = OB[i];
+  const isLast = i === OB.length - 1;
+
+  // Renderizar demostración según el tipo
+  const renderDemo = () => {
+    if (current.demo === "bamboo" && current.rewards) {
+      return (
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            {current.rewards.map((reward, idx) => (
+              <div key={idx} style={{ 
+                background: C.cream, 
+                borderRadius: 12, 
+                padding: "12px 8px",
+                border: `1.5px solid ${C.border}`,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 4
+              }}>
+                <div style={{ fontSize: "1.5rem" }}>{reward.emoji}</div>
+                <div style={{ fontSize: "0.7rem", fontWeight: 700, color: C.inkM }}>{reward.text}</div>
+                <div style={{ fontSize: "0.9rem", fontWeight: 800, color: C.olive }}>{reward.amount} 🎋</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: 12, fontSize: "0.8rem", color: C.inkL, fontStyle: "italic" }}>
+            💡 Tip: Más interacciones = Más bambú = Más decoraciones
+          </div>
         </div>
-        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.85rem", color: C.dark, marginBottom: 8 }}>{OB[i].title}</div>
-        <div style={{ color: C.inkM, lineHeight: 1.6, marginBottom: 24, fontFamily: "'Nunito',sans-serif" }}>{OB[i].body}</div>
-        <div style={{ display: "flex", gap: 7, justifyContent: "center", marginBottom: 24 }}>{OB.map((_, j) => <div key={j} style={{ width: j === i ? 24 : 8, height: 8, borderRadius: 50, background: j === i ? C.dark : C.sand, transition: "all 0.3s" }} />)}</div>
-        {i < OB.length - 1 ? <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <button onClick={onDone} style={{ background: "none", border: "none", color: C.inkL, fontWeight: 700, cursor: "pointer", fontFamily: "'Nunito',sans-serif" }}>Saltar</button>
-          <button onClick={() => setI(i + 1)} style={{ background: C.white, border: `1.5px solid ${C.border}`, color: C.dark, borderRadius: 12, padding: "10px 22px", fontFamily: "'Fredoka One',cursive", cursor: "pointer", boxShadow: `0 3px 0 ${C.border}` }}>Siguiente →</button>
-        </div> : <button onClick={onDone} style={{ width: "100%", background: C.dark, color: C.cream2, border: "none", borderRadius: 12, padding: "14px", fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", cursor: "pointer", boxShadow: "0 4px 0 rgba(0,0,0,0.2)" }}>Comenzar juntos 🐼</button>}
+      );
+    }
+    
+    if (current.demo === "shop" && current.shopItems) {
+      return (
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ 
+            background: C.white, 
+            borderRadius: 14, 
+            padding: 12,
+            border: `1.5px solid ${C.border}`,
+            boxShadow: `0 3px 0 ${C.border}`
+          }}>
+            <div style={{ fontSize: "0.75rem", fontWeight: 700, color: C.inkL, marginBottom: 10, textAlign: "left" }}>
+              🛒 Tienda de decoraciones
+            </div>
+            {current.shopItems.map((item, idx) => (
+              <div key={idx} style={{ 
+                display: "flex", 
+                alignItems: "center", 
+                justifyContent: "space-between",
+                padding: "8px 0",
+                borderBottom: idx < current.shopItems.length - 1 ? `1px solid ${C.border}` : "none"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: "1.3rem" }}>{item.emoji}</span>
+                  <span style={{ fontSize: "0.85rem", color: C.dark, fontWeight: 600 }}>{item.name}</span>
+                </div>
+                <div style={{ 
+                  background: C.olive, 
+                  color: C.white, 
+                  padding: "4px 10px", 
+                  borderRadius: 10,
+                  fontSize: "0.75rem",
+                  fontWeight: 700
+                }}>
+                  {item.price} 🎋
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: 12, fontSize: "0.8rem", color: C.inkL, fontStyle: "italic" }}>
+            🌟 Compra juntos y decora su jardín único
+          </div>
+        </div>
+      );
+    }
+    
+    return null;
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: "linear-gradient(180deg, #f8f4ff 0%, #f0e8ff 100%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "28px 20px" }}>
+      <div style={{ textAlign: "center", maxWidth: 340, width: "100%" }}>
+        {/* Icono grande */}
+        <div style={{ animation: "float 3s ease-in-out infinite", marginBottom: 20, fontSize: "5rem" }}>
+          {current.icon}
+        </div>
+
+        {/* Título */}
+        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.6rem", color: C.dark, marginBottom: 12 }}>
+          {current.title}
+        </div>
+
+        {/* Body */}
+        <div style={{ color: C.inkM, lineHeight: 1.7, marginBottom: 20, fontFamily: "'Nunito',sans-serif", fontSize: "1rem" }}>
+          {current.body}
+        </div>
+
+        {/* Demo visual */}
+        {renderDemo()}
+
+        {/* Indicadores de progreso */}
+        <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 32 }}>
+          {OB.map((_, j) => (
+            <div key={j} style={{
+              width: j === i ? 28 : 8,
+              height: 8,
+              borderRadius: 50,
+              background: j === i ? C.dark : C.border,
+              transition: "all 0.3s"
+            }} />
+          ))}
+        </div>
+
+        {/* Botones */}
+        {!isLast ? (
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <button onClick={onDone} style={{
+              background: "none", border: "none", color: C.inkL, fontWeight: 700,
+              cursor: "pointer", fontFamily: "'Nunito',sans-serif", fontSize: "0.9rem", padding: "10px 0"
+            }}>
+              Saltar
+            </button>
+            <button onClick={() => setI(i + 1)} style={{
+              background: C.dark, color: C.cream2, border: "none", borderRadius: 14,
+              padding: "14px 28px", fontFamily: "'Fredoka One',cursive", fontSize: "1rem",
+              cursor: "pointer", boxShadow: "0 4px 0 rgba(0,0,0,0.2)"
+            }}>
+              Siguiente →
+            </button>
+          </div>
+        ) : (
+          <button onClick={onDone} style={{
+            width: "100%", background: C.olive, color: C.cream2, border: "none",
+            borderRadius: 14, padding: "16px", fontFamily: "'Fredoka One',cursive",
+            fontSize: "1.15rem", cursor: "pointer", boxShadow: "0 4px 0 rgba(0,0,0,0.2)"
+          }}>
+            Comenzar juntos 💜
+          </button>
+        )}
+
+        {/* Progreso numérico */}
+        <div style={{ marginTop: 20, fontSize: "0.8rem", color: C.inkL, fontWeight: 600 }}>
+          {i + 1} de {OB.length}
+        </div>
       </div>
     </div>
   );
@@ -5108,6 +6364,10 @@ export default function App() {
 
     // Diario personal entries (real-time both ways)
     unsubs.push(fbListenDiaryEntries(code, items => setDiario(items)));
+    // Diario personal (private — only for current user)
+    if (user?.uid) {
+      unsubs.push(fbListenDiario(user.uid, items => setDiario(items)));
+    }
 
     // Conocete answers (real-time both ways)
     unsubs.push(fbListenConoce(code, map => setConoce(map)));
@@ -5133,6 +6393,24 @@ export default function App() {
 
     return () => unsubs.forEach(u => u && u());
   }, [user?.code]);
+
+  // Listen to code changes to update user when partner joins
+  useEffect(() => {
+    if (!user?.code || user?.isGuest) return;
+    const unsub = fbListenCode(user.code, (codeData) => {
+      if (codeData && codeData.names && codeData.names !== user.names) {
+        // Update user with new names when partner joins
+        setUser(u => ({ ...u, names: codeData.names }));
+        // Also update localStorage
+        const users = ls.get("mochi_users") || {};
+        if (users[user.email]) {
+          users[user.email] = { ...users[user.email], names: codeData.names };
+          ls.set("mochi_users", users);
+        }
+      }
+    });
+    return unsub;
+  }, [user?.code, user?.names]);
 
   useEffect(() => {
     // Use Firebase Auth state to keep session alive
@@ -5585,6 +6863,32 @@ export default function App() {
     }
   };
 
+  const resetQuiz = async () => {
+    // Reset all quiz-related entries from conoce
+    const quizPrefixes = ["quizFortalezas", "quizValores", "quizSternberg"];
+    const newConoce = { ...conoce };
+    
+    // Remove all quiz-related keys
+    Object.keys(newConoce).forEach(key => {
+      if (quizPrefixes.some(prefix => key.startsWith(prefix))) {
+        delete newConoce[key];
+      }
+    });
+    
+    setConoce(newConoce);
+    
+    if (user?.code && !user?.isGuest) {
+      // Reset in Firebase
+      for (const prefix of quizPrefixes) {
+        for (let i = 0; i < 10; i++) {
+          await fbSaveConoce(user.code, `${prefix}-${i}`, { owner: "", partner: "", updatedAt: new Date().toISOString() }).catch(() => {});
+        }
+      }
+    }
+    
+    toast("Tests reiniciados 🔄 Pueden volver a responder");
+  };
+
   const saveBurbujaMine = async (id, myText) => {
     const clean = (myText || "").trim();
     if (!clean) return;
@@ -5622,6 +6926,7 @@ export default function App() {
       toast("Primero ambos deben escribir su parte");
       return;
     }
+    const wasApproved = prev.status === "approved";
     const history = [...(prev.history || []), { id: Date.now(), type: isCounter ? "counter" : "proposal", by: myRole, text: clean, at: new Date().toISOString() }];
     const next = {
       ...prev,
@@ -5629,14 +6934,17 @@ export default function App() {
       proposalText: clean,
       proposalBy: myRole,
       history,
-      approvedText: null,
-      approvedBy: null,
-      approvedAt: null,
+      // Preserve previous approvedText when editing an already-approved agreement
+      // so the partner can compare old vs new, and we don't lose it if they reject.
+      approvedText: wasApproved ? prev.approvedText : null,
+      approvedBy: wasApproved ? prev.approvedBy : null,
+      approvedAt: wasApproved ? prev.approvedAt : null,
+      isEditOfApproved: wasApproved || prev.isEditOfApproved === true,
     };
     const map = { ...burbuja, [id]: next };
     setBurbuja(map);
     trigHappy();
-    toast(isCounter ? "Contraoferta enviada ↔" : "Propuesta enviada ✉️");
+    toast(wasApproved ? "Edición enviada a tu pareja ✉️" : (isCounter ? "Contraoferta enviada ↔" : "Propuesta enviada ✉️"));
 
     if (user?.code && !user?.isGuest) {
       await fbSaveBurbuja(user.code, id, next).catch(() => {});
@@ -5644,7 +6952,9 @@ export default function App() {
         const me = getMyName(user, "Tu pareja");
         fbSendNotif(user.code, {
           type: "acuerdo",
-          msg: isCounter ? `${me} envió una contraoferta de acuerdo ↔` : `${me} te envió una propuesta de acuerdo ✉️`,
+          msg: wasApproved
+            ? `${me} propuso editar un acuerdo aprobado ✏️`
+            : (isCounter ? `${me} envió una contraoferta de acuerdo ↔` : `${me} te envió una propuesta de acuerdo ✉️`),
           forUid: user?.isOwner !== false ? "partner" : "owner",
           fromUid: user.uid,
           agreementId: id,
@@ -5673,6 +6983,7 @@ export default function App() {
       approvedBy: myRole,
       approvedAt: new Date().toISOString(),
       history,
+      isEditOfApproved: false,
     };
     const map = { ...burbuja, [id]: next };
     setBurbuja(map);
@@ -5798,6 +7109,39 @@ export default function App() {
       setDiario(nd);
       toast("Entrada eliminada");
     }
+  // ─── DIARIO PERSONAL (private) ─────────────────────────
+  const addDiario = async (entry) => {
+    const enriched = { 
+      ...entry, 
+      date: new Date().toLocaleDateString("es", {day:"numeric",month:"short",year:"numeric"}),
+      timestamp: Date.now()
+    };
+    trigHappy();
+    if (user?.uid && !user?.isGuest) {
+      await fbAddDiarioEntry(user.uid, enriched).catch(() => {});
+    } else {
+      const nd = [{ ...enriched, id: Date.now() }, ...diario];
+      setDiario(nd);
+    }
+    toast("📝 Entrada guardada en tu diario");
+  };
+
+  const updateDiario = async (entryId, data) => {
+    if (user?.uid && !user?.isGuest) {
+      await fbUpdateDiarioEntry(entryId, user.uid, data).catch(() => {});
+    } else {
+      setDiario(prev => prev.map(d => d.id === entryId ? { ...d, ...data } : d));
+    }
+    toast("📝 Entrada actualizada");
+  };
+
+  const deleteDiario = async (entryId) => {
+    if (user?.uid && !user?.isGuest) {
+      await fbDeleteDiarioEntry(entryId).catch(() => {});
+    } else {
+      setDiario(prev => prev.filter(d => d.id !== entryId));
+    }
+    toast("📝 Entrada eliminada");
   };
 
   const claimDailyTip = async () => {
@@ -5911,6 +7255,9 @@ export default function App() {
           />
         )}
         {tab==="perfil" && <Perfil user={user} bamboo={bamboo} garden={garden} accessories={accessories} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} lessonsDone={lessonsDone} coupleInfo={coupleInfo} streakInfo={streakData} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={retakeTest} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} diario={diario} onAddDiaryEntry={addDiaryEntry} onDeleteDiaryEntry={deleteDiaryEntry} onSendMessage={sendMsg} onClaimDailyTip={claimDailyTip}/>} 
+        {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} onResetQuiz={resetQuiz} user={user}/>}
+        {tab==="burbuja" && <Burbuja burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} user={user}/>}
+        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} garden={garden} accessories={accessories} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} lessonsDone={lessonsDone} coupleInfo={coupleInfo} streakInfo={streakData} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} onSendMessage={sendMsg} onClaimDailyTip={claimDailyTip} diario={diario} onAddDiario={addDiario} onUpdateDiario={updateDiario} onDeleteDiario={deleteDiario}/>} 
       </div>
       <div style={{ position:"fixed", bottom:0, left:0, right:0, margin:"0 auto", width:"min(100vw, 480px)", background:C.white, borderTop:`1.5px solid ${C.border}`, display:"flex", zIndex:1000, boxShadow:`0 -3px 0 ${C.line}`, paddingBottom:"env(safe-area-inset-bottom)" }}>
         {NAV.map(n => {
@@ -5944,6 +7291,366 @@ export default function App() {
 }
 
 // ═══════════════════════════════════════════════
+// DIARIO PERSONAL — private journal with ABC analysis
+// ═══════════════════════════════════════════════
+const DIARIO_TIPOS = [
+  { id: "reflexion", label: "Reflexión", emoji: "🤔", color: "#7b9bd1" },
+  { id: "conflicto", label: "Discusión", emoji: "⚡", color: "#d4a040" },
+  { id: "gratitud", label: "Gratitud", emoji: "💛", color: "#c8a040" },
+  { id: "meta", label: "Meta", emoji: "🎯", color: "#5a9a5a" },
+];
+
+const DIARIO_ANALISIS = {
+  conflicto: {
+    title: "¿Qué pasó ahí?",
+    steps: [
+      { letra: "A", nombre: "Activador", desc: "¿Qué lo prendió? No lo que hizo tu pareja, sino qué situación desencadenó tu reacción." },
+      { letra: "B", nombre: "Creencia", desc: "¿Qué te dijiste a ti mismo en ese momento? 'No me respeta', 'No me quiere', 'Siempre pasa esto'..." },
+      { letra: "C", nombre: "Consecuencia", desc: "¿Qué sentiste? ¿Ira, tristeza, miedo? Y ¿qué hiciste? ¿Callaste, explotaste, te fuiste?" },
+    ],
+    consejo: "La próxima vez que sientas que sube, respira 3 veces antes de reaccionar. Pregúntate: ¿qué necesito realmente aquí?",
+    ejercicio: "Escribe una carta a tu pareja que NUNCA enviarás. Dile todo lo que sentiste. Luego léela y táchalo. Lo que quede es lo que realmente necesitas expresar.",
+  },
+  reflexion: {
+    title: "Mirada hacia adentro",
+    steps: [
+      { letra: "¿", nombre: "Situación", desc: "¿Qué pasó hoy que te hizo pensar?" },
+      { letra: "¿", nombre: "Sentimiento", desc: "¿Cómo te sentiste? No solo 'bien' o 'mal', sé específico." },
+      { letra: "¿", nombre: "Aprendizaje", desc: "¿Qué te enseñó esto sobre ti o sobre tu relación?" },
+    ],
+    consejo: "Las reflexiones más profundas vienen cuando no juzgas lo que sientes. Solo obsérvalo como si fuera una película.",
+    ejercicio: "Si pudieras darle un consejo a tu 'yo' de hace un año sobre tu relación, ¿qué le dirías?",
+  },
+  gratitud: {
+    title: "Lo bueno de hoy",
+    steps: [
+      { letra: "1", nombre: "Detalle", desc: "¿Qué pequeña cosa hizo tu pareja hoy que te gustó?" },
+      { letra: "2", nombre: "Impacto", desc: "¿Cómo te hizo sentir ese gesto?" },
+      { letra: "3", nombre: "Intención", desc: "¿Qué crees que intentaba decirte con eso?" },
+    ],
+    consejo: "La gratitud no es ignorar lo difícil. Es elegir ver lo que funciona aunque todo no esté perfecto.",
+    ejercicio: "Mándale un mensaje a tu pareja contándole una de estas tres cosas. No necesita ser largo, solo genuino.",
+  },
+  meta: {
+    title: "Hacia dónde vamos",
+    steps: [
+      { letra: "🎯", nombre: "Meta", desc: "¿Qué quieres que sea diferente en tu relación?" },
+      { letra: "🚶", nombre: "Paso", desc: "¿Qué pequeño paso puedes dar esta semana?" },
+      { letra: "💪", nombre: "Apoyo", desc: "¿Qué necesitas de tu pareja (o de ti) para lograrlo?" },
+    ],
+    consejo: "Las metas grandes asustan. Las metas pequeñas, consistentes, cambian todo.",
+    ejercicio: "Comparte UNA de estas metas con tu pareja esta semana. No todas, solo una. El cambio se da paso a paso.",
+  },
+};
+
+function DiarioSection({ diario, onAdd, onUpdate, onDelete, user }) {
+  const [showForm, setShowForm] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+  const [showAnalysis, setShowAnalysis] = useState(false);
+  const [analysisEntry, setAnalysisEntry] = useState(null);
+  const [text, setText] = useState("");
+  const [tipo, setTipo] = useState("reflexion");
+  const [mood, setMood] = useState(3);
+  const [editingId, setEditingId] = useState(null);
+
+  const tipoInfo = DIARIO_TIPOS.find(t => t.id === tipo);
+  const recentEntries = [...diario].slice(0, 3);
+  const entryCount = diario.length;
+
+  const resetForm = () => {
+    setText("");
+    setTipo("reflexion");
+    setMood(3);
+    setEditingId(null);
+  };
+
+  const submit = () => {
+    if (!text.trim()) return;
+    if (editingId) {
+      onUpdate(editingId, { text: text.trim(), tipo, mood });
+    } else {
+      onAdd({ text: text.trim(), tipo, mood });
+    }
+    resetForm();
+    setShowForm(false);
+  };
+
+  const startEdit = (entry) => {
+    setText(entry.text || "");
+    setTipo(entry.tipo || "reflexion");
+    setMood(entry.mood || 3);
+    setEditingId(entry.id);
+    setShowForm(true);
+  };
+
+  const openAnalysis = (entry) => {
+    setAnalysisEntry(entry);
+    setShowAnalysis(true);
+  };
+
+  const getMoodEmoji = (m) => {
+    const emojis = ["😢", "😕", "😐", "🙂", "😊"];
+    return emojis[(m || 3) - 1] || "😐";
+  };
+
+  const getTipoInfo = (tid) => DIARIO_TIPOS.find(t => t.id === tid) || DIARIO_TIPOS[0];
+
+  return (
+    <div style={{ margin: "0 14px 12px" }}>
+      <div style={{ background: C.white, borderRadius: 18, padding: 16, border: `1.5px solid ${C.border}`, boxShadow: `0 3px 0 ${C.border}` }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.05rem", color: C.dark }}>
+            📔 Mi Diario
+          </div>
+          <div style={{ fontSize: "0.7rem", color: C.inkL, fontWeight: 700 }}>
+            Solo tú lo ves 🔒
+          </div>
+        </div>
+        <div style={{ fontSize: "0.8rem", color: C.inkM, lineHeight: 1.6, marginBottom: 12 }}>
+          Un espacio privado para registrar lo que sientes, pensamientos, discusiones y metas. 
+          Nadie más tiene acceso a esto, ni siquiera tu pareja.
+        </div>
+
+        <button
+          onClick={() => { resetForm(); setShowForm(true); }}
+          style={{
+            width: "100%",
+            background: C.dark,
+            color: C.cream2,
+            border: "none",
+            borderRadius: 12,
+            padding: "12px 16px",
+            fontFamily: "'Fredoka One',cursive",
+            fontSize: "0.95rem",
+            cursor: "pointer",
+            boxShadow: "0 3px 0 rgba(0,0,0,0.18)",
+            marginBottom: 12,
+          }}
+        >
+          ✍️ Escribir entrada
+        </button>
+
+        {entryCount > 0 && (
+          <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 10 }}>
+            <div style={{ fontSize: "0.75rem", color: C.inkL, fontWeight: 700 }}>
+              {entryCount} entrada{entryCount !== 1 ? "s" : ""}
+            </div>
+            <div style={{ flex: 1, height: 1, background: C.border }} />
+          </div>
+        )}
+
+        {recentEntries.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "20px 0", color: C.inkL, fontSize: "0.85rem" }}>
+            Aún no tienes entradas. Empieza hoy 💕
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {recentEntries.map((entry, i) => {
+              const tinfo = getTipoInfo(entry.tipo);
+              return (
+                <div key={entry.id || i} style={{ background: C.cream, borderRadius: 12, padding: "10px 12px", border: `1.5px solid ${C.border}` }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontSize: "1rem" }}>{tinfo.emoji}</span>
+                      <span style={{ fontSize: "0.72rem", fontWeight: 800, color: tinfo.color }}>{tinfo.label.toUpperCase()}</span>
+                    </div>
+                    <div style={{ fontSize: "0.85rem" }}>{getMoodEmoji(entry.mood)}</div>
+                  </div>
+                  <div style={{ fontSize: "0.82rem", color: C.ink, lineHeight: 1.5, marginBottom: 6 }}>
+                    {entry.text?.substring(0, 80)}{entry.text?.length > 80 ? "..." : ""}
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ fontSize: "0.68rem", color: C.inkL }}>
+                      {entry.date || new Date(entry.timestamp).toLocaleDateString("es", { day: "numeric", month: "short" })}
+                    </div>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button onClick={() => openAnalysis(entry)} style={{ background: "transparent", border: "none", color: C.olive, fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", padding: "2px 6px" }}>
+                        🔍 Analizar
+                      </button>
+                      <button onClick={() => startEdit(entry)} style={{ background: "transparent", border: "none", color: C.inkM, fontSize: "0.75rem", cursor: "pointer", padding: "2px 6px" }}>
+                        ✏️
+                      </button>
+                      <button onClick={() => { if (confirm("¿Eliminar esta entrada?")) onDelete(entry.id); }} style={{ background: "transparent", border: "none", color: "#c05050", fontSize: "0.75rem", cursor: "pointer", padding: "2px 6px" }}>
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            {diario.length > 3 && (
+              <button
+                onClick={() => setShowAll(true)}
+                style={{
+                  width: "100%",
+                  marginTop: 4,
+                  background: "transparent",
+                  color: C.dark,
+                  border: `1.5px solid ${C.border}`,
+                  borderRadius: 10,
+                  padding: "10px 14px",
+                  fontFamily: "'Fredoka One',cursive",
+                  fontSize: "0.85rem",
+                  cursor: "pointer",
+                }}
+              >
+                📜 Ver todas las entradas ({diario.length})
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Modal: Formulario */}
+      {showForm && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15,25,15,0.62)", zIndex: 5000, display: "flex", alignItems: "flex-end" }} onClick={e => { if (e.target === e.currentTarget) { setShowForm(false); resetForm(); } }}>
+          <div style={{ background: C.white, borderRadius: "22px 22px 0 0", padding: "16px 18px 44px", width: "100%", maxWidth: 480, margin: "0 auto", border: `1.5px solid ${C.border}` }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+              <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.2rem", color: C.dark }}>
+                {editingId ? "✏️ Editar entrada" : "✍️ Nueva entrada"}
+              </div>
+              <div onClick={() => { setShowForm(false); resetForm(); }} style={{ width: 30, height: 30, borderRadius: "50%", background: C.sand, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "1rem", color: C.inkM, fontWeight: 800 }}>✕</div>
+            </div>
+
+            <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
+              {DIARIO_TIPOS.map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => setTipo(t.id)}
+                  style={{
+                    padding: "6px 12px",
+                    borderRadius: 10,
+                    border: `1.5px solid ${tipo === t.id ? t.color : C.border}`,
+                    background: tipo === t.id ? t.color + "20" : C.white,
+                    color: tipo === t.id ? t.color : C.inkM,
+                    fontFamily: "'Fredoka One',cursive",
+                    fontSize: "0.8rem",
+                    cursor: "pointer",
+                  }}
+                >
+                  {t.emoji} {t.label}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ fontSize: "0.7rem", fontWeight: 800, color: C.inkL, marginBottom: 6, letterSpacing: "0.5px" }}>¿CÓMO TE SIENTES?</div>
+            <div style={{ display: "flex", gap: 8, marginBottom: 12, justifyContent: "center" }}>
+              {[1, 2, 3, 4, 5].map(m => (
+                <button key={m} onClick={() => setMood(m)} style={{ fontSize: mood === m ? "1.8rem" : "1.4rem", filter: mood === m ? "none" : "opacity(0.4)", background: "transparent", border: "none", cursor: "pointer", transition: "all 0.15s" }}>
+                  {getMoodEmoji(m)}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ fontSize: "0.7rem", fontWeight: 800, color: C.inkL, marginBottom: 6, letterSpacing: "0.5px" }}>TU ENTRADA</div>
+            <textarea
+              value={text}
+              onChange={e => setText(e.target.value)}
+              placeholder={tipo === "conflicto" ? "¿Qué pasó? Describe la situación, qué pensaste y qué hiciste..." : tipo === "meta" ? "¿Qué quieres lograr en tu relación?" : "Escribe lo que sientes, piensas o necesitas recordar..."}
+              rows={5}
+              style={{
+                width: "100%",
+                padding: "10px 12px",
+                borderRadius: 10,
+                border: `1.5px solid ${C.border}`,
+                fontFamily: "'Nunito',sans-serif",
+                fontSize: "0.9rem",
+                color: C.ink,
+                background: C.sandL,
+                marginBottom: 12,
+                boxSizing: "border-box",
+                resize: "vertical",
+              }}
+            />
+            <Btn onClick={submit} variant="olive" style={{ width: "100%" }}>
+              {editingId ? "Guardar cambios ✓" : "Guardar entrada ✓"}
+            </Btn>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Ver todas */}
+      {showAll && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15,25,15,0.62)", zIndex: 5100, display: "flex", alignItems: "flex-end" }} onClick={e => { if (e.target === e.currentTarget) setShowAll(false); }}>
+          <div style={{ background: C.white, borderRadius: "22px 22px 0 0", padding: "16px 18px 44px", width: "100%", maxWidth: 480, margin: "0 auto", border: `1.5px solid ${C.border}`, maxHeight: "85vh", display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+              <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.2rem", color: C.dark }}>📔 Todas las entradas</div>
+              <div onClick={() => setShowAll(false)} style={{ width: 30, height: 30, borderRadius: "50%", background: C.sand, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "1rem", color: C.inkM, fontWeight: 800 }}>✕</div>
+            </div>
+            <div style={{ flex: 1, overflowY: "auto", padding: "0 4px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {diario.map((entry, i) => {
+                  const tinfo = getTipoInfo(entry.tipo);
+                  return (
+                    <div key={entry.id || i} style={{ background: C.cream, borderRadius: 12, padding: "11px 13px", border: `1.5px solid ${C.border}` }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <span style={{ fontSize: "1rem" }}>{tinfo.emoji}</span>
+                          <span style={{ fontSize: "0.72rem", fontWeight: 800, color: tinfo.color }}>{tinfo.label.toUpperCase()}</span>
+                        </div>
+                        <div style={{ fontSize: "0.85rem" }}>{getMoodEmoji(entry.mood)}</div>
+                      </div>
+                      <div style={{ fontSize: "0.85rem", color: C.ink, lineHeight: 1.5, marginBottom: 6, whiteSpace: "pre-wrap" }}>{entry.text}</div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div style={{ fontSize: "0.68rem", color: C.inkL }}>
+                          {entry.date || new Date(entry.timestamp).toLocaleDateString("es", { day: "numeric", month: "short", year: "numeric" })}
+                        </div>
+                        <div style={{ display: "flex", gap: 6 }}>
+                          <button onClick={() => { setShowAll(false); openAnalysis(entry); }} style={{ background: "transparent", border: "none", color: C.olive, fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", padding: "2px 6px" }}>🔍 Analizar</button>
+                          <button onClick={() => { setShowAll(false); startEdit(entry); }} style={{ background: "transparent", border: "none", color: C.inkM, fontSize: "0.75rem", cursor: "pointer", padding: "2px 6px" }}>✏️</button>
+                          <button onClick={() => { if (confirm("¿Eliminar esta entrada?")) onDelete(entry.id); }} style={{ background: "transparent", border: "none", color: "#c05050", fontSize: "0.75rem", cursor: "pointer", padding: "2px 6px" }}>🗑️</button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Análisis */}
+      {showAnalysis && analysisEntry && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15,25,15,0.62)", zIndex: 5200, display: "flex", alignItems: "flex-end" }} onClick={e => { if (e.target === e.currentTarget) { setShowAnalysis(false); setAnalysisEntry(null); } }}>
+          <div style={{ background: C.white, borderRadius: "22px 22px 0 0", padding: "16px 18px 44px", width: "100%", maxWidth: 480, margin: "0 auto", border: `1.5px solid ${C.border}`, maxHeight: "90vh", overflowY: "auto" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+              <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.2rem", color: C.dark }}>🔍 {DIARIO_ANALISIS[analysisEntry.tipo]?.title || "Análisis"}</div>
+              <div onClick={() => { setShowAnalysis(false); setAnalysisEntry(null); }} style={{ width: 30, height: 30, borderRadius: "50%", background: C.sand, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "1rem", color: C.inkM, fontWeight: 800 }}>✕</div>
+            </div>
+
+            <div style={{ background: C.cream, borderRadius: 12, padding: 12, marginBottom: 14, border: `1px solid ${C.border}` }}>
+              <div style={{ fontSize: "0.78rem", color: C.inkM, fontWeight: 700, marginBottom: 4 }}>TU ENTRADA:</div>
+              <div style={{ fontSize: "0.85rem", color: C.ink, lineHeight: 1.5, fontStyle: "italic" }}>"{analysisEntry.text}"</div>
+            </div>
+
+            {DIARIO_ANALISIS[analysisEntry.tipo]?.steps.map((step, i) => (
+              <div key={i} style={{ background: C.sandL, borderRadius: 12, padding: 12, marginBottom: 10, border: `1.5px solid ${C.border}` }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: C.dark, color: C.cream2, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Fredoka One',cursive", fontSize: "0.85rem" }}>{step.letra}</div>
+                  <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.9rem", color: C.dark }}>{step.nombre}</div>
+                </div>
+                <div style={{ fontSize: "0.82rem", color: C.inkM, lineHeight: 1.5 }}>{step.desc}</div>
+              </div>
+            ))}
+
+            <div style={{ background: "#e8f4e8", borderRadius: 12, padding: 12, marginBottom: 10, border: `1.5px solid #a0d0a0` }}>
+              <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.85rem", color: "#3a7a3a", marginBottom: 4 }}>💡 Consejo</div>
+              <div style={{ fontSize: "0.82rem", color: C.ink, lineHeight: 1.5 }}>{DIARIO_ANALISIS[analysisEntry.tipo]?.consejo}</div>
+            </div>
+
+            <div style={{ background: "#f0e8ff", borderRadius: 12, padding: 12, marginBottom: 10, border: `1.5px solid #c0a0e0` }}>
+              <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.85rem", color: C.dark, marginBottom: 4 }}>✍️ Ejercicio para hacer</div>
+              <div style={{ fontSize: "0.82rem", color: C.ink, lineHeight: 1.5 }}>{DIARIO_ANALISIS[analysisEntry.tipo]?.ejercicio}</div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
 // BAUL SECTION — embedded in Perfil
 // ═══════════════════════════════════════════════
 function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) {
@@ -5956,6 +7663,7 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
   const [showAllMomentos, setShowAllMomentos] = useState(false);
   const [gText, setGText] = useState(""); const [gWho, setGWho] = useState("A");
   const [mTitle, setMTitle] = useState(""); const [mText, setMText] = useState("");
+  const [showAllHistory, setShowAllHistory] = useState(false);
 
   const getEntryTime = (entry) => {
     if (entry?.createdAt?.toDate) return entry.createdAt.toDate().getTime();
@@ -5967,9 +7675,81 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
   const sortedMomentos = [...momentos].sort((a, b) => getEntryTime(b) - getEntryTime(a));
   const visibleGratitud = showAllGratitud ? sortedGratitud : sortedGratitud.slice(0, 3);
   const visibleMomentos = showAllMomentos ? sortedMomentos : sortedMomentos.slice(0, 3);
+  const recentGratitud = [...gratitud].sort((a, b) => getEntryTime(b) - getEntryTime(a)).slice(0, 3);
+  const recentMomentos = [...momentos].sort((a, b) => getEntryTime(b) - getEntryTime(a)).slice(0, 3);
+  const allGratitud = [...gratitud].sort((a, b) => getEntryTime(b) - getEntryTime(a));
+  const allMomentos = [...momentos].sort((a, b) => getEntryTime(b) - getEntryTime(a));
 
   const submitG = () => { if (!gText.trim()) return; onAddGratitud({ text:gText.trim() }); setGText(""); setShowGForm(false); };
   const submitM = () => { if (!mTitle.trim()||!mText.trim()) return; onAddMomento({ title:mTitle.trim(), text:mText.trim() }); setMTitle(""); setMText(""); setShowMForm(false); };
+
+  // Modal de historial completo
+  if (showAllHistory) {
+    return (
+      <div style={{ background:C.white, borderRadius:20, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}`, overflow:"hidden" }}>
+        {/* Tab bar */}
+        <div style={{ display:"flex", background:C.sandL, borderBottom:`1.5px solid ${C.border}` }}>
+          {[["gratitud","💛 Gratitud"],["momentos","✨ Momentos"]].map(([id,label]) => (
+            <div key={id} onClick={() => setActiveTab(id)}
+              style={{ flex:1, padding:"11px 0", textAlign:"center", fontFamily:"'Fredoka One',cursive",
+                fontSize:"0.88rem", cursor:"pointer",
+                background: activeTab===id ? C.white : "transparent",
+                color: activeTab===id ? C.dark : C.inkL,
+                borderBottom: activeTab===id ? `2.5px solid ${C.dark}` : "2.5px solid transparent",
+                transition:"all 0.15s" }}>
+              {label}
+            </div>
+          ))}
+        </div>
+
+        <div style={{ padding:16, maxHeight:400, overflowY:"auto" }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark }}>
+              {activeTab === "gratitud" ? `💛 Historial de gratitud (${allGratitud.length})` : `✨ Historial de momentos (${allMomentos.length})`}
+            </div>
+            <button 
+              onClick={() => setShowAllHistory(false)}
+              style={{ background:C.sand, border:`1.5px solid ${C.border}`, borderRadius:8, padding:"6px 12px", fontSize:"0.8rem", cursor:"pointer", color:C.inkM }}
+            >
+              ✕ Cerrar
+            </button>
+          </div>
+
+          {activeTab === "gratitud" && (
+            <>
+              {allGratitud.length === 0
+                ? <div style={{ textAlign:"center", padding:"20px 0", color:C.inkL, fontSize:"0.84rem" }}>💛 Todavía no hay entradas</div>
+                : allGratitud.map((g,i) => (
+                  <div key={g.id||i} style={{ background:"#fffde8", borderRadius:12, padding:"10px 14px", marginBottom:8, border:"1px solid #e8d84030" }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
+                      <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.8rem", color:C.dark }}>🐼 {g.authorName || g.name || "Tú"}</div>
+                      <div style={{ fontSize:"0.68rem", color:C.inkL, fontWeight:700 }}>{g.date}</div>
+                    </div>
+                    <div style={{ fontSize:"0.86rem", color:C.inkM, lineHeight:1.6 }}>{g.text}</div>
+                  </div>
+                ))}
+            </>
+          )}
+
+          {activeTab === "momentos" && (
+            <>
+              {allMomentos.length === 0
+                ? <div style={{ textAlign:"center", padding:"20px 0", color:C.inkL, fontSize:"0.84rem" }}>✨ Todavía no hay momentos guardados</div>
+                : allMomentos.map((m,i) => (
+                  <div key={m.id||i} style={{ background:"#f8f0ff", borderRadius:12, padding:"10px 14px", marginBottom:8, border:`1px solid #c8a8f830` }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
+                      <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.88rem", color:C.dark }}>✨ {m.title}</div>
+                      <div style={{ fontSize:"0.68rem", color:C.inkL, fontWeight:700 }}>{m.date}</div>
+                    </div>
+                    <div style={{ fontSize:"0.85rem", color:C.inkM, lineHeight:1.65 }}>{m.text}</div>
+                  </div>
+                ))}
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ background:C.white, borderRadius:20, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}`, overflow:"hidden" }}>
@@ -6011,6 +7791,11 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
             {gratitud.length > 3 && (
               <button onClick={() => setShowAllGratitud(v => !v)} style={{ width:"100%", background:"none", border:`1.5px solid ${C.border}`, borderRadius:10, padding:"8px 12px", fontSize:"0.78rem", fontWeight:800, color:C.inkM, cursor:"pointer", marginTop:4 }}>
                 {showAllGratitud ? "Ver menos ↑" : `Ver todo (${gratitud.length}) ↓`}
+              <button 
+                onClick={() => setShowAllHistory(true)}
+                style={{ width:"100%", marginTop:8, background:C.sandL, border:`1.5px solid ${C.border}`, borderRadius:10, padding:"10px", fontSize:"0.8rem", fontWeight:800, color:C.dark, cursor:"pointer" }}
+              >
+                📜 Ver historial completo ({gratitud.length} entradas)
               </button>
             )}
           </>
@@ -6039,6 +7824,11 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
             {momentos.length > 3 && (
               <button onClick={() => setShowAllMomentos(v => !v)} style={{ width:"100%", background:"none", border:`1.5px solid ${C.border}`, borderRadius:10, padding:"8px 12px", fontSize:"0.78rem", fontWeight:800, color:C.inkM, cursor:"pointer", marginTop:4 }}>
                 {showAllMomentos ? "Ver menos ↑" : `Ver todo (${momentos.length}) ↓`}
+              <button 
+                onClick={() => setShowAllHistory(true)}
+                style={{ width:"100%", marginTop:8, background:C.sandL, border:`1.5px solid ${C.border}`, borderRadius:10, padding:"10px", fontSize:"0.8rem", fontWeight:800, color:C.dark, cursor:"pointer" }}
+              >
+                📜 Ver historial completo ({momentos.length} momentos)
               </button>
             )}
           </>
