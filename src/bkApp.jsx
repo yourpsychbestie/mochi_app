@@ -3351,7 +3351,6 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
   const [open, setOpen] = useState({});
   const [tmp, setTmp] = useState({});
   const [editingApproved, setEditingApproved] = useState({});
-  const [burbujaTab, setBurbujaTab] = useState("negociacion");
   const [focusAgreementId, setFocusAgreementId] = useState(null);
   const [burbujaTab, setBurbujaTab] = useState("inbox");
 
