@@ -84,9 +84,11 @@ service cloud.firestore {
         || resource.data.partnerUid == request.auth.uid
         // New partner can claim if slot is empty and they're setting themselves as partner
         || (
-          !(resource.data.partnerUid is string)
+          (
+            !(resource.data.partnerUid is string)
+            || resource.data.partnerUid == ""
+          )
           && request.resource.data.partnerUid == request.auth.uid
-          && request.resource.data.ownerUid == resource.data.ownerUid
         )
       );
       allow delete: if isSignedIn() && resource.data.ownerUid == request.auth.uid;
@@ -163,6 +165,12 @@ service cloud.firestore {
     }
 
     match /streakInteractions/{docId} {
+      allow create: if canCreateCoupleScoped();
+      allow read, delete: if canAccessStoredCoupleScoped();
+      allow update: if canAccessStoredCoupleScoped() && keepsCoupleCodeStable();
+    }
+
+    match /diario/{docId} {
       allow create: if canCreateCoupleScoped();
       allow read, delete: if canAccessStoredCoupleScoped();
       allow update: if canAccessStoredCoupleScoped() && keepsCoupleCodeStable();

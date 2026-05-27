@@ -20,6 +20,7 @@ import {
   fbSendNotif, fbListenNotifs, fbMarkNotifRead,
   fbSaveStreakInteraction, fbListenStreakInteractions,
   fbSaveStreakProfile, fbListenStreakProfile,
+  fbSendDiaryEntry, fbListenDiaryEntries, fbDeleteDiaryEntry,
 } from "./firebase";
 import Cuestionarios, { getQuizAdviceFromConoce } from "./Cuestionarios";
 
@@ -281,6 +282,17 @@ const getCoupleNames = (user) => {
   };
 };
 
+const isNotifForUser = (notif, user) => {
+  if (!notif || !user || user?.isGuest) return false;
+  const myNotifRole = user?.isOwner !== false ? "owner" : "partner";
+  if (notif.fromUid && user?.uid && notif.fromUid === user.uid) return false;
+  return (
+    notif.forUid === user?.uid
+    || notif.forUid === myNotifRole
+    || (notif.forUid === "partner" && myNotifRole === "partner")
+  );
+};
+
 // ═══════════════════════════════════════════════
 // GARDEN ITEMS — multiple quantities, koi/lotus aesthetic
 // ═══════════════════════════════════════════════
@@ -294,26 +306,36 @@ const GARDEN_ITEMS = [
   {id:"peony",    cat:"plantas", name:"Peonía",        cost:15,  desc:"Flores de primavera"},
   {id:"cherry",   cat:"plantas", name:"Cerezo",        cost:80,  desc:"Belleza efímera"},
   {id:"lily",     cat:"plantas", name:"Lirio Azul",    cost:20,  desc:"Calma y claridad"},
+  {id:"maple",    cat:"plantas", name:"Arce Rojo",     cost:75,  desc:"Hojas rojitas para otoño eterno"},
+  {id:"wisteria", cat:"plantas", name:"Glicinia",      cost:48,  desc:"Cascada de flores colgantes"},
   // Agua
   {id:"pond",     cat:"agua",    name:"Estanque",      cost:60,  desc:"Espejo del cielo"},
   {id:"koi1",     cat:"agua",    name:"Pez Koi Rojo",  cost:40,  desc:"Buena fortuna"},
   {id:"koi2",     cat:"agua",    name:"Pez Koi Dorado",cost:55,  desc:"Prosperidad"},
   {id:"lotus_pad",cat:"agua",    name:"Hoja de Loto",  cost:20,  desc:"Reposa en el agua"},
+  {id:"waterfall",cat:"agua",    name:"Cascadita",     cost:85,  desc:"El jardín suena a calma"},
+  {id:"ducks",    cat:"agua",    name:"Patitos Mandarín", cost:50, desc:"Parejita fiel en el agua"},
   // Cielo
   {id:"sun",      cat:"cielo",   name:"Sol",           cost:30,  desc:"Calienta el jardín"},
   {id:"rainbow",  cat:"cielo",   name:"Arcoíris",      cost:100, desc:"Magia después de la lluvia"},
   {id:"swallow1", cat:"cielo",   name:"Golondrina",    cost:35,  desc:"Mensajera del amor"},
   {id:"swallow2", cat:"cielo",   name:"Par de Golondrinas",cost:55,desc:"Vuelo juntos"},
   {id:"clouds",   cat:"cielo",   name:"Nubes",         cost:25,  desc:"Sueños flotantes"},
+  {id:"shooting_stars", cat:"cielo", name:"Estrellas Fugaces", cost:110, desc:"Deseos cruzando la noche"},
+  {id:"heart_cloud", cat:"cielo", name:"Nube Corazón", cost:42,  desc:"Una nube enamorada"},
   // Decoración
   {id:"lantern",  cat:"deco",    name:"Farolito",      cost:25,  desc:"Luz cálida"},
   {id:"lantern2", cat:"deco",    name:"Farolitos",     cost:40,  desc:"Noche romántica"},
   {id:"heart",    cat:"deco",    name:"Corazón",       cost:50,  desc:"Amor visible"},
   {id:"bridge",   cat:"deco",    name:"Puente",        cost:70,  desc:"Un camino juntos"},
   {id:"pagoda",   cat:"deco",    name:"Pagoda",        cost:90,  desc:"Refugio sagrado"},
+  {id:"bench",    cat:"deco",    name:"Banco de Madera", cost:55, desc:"Un rincón para ustedes"},
+  {id:"wind_chime", cat:"deco",  name:"Campanitas de Viento", cost:38, desc:"Suena suave con la brisa"},
   // Especiales
   {id:"firefly",  cat:"especial",name:"Luciérnagas",   cost:65,  desc:"Magia nocturna"},
   {id:"moongate", cat:"especial",name:"Luna Llena",    cost:120, desc:"Romance bajo la luna"},
+  {id:"aurora",   cat:"especial",name:"Aurora Nocturna", cost:140, desc:"El cielo se pinta de magia"},
+  {id:"petal_rain", cat:"especial",name:"Lluvia de Pétalos", cost:95, desc:"Flores en movimiento"},
 ];
 
 // Regar sigue siendo acción especial
@@ -447,6 +469,60 @@ const EXERCISES = [
     timer:600,timerLabel:"Presencia plena — sin distracciones",
     beforeTimer:["Apaguen o silencien los teléfonos.","Siéntense cómodos, cerca.","No hay tema — solo estén presentes.","Hablen de lo que surja naturalmente.","Presionen INICIAR."],
     afterPrompts:[{role:0,ph:"Lo que noté en ti hoy fue…"},{role:1,ph:"Estar presente contigo me hizo sentir…"}]},
+  {id:"inicio_suave",emoji:"🕊️",title:"Inicio Suave (sin ataque)",tags:"Gottman · Comunicación",bamboo:35,time:"14 min",
+    desc:"Practiquen convertir frases duras en peticiones claras. El objetivo no es ganar, es abrir escucha.",
+    instructions:["Elijan un tema pequeño que suele detonar discusión","Hablen en primera persona: 'yo siento'","Eviten 'siempre' y 'nunca'","Pidan algo concreto y realizable","Cierren con una frase de aprecio"],
+    phases:[
+      {role:0,q:"Persona A: Di una versión dura que te sale cuando te activas.",ph:"Cuando me enojo suelo decir…",hint:"Solo para identificar patrón, no para atacar."},
+      {role:1,q:"Persona B: Reescribe esa frase en versión suave.",ph:"Yo siento… y me ayudaría que…"},
+      {role:0,q:"Persona A: Ahora dilo en versión suave real.",ph:"Cuando pasó… yo sentí… y necesito…"},
+      {role:1,q:"Persona B: Refleja lo que entendiste.",ph:"Lo que escucho es que necesitas…"},
+      {role:0,q:"Persona A: Haz una petición concreta para esta semana.",ph:"Me ayudaría que esta semana…"},
+      {role:1,q:"Persona B: Cierra con validación y compromiso.",ph:"Tiene sentido. Esta semana sí puedo…"},
+    ]},
+  {id:"tcc_pensamientos",emoji:"🧠",title:"Caza de Pensamientos Trampa",tags:"TCC · Reestructuración",bamboo:40,time:"16 min",
+    desc:"Detecten distorsiones cognitivas en pareja y sustitúyanlas por pensamientos más útiles y realistas.",
+    instructions:["Tomen un conflicto reciente","Identifiquen el pensamiento automático","Busquen distorsión: extremo, adivinación, catástrofe","Construyan alternativa más equilibrada","Noten cómo cambia la emoción"],
+    phases:[
+      {role:0,q:"Persona A: ¿Qué pensaste automáticamente en ese conflicto?",ph:"Mi mente dijo: '...'."},
+      {role:1,q:"Persona B: ¿Qué distorsión ves ahí?",ph:"Suena a (todo o nada / leer mente / catastrofizar)...",hint:"No juzgar: observar con curiosidad."},
+      {role:0,q:"Persona A: Escribe una versión más realista.",ph:"También podría ser cierto que..."},
+      {role:1,q:"Persona B: Tu turno con tu pensamiento automático.",ph:"Mi mente dijo: '...'."},
+      {role:0,q:"Persona A: Identifica su distorsión.",ph:"Creo que aquí aparece..."},
+      {role:1,q:"Persona B: Reescritura útil.",ph:"Una lectura más justa sería..."},
+    ]},
+  {id:"dbt_tipp_pareja",emoji:"🧊",title:"TIPP en Pareja",tags:"DBT · Regulación",bamboo:30,time:"12 min",
+    desc:"Cuando sube demasiado la intensidad, regulen el cuerpo primero y conversen después con más claridad.",
+    instructions:["No usar este ejercicio para evitar temas: es para regularse y volver","Elijan una mini crisis reciente","Practiquen TIPP en versión breve","Al final acuerden señal de pausa para próximas peleas"],
+    timer:180,
+    timerLabel:"Respira 4 seg · exhala 6 seg",
+    beforeTimer:["Moja tu cara o manos con agua fría 20-30 segundos.","Haz 30-60 segundos de movimiento rápido (saltos o caminata intensa).","Siéntate y prepara respiración larga.","Presionen INICIAR para hacer 3 minutos juntos."],
+    afterPrompts:[
+      {role:0,ph:"Después de regularme, noto que ahora puedo..."},
+      {role:1,ph:"Nuestra señal de pausa para próximas discusiones será..."}
+    ]},
+  {id:"act_valores",emoji:"🧭",title:"Pausa de Valores",tags:"ACT · Flexibilidad",bamboo:38,time:"15 min",
+    desc:"Pasen del impulso a la intención: elegir cómo actuar según los valores de la relación, no según el enojo del momento.",
+    instructions:["Definan 3 valores de su relación","Piensen en un conflicto frecuente","Elijan una conducta concreta por valor","Ensayen una frase de retorno cuando se activen"],
+    phases:[
+      {role:0,q:"Persona A: ¿Qué valor quieres proteger cuando discuten?",ph:"Quiero proteger el valor de..."},
+      {role:1,q:"Persona B: ¿Qué conducta concreta representa ese valor?",ph:"Ese valor se vería como..."},
+      {role:1,q:"Persona B: Ahora tu valor principal.",ph:"En conflicto quiero ser una persona que..."},
+      {role:0,q:"Persona A: Conducta concreta para ese valor.",ph:"Cuando me active, en lugar de..., haré..."},
+      {role:0,q:"Escriban una frase ancla para volver al valor.",ph:"Pausa: queremos cuidarnos, volvamos a hablar con..."},
+      {role:1,q:"Compromiso de práctica esta semana.",ph:"Esta semana practicaré mi valor cuando..."},
+    ]},
+  {id:"reparacion_20",emoji:"🛠️",title:"Reparación en 20 Min",tags:"Gottman · DBT",bamboo:42,time:"18 min",
+    desc:"Aprendan un protocolo corto para reparar rápido después de un roce y evitar que se convierta en guerra fría.",
+    instructions:["Elijan un conflicto pequeño de esta semana","No se interrumpan","Cada uno asume su parte (mínimo 5%)","Definan una acción reparadora específica hoy"],
+    phases:[
+      {role:0,q:"Persona A: ¿Qué pasó, en hechos, sin interpretar intención?",ph:"El hecho fue..."},
+      {role:1,q:"Persona B: ¿Qué emoción principal se activó en ti?",ph:"Se me activó..."},
+      {role:0,q:"Persona A: Asume tu parte aunque sea pequeña.",ph:"Mi parte en esto fue..."},
+      {role:1,q:"Persona B: Asume tu parte aunque sea pequeña.",ph:"Yo también aporté cuando..."},
+      {role:0,q:"Persona A: ¿Qué reparación concreta puedes hacer hoy?",ph:"Hoy puedo reparar haciendo..."},
+      {role:1,q:"Persona B: ¿Qué necesitas para cerrar este episodio?",ph:"Para cerrar bien, necesito..."},
+    ]},
 ];
 
 const CONOCE_CATS = {
@@ -561,7 +637,7 @@ const BURBUJA_SECTIONS = [
 
 const BURBUJA_ITEM_MAP = BURBUJA_SECTIONS.reduce((acc, sec) => {
   sec.items.forEach(item => {
-    acc[item.id] = { question: item.q, section: sec.title };
+    acc[item.id] = { question: item.q, section: sec.title, sectionId: sec.id };
   });
   return acc;
 }, {});
@@ -585,6 +661,56 @@ const getDayNumberLocal = (date = new Date()) => {
 };
 
 const CONSEJOS_DIARIOS = [
+  { id: 1,
+    titular: "El pensamiento 'no le importo' casi nunca es un hecho — es una historia.",
+    porQue: "En momentos de tensión, el cerebro busca confirmar lo que ya teme. Cuestionar esa historia juntos, en voz alta, cambia la conversación de acusación a conexión.",
+    accion: "La próxima vez que aparezca un pensamiento como 'siempre hago todo mal', pregunten juntos: '¿qué evidencia real tenemos de eso?' Una pregunta honesta puede romper el ciclo.",
+    experto: "Aaron Beck", corriente: "TCC · Terapia Cognitivo-Conductual" },
+  { id: 2,
+    titular: "Antes de responder, haz pausa — 90 segundos cambian todo.",
+    porQue: "Cuando estamos activados emocionalmente, el cerebro entra en modo defensa. Solo 90 segundos de pausa bajan la adrenalina lo suficiente para volver a escuchar de verdad.",
+    accion: "La próxima vez que sientas que va a estallar algo, digan juntos la frase acordada: 'necesito un minuto'. Luego vuelvan. Eso no es huir — es cuidarse.",
+    experto: "Marsha Linehan", corriente: "DBT · Terapia Dialectico-Conductual" },
+  { id: 3,
+    titular: "Un pensamiento no es la realidad — aunque se sienta tan real.",
+    porQue: "La mente repite historias que aprendimos hace años. Cuando las creemos sin cuestionarlas, reaccionamos al pasado en lugar de al presente. Separarse del pensamiento abre espacio.",
+    accion: "Cuando llegue una historia difícil ('siempre hace lo mismo'), anteponle: 'estoy notando que pienso que...'. Solo eso. Tres palabras que te dan perspectiva.",
+    experto: "Steven Hayes", corriente: "ACT · Terapia de Aceptación y Compromiso" },
+  { id: 4,
+    titular: "Validar no significa estar de acuerdo — significa que el otro se siente visto.",
+    porQue: "Cuando alguien se siente validado, baja la guardia. La necesidad de pelear disminuye porque ya no tiene que 'ganar' para ser escuchado.",
+    accion: "Hoy, cuando tu pareja exprese algo difícil, responde primero con: 'tiene sentido que sientas eso'. Sin peros. Sin explicaciones. Solo eso.",
+    experto: "Jeffrey Young", corriente: "Terapia de Esquemas" },
+  { id: 5,
+    titular: "Los primeros tres minutos de un conflicto predicen cómo termina.",
+    porQue: "Gottman estudió miles de parejas y encontró que el tono del inicio determina casi siempre el desenlace. Una apertura suave abre la puerta a la solución.",
+    accion: "En vez de empezar con 'siempre...' o 'nunca...', prueba: 'me sentí [emoción] cuando [situación concreta]. ¿Podemos hablar de eso?'",
+    experto: "John Gottman", corriente: "Método Gottman · Investigación en parejas" },
+  { id: 6,
+    titular: "Actuar desde tus valores importa más que tener la razón.",
+    porQue: "En los momentos difíciles, el impulso es ganar. Pero las parejas que más se quieren eligen actuar desde quiénes quieren ser — no desde la herida del momento.",
+    accion: "Elijan hoy un valor que quieran vivir juntos (ternura, honestidad, humor) y conviertan ese valor en una sola acción pequeña y concreta antes de que termine el día.",
+    experto: "Steven Hayes", corriente: "ACT · Terapia de Aceptación y Compromiso" },
+  { id: 7,
+    titular: "Lo que asumes del otro no siempre es lo que el otro pensó.",
+    porQue: "La lectura mental — creer que sabemos qué quiso decir el otro — es una de las trampas más comunes en pareja. La mente llena vacíos con miedos propios.",
+    accion: "Antes de concluir que algo fue una intención negativa, pregunten con curiosidad genuina: '¿qué quisiste decir cuando dijiste eso?' Solo escuchen la respuesta.",
+    experto: "Aaron Beck", corriente: "TCC · Terapia Cognitivo-Conductual" },
+  { id: 8,
+    titular: "El cuerpo necesita calmarse antes de que la conversación funcione.",
+    porQue: "Cuando el corazón supera las 100 pulsaciones, el cortex prefrontal — el que razona — se desconecta. Hablar en ese estado raramente lleva a acuerdos reales.",
+    accion: "Si sienten que la conversación se calienta, hagan juntos esto: agua fría en la cara o muñecas, tres respiraciones lentas, y vuelvan cuando ambos se sientan listos.",
+    experto: "Marsha Linehan", corriente: "DBT · Regulación Emocional" },
+  { id: 9,
+    titular: "Hablar más suave cuando más duele — eso es amor en acción.",
+    porQue: "La voz compasiva activa el sistema de calma en el otro. No es debilidad — es la herramienta más poderosa para conectar cuando hay dolor presente.",
+    accion: "Hoy, si hay algo que necesitan decirse, intenten decirlo un tono más suave de lo habitual. Noten qué cambia en la respuesta del otro.",
+    experto: "Paul Gilbert", corriente: "CFT · Terapia Centrada en la Compasión" },
+  { id: 10,
+    titular: "Detrás de la queja hay una necesidad de cercanía que no se atrevió a pedirse.",
+    porQue: "Cuando protestamos, atacamos o nos alejamos, solemos estar pidiendo lo mismo: que el otro se acerque. La EFT llama a esto el 'ciclo negativo' — una danza donde ambos buscan vínculo pero se alejan más.",
+    accion: "La próxima vez que sientan tensión, prueben reemplazar la queja por la necesidad real: 'cuando te alejas siento que no importo — necesito que me digas que estás aquí'.",
+    experto: "Sue Johnson", corriente: "EFT · Terapia Focalizada en las Emociones" },
   {
     id: 1,
     texto: "Escucha de verdad, no solo esperes tu turno para hablar.",
@@ -883,7 +1009,7 @@ function ScreenTop({ title, sub, bg }) {
 
 function Toast({ msg }) {
   if (!msg) return null;
-  return <div style={{ position: "fixed", bottom: 90, left: "50%", transform: "translateX(-50%)", background: C.dark, color: C.cream2, padding: "11px 22px", borderRadius: 12, fontFamily: "'Nunito',sans-serif", fontWeight: 700, fontSize: "0.88rem", whiteSpace: "nowrap", zIndex: 9999, boxShadow: "0 4px 0 rgba(0,0,0,0.2)" }}>{msg}</div>;
+  return <div style={{ position: "fixed", bottom: 90, left: "50%", transform: "translateX(-50%)", background: C.dark, color: C.cream2, padding: "11px 22px", borderRadius: 12, fontFamily: "'Nunito',sans-serif", fontWeight: 700, fontSize: "0.88rem", whiteSpace: "nowrap", zIndex: 4800, boxShadow: "0 4px 0 rgba(0,0,0,0.2)" }}>{msg}</div>;
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1002,11 +1128,15 @@ function GardenItemIcon({ id, size = 38 }) {
     peony: (<svg viewBox="0 0 44 52" width={s} height={s}><rect x="20" y="28" width="5" height="22" rx="2.5" fill="#5a7e3c"/><ellipse cx="22" cy="16" rx="14" ry="12" fill="#d4a0d8"/><ellipse cx="22" cy="18" rx="10" ry="9" fill="#e0b8e8"/><ellipse cx="22" cy="20" rx="6" ry="6" fill="#f0d0f4"/><ellipse cx="22" cy="21" rx="3" ry="3" fill="#f8e0a0"/><ellipse cx="12" cy="22" rx="8" ry="10" fill="#c890cc" transform="rotate(20 12 22)" opacity="0.7"/><ellipse cx="32" cy="22" rx="8" ry="10" fill="#c890cc" transform="rotate(-20 32 22)" opacity="0.7"/></svg>),
     cherry: (<svg viewBox="0 0 52 52" width={s} height={s}><rect x="23" y="30" width="7" height="20" rx="3" fill="#9a7848"/><circle cx="26" cy="22" r="16" fill="#f4a8b8" opacity="0.8"/><circle cx="14" cy="28" r="11" fill="#f8b8c8" opacity="0.8"/><circle cx="38" cy="27" r="12" fill="#f0a0b0" opacity="0.8"/>{[16,24,32,20,28,22,30].map((x,i)=><circle key={i} cx={x} cy={15+i*2} r="2" fill="#f4d0d8" opacity="0.7"/>)}</svg>),
     lily: (<svg viewBox="0 0 40 50" width={s} height={s}><rect x="18" y="26" width="5" height="22" rx="2.5" fill="#5a7e3c"/>{[0,60,120,180,240,300].map((a,i)=><ellipse key={i} cx={20+Math.cos(a*Math.PI/180)*11} cy={18+Math.sin(a*Math.PI/180)*9} rx="7" ry="11" fill={i%2===0?"#8ab8e8":"#a8ccf0"} transform={`rotate(${a} ${20+Math.cos(a*Math.PI/180)*11} ${18+Math.sin(a*Math.PI/180)*9})`} opacity="0.85"/>)}<circle cx="20" cy="18" r="5" fill="#f8e060"/></svg>),
+    maple: (<svg viewBox="0 0 52 52" width={s} height={s}><rect x="23" y="30" width="7" height="20" rx="3" fill="#8e6a3f"/><path d="M26 7 L30 14 L38 12 L34 20 L42 24 L33 26 L34 34 L26 30 L18 34 L19 26 L10 24 L18 20 L14 12 L22 14 Z" fill="#d4553a"/><circle cx="20" cy="23" r="6" fill="#e0774e" opacity="0.6"/><circle cx="32" cy="23" r="6" fill="#c94a32" opacity="0.6"/></svg>),
+    wisteria: (<svg viewBox="0 0 48 52" width={s} height={s}><line x1="6" y1="6" x2="42" y2="6" stroke="#7f6a48" strokeWidth="3"/><path d="M12 6 Q10 16 14 22 Q18 28 14 36" fill="none" stroke="#6aa049" strokeWidth="2"/><path d="M24 6 Q22 16 26 24 Q30 30 26 38" fill="none" stroke="#6aa049" strokeWidth="2"/><path d="M36 6 Q34 16 38 22 Q42 28 38 36" fill="none" stroke="#6aa049" strokeWidth="2"/><ellipse cx="14" cy="39" rx="5" ry="8" fill="#bda0e8"/><ellipse cx="26" cy="41" rx="5" ry="8" fill="#c8b0ef"/><ellipse cx="38" cy="39" rx="5" ry="8" fill="#b08fdc"/></svg>),
     // Agua
     pond: (<svg viewBox="0 0 52 32" width={s} height={s*0.62}><ellipse cx="26" cy="18" rx="24" ry="12" fill="#7ac8b8" opacity="0.7"/><ellipse cx="26" cy="16" rx="20" ry="9" fill="#a8d8e8" opacity="0.6"/><ellipse cx="18" cy="18" rx="7" ry="5" fill="#6ab830" opacity="0.8"/><circle cx="18" cy="15" r="2.5" fill="#e8607a" opacity="0.9"/><ellipse cx="35" cy="20" rx="5" ry="3.5" fill="#6ab830" opacity="0.7"/>{[14,22,30,38].map((x,i)=><ellipse key={i} cx={x} cy={22+i%2} rx="2.5" ry="1.5" fill="#88c8d8" opacity="0.5"/>)}</svg>),
     koi1: (<svg viewBox="0 0 44 28" width={s} height={s*0.64}><ellipse cx="22" cy="14" rx="16" ry="8" fill="#e86040"/><ellipse cx="18" cy="14" rx="12" ry="6" fill="#f07848"/><path d="M6 14 Q2 8 0 14 Q2 20 6 14Z" fill="#e05030"/><circle cx="30" cy="12" r="2.5" fill="white"/><circle cx="30" cy="12" r="1.2" fill="#1a1a1a"/><path d="M12 8 Q16 4 20 8" fill="none" stroke="#f8a870" strokeWidth="1.5" opacity="0.6"/><path d="M12 20 Q16 24 20 20" fill="none" stroke="#f8a870" strokeWidth="1.5" opacity="0.6"/></svg>),
     koi2: (<svg viewBox="0 0 44 28" width={s} height={s*0.64}><ellipse cx="22" cy="14" rx="16" ry="8" fill="#d4a843"/><ellipse cx="18" cy="14" rx="12" ry="6" fill="#e8c060"/><path d="M6 14 Q2 8 0 14 Q2 20 6 14Z" fill="#c89830"/><circle cx="30" cy="12" r="2.5" fill="white"/><circle cx="30" cy="12" r="1.2" fill="#1a1a1a"/><circle cx="20" cy="10" r="2" fill="#e86040" opacity="0.7"/><circle cx="24" cy="16" r="1.5" fill="#e86040" opacity="0.6"/></svg>),
     lotus_pad: (<svg viewBox="0 0 44 28" width={s} height={s*0.64}><ellipse cx="22" cy="16" rx="20" ry="11" fill="#5a9840" opacity="0.85"/><ellipse cx="22" cy="16" rx="16" ry="8" fill="#6aac48" opacity="0.8"/><path d="M22 5 L22 16" stroke="#4a8030" strokeWidth="1.5"/>{[30,60,90,120,150,210,240,270,300,330].map((a,i)=><path key={i} d={`M22 16 L${22+Math.cos(a*Math.PI/180)*18} ${16+Math.sin(a*Math.PI/180)*10}`} stroke="#4a8030" strokeWidth="1" opacity="0.5"/>)}<circle cx="28" cy="8" r="4" fill="#f4a8b8" opacity="0.9"/><circle cx="28" cy="8" r="2.5" fill="#f8c4cc"/></svg>),
+    waterfall: (<svg viewBox="0 0 48 44" width={s} height={s*0.9}><path d="M4 34 C12 20 16 18 20 8 L30 8 C26 20 24 26 24 36" fill="#9e8960"/><path d="M22 8 C28 16 30 23 28 36" fill="none" stroke="#7fc7e8" strokeWidth="6" strokeLinecap="round"/><ellipse cx="28" cy="38" rx="16" ry="5" fill="#90d8f0" opacity="0.7"/></svg>),
+    ducks: (<svg viewBox="0 0 56 34" width={s} height={s*0.64}><ellipse cx="18" cy="18" rx="10" ry="6" fill="#f2c487"/><circle cx="24" cy="14" r="4" fill="#f2c487"/><path d="M28 14 L34 16 L28 18Z" fill="#e38a3a"/><ellipse cx="38" cy="21" rx="10" ry="6" fill="#eab670"/><circle cx="44" cy="17" r="4" fill="#eab670"/><path d="M48 17 L54 19 L48 21Z" fill="#d97a2a"/><path d="M6 30 Q18 26 30 30" fill="none" stroke="#8dcde6" strokeWidth="2"/><path d="M20 30 Q32 27 44 30" fill="none" stroke="#8dcde6" strokeWidth="2"/></svg>),
     // Cielo
     sun: (<svg viewBox="0 0 48 48" width={s} height={s}>
       {[0,30,60,90,120,150,180,210,240,270,300,330].map(a=>(
@@ -1054,15 +1184,21 @@ function GardenItemIcon({ id, size = 38 }) {
       <ellipse cx="40" cy="18" rx="11" ry="7" fill="white" opacity="0.9"/>
       <ellipse cx="28" cy="19" rx="21" ry="9" fill="none" stroke="#d5e0e8" strokeWidth="1" opacity="0.7"/>
     </svg>),
+    shooting_stars: (<svg viewBox="0 0 58 34" width={s} height={s*0.59}><path d="M6 8 L22 14" stroke="#ffe28a" strokeWidth="3" strokeLinecap="round"/><path d="M24 5 L42 12" stroke="#ffd268" strokeWidth="2.5" strokeLinecap="round"/><path d="M35 14 L52 19" stroke="#ffe8a8" strokeWidth="2" strokeLinecap="round"/><path d="M22 14 L28 16 L24 10Z" fill="#fff0b8"/><path d="M42 12 L47 14 L44 9Z" fill="#ffe0a0"/></svg>),
+    heart_cloud: (<svg viewBox="0 0 52 34" width={s} height={s*0.59}><path d="M26 30 C26 30 8 21 8 12 C8 7 12 4 16 5 C19 6 22 8 26 12 C30 8 33 6 36 5 C40 4 44 7 44 12 C44 21 26 30 26 30Z" fill="white" opacity="0.95"/><ellipse cx="19" cy="18" rx="10" ry="6" fill="#f7fbff" opacity="0.8"/><ellipse cx="33" cy="18" rx="10" ry="6" fill="#f7fbff" opacity="0.8"/></svg>),
     // Decoración
     lantern: (<svg viewBox="0 0 32 50" width={s} height={s}><rect x="14" y="2" width="4" height="7" rx="2" fill="#9a7848"/><rect x="10" y="12" width="12" height="22" rx="6" fill="#e86030"/><rect x="12" y="12" width="8" height="22" rx="4" fill="#f08050" opacity="0.7"/><ellipse cx="16" cy="12" rx="7" ry="3" fill="#9a7848"/><ellipse cx="16" cy="34" rx="7" ry="3" fill="#9a7848"/><rect x="14" y="34" width="4" height="8" rx="2" fill="#9a7848"/><circle cx="16" cy="23" r="4" fill="#f8e060" opacity="0.5"/></svg>),
     lantern2: (<svg viewBox="0 0 52 50" width={s} height={s}><line x1="8" y1="0" x2="44" y2="0" stroke="#9a7848" strokeWidth="2"/><line x1="16" y1="0" x2="12" y2="10" stroke="#9a7848" strokeWidth="1.5"/><line x1="36" y1="0" x2="40" y2="10" stroke="#9a7848" strokeWidth="1.5"/><rect x="6" y="10" width="10" height="18" rx="5" fill="#e86030"/><rect x="8" y="10" width="6" height="18" rx="3" fill="#f08050" opacity="0.7"/><ellipse cx="11" cy="10" rx="6" ry="2.5" fill="#9a7848"/><ellipse cx="11" cy="28" rx="6" ry="2.5" fill="#9a7848"/><rect x="30" y="10" width="10" height="18" rx="5" fill="#d4408a"/><rect x="32" y="10" width="6" height="18" rx="3" fill="#e060a0" opacity="0.7"/><ellipse cx="35" cy="10" rx="6" ry="2.5" fill="#9a7848"/><ellipse cx="35" cy="28" rx="6" ry="2.5" fill="#9a7848"/></svg>),
     heart: (<svg viewBox="0 0 40 36" width={s} height={s*0.9}><path d="M20 32 C20 32 3 20 3 10 C3 4 8 1 13 3.5 C16 4.5 20 8.5 20 8.5 C20 8.5 24 4.5 27 3.5 C32 1 37 4 37 10 C37 20 20 32 20 32Z" fill="#e8607a"/><path d="M20 26 C20 26 8 18 8 13 C8 10 10 8 12 9 C14 10 20 14 20 14" fill="#f4a8c0" opacity="0.5"/></svg>),
     bridge: (<svg viewBox="0 0 52 30" width={s} height={s*0.58}><path d="M2 22 Q26 4 50 22" fill="none" stroke="#9a7848" strokeWidth="4" strokeLinecap="round"/><line x1="2" y1="22" x2="2" y2="28" stroke="#8a6838" strokeWidth="3"/><line x1="50" y1="22" x2="50" y2="28" stroke="#8a6838" strokeWidth="3"/>{[10,18,26,34,42].map(x=><line key={x} x1={x} y1={16+(x-26)**2/200} x2={x} y2={28} stroke="#8a6838" strokeWidth="2"/>)}<path d="M0 28 L52 28" stroke="#8a6838" strokeWidth="3"/></svg>),
     pagoda: (<svg viewBox="0 0 44 52" width={s} height={s}><rect x="16" y="46" width="12" height="5" rx="1" fill="#c07840"/><rect x="12" y="38" width="20" height="9" rx="1" fill="#d08848"/><path d="M6 38 L22 28 L38 38Z" fill="#c07040"/><rect x="14" y="28" width="16" height="11" rx="1" fill="#d08848"/><path d="M10 28 L22 18 L34 28Z" fill="#c07040"/><rect x="16" y="18" width="12" height="11" rx="1" fill="#d08848"/><path d="M14 18 L22 8 L30 18Z" fill="#c07040"/><rect x="20" y="2" width="4" height="8" rx="1" fill="#e8a030"/></svg>),
+    bench: (<svg viewBox="0 0 56 34" width={s} height={s*0.6}><rect x="10" y="12" width="36" height="6" rx="2" fill="#9b7a4a"/><rect x="10" y="19" width="36" height="4" rx="2" fill="#8c6a3f"/><rect x="12" y="23" width="4" height="9" rx="1.5" fill="#7c5c35"/><rect x="40" y="23" width="4" height="9" rx="1.5" fill="#7c5c35"/></svg>),
+    wind_chime: (<svg viewBox="0 0 40 52" width={s} height={s}><line x1="6" y1="6" x2="34" y2="6" stroke="#9a7848" strokeWidth="2.5"/><line x1="12" y1="6" x2="12" y2="30" stroke="#9a7848" strokeWidth="1.6"/><line x1="20" y1="6" x2="20" y2="34" stroke="#9a7848" strokeWidth="1.6"/><line x1="28" y1="6" x2="28" y2="30" stroke="#9a7848" strokeWidth="1.6"/><rect x="9" y="30" width="6" height="12" rx="2" fill="#d8a85f"/><rect x="17" y="34" width="6" height="12" rx="2" fill="#c89058"/><rect x="25" y="30" width="6" height="12" rx="2" fill="#d8a85f"/><path d="M20 34 L20 48" stroke="#9a7848" strokeWidth="1.4"/><ellipse cx="20" cy="49" rx="6" ry="2.5" fill="#f0d090"/></svg>),
     // Especiales
     firefly: (<svg viewBox="0 0 48 48" width={s} height={s}><circle cx="24" cy="24" r="20" fill="#1a2a1a" opacity="0.2"/>{[[12,15],[30,10],[8,30],[36,28],[20,36],[38,18],[16,22],[28,34]].map(([x,y],i)=><g key={i}><circle cx={x} cy={y} r="2.5" fill="#f8e840" opacity="0.9"/><circle cx={x} cy={y} r="4" fill="#f8e840" opacity="0.25"/></g>)}</svg>),
     moongate: (<svg viewBox="0 0 52 52" width={s} height={s}><circle cx="26" cy="22" r="20" fill="none" stroke="#f8e0a0" strokeWidth="3"/><path d="M6 40 L6 22 A20 20 0 0 1 46 22 L46 40" fill="#f8e0a0" opacity="0.1" stroke="#f8e0a0" strokeWidth="2"/><circle cx="26" cy="22" r="16" fill="#1a2a3a" opacity="0.5"/><circle cx="26" cy="22" r="15" fill="none"/>{[5,4,3,2].map((r,i)=><circle key={i} cx={26-r} cy={18+r} r={r} fill="#f8e0a0" opacity={0.4-i*0.08}/>)}<path d="M6 42 L6 52 L46 52 L46 42" fill="#7ab848" opacity="0.8"/></svg>),
+    aurora: (<svg viewBox="0 0 56 34" width={s} height={s*0.6}><path d="M2 30 Q16 10 30 20 Q42 28 54 8" fill="none" stroke="#6ad8c4" strokeWidth="4" opacity="0.7"/><path d="M2 24 Q16 6 30 16 Q42 24 54 4" fill="none" stroke="#86b8f4" strokeWidth="3" opacity="0.7"/><path d="M2 18 Q16 2 30 12 Q42 20 54 2" fill="none" stroke="#c6a8f0" strokeWidth="2.5" opacity="0.7"/></svg>),
+    petal_rain: (<svg viewBox="0 0 48 48" width={s} height={s}>{[[10,8],[22,6],[34,10],[14,20],[28,18],[38,26],[18,30],[30,34],[12,40],[36,40]].map(([x,y],i)=><ellipse key={i} cx={x} cy={y} rx="3" ry="5" fill={i%2===0?"#f4a8b8":"#f8c4d0"} transform={`rotate(${i%2===0?18:-18} ${x} ${y})`} opacity="0.9"/>)}<path d="M4 44 Q24 40 44 44" fill="none" stroke="#d8b8c8" strokeWidth="1.5" opacity="0.6"/></svg>),
   };
   return icons[id] || <svg viewBox="0 0 40 40" width={s} height={s}><circle cx="20" cy="20" r="16" fill={C.sand}/></svg>;
 }
@@ -1270,7 +1406,7 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
 
       {/* OUTFIT: KIMONO */}
       {owned.outfit_kimono && (
-        <g>
+        <g transform="translate(0,4)">
           {/* Left panda kimono */}
           <path d="M38 140 C34 150 32 170 34 195 C40 200 70 202 114 195 C116 170 114 150 110 140 C100 132 88 130 76 130 C64 130 52 132 38 140Z"
             fill="#d4508a" opacity="0.92"/>
@@ -1299,7 +1435,7 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
       )}
 
       {owned.outfit_sailor && (
-        <g>
+        <g transform="translate(0,4)">
           <path d="M45 136 C43 151 43 170 45 192 C56 197 95 197 107 192 C109 170 109 151 107 136 C92 131 61 131 45 136Z" fill="#f5f8ff" opacity="0.96"/>
           <path d="M59 132 L76 152 L93 132" fill="none" stroke="#5d7bbd" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
           <rect x="47" y="161" width="58" height="10" rx="5" fill="#5d7bbd" opacity="0.85"/>
@@ -1313,7 +1449,7 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
       )}
 
       {owned.outfit_witch && (
-        <g>
+        <g transform="translate(0,4)">
           <path d="M44 138 C40 155 40 176 44 194 C56 201 97 201 108 194 C112 176 112 155 108 138 C92 132 60 132 44 138Z" fill="#7b5bb8" opacity="0.9"/>
           <path d="M52 138 C60 145 69 149 76 149 C83 149 92 145 100 138" fill="none" stroke="#d6a55a" strokeWidth="2.5"/>
           <circle cx="76" cy="168" r="6" fill="#2f1d4a" opacity="0.8"/>
@@ -1325,7 +1461,7 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
       )}
 
       {owned.outfit_angel && (
-        <g>
+        <g transform="translate(0,4)">
           <path d="M44 137 C42 154 42 174 44 192 C56 199 96 199 108 192 C110 174 110 154 108 137 C92 132 60 132 44 137Z" fill="#fff8f0" opacity="0.97"/>
           <ellipse cx="34" cy="151" rx="10" ry="18" fill="#f6fcff" opacity="0.8"/>
           <ellipse cx="118" cy="151" rx="10" ry="18" fill="#f6fcff" opacity="0.8"/>
@@ -1541,6 +1677,10 @@ function GardenScene({ garden, waterLevel }) {
         <ellipse cx="280" cy="42" rx="20" ry="9" fill="white" opacity="0.4"/>
       </g>}
 
+      {g.heart_cloud && <g>
+        <path d="M252 62 C252 62 232 52 232 41 C232 35 237 32 242 34 C246 35 249 38 252 42 C255 38 258 35 262 34 C267 32 272 35 272 41 C272 52 252 62 252 62Z" fill="white" opacity="0.9"/>
+      </g>}
+
       {/* Sun / Moon */}
       {g.sun ? <>
         <circle cx="330" cy="55" r="28" fill="#f0b030" opacity="0.95"/>
@@ -1555,6 +1695,18 @@ function GardenScene({ garden, waterLevel }) {
       {g.rainbow && [["#e87878",0],["#e8a858",7],["#e8d860",14],["#8ac868",21],["#5ab8c8",28]].map(([c,o],i)=>(
         <path key={i} d={`M${10+o/2} 280 Q200 ${80+o} ${380-o/2} 280`} fill="none" stroke={c} strokeWidth="5" strokeLinecap="round" opacity="0.6"/>
       ))}
+
+      {g.shooting_stars && <g>
+        <path d="M54 36 L88 48" stroke="#ffe08a" strokeWidth="3" strokeLinecap="round" opacity="0.85"/>
+        <path d="M132 28 L166 42" stroke="#ffd068" strokeWidth="2.5" strokeLinecap="round" opacity="0.8"/>
+        <path d="M210 40 L242 52" stroke="#ffefb8" strokeWidth="2.5" strokeLinecap="round" opacity="0.85"/>
+      </g>}
+
+      {g.aurora && <g>
+        <path d="M0 120 Q70 70 150 95 Q230 120 320 85 Q360 72 390 78" fill="none" stroke="#77d8c6" strokeWidth="9" opacity="0.28"/>
+        <path d="M0 108 Q76 58 158 82 Q242 108 332 74 Q364 62 390 66" fill="none" stroke="#8fb8f2" strokeWidth="7" opacity="0.25"/>
+        <path d="M0 96 Q80 48 164 72 Q250 98 340 64 Q368 54 390 58" fill="none" stroke="#c4a8ef" strokeWidth="5" opacity="0.23"/>
+      </g>}
 
       {/* Misty mountains background */}
       <ellipse cx="100" cy="200" rx="130" ry="80" fill={MIST[lvl]} opacity="0.3"/>
@@ -1636,25 +1788,56 @@ function GardenScene({ garden, waterLevel }) {
         <circle cx="302" cy="145" r="24" fill={dry?"#d0a868":"#f0a0b0"} opacity={dry?0.55:0.75}/>
       </g>}
 
-      {/* Pond */}
+      {g.maple && <g>
+        <rect x="70" y="162" width="10" height="68" rx="4" fill="#8e6a3f"/>
+        <circle cx="75" cy="146" r="24" fill={dry?"#c89a62":"#d5563a"} opacity="0.82"/>
+        <circle cx="60" cy="154" r="17" fill={dry?"#b88952":"#e0784f"} opacity="0.76"/>
+        <circle cx="90" cy="154" r="17" fill={dry?"#b88952":"#c94931"} opacity="0.76"/>
+      </g>}
+
+      {g.wisteria && <g>
+        <line x1="320" y1="108" x2="380" y2="108" stroke="#7f6a48" strokeWidth="3"/>
+        {[334,348,362,376].map((x,i)=><g key={x}>
+          <path d={`M${x} 108 Q${x-4} 124 ${x} ${146+i*5}`} fill="none" stroke="#6aa049" strokeWidth="2"/>
+          <ellipse cx={x} cy={152+i*5} rx="5" ry="8" fill={i%2===0?"#c4b0ef":"#b596de"} opacity="0.9"/>
+        </g>)}
+      </g>}
+
+      {/* Pond — shifted right (+90) so pandas don't overlap and waterfall pool (cx=372) falls inside */}
       {g.pond && <g>
-        <ellipse cx="200" cy="262" rx="90" ry="22" fill={waterCol} opacity="0.55"/>
-        <ellipse cx="200" cy="259" rx="74" ry="15" fill={waterCol} opacity={dry?0.3:0.5}/>
-        {/* Koi fish */}
+        <ellipse cx="290" cy="262" rx="90" ry="22" fill={waterCol} opacity="0.55"/>
+        <ellipse cx="290" cy="259" rx="74" ry="15" fill={waterCol} opacity={dry?0.3:0.5}/>
+        {/* Koi fish — shifted +100 to sit in right portion of pond, away from ducks */}
         {g.koi1 && <g>
-          <ellipse cx="185" cy="260" rx="18" ry="7" fill="#e86040" opacity="0.8"/>
-          <path d="M167 260 Q163 254 160 260 Q163 266 167 260Z" fill="#e05030" opacity="0.8"/>
-          <circle cx="196" cy="258" r="2" fill="white" opacity="0.9"/>
+          <ellipse cx="285" cy="260" rx="18" ry="7" fill="#e86040" opacity="0.8"/>
+          <path d="M267 260 Q263 254 260 260 Q263 266 267 260Z" fill="#e05030" opacity="0.8"/>
+          <circle cx="296" cy="258" r="2" fill="white" opacity="0.9"/>
         </g>}
         {g.koi2 && <g>
-          <ellipse cx="215" cy="264" rx="16" ry="6" fill="#d4a843" opacity="0.8"/>
-          <path d="M231 264 Q235 258 238 264 Q235 270 231 264Z" fill="#c89030" opacity="0.8"/>
+          <ellipse cx="315" cy="264" rx="16" ry="6" fill="#d4a843" opacity="0.8"/>
+          <path d="M331 264 Q335 258 338 264 Q335 270 331 264Z" fill="#c89030" opacity="0.8"/>
         </g>}
         {/* Lotus pads */}
         {g.lotus_pad && <g>
-          <ellipse cx="175" cy="255" rx="18" ry="10" fill="#5a9840" opacity="0.8"/>
-          <ellipse cx="222" cy="260" rx="14" ry="8" fill="#5a9840" opacity="0.7"/>
+          <ellipse cx="265" cy="255" rx="18" ry="10" fill="#5a9840" opacity="0.8"/>
+          <ellipse cx="312" cy="260" rx="14" ry="8" fill="#5a9840" opacity="0.7"/>
         </g>}
+      </g>}
+
+      {g.waterfall && <g>
+        <path d="M344 228 C350 214 356 204 362 180 L384 180 C378 202 374 214 372 230" fill="#9e8960" opacity="0.85"/>
+        <path d="M365 180 C372 194 374 208 372 230" fill="none" stroke={dry?"#c8b870":"#80c8ea"} strokeWidth="10" strokeLinecap="round" opacity={dry?0.55:0.85}/>
+        <ellipse cx="372" cy="234" rx="24" ry="7" fill={dry?"#b8b080":"#90d8f0"} opacity="0.7"/>
+      </g>}
+
+      {/* Ducks — shifted +70, left portion of pond, clear of koi (+100) */}
+      {g.ducks && <g>
+        <ellipse cx="226" cy="264" rx="10" ry="6" fill="#f2c487" opacity="0.9"/>
+        <circle cx="233" cy="260" r="3.8" fill="#f2c487" opacity="0.95"/>
+        <path d="M236 260 L241 262 L236 264Z" fill="#dd8734"/>
+        <ellipse cx="246" cy="268" rx="10" ry="6" fill="#eab670" opacity="0.9"/>
+        <circle cx="253" cy="264" r="3.8" fill="#eab670" opacity="0.95"/>
+        <path d="M256 264 L261 266 L256 268Z" fill="#d87727"/>
       </g>}
 
       {/* Lotus flowers */}
@@ -1740,6 +1923,23 @@ function GardenScene({ garden, waterLevel }) {
         <rect x="322" y="162" width="12" height="8" rx="2" fill="#e8a030" opacity="0.9"/>
       </g>}
 
+      {g.bench && <g>
+        <rect x="232" y="248" width="54" height="8" rx="3" fill="#9b7a4a"/>
+        <rect x="232" y="257" width="54" height="6" rx="3" fill="#8c6a3f"/>
+        <rect x="238" y="263" width="5" height="9" rx="2" fill="#7c5c35"/>
+        <rect x="275" y="263" width="5" height="9" rx="2" fill="#7c5c35"/>
+      </g>}
+
+      {g.wind_chime && <g>
+        <line x1="300" y1="128" x2="342" y2="128" stroke="#9a7848" strokeWidth="2.5"/>
+        {[308,320,332].map((x,i)=><g key={x}>
+          <line x1={x} y1="128" x2={x} y2={148+i*2} stroke="#9a7848" strokeWidth="1.5"/>
+          <rect x={x-3} y={148+i*2} width="6" height="14" rx="2" fill={i===1?"#c89058":"#d8a85f"}/>
+        </g>)}
+        <line x1="320" y1="150" x2="320" y2="168" stroke="#9a7848" strokeWidth="1.4"/>
+        <ellipse cx="320" cy="170" rx="7" ry="2.8" fill="#f0d090"/>
+      </g>}
+
       {/* Lanterns */}
       {g.lantern && <g>
         <rect x="22" y="185" width="6" height="40" rx="3" fill="#9a7848"/>
@@ -1767,6 +1967,12 @@ function GardenScene({ garden, waterLevel }) {
             <circle cx={x} cy={y} r="2.5" fill="#f8e840" opacity="0.95"/>
             <circle cx={x} cy={y} r="5" fill="#f8e840" opacity="0.2"/>
           </g>
+        ))}
+      </g>}
+
+      {g.petal_rain && <g>
+        {[[58,118],[92,98],[122,130],[166,106],[204,122],[242,102],[286,126],[326,108],[358,132],[188,142],[228,144],[268,150]].map(([x,y],i)=>(
+          <ellipse key={i} cx={x} cy={y} rx="4" ry="6" fill={i%2===0?"#f4a8b8":"#f8c4d0"} transform={`rotate(${i%2===0?18:-18} ${x} ${y})`} opacity="0.85"/>
         ))}
       </g>}
 
@@ -1818,7 +2024,7 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
           <div style={{ background: C.olive, borderRadius: 10, padding: "8px 16px", fontFamily: "'Fredoka One',cursive", fontSize: "1.05rem", color: C.cream2, boxShadow: "0 3px 0 rgba(0,0,0,0.2)" }}>🌿 {bamboo}</div>
         </div>
         {/* Bars */}
-        {[{l:"♡ AMOR",v:happiness,c:C.salmon},{l:"💧 AGUA",v:water,c:dry?"#e86030":withering?"#e8a030":C.sky}].map(b => (
+        {[{l:"💧 AGUA",v:water,c:dry?"#e86030":withering?"#e8a030":C.sky}].map(b => (
           <div key={b.l} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
             <span style={{ fontSize:"0.68rem", color:`${C.cream}88`, fontWeight:800, minWidth:54, letterSpacing:"0.5px" }}>{b.l}</span>
             <div style={{ flex:1, height:9, background:"rgba(255,255,255,0.14)", borderRadius:50, overflow:"hidden" }}>
@@ -2006,14 +2212,29 @@ function Login({ onLogin }) {
 
   const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
   const normalizeEmail = (value) => String(value || "").trim().toLowerCase();
+  const isInAppBrowser = () => {
+    const ua = String(navigator?.userAgent || "").toLowerCase();
+    return ua.includes("instagram") || ua.includes("fbav") || ua.includes("fban") || ua.includes("line/") || ua.includes("wv");
+  };
 
   const ensureAuthReady = async (firebaseUser) => {
+    if (!firebaseUser) return;
+    for (const delay of [0, 300, 700, 1200]) {
+      if (delay) await wait(delay);
+      await firebaseUser.reload?.().catch(() => {});
+      try {
+        await firebaseUser.getIdToken(true);
+        return;
+      } catch {
+        // keep trying while Auth finishes propagating on slower mobile networks
+      }
+    }
     // Force token refresh and wait longer for auth to propagate
     await firebaseUser?.getIdToken(true).catch(() => {});
     await wait(800);
   };
 
-  const retryFirestore = async (fn) => {
+  const retryFirestore = async (fn, firebaseUser = null) => {
     let lastErr;
     // Increased delays and more retries for permission errors
     for (const delay of [0, 500, 1000, 2000]) {
@@ -2023,7 +2244,7 @@ function Login({ onLogin }) {
       } catch (e) {
         lastErr = e;
         // Only retry on permission errors
-        if (!isPermissionError(e)) throw e;
+        if (!isPermissionError(e)) throw e;        await ensureAuthReady(firebaseUser).catch(() => {});
         console.warn(`Permission error, retrying after ${delay}ms...`, e?.message);
       }
     }
@@ -2084,13 +2305,17 @@ function Login({ onLogin }) {
       const since = durN ? `Juntos ${durN} ${durU}` : "Juntos desde hoy";
       const cred = await fbRegister(cleanEmail, pass);
       createdAuthUser = true;
-      const uid = cred.user.uid;
-      await ensureAuthReady(cred.user);
+      // On some mobile browsers, forcing a fresh sign-in right after register
+      // stabilizes request.auth for the first Firestore writes.
+      const freshCred = await fbLogin(cleanEmail, pass).catch(() => cred);
+      const sessionUser = freshCred?.user || cred.user;
+      const uid = sessionUser.uid;
+      await ensureAuthReady(sessionUser);
       let finalCode = code;
       let created = false;
       for (let i = 0; i < 8; i += 1) {
         try {
-          await retryFirestore(() => fbCreateCodeOwner(finalCode, { ownerEmail: cleanEmail, ownerUid: uid, names, since }));
+          await retryFirestore(() => fbCreateCodeOwner(finalCode, { ownerEmail: cleanEmail, ownerUid: uid, names, since }), sessionUser);
           created = true;
           break;
         } catch (e) {
@@ -2109,7 +2334,7 @@ function Login({ onLogin }) {
         return;
       }
       if (finalCode !== code) setCode(finalCode);
-      await retryFirestore(() => fbSaveUser(uid, { email: cleanEmail, names, code: finalCode, since, isOwner: true }));
+      await retryFirestore(() => fbSaveUser(uid, { email: cleanEmail, names, code: finalCode, since, isOwner: true }), sessionUser);
       onLogin({ uid, email: cleanEmail, names, code: finalCode, since, isOwner: true, isGuest: false }, true);
     } catch(e) {
       if (e.code === "auth/email-already-in-use") {
@@ -2133,21 +2358,36 @@ function Login({ onLogin }) {
     const cleanPartnerEmail = normalizeEmail(pEmail);
     const cleanPartnerName = nameB.trim() || "?";
     if (!cleanPartnerName || !cleanCode || !cleanPartnerEmail || pPass.length < 6) { setErr("Completa tu nombre, código, correo y contraseña"); return; }
+    if (isInAppBrowser()) {
+      setErr("Estás en navegador interno (Instagram/Facebook). Abre este link en Chrome/Safari para vincular sin bloqueos.");
+      return;
+    }
     setLoading(true); setErr("");
     _pendingLocalAuth = true;
     let justCreated = false;
+    let pendingUid = null;
     try {
       const cred = await fbRegister(cleanPartnerEmail, pPass);
       justCreated = true;
-      const uid = cred.user.uid;
-      await ensureAuthReady(cred.user);
+      // On some mobile browsers, forcing a fresh sign-in right after register
+      // stabilizes request.auth for the first Firestore writes.
+      const freshCred = await fbLogin(cleanPartnerEmail, pPass).catch(() => cred);
+      const sessionUser = freshCred?.user || cred.user;
+      const uid = sessionUser.uid;
+      pendingUid = uid;
+      await ensureAuthReady(sessionUser);
       const claim = await retryFirestore(() => fbClaimPartnerCode(cleanCode, {
         partnerEmail: cleanPartnerEmail,
         partnerUid: uid,
         partnerName: cleanPartnerName,
-      }));
+      }), sessionUser);
       const names = claim.names || "Nosotros";
       const since = claim.since || "Juntos desde hoy";
+      // Best effort: if this write is blocked transiently, do not lose the successful code claim.
+      await retryFirestore(() => fbSaveUser(uid, { email: cleanPartnerEmail, names, code: cleanCode, since, isOwner: false }), sessionUser).catch(() => {});
+      // Also update owner's user record with new names
+      // Owner profile update is best-effort: partner cannot always write owner's user doc by rules.
+      if (claim.ownerUid) await retryFirestore(() => fbSaveUser(claim.ownerUid, { names }), sessionUser).catch(() => {});
       await retryFirestore(() => fbSaveUser(uid, { email: cleanPartnerEmail, names, code: cleanCode, since, isOwner: false }));
       // Note: We don't update owner's user doc here because of Firestore rules.
       // The owner will see the updated names through the code document listener.
@@ -2164,8 +2404,12 @@ function Login({ onLogin }) {
             partnerEmail: cleanPartnerEmail,
             partnerUid: uid2,
             partnerName: cleanPartnerName,
-          }));
+          }), cred2.user);
           const names2 = claim2.names || "Nosotros";
+          // Best effort: if this write is blocked transiently, still complete login.
+          await retryFirestore(() => fbSaveUser(uid2, { email: cleanPartnerEmail, names: names2, code: cleanCode, isOwner: false }), cred2.user).catch(() => {});
+          // Keep join successful even if owner profile write is rejected by Firestore rules.
+          if (claim2.ownerUid) await retryFirestore(() => fbSaveUser(claim2.ownerUid, { names: names2 }), cred2.user).catch(() => {});
           await retryFirestore(() => fbSaveUser(uid2, { email: cleanPartnerEmail, names: names2, code: cleanCode, isOwner: false }));
           // Note: We don't update owner's user doc here because of Firestore rules.
           // The owner will see the updated names through the code document listener.
@@ -2183,6 +2427,35 @@ function Login({ onLogin }) {
           } else if (msg2.includes("CODE_NOT_FOUND")) {
             setErr("Código no encontrado — revisa que esté bien escrito");
           } else if (isPermissionError(e2)) {
+            const currentCode2 = await fbGetCode(cleanCode).catch(() => null);
+            if (!currentCode2) {
+              setErr("Código no encontrado — revisa que esté bien escrito");
+            } else if (currentCode2?.partnerUid && currentCode2.partnerUid !== uid2) {
+              setErr("Ese código ya está vinculado con otra cuenta de pareja.");
+            } else {
+              const ownerName2 = String(currentCode2?.names || "Nosotros & ?").split(" & ")[0].trim() || "Nosotros";
+              const namesFallback2 = `${ownerName2} & ${cleanPartnerName || "?"}`;
+              const sinceFallback2 = currentCode2?.since || "Juntos";
+              await retryFirestore(() => fbSaveUser(uid2, {
+                email: cleanPartnerEmail,
+                names: namesFallback2,
+                code: cleanCode,
+                since: sinceFallback2,
+                isOwner: false,
+              }), cred2.user).catch(() => {});
+              onLogin({
+                uid: uid2,
+                email: cleanPartnerEmail,
+                names: namesFallback2,
+                code: cleanCode,
+                since: sinceFallback2,
+                isOwner: false,
+                isGuest: false,
+              }, false);
+              _pendingLocalAuth = false;
+              setLoading(false);
+              return;
+            }
             setErr("Firebase bloqueó el acceso (segundo intento). Código: " + (code2 || "unknown"));
           } else if (code2 === "auth/user-not-found") {
             setErr("No existe una cuenta con ese correo. Intenta crear una nueva cuenta.");
@@ -2205,7 +2478,95 @@ function Login({ onLogin }) {
       } else if (e.code === "auth/weak-password") {
         setErr("La contraseña debe tener al menos 6 caracteres");
       } else if (isPermissionError(e)) {
+        // Recovery path for transient auth propagation issues on mobile/web:
+        // force a fresh sign-in and retry the join transaction once more.
+        try {
+          const relogCred = await fbLogin(cleanPartnerEmail, pPass);
+          const relogUser = relogCred?.user;
+          if (relogUser) {
+            pendingUid = relogUser.uid;
+            await ensureAuthReady(relogUser);
+            const claimRecovered = await retryFirestore(() => fbClaimPartnerCode(cleanCode, {
+              partnerEmail: cleanPartnerEmail,
+              partnerUid: relogUser.uid,
+              partnerName: cleanPartnerName,
+            }), relogUser);
+            const namesRecovered = claimRecovered.names || "Nosotros";
+            const sinceRecovered = claimRecovered.since || "Juntos desde hoy";
+            await retryFirestore(() => fbSaveUser(relogUser.uid, {
+              email: cleanPartnerEmail,
+              names: namesRecovered,
+              code: cleanCode,
+              since: sinceRecovered,
+              isOwner: false,
+            }), relogUser).catch(() => {});
+            if (claimRecovered.ownerUid) {
+              await retryFirestore(() => fbSaveUser(claimRecovered.ownerUid, { names: namesRecovered }), relogUser).catch(() => {});
+            }
+            onLogin({
+              uid: relogUser.uid,
+              email: cleanPartnerEmail,
+              names: namesRecovered,
+              code: cleanCode,
+              since: sinceRecovered,
+              isOwner: false,
+              isGuest: false,
+            }, false);
+            _pendingLocalAuth = false;
+            setLoading(false);
+            return;
+          }
+        } catch {
+          // If recovery fails, continue with the standard error handling below.
+        }
+
+        const currentCode = await fbGetCode(cleanCode).catch(() => null);
+        if (currentCode?.partnerUid && currentCode.partnerUid !== pendingUid) {
+          if (justCreated) await fbDeleteCurrentUser().catch(() => {});
+          setErr("Ese código ya está vinculado con otra cuenta de pareja.");
+          _pendingLocalAuth = false;
+          setLoading(false);
+          return;
+        }
+        if (currentCode) {
+          const ownerNameFallback = String(currentCode?.names || "Nosotros & ?").split(" & ")[0].trim() || "Nosotros";
+          const namesFallback = `${ownerNameFallback} & ${cleanPartnerName || "?"}`;
+          const sinceFallback = currentCode?.since || "Juntos desde hoy";
+          try {
+            const fallbackCred = await fbLogin(cleanPartnerEmail, pPass).catch(() => null);
+            const fallbackUser = fallbackCred?.user;
+            if (fallbackUser) {
+              await ensureAuthReady(fallbackUser);
+              await retryFirestore(() => fbSaveUser(fallbackUser.uid, {
+                email: cleanPartnerEmail,
+                names: namesFallback,
+                code: cleanCode,
+                since: sinceFallback,
+                isOwner: false,
+              }), fallbackUser).catch(() => {});
+              onLogin({
+                uid: fallbackUser.uid,
+                email: cleanPartnerEmail,
+                names: namesFallback,
+                code: cleanCode,
+                since: sinceFallback,
+                isOwner: false,
+                isGuest: false,
+              }, false);
+              _pendingLocalAuth = false;
+              setLoading(false);
+              return;
+            }
+          } catch {
+            // Continue to standard error handling below.
+          }
+        }
         if (justCreated) await fbDeleteCurrentUser().catch(() => {});
+        if (isInAppBrowser()) {
+          setErr("No se pudo vincular ahora. Si abriste desde Instagram/Facebook, usa Chrome/Safari e inténtalo de nuevo.");
+        } else {
+          setErr("No se pudo vincular por permisos temporales. Inténtalo de nuevo en 10 segundos.");
+        }
         setErr("Firebase bloqueó el acceso (primer intento). Código: " + (e?.code || "unknown") + " - " + String(e?.message || "").substring(0, 100));
       } else {
         const msg = String(e?.message || "");
@@ -2324,6 +2685,9 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState(null);
   const messagesEndRef = useRef(null);
+  // Prevents the partner from double-triggering onDone via the useEffect
+  // after the finisher already called it directly in send().
+  const doneCalled = useRef(false);
 
   const messages = session?.messages || [];
   const currentStep = session?.step ?? 0;
@@ -2358,6 +2722,15 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
     });
     return () => unsub();
   }, [user?.code, ex.id, isGuest]);
+
+  // When the Firestore listener marks the session done, notify the partner
+  // (the finisher already called onDone directly in send()).
+  useEffect(() => {
+    if (isDone && !doneCalled.current) {
+      doneCalled.current = true;
+      onDone(true); // true = sync completion (partner side) → skip bamboo increment
+    }
+  }, [isDone]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -2401,13 +2774,17 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
       const newMsgs = [...messages, msg];
       setSession(s => ({ ...s, messages: newMsgs, step: newStep, done: isDoneNow }));
       setVal("");
-      if (isDoneNow) onDone();
+      if (isDoneNow) {
+        doneCalled.current = true;
+        onDone(false); // false = local finisher → full bamboo award
+      }
     } else {
       const newMessages = [...messages, msg];
       await fbSendExMessage(user.code, ex.id, { messages: newMessages, step: newStep, starterRole }).catch(() => {});
       if (isDoneNow) {
+        doneCalled.current = true;
         await fbCompleteExSession(user.code, ex.id).catch(() => {});
-        onDone();
+        onDone(false); // false = local finisher → full bamboo award
       } else {
         fbSendNotif(user.code, {
           type: "ejercicio",
@@ -2551,7 +2928,8 @@ function ExModal({ ex, onClose, onComplete, nameA, nameB, user }) {
   const [pts, setPts] = useState(0);
   const [showInstructions, setShowInstructions] = useState(false);
 
-  const finish = (p = ex.bamboo) => { setDone(true); setPts(p); onComplete(ex, p); };
+  // isSync = true when the partner detected done via Firestore (skip bamboo; other user already awarded it)
+  const finish = (isSync = false) => { setDone(true); setPts(ex.bamboo); onComplete(ex, ex.bamboo, isSync); };
 
   if (done) return (
     <div style={{ textAlign: "center", padding: "8px 0" }}>
@@ -2603,7 +2981,7 @@ function ExModal({ ex, onClose, onComplete, nameA, nameB, user }) {
         </div>
       )}
 
-      {ex.phases && <ChatEx ex={ex} onDone={finish} nameA={nameA} nameB={nameB} user={user} />}
+      {ex.phases && <ChatEx ex={ex} onDone={isSync => finish(isSync)} nameA={nameA} nameB={nameB} user={user} />}
       {ex.timer && <TimerEx ex={ex} onDone={finish} nameA={nameA} nameB={nameB} />}
     </div>
   );
@@ -2618,7 +2996,7 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
 
   return (
     <>
-      <div style={{ background: C.sandL, minHeight: ejTab === "ejerc" ? "100vh" : "auto", paddingBottom: 90 }}>
+      <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: ejTab === "ejerc" ? 90 : 14 }}>
         {/* Header with sub-tabs */}
         <div style={{ background: C.dark, padding:"44px 18px 0" }}>
           <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.9rem", color:C.cream2, marginBottom:4 }}>Ejercicios ⭐</div>
@@ -2717,6 +3095,7 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
             );
           });
         })()}
+
       </div>
 
       {/* LESSON MODAL */}
@@ -2760,7 +3139,6 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
           </div>
         </div>
       )}
-
       </div>
       )}
 
@@ -2905,6 +3283,7 @@ function Conocete({ conoce, onSave, onResetQuiz, user }) {
 }
 
 // BURBUJA
+function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user, notifs = [], onMarkNotifRead }) {
 function BurbujaHistoryPanel({ history, nameA, nameB, myRole }) {
   const [open, setOpen] = useState(false);
   if (!history || !history.length) return null;
@@ -2972,6 +3351,8 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
   const [open, setOpen] = useState({});
   const [tmp, setTmp] = useState({});
   const [editingApproved, setEditingApproved] = useState({});
+  const [burbujaTab, setBurbujaTab] = useState("negociacion");
+  const [focusAgreementId, setFocusAgreementId] = useState(null);
   const [burbujaTab, setBurbujaTab] = useState("inbox");
 
   const get = (id, f) => tmp[id]?.[f] ?? burbuja[id]?.[f] ?? "";
@@ -2983,6 +3364,50 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
       .filter(item => burbuja[item.id]?.status === "approved")
       .map(item => ({ item, entry: burbuja[item.id] || {} }))
   );
+  const inboxItems = [...(notifs || [])]
+    .sort((a, b) => {
+      const aTime = toJsDate(a?.createdAt || a?.updatedAt || a?.at)?.getTime() || 0;
+      const bTime = toJsDate(b?.createdAt || b?.updatedAt || b?.at)?.getTime() || 0;
+      return bTime - aTime;
+    });
+  const unreadInboxCount = inboxItems.filter(x => !x?.read).length;
+  const notifMeta = {
+    acuerdo: { icon: "🫧", label: "Acuerdos" },
+    mensaje: { icon: "💌", label: "Mensajes" },
+    gratitud: { icon: "🙏", label: "Gratitud" },
+    momento: { icon: "📸", label: "Momentos" },
+    conoce: { icon: "🌿", label: "Conócete" },
+    ejercicio: { icon: "🧩", label: "Ejercicio" },
+    leccion: { icon: "📖", label: "Lección" },
+    racha: { icon: "🔥", label: "Racha" },
+  };
+
+  useEffect(() => {
+    if (!focusAgreementId) return;
+    const t = setTimeout(() => {
+      const el = document.getElementById(`burbuja-item-${focusAgreementId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 120);
+    return () => clearTimeout(t);
+  }, [focusAgreementId, burbujaTab, open]);
+
+  const openAgreementFromNotif = (notif) => {
+    const agreementId = notif?.agreementId;
+    if (!agreementId) return;
+    const meta = BURBUJA_ITEM_MAP[agreementId] || {};
+    const entry = burbuja?.[agreementId] || {};
+    const isApproved = notif?.agreementStatus === "approved" || entry?.status === "approved";
+    const nextTab = isApproved ? "acuerdos" : "negociacion";
+
+    setBurbujaTab(nextTab);
+    if (meta.sectionId) {
+      setOpen(prev => ({ ...prev, [meta.sectionId]: true }));
+    }
+    setFocusAgreementId(agreementId);
+    if (notif?.id) onMarkNotifRead?.(notif.id);
+  };
 
   // ─── INBOX DATA ───
   const inboxNeedsAction = BURBUJA_SECTIONS.flatMap(sec =>
@@ -3086,6 +3511,31 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
 
       {/* TABS */}
       <div style={{ display: "flex", gap: 8, margin: "0 14px 10px" }}>
+        {[ ["negociacion", "Negociación"], ["acuerdos", "Acuerdos hechos"], ["inbox", "Inbox"] ].map(([id, label]) => (
+          <button
+            key={id}
+            onClick={() => setBurbujaTab(id)}
+            style={{
+              flex: 1,
+              borderRadius: 12,
+              padding: "10px 12px",
+              border: `1.5px solid ${burbujaTab === id ? C.dark : C.border}`,
+              background: burbujaTab === id ? C.dark : C.white,
+              color: burbujaTab === id ? C.cream2 : C.ink,
+              fontFamily: "'Fredoka One',cursive",
+              fontSize: "0.82rem",
+              cursor: "pointer",
+              boxShadow: burbujaTab === id ? "0 2px 0 rgba(0,0,0,0.18)" : `0 2px 0 ${C.border}`,
+            }}
+          >
+            {label}
+            {id === "inbox" && unreadInboxCount > 0 && (
+              <span style={{ marginLeft: 6, background: "#c05068", color: C.white, borderRadius: 999, fontSize: "0.64rem", padding: "2px 6px", verticalAlign: "middle" }}>
+                {unreadInboxCount}
+              </span>
+            )}
+          </button>
+        ))}
         {[ ["inbox", "Inbox"], ["negociacion", "Negociación"], ["acuerdos", "Acuerdos hechos"] ].map(([id, label]) => {
           let badge = 0;
           if (id === "inbox") badge = inboxCount;
@@ -3254,7 +3704,7 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
               const hasPending = entry.status === "pending" && !!entry.proposalText;
               const pendingByMe = hasPending && entry.proposalBy === myRole;
 
-              return <div key={item.id} style={{ background: isApproved ? C.cream : C.sandL, borderRadius: 13, padding: 13, marginBottom: 9, borderLeft: `3px solid ${isApproved ? C.olive : C.border}` }}>
+              return <div id={`burbuja-item-${item.id}`} key={item.id} style={{ background: C.sandL, borderRadius: 13, padding: 13, marginBottom: 9, borderLeft: `3px solid ${focusAgreementId === item.id ? C.olive : C.border}`, boxShadow: focusAgreementId === item.id ? `0 0 0 2px ${C.olive}44` : "none" }}>
                 <div style={{ fontSize: "0.88rem", fontWeight: 700, color: C.ink, marginBottom: 10 }}>{item.q}</div>
                 {item.note && <div style={{ background: C.white, borderRadius: 9, padding: "9px 11px", marginBottom: 10, fontSize: "0.78rem", color: C.inkM, lineHeight: 1.6, border: `1px solid ${C.border}` }}>{item.note}</div>}
 
@@ -3327,6 +3777,24 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
         </div>
       )}
 
+      {burbujaTab === "acuerdos" && (
+        <div style={{ margin: "0 14px 10px" }}>
+          {!approvedItems.length ? (
+            <div style={{ background: C.white, borderRadius: 16, padding: 14, border: `1.5px solid ${C.border}` }}>
+              <div style={{ fontSize: "0.82rem", color: C.inkM, fontWeight: 700, lineHeight: 1.6 }}>
+                Aún no tienen acuerdos aprobados. Cuando aprueben uno, aparecerá aquí.
+              </div>
+            </div>
+          ) : approvedItems.map(({ item, entry }) => {
+            const proposalText = get(item.id, "proposalText");
+            const approvedText = entry.approvedText || entry.proposalText || "";
+            return (
+              <div id={`burbuja-item-${item.id}`} key={item.id} style={{ background: C.white, borderRadius: 13, padding: 13, marginBottom: 9, borderLeft: `3px solid ${C.olive}`, border: `1.5px solid ${focusAgreementId === item.id ? C.olive : C.border}`, boxShadow: focusAgreementId === item.id ? `0 0 0 2px ${C.olive}44` : "none" }}>
+                <div style={{ fontSize: "0.72rem", fontWeight: 800, color: C.inkL, marginBottom: 5, letterSpacing: "0.3px" }}>PROMPT</div>
+                <div style={{ fontSize: "0.82rem", fontWeight: 800, color: C.rose, marginBottom: 7 }}>{item.q}</div>
+                <div style={{ fontSize: "0.72rem", fontWeight: 800, color: C.olive, marginBottom: 3, letterSpacing: "0.3px" }}>ACUERDO</div>
+                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: C.ink, lineHeight: 1.6 }}>
+                  {approvedText}
       {/* ─── ACUERDOS TAB ─── */}
       {burbujaTab === "acuerdos" && (() => {
         // Pending edits of previously-approved agreements (split top/bottom)
@@ -3453,6 +3921,91 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
                         Editar acuerdo
                       </Btn>
                     </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {burbujaTab === "inbox" && (
+        <div style={{ margin: "0 14px 10px" }}>
+          {!inboxItems.length ? (
+            <div style={{ background: C.white, borderRadius: 16, padding: 14, border: `1.5px solid ${C.border}` }}>
+              <div style={{ fontSize: "0.82rem", color: C.inkM, fontWeight: 700, lineHeight: 1.6 }}>
+                Aún no hay notificaciones. Cuando te manden mensajes, acuerdos o gratitud, aparecerán aquí.
+              </div>
+            </div>
+          ) : (
+            <>
+              {unreadInboxCount > 0 && (
+                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+                  <Btn
+                    onClick={() => {
+                      inboxItems.filter(x => !x?.read).forEach(x => onMarkNotifRead?.(x.id));
+                    }}
+                    variant="sand"
+                    style={{ padding: "8px 12px", fontSize: "0.78rem" }}
+                  >
+                    Marcar todo leído
+                  </Btn>
+                </div>
+              )}
+              {inboxItems.map((n) => {
+                const meta = notifMeta[n.type] || { icon: "🔔", label: "Notificación" };
+                const when = toJsDate(n.createdAt || n.updatedAt || n.at);
+                const whenText = when
+                  ? when.toLocaleString("es-MX", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
+                  : "Ahora";
+                return (
+                  <div
+                    key={n.id}
+                    style={{
+                      background: C.white,
+                      borderRadius: 13,
+                      padding: 13,
+                      marginBottom: 9,
+                      border: `1.5px solid ${n.read ? C.border : C.olive}`,
+                      boxShadow: `0 2px 0 ${C.border}`,
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                      <div style={{ fontSize: "0.74rem", fontWeight: 800, color: C.inkM }}>
+                        {meta.icon} {meta.label}
+                      </div>
+                      <div style={{ fontSize: "0.68rem", color: C.inkL, fontWeight: 700 }}>{whenText}</div>
+                    </div>
+                    <div style={{ fontSize: "0.86rem", color: C.ink, fontWeight: 700, lineHeight: 1.6 }}>{n.msg || "Nueva actividad en Mochi"}</div>
+                    {n.type === "acuerdo" && !!n.agreementId && (
+                      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+                        <Btn
+                          onClick={() => openAgreementFromNotif(n)}
+                          variant="sand"
+                          style={{ padding: "8px 12px", fontSize: "0.78rem" }}
+                        >
+                          Ir al acuerdo
+                        </Btn>
+                      </div>
+                    )}
+                    {!n.read && (
+                      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+                        <Btn
+                          onClick={() => onMarkNotifRead?.(n.id)}
+                          variant="ghost"
+                          style={{ padding: "8px 12px", fontSize: "0.78rem" }}
+                        >
+                          Marcar leída
+                        </Btn>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </>
+          )}
+        </div>
+      )}
                   ) : (
                     <div style={{ marginTop: 8 }}>
                       <TA value={proposalText} onChange={v => set_(item.id, "proposalText", v)} placeholder="Escribe la nueva versión del acuerdo..." rows={2} />
@@ -3660,6 +4213,8 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
   const [favs, setFavs] = useState(() => ls.get(favKey) || []);
   const dayKey = getDateKeyLocal();
 
+  useEffect(() => { setOffset(0); setOpen(false); }, [dayKey, ownerKey]);
+  useEffect(() => { ls.set(favKey, favs); }, [favKey, favs]);
   useEffect(() => {
     setOffset(0);
     setOpen(false);
@@ -3676,10 +4231,11 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
   const consejo = CONSEJOS_DIARIOS[idx];
   const isFav = favs.includes(consejo.id);
 
-  const toggleFav = () => {
+  const toggleFav = () =>
     setFavs(prev => isFav ? prev.filter(id => id !== consejo.id) : [...prev, consejo.id]);
-  };
 
+  const handleToggleOpen = () => {
+    setOpen(v => { const next = !v; if (next) onClaimReward?.(); return next; });
   const removeFav = (id) => {
     setFavs(prev => prev.filter(fid => fid !== id));
   };
@@ -3700,6 +4256,19 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
       {/* Área rectangular unificada */}
       <div
         style={{
+          width: "100%", background: C.white, color: C.dark,
+          border: `1.5px solid ${C.border}`, borderRadius: 14,
+          padding: "12px 16px", fontFamily: "'Fredoka One',cursive",
+          fontSize: "0.98rem", cursor: "pointer",
+          boxShadow: `0 3px 0 ${C.border}`,
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+        }}
+      >
+        <span>💡 Consejo del día · +15 bambú</span>
+        <span style={{ fontSize: "0.82rem", color: C.inkL, fontWeight: 700 }}>
+          {open ? "Cerrar" : "Ver"}
+        </span>
+      </button>
           background: "linear-gradient(130deg, #f7f1ff 0%, #eee3ff 100%)",
           border: `1.5px solid ${C.border}`,
           borderRadius: 14,
@@ -3760,6 +4329,208 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
 
       {/* Modal Pop-up del Consejo */}
       {open && (
+        <div
+          style={{ position: "fixed", inset: 0, background: "rgba(44,35,66,0.62)", zIndex: 5100, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}
+          onClick={e => { if (e.target === e.currentTarget) setOpen(false); }}
+        >
+          <div style={{ background: C.white, borderRadius: 28, padding: "20px 16px 18px", width: "100%", maxWidth: 480, maxHeight: "90vh", overflowY: "auto", border: `1.5px solid ${C.border}`, boxShadow: "0 16px 40px rgba(24,18,36,0.28)" }}>
+
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+              <div>
+                <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "clamp(1.2rem,5vw,1.6rem)", color: C.dark, lineHeight: 1.1 }}>Consejo del día</div>
+                <div style={{ fontSize: "0.78rem", color: C.inkL, fontWeight: 800 }}>#{consejo.id} de {CONSEJOS_DIARIOS.length} · +15 bambú 🌿</div>
+              </div>
+              <button
+                onClick={() => setOpen(false)}
+                style={{ width: 44, height: 44, borderRadius: "50%", border: "none", background: "#ede6f8", cursor: "pointer", fontSize: "1.4rem", color: C.inkM, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
+              >×</button>
+            </div>
+
+            {/* Titular */}
+            <div style={{ background: "#ede6f8", borderRadius: 22, padding: "18px 16px", marginBottom: 14, textAlign: "center", border: "2px solid #d8ceee" }}>
+              <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "clamp(1rem,4.8vw,1.36rem)", color: C.dark, lineHeight: 1.28 }}>
+                {consejo.titular}
+              </div>
+            </div>
+
+            {/* Por qué funciona */}
+            <div style={{ background: "#f0eaf8", borderRadius: 18, padding: "14px 16px", marginBottom: 12, border: "2px solid #ddd3f0" }}>
+              <div style={{ fontSize: "0.78rem", fontWeight: 900, color: "#7b52b8", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>💜 Por qué funciona</div>
+              <div style={{ fontSize: "clamp(0.82rem,3.8vw,0.95rem)", color: C.ink, lineHeight: 1.55, fontWeight: 500 }}>{consejo.porQue}</div>
+            </div>
+
+            {/* Acción de hoy */}
+            <div style={{ background: "#e4eef8", borderRadius: 18, padding: "14px 16px", marginBottom: 14, border: "2px solid #c8d8ee" }}>
+              <div style={{ fontSize: "0.78rem", fontWeight: 900, color: "#3d6b9f", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>✨ Pruébalo hoy</div>
+              <div style={{ fontSize: "clamp(0.82rem,3.8vw,0.95rem)", color: C.ink, lineHeight: 1.55, fontWeight: 500 }}>{consejo.accion}</div>
+            </div>
+
+            {/* Fuente */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "#faf7f2", borderRadius: 14, marginBottom: 14, border: `1px solid ${C.border}` }}>
+              <div style={{ fontSize: "1.5rem" }}>🧠</div>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: "0.88rem", color: C.dark }}>{consejo.experto}</div>
+                <div style={{ fontSize: "0.75rem", color: C.inkL, fontWeight: 600 }}>{consejo.corriente}</div>
+              </div>
+            </div>
+
+            {/* Acciones */}
+            <div style={{ display: "flex", gap: 10 }}>
+              <Btn onClick={() => setOffset(v => (v + 1) % CONSEJOS_DIARIOS.length)} variant="sand" style={{ flex: 1, padding: "11px 12px", fontSize: "0.84rem" }}>
+                Otro consejo
+              </Btn>
+              <Btn onClick={toggleFav} variant={isFav ? "olive" : "cream"} style={{ flex: 1, padding: "11px 12px", fontSize: "0.84rem" }}>
+                {isFav ? "Guardado ✓" : "Guardar"}
+              </Btn>
+            </div>
+
+            {favs.length > 0 && (
+              <div style={{ marginTop: 10, fontSize: "0.7rem", color: C.inkL, fontWeight: 700, textAlign: "center" }}>
+                Tienes {favs.length} consejo{favs.length !== 1 ? "s" : ""} guardado{favs.length !== 1 ? "s" : ""} ✨
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+// ═══════════════════════════════════════════════
+// DIARIO PERSONAL
+// ═══════════════════════════════════════════════
+function DiarioSection({ diario, user, onAddDiaryEntry, onDeleteDiaryEntry }) {
+  const [showForm, setShowForm] = useState(false);
+  const [entryType, setEntryType] = useState("emocion");
+  const [entryText, setEntryText] = useState("");
+  const [expandedEntryId, setExpandedEntryId] = useState(null);
+  const [showAllEntries, setShowAllEntries] = useState(false);
+
+  const ENTRY_TYPES = [
+    { id: "emocion", label: "😔 Lidiar con una emoción", emoji: "😔", color: "#fdd8e0" },
+    { id: "conflicto", label: "💔 Resolver una discusión", emoji: "💔", color: "#fce4d4" },
+    { id: "reflexion", label: "🤔 Reflexión personal", emoji: "🤔", color: "#f8f0ff" },
+    { id: "desahogo", label: "🫀 Desahogo", emoji: "🫀", color: "#ffe8f0" },
+  ];
+
+  const currentType = ENTRY_TYPES.find(t => t.id === entryType);
+
+  const handleSubmit = () => {
+    if (!entryText.trim()) return;
+    onAddDiaryEntry({
+      text: entryText.trim(),
+      type: entryType,
+      typeLabel: currentType?.label || entryType,
+    });
+    setEntryText("");
+    setShowForm(false);
+    setEntryType("emocion");
+  };
+
+  const visibleEntries = showAllEntries ? diario : diario.slice(0, 3);
+
+  return (
+    <div style={{ margin: "0 0 12px", background: "#f9f5ff", borderRadius: 18, padding: 16, boxShadow: "0 3px 0 #dccff0", border: "1.5px solid #dccff0", overflow: "hidden" }}>
+      {/* Header */}
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: "#4a3d63", marginBottom: 4 }}>📔 Diario Personal</div>
+        <div style={{ fontSize: "0.75rem", color: "#76698f", lineHeight: 1.5 }}>Un lugar seguro para desahogarte, entender tus emociones y reflexionar sin juzgarte</div>
+      </div>
+
+      {/* Form */}
+      {!showForm ? (
+        <button onClick={() => setShowForm(true)} style={{ width: "100%", background: "#8b79b2", color: "#ffffff", border: "none", borderRadius: 12, padding: "12px 14px", fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", cursor: "pointer", marginBottom: 12 }}>
+          + Escribir una entrada
+        </button>
+      ) : (
+        <div style={{ background: "#f0e8fb", borderRadius: 14, padding: 14, marginBottom: 12, border: "1.5px solid #cfbde8" }}>
+          {/* Entry type selector */}
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: "0.7rem", fontWeight: 800, color: "#6d5d86", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>¿Sobre qué quieres escribir?</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {ENTRY_TYPES.map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => setEntryType(t.id)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    borderRadius: 10,
+                    border: entryType === t.id ? "2px solid #9f8dc3" : "1.5px solid #cfbde8",
+                    background: entryType === t.id ? "#e5d9f6" : "#f7f2ff",
+                    color: "#4a3d63",
+                    fontFamily: "'Nunito',sans-serif",
+                    fontSize: "0.85rem",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    textAlign: "left",
+                    transition: "all 0.15s"
+                  }}
+                >
+                  {t.emoji} {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Text input */}
+          <textarea
+            value={entryText}
+            onChange={e => setEntryText(e.target.value)}
+            placeholder={`Escribe aquí... sin filtros, solo para ti. Describe qué sientes, qué pasó, qué necesitas entender`}
+            style={{
+              width: "100%",
+              minHeight: 100,
+              border: "1.5px solid #cfbde8",
+              borderRadius: 10,
+              padding: "12px 14px",
+              fontFamily: "'Nunito',sans-serif",
+              fontSize: "0.85rem",
+              background: "#ffffff",
+              color: "#3f3556",
+              outline: "none",
+              boxSizing: "border-box",
+              marginBottom: 12,
+              resize: "vertical"
+            }}
+          />
+
+          {/* Submit buttons */}
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              onClick={handleSubmit}
+              style={{
+                flex: 1,
+                background: "#7f6aa8",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: 10,
+                padding: "10px 12px",
+                fontFamily: "'Fredoka One',cursive",
+                fontSize: "0.9rem",
+                fontWeight: 800,
+                cursor: "pointer",
+                transition: "all 0.15s"
+              }}
+            >
+              Guardar 📔
+            </button>
+            <button
+              onClick={() => { setShowForm(false); setEntryText(""); }}
+              style={{
+                padding: "10px 14px",
+                background: "#f7f2ff",
+                border: "1.5px solid #cfbde8",
+                borderRadius: 10,
+                color: "#5d4f78",
+                cursor: "pointer",
+                fontSize: "1rem",
+                fontWeight: 700
+              }}
+            >
+              ✕
         <div 
           style={{ 
             position: "fixed", 
@@ -3874,6 +4645,13 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
           </div>
         </div>
       )}
+
+      {/* Entries list */}
+      {diario.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "24px 14px", color: "#7b6f95" }}>
+          <div style={{ fontSize: "1.8rem", marginBottom: 8 }}>📔</div>
+          <div style={{ fontSize: "0.9rem", fontFamily: "'Fredoka One',cursive", marginBottom: 6 }}>Tu diario está vacío</div>
+          <div style={{ fontSize: "0.78rem", lineHeight: 1.5 }}>Escribe cuando te sientas enojada, confundida o necesites reflexionar. Este es tu espacio seguro.</div>
 
       {/* Modal de Favoritos */}
       {showFavs && (
@@ -3990,12 +4768,107 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
             </button>
           </div>
         </div>
+      ) : (
+        <>
+          {visibleEntries.map((entry, idx) => {
+            const typeData = ENTRY_TYPES.find(t => t.id === entry.type);
+            const isExpanded = expandedEntryId === entry.id;
+            return (
+              <div
+                key={entry.id || idx}
+                style={{
+                  marginBottom: 10,
+                  borderRadius: 12,
+                  border: "1.5px solid #d8c9ef",
+                  overflow: "hidden",
+                  transition: "all 0.15s"
+                }}
+              >
+                <div
+                  onClick={() => setExpandedEntryId(isExpanded ? null : entry.id)}
+                  style={{
+                    background: typeData?.color || "#f8f0ff",
+                    padding: "12px 14px",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 8
+                  }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 800, fontSize: "0.88rem", color: "#4a3d63", marginBottom: 3 }}>
+                      {typeData?.emoji} {typeData?.label}
+                    </div>
+                    <div style={{ fontSize: "0.7rem", color: "#7c6c99", fontWeight: 700 }}>
+                      {entry.date} • {entry.time}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: "0.9rem", color: "#4a3d63", fontWeight: 800 }}>
+                    {isExpanded ? "▲" : "▼"}
+                  </div>
+                </div>
+
+                {isExpanded && (
+                  <div style={{ background: "#faf7ff", padding: "14px", borderTop: "1.5px solid #cfbde8" }}>
+                    <div style={{ fontSize: "0.88rem", color: "#3f3556", lineHeight: 1.7, marginBottom: 12 }}>
+                      {entry.text}
+                    </div>
+                    <button
+                      onClick={() => onDeleteDiaryEntry(entry.id)}
+                      style={{
+                        background: "#fff1f4",
+                        color: "#c8566a",
+                        border: "1px solid #e7a8b4",
+                        borderRadius: 8,
+                        padding: "6px 10px",
+                        fontSize: "0.75rem",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        transition: "all 0.15s"
+                      }}
+                    >
+                      🗑 Eliminar entrada
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {diario.length > 3 && (
+            <button
+              onClick={() => setShowAllEntries(v => !v)}
+              style={{
+                width: "100%",
+                background: "#ffffff",
+                border: "1.5px solid #cfbde8",
+                borderRadius: 10,
+                padding: "8px 12px",
+                fontSize: "0.78rem",
+                fontWeight: 800,
+                color: "#6c5c89",
+                cursor: "pointer",
+                marginTop: 4,
+                transition: "all 0.15s"
+              }}
+            >
+              {showAllEntries ? "Ver menos ↑" : `Ver todo (${diario.length}) ↓`}
+            </button>
+          )}
+        </>
       )}
     </div>
   );
 }
 
+
 // PROFILE — Enhanced with more info fields
+function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, conoce, lessonsDone, coupleInfo, streakInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento, diario, onAddDiaryEntry, onDeleteDiaryEntry, onSendMessage, onClaimDailyTip }) {
+  const [editMode, setEditMode] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [showLoveModal, setShowLoveModal] = useState(false);
+  const [showAllMsgs, setShowAllMsgs] = useState(false);
 function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, conoce, lessonsDone, coupleInfo, streakInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento, onSendMessage, onClaimDailyTip, diario, onAddDiario, onUpdateDiario, onDeleteDiario }) {
   const [editMode, setEditMode] = useState(false);
   const [editingName, setEditingName] = useState(false);
@@ -4110,6 +4983,18 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
 
   useEffect(() => () => clearTimeout(deleteCloseTimer.current), []);
 
+  const testResults = testScores
+    ? TEST_AREAS.map(a => {
+        const sA = testScores[a.id]?.a || 3;
+        const sB = testScores[a.id]?.b || 3;
+        const avg = (sA + sB) / 2;
+        return { ...a, avg, sA, sB };
+      })
+    : null;
+  const testTotal = testResults
+    ? testResults.reduce((s, a) => s + a.avg, 0) / testResults.length
+    : null;
+
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
       <div style={{ background: C.dark, padding: "38px 20px 28px", textAlign: "center" }}>
@@ -4134,11 +5019,27 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
           Manda un mensaje de amor
         </button>
         <div style={{ marginTop:12, background:C.cream, borderRadius:12, padding:12, border:`1px solid ${C.border}` }}>
-          <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.88rem", color:C.dark, marginBottom:6 }}>💌 Últimos 3 mensajes de tu pareja</div>
-          {!recentPartnerMsgs.length ? (
+          <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.88rem", color:C.dark, marginBottom:6 }}>💌 Mensajes de tu pareja</div>
+          {!partnerMsgs.length ? (
             <div style={{ fontSize:"0.8rem", color:C.inkL, lineHeight:1.6 }}>Aquí aparecerán los últimos mensajitos que te enviaron. Lo que mandes desde aquí seguirá saliendo en los globos del jardín.</div>
           ) : (
             <>
+              {(showAllMsgs ? partnerMsgs : recentPartnerMsgs).map((msg, i) => {
+                const list = showAllMsgs ? partnerMsgs : recentPartnerMsgs;
+                return (
+                  <div key={msg.id || i} style={{ background:C.white, borderRadius:10, padding:"9px 10px", border:`1px solid ${C.border}`, marginBottom: i === list.length - 1 && !(partnerMsgs.length > 3) ? 0 : 8 }}>
+                    <div style={{ fontSize:"0.86rem", color:C.ink, lineHeight:1.65, fontWeight:700 }}>{msg.text}</div>
+                    <div style={{ fontSize:"0.7rem", color:C.inkL, fontWeight:700, marginTop:5 }}>
+                      De {msg.sender} · {new Date(msg.time).toLocaleDateString("es", { day:"numeric", month:"short", hour:"2-digit", minute:"2-digit" })}
+                    </div>
+                  </div>
+                );
+              })}
+              {partnerMsgs.length > 3 && (
+                <button onClick={() => setShowAllMsgs(v => !v)} style={{ width:"100%", background:"none", border:`1.5px solid ${C.border}`, borderRadius:10, padding:"8px 12px", fontSize:"0.78rem", fontWeight:800, color:C.inkM, cursor:"pointer", marginTop:4 }}>
+                  {showAllMsgs ? "Ver menos ↑" : `Ver todo (${partnerMsgs.length}) ↓`}
+                </button>
+              )}
               {recentPartnerMsgs.map((msg, i) => (
                 <div key={msg.id || i} style={{ background:C.white, borderRadius:10, padding:"9px 10px", border:`1px solid ${C.border}`, marginBottom:i === recentPartnerMsgs.length - 1 ? 0 : 8 }}>
                   <div style={{ fontSize:"0.86rem", color:C.ink, lineHeight:1.65, fontWeight:700 }}>{msg.text}</div>
@@ -4185,6 +5086,56 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
         />
       </div>
 
+      <div style={{ padding: "0 14px 20px" }}>
+
+        {/* ── DIARIO PERSONAL ── */}
+        <DiarioSection
+          diario={diario}
+          user={user}
+          onAddDiaryEntry={onAddDiaryEntry}
+          onDeleteDiaryEntry={onDeleteDiaryEntry}
+        />
+
+        {/* ── TEST DE PAREJA (estadísticas) ── */}
+        <div style={{ margin:"0 0 12px", background:C.white, borderRadius:18, padding:16, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
+            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark }}>📊 Test de pareja</div>
+            <button onClick={onRetakeTest} style={{ background:C.sandL, border:`1.5px solid ${C.border}`, borderRadius:10, padding:"5px 12px", fontSize:"0.75rem", fontWeight:800, color:C.inkM, cursor:"pointer" }}>Repetir →</button>
+          </div>
+          {testResults ? (
+            <>
+              <div style={{ textAlign:"center", marginBottom:14 }}>
+                <div style={{ display:"inline-block", background: testTotal >= 4.2 ? "#4a9a40" : testTotal >= 3.2 ? "#7ab848" : testTotal >= 2.2 ? "#e8a030" : "#e86040", color:"white", borderRadius:50, padding:"5px 18px", fontFamily:"'Fredoka One',cursive", fontSize:"1rem" }}>
+                  {testTotal.toFixed(1)} / 5.0
+                </div>
+              </div>
+              {testResults.map(a => (
+                <div key={a.id} style={{ marginBottom:12 }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
+                    <div style={{ fontWeight:800, fontSize:"0.82rem", color:C.ink }}>{a.emoji} {a.label}</div>
+                    <div style={{ fontSize:"0.72rem", color:C.inkL, fontWeight:700 }}>{a.avg.toFixed(1)} / 5</div>
+                  </div>
+                  <div style={{ display:"flex", gap:3 }}>
+                    {[1,2,3,4,5].map(i => (
+                      <div key={i} style={{ flex:1, height:7, borderRadius:50, background: i <= a.avg ? TEST_COLORS[Math.round(a.avg)-1] : C.sand }}/>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              <div style={{ background:"#e8f4e8", borderRadius:12, padding:12, marginTop:4, border:`1px solid ${C.olive}30` }}>
+                <div style={{ fontSize:"0.68rem", fontWeight:800, color:C.olive, marginBottom:6 }}>💡 ÁREAS A TRABAJAR</div>
+                {[...testResults].sort((a,b)=>a.avg-b.avg).slice(0,2).map(a => (
+                  <div key={a.id} style={{ fontSize:"0.8rem", color:C.inkM, marginBottom:3 }}>→ {a.emoji} <strong>{a.label}</strong></div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div style={{ textAlign:"center", padding:"10px 0" }}>
+              <div style={{ fontSize:"0.84rem", color:C.inkL, marginBottom:12 }}>Todavía no han completado el test de pareja.</div>
+              <button onClick={onRetakeTest} style={{ background:C.dark, color:C.cream2, border:"none", borderRadius:12, padding:"10px 20px", fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", cursor:"pointer" }}>Hacer el test 📊</button>
+            </div>
+          )}
+        </div>
       {/* ── DIARIO PERSONAL ── */}
       <DiarioSection
         diario={diario}
@@ -4194,7 +5145,31 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
         user={user}
       />
 
-      <div style={{ padding: "0 14px 20px" }}>
+        {/* ── TERAPIA DE PAREJA ── */}
+        <div style={{ margin:"0 0 12px", background:"#2f1b45", borderRadius:18, padding:16, boxShadow:"0 3px 0 #211132", border:"1.5px solid #4f2f71" }}>
+          <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:"#f3ebff", marginBottom:6 }}>🫶 ¿Quieren ir a terapia de pareja?</div>
+          <div style={{ fontSize:"0.8rem", color:"#d8c8f0", lineHeight:1.6, marginBottom:12 }}>
+            Cuéntame dónde están y con gusto los refiero con un terapeuta de confianza según su ubicación.
+          </div>
+          <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+            <a href="https://www.instagram.com/tu.amiga.psicologa" target="_blank" rel="noopener noreferrer"
+              style={{ display:"flex", alignItems:"center", gap:10, background:"#4a2a6e", borderRadius:12, padding:"10px 14px", border:"1.5px solid #6a44a0", textDecoration:"none" }}>
+              <span style={{ fontSize:"1.3rem" }}>📸</span>
+              <div>
+                <div style={{ fontSize:"0.78rem", fontWeight:800, color:"#ffffff" }}>Instagram</div>
+                <div style={{ fontSize:"0.74rem", color:"#e4d7ff", fontWeight:700 }}>@Tu.amiga.psicologa</div>
+              </div>
+            </a>
+            <a href="mailto:tu.amiga.psicologaa@gmail.com"
+              style={{ display:"flex", alignItems:"center", gap:10, background:"#4a2a6e", borderRadius:12, padding:"10px 14px", border:"1.5px solid #6a44a0", textDecoration:"none" }}>
+              <span style={{ fontSize:"1.3rem" }}>✉️</span>
+              <div>
+                <div style={{ fontSize:"0.78rem", fontWeight:800, color:"#ffffff" }}>Correo</div>
+                <div style={{ fontSize:"0.74rem", color:"#e4d7ff", fontWeight:700 }}>tu.amiga.psicologaa@gmail.com</div>
+              </div>
+            </a>
+          </div>
+        </div>
 
         {/* Couple code — discrete, at bottom */}
         {!user?.isGuest && <div style={{ background: C.white, borderRadius: 16, padding: "14px 16px", marginBottom: 12, border: `1.5px solid ${C.border}` }}>
@@ -4401,6 +5376,7 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
 const STYLES = `
 @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 body { background: #f3ecff; }
 @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
 @keyframes floatHappy { 0%,100%{transform:translateY(0) rotate(-1.5deg)} 50%{transform:translateY(-18px) rotate(1.5deg)} }
@@ -4576,6 +5552,19 @@ const DAILY_LESSONS = [
       { title:"El interés genuino", icon:"🔍", body:"Gottman llama a esto 'mapas del amor' — conocer el mundo interno de tu pareja: sus miedos, sueños, el nombre de su jefa, lo que le da ansiedad esta semana." },
     ],
     reflect:"¿Cómo está su banco emocional ahora? ¿Están depositando o retirando más?" },
+
+  { id:"couple_bubble", emoji:"🫧", title:"¿Qué es la burbuja de pareja?",
+    tag:"Gottman · EFT · Límites sanos",
+    intro:"La burbuja de pareja es el acuerdo explícito de que su vínculo es un lugar seguro. No es aislarse del mundo: es proteger la relación con límites claros, conexión emocional y reglas de cuidado mutuo.",
+    sections:[
+      { title:"Primero: seguridad emocional", icon:"🛡", body:"Desde la terapia focalizada en emociones (EFT), una relación estable se construye cuando ambos sienten: 'si te busco, estás ahí'. La burbuja empieza con disponibilidad, respuesta y cercanía emocional." },
+      { title:"Segundo: nosotros como equipo", icon:"🤝", body:"En terapia de pareja se trabaja la identidad de 'nosotros': no es perder individualidad, es tomar decisiones con conciencia del vínculo. El problema es el problema; ustedes van del mismo lado." },
+      { title:"Tercero: límites que cuidan", icon:"🚧", body:"Una burbuja sana define qué protege la confianza: cómo se manejan conversaciones sensibles, vínculos externos, privacidad digital y tiempos de pausa. Limitar no es controlar; es cuidar lo importante." },
+      { title:"Cuarto: rituales de conexión", icon:"🌱", body:"Las parejas que duran no dependen solo del 'feeling': sostienen rituales pequeños y constantes (saludo, check-in del día, reparación después de conflicto). Los rituales mantienen viva la burbuja." },
+      { title:"Quinto: reparación rápida", icon:"🩹", body:"La burbuja no significa 'no peleamos'; significa 'sabemos volver'. Validar, asumir una parte y reconectar evita que un conflicto puntual se convierta en distancia crónica." },
+    ],
+    reflect:"Si tuvieran que resumir su burbuja en 3 acuerdos concretos, ¿cuáles serían desde hoy?" },
+
   { id:"lesson8", emoji:"🌻", title:"La Regla de Oro: 5 actos al día",
   tag:"Gottman · Actos de bondad",
   intro:"John Gottman descubrió que las parejas más felices no son las que nunca pelean, sino las que tienen más interacciones positivas que negativas. La proporción mágica es 5:1.",
@@ -4585,7 +5574,57 @@ const DAILY_LESSONS = [
     { title:"¿Qué cuenta como interacción positiva?", body:"No hacen falta grandes gestos: un beso antes de salir, preguntar cómo estuvo el día y escuchar de verdad, un mensaje de 'te pienso', reírse juntos, decir gracias mirando a los ojos." },
     { title:"Cómo practicarlo hoy", body:"Pongan una alarma diaria llamada '5:1'. Cada vez que suene, busquen hacer una interacción positiva. No tiene que ser grandioso — los pequeños momentos son los más poderosos." },
   ],
-  reflect:"¿Cuántas interacciones positivas creen que tienen al día? ¿Qué pequeño acto podrían agregar mañana?" }
+    reflect:"¿Cuántas interacciones positivas creen que tienen al día? ¿Qué pequeño acto podrían agregar mañana?" },
+    { id:"soft_startup", emoji:"🕊", title:"Hablar sin atacar",
+    tag:"Gottman · Comunicación",
+    intro:"Muchas peleas no explotan por el tema, sino por cómo se empieza la conversación. Un inicio duro activa defensa; un inicio suave abre escucha.",
+    sections:[
+      { title:"Inicio suave", icon:"💬", body:"En vez de 'tú siempre' o 'tú nunca', hablen desde 'yo siento' y 'yo necesito'. Criticar el carácter del otro casi siempre cierra la conversación." },
+      { title:"Una queja no es un ataque", icon:"🎯", body:"Una queja sana se enfoca en un hecho concreto: 'Me dolió que no me avisaras'. Un ataque suena a identidad: 'Eres egoísta'. Lo primero abre reparación; lo segundo activa pelea." },
+      { title:"Pedir claro", icon:"🙏", body:"No basta con decir lo que dolió. También ayuda decir qué necesitan: más aviso, más cariño, más claridad, más presencia. La mente no adivina." },
+      { title:"Fórmula útil", icon:"🧩", body:"Prueben esta estructura: 'Cuando pasó esto, me sentí así, y me ayudaría esto'. Es simple, concreta y baja la probabilidad de escalar." },
+    ],
+    reflect:"¿Cómo suelen empezar sus conversaciones difíciles? ¿Qué frase podrían cambiar desde hoy?" },
+    { id:"thinking_traps", emoji:"🧠", title:"Trampas mentales en pareja",
+    tag:"TCC · Distorsiones cognitivas",
+    intro:"En conflicto no solo reaccionamos a lo que pasó, también a la historia que nuestra mente inventa. La TCC enseña a detectar esos sesgos antes de actuar desde ellos.",
+    sections:[
+      { title:"Leer la mente", icon:"🔮", body:"Asumir que sabes lo que tu pareja quiso decir: 'Lo hizo para lastimarme'. Antes de concluir intención, pregunta. Muchas discusiones nacen de adivinar mal." },
+      { title:"Todo o nada", icon:"⚫", body:"Pensar en extremos: 'Nunca me escuchas', 'Siempre hago todo yo'. Cuando hablamos en absolutos, borramos los matices y el otro deja de sentirse visto." },
+      { title:"Catastrofizar", icon:"🌪", body:"Convertir un problema puntual en una amenaza total: 'Si peleamos así, esto ya no funciona'. Bajar un nivel la historia ayuda a responder mejor." },
+      { title:"Chequeo de realidad", icon:"✅", body:"Antes de reaccionar, pregúntense: '¿Qué hecho tengo?', '¿Qué estoy suponiendo?', '¿Hay otra explicación posible?'. Eso sola ya cambia el tono de la conversación." },
+    ],
+    reflect:"¿Cuál de estas trampas mentales les aparece más: leer la mente, extremos o catastrofizar?" },
+    { id:"act_values_conflict", emoji:"🧭", title:"Pelear guiados por valores",
+    tag:"ACT · Valores",
+    intro:"ACT no busca eliminar emociones difíciles, sino ayudarles a actuar como la pareja que quieren ser incluso cuando están activados. El norte son los valores, no el impulso del momento.",
+    sections:[
+      { title:"Valor no es emoción", icon:"🌱", body:"Puedo sentir rabia y aun así elegir hablar con respeto. Puedo sentir miedo y aun así elegir honestidad. Los valores son dirección, no estado de ánimo." },
+      { title:"La pregunta clave", icon:"❓", body:"En medio de un conflicto, pregúntense: 'Si actuara como la pareja que quiero ser, ¿qué haría ahora?'. Esa pregunta corta la escalada y devuelve agencia." },
+      { title:"Desfusionarse", icon:"🎈", body:"No todo pensamiento merece obediencia. 'Esto es un desastre' es un pensamiento, no un mandato. Ponerle nombre a la mente baja su poder." },
+      { title:"Microcompromisos", icon:"🤝", body:"A veces actuar con valores se ve pequeño: bajar la voz, no interrumpir, volver después de una pausa, validar una emoción. Pequeños actos sostienen grandes vínculos." },
+    ],
+    reflect:"Cuando discuten, ¿qué valor les gustaría proteger más: respeto, honestidad, ternura, paciencia o colaboración?" },
+    { id:"dbt_tipp_couples", emoji:"🧊", title:"Calmar el cuerpo antes de hablar",
+    tag:"DBT · Regulación emocional",
+    intro:"Cuando el cuerpo entra en alarma, la conversación pierde calidad. DBT propone habilidades concretas para bajar intensidad primero y hablar mejor después.",
+    sections:[
+      { title:"TIPP", icon:"⚡", body:"Una herramienta breve para crisis emocionales: cambiar temperatura, mover el cuerpo intensamente, respirar más lento y relajar músculos. Sirve para cortar la ola antes de lastimar." },
+      { title:"Respirar más largo al exhalar", icon:"🌬", body:"Prueben inhalar 4 segundos y exhalar 6 durante 1 o 2 minutos. Una exhalación más larga manda al cuerpo la señal de que ya no está en peligro." },
+      { title:"Pausa física, no abandono", icon:"🚪", body:"Ir a mojarse la cara, caminar rápido o estirar no es huir si acuerdan volver. La diferencia está en decir: 'Necesito regularme y regreso en 20 minutos'." },
+      { title:"Primero cuerpo, luego tema", icon:"🫀", body:"Intentar resolverlo todo muy activados suele empeorarlo. Regular el sistema nervioso primero aumenta la probabilidad de escucha, claridad y reparación." },
+    ],
+    reflect:"¿Qué les calma más cuando están activados: agua fría, caminar, respirar, silencio o moverse un poco?" },
+    { id:"validate_before_fix", emoji:"🤍", title:"Validar antes de solucionar",
+    tag:"DBT · EFT · Apego",
+    intro:"Muchas personas no necesitan una solución inmediata; primero necesitan sentirse comprendidas. La validación baja defensa y crea seguridad emocional.",
+    sections:[
+      { title:"Qué sí es validar", icon:"🪞", body:"Validar es comunicar: 'Tiene sentido que te sientas así por lo que viviste'. No significa estar de acuerdo con todo; significa reconocer la experiencia del otro." },
+      { title:"Qué rompe la conexión", icon:"🧱", body:"Frases como 'estás exagerando', 'ya supéralo' o 'eso no es para tanto' pueden cerrar el corazón del otro aunque la intención no sea herir." },
+      { title:"Secuencia útil", icon:"🫶", body:"Primero escucha. Luego resume. Después valida. Y solo al final pregunta: '¿Quieres que te escuche o que pensemos soluciones?'. Eso evita arreglar demasiado pronto." },
+      { title:"Seguridad emocional", icon:"🏠", body:"Las parejas más seguras no son las que nunca se alteran, sino las que saben volver a encontrarse. La validación es una de las formas más rápidas de volver." },
+    ],
+    reflect:"¿Tienden más a arreglar rápido o a validar primero? ¿Qué les gustaría practicar más esta semana?" }
 ];
 
 // ═══════════════════════════════════════════════
@@ -5323,6 +6362,8 @@ export default function App() {
     // Momentos entries (real-time both ways)
     unsubs.push(fbListenMomentos(code, items => setMomentos(items)));
 
+    // Diario personal entries (real-time both ways)
+    unsubs.push(fbListenDiaryEntries(code, items => setDiario(items)));
     // Diario personal (private — only for current user)
     if (user?.uid) {
       unsubs.push(fbListenDiario(user.uid, items => setDiario(items)));
@@ -5595,10 +6636,23 @@ export default function App() {
         return;
       }
       const safeAccessories = accessories && typeof accessories === "object" ? accessories : {};
+      const exclusiveCats = new Set(["sombrero", "traje"]);
+      const equipWithCategoryRules = (baseAccessories, nextItem) => {
+        const na = { ...baseAccessories };
+        if (exclusiveCats.has(nextItem.cat)) {
+          PANDA_ACCESSORIES.forEach(a => {
+            if (a.cat === nextItem.cat && a.id !== nextItem.id && na[a.id] === true) {
+              na[a.id] = "owned";
+            }
+          });
+        }
+        na[nextItem.id] = true;
+        return na;
+      };
 
       // If already owned, toggle it on/off (equip/unequip)
       if (safeAccessories[item.id] === "owned") {
-        const na = { ...safeAccessories, [item.id]: true };
+        const na = equipWithCategoryRules(safeAccessories, item);
         setAccessories(na);
         if (user?.code && !user?.isGuest) {
           fbSaveGardenState(user.code, { garden, accessories: na, water, happiness }).catch(() => {});
@@ -5618,7 +6672,7 @@ export default function App() {
         return;
       }
       if (bamboo < item.cost) { toast("Necesitas más bambú"); return; }
-      const nb = bamboo - item.cost, na = { ...safeAccessories, [item.id]: true }, nh = Math.min(100, happiness + 5);
+      const nb = bamboo - item.cost, na = equipWithCategoryRules(safeAccessories, item), nh = Math.min(100, happiness + 5);
       const nv = new Date().toISOString();
       if (user?.code && !user?.isGuest) {
         fbPurchaseGardenUpdate(user.code, item.cost, { garden, accessories: na, water, happiness: nh })
@@ -5705,24 +6759,37 @@ export default function App() {
     setScreen("main");
   };
 
-  const completeEx = async (ex, pts) => {
+  const retakeTest = async () => {
+    setTestScores(null);
+    if (user?.code && !user?.isGuest) {
+      await fbResetTest(user.code).catch(() => {});
+    }
+    save(null, { bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit, testScores:null, lessonsDone, gratitud, momentos });
+    setScreen("reltest");
+  };
+
+  // skipBamboo = true when the partner detects completion via Firestore sync;
+  // the other user already incremented the shared bamboo bank.
+  const completeEx = async (ex, pts, skipBamboo = false) => {
     const nd = { ...exDone, [ex.id]: (exDone[ex.id] || 0) + 1 };
-    const bonus = nd[ex.id] === 3 ? 30 : 0;
-    const total = pts + bonus;
+    const bonus = (!skipBamboo && nd[ex.id] === 3) ? 30 : 0;
+    const total = skipBamboo ? 0 : (pts + bonus);
     const nh = Math.min(100, happiness + 8);
     setHappiness(nh); setExDone(nd); trigHappy();
     const myName = getMyName(user, "Yo");
     if (user?.code && !user?.isGuest) {
-      const nb = await fbIncrementBamboo(user.code, total).catch(() => bamboo + total);
-      setBamboo(nb);
+      if (!skipBamboo) {
+        const nb = await fbIncrementBamboo(user.code, total).catch(() => bamboo + total);
+        setBamboo(nb);
+        fbSendNotif(user.code, { type:"ejercicio", msg:`${myName} completó un ejercicio — ¡complétalo tú también! 🌿`, forUid:user?.isOwner !== false ? "partner" : "owner", fromUid: user.uid }).catch(()=>{});
+      }
       trackDailyInteraction("exercise");
-      fbSendNotif(user.code, { type:"ejercicio", msg:`${myName} completó un ejercicio — ¡complétalo tú también! 🌿`, forUid:user?.isOwner !== false ? "partner" : "owner", fromUid: user.uid }).catch(()=>{});
     } else {
-      setBamboo(b => b + total);
+      if (!skipBamboo) setBamboo(b => b + total);
       trackDailyInteraction("exercise");
     }
-    toast(bonus ? `¡Maestría! +${total} bambú 🌟` : `+${total} bambú 🌿`);
-    save(null, { bamboo: bamboo + total, happiness:nh, water, garden, accessories, exDone:nd, messages, conoce, burbuja, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
+    if (!skipBamboo) toast(bonus ? `¡Maestría! +${total} bambú 🌟` : `+${total} bambú 🌿`);
+    save(null, { bamboo: skipBamboo ? bamboo : bamboo + total, happiness:nh, water, garden, accessories, exDone:nd, messages, conoce, burbuja, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
   };
 
   const sendMsg = text => {
@@ -5837,7 +6904,14 @@ export default function App() {
       await fbSaveBurbuja(user.code, id, next).catch(() => {});
       if (user?.uid) {
         const me = getMyName(user, "Tu pareja");
-        fbSendNotif(user.code, { type:"acuerdo", msg:`${me} actualizó su parte de un acuerdo 🫧`, forUid:user?.isOwner !== false ? "partner" : "owner", fromUid: user.uid }).catch(()=>{});
+        fbSendNotif(user.code, {
+          type:"acuerdo",
+          msg:`${me} actualizó su parte de un acuerdo 🫧`,
+          forUid:user?.isOwner !== false ? "partner" : "owner",
+          fromUid: user.uid,
+          agreementId: id,
+          agreementStatus: next.status || "draft",
+        }).catch(()=>{});
       }
     }
     save(null, { bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja:map, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
@@ -5882,7 +6956,9 @@ export default function App() {
             ? `${me} propuso editar un acuerdo aprobado ✏️`
             : (isCounter ? `${me} envió una contraoferta de acuerdo ↔` : `${me} te envió una propuesta de acuerdo ✉️`),
           forUid: user?.isOwner !== false ? "partner" : "owner",
-          fromUid: user.uid
+          fromUid: user.uid,
+          agreementId: id,
+          agreementStatus: next.status || "pending",
         }).catch(() => {});
       }
     }
@@ -5934,7 +7010,9 @@ export default function App() {
           type: "acuerdo",
           msg: `${me} aprobó su acuerdo ✅`,
           forUid: user?.isOwner !== false ? "partner" : "owner",
-          fromUid: user.uid
+          fromUid: user.uid,
+          agreementId: id,
+          agreementStatus: "approved",
         }).catch(() => {});
       }
     }
@@ -6000,6 +7078,37 @@ export default function App() {
     toast("✨ Guardado en el baúl de momentos +5 bambú 🌿");
   };
 
+  const addDiaryEntry = async (entry) => {
+    const myName = getMyName(user, "Yo");
+    const enriched = { 
+      ...entry, 
+      authorName: myName, 
+      authorUid: user?.uid, 
+      date: new Date().toLocaleDateString("es", {day:"numeric",month:"short",year:"numeric"}),
+      time: new Date().toLocaleTimeString("es", {hour:"2-digit",minute:"2-digit"})
+    };
+    trigHappy();
+    if (user?.code && !user?.isGuest) {
+      await fbSendDiaryEntry(user.code, user.uid, enriched).catch(() => {});
+      toast("📔 Entrada guardada en tu diario personal");
+      trackDailyInteraction("diario");
+    } else {
+      const nd = [{ ...enriched, id: Date.now() }, ...diario];
+      setDiario(nd);
+      toast("📔 Entrada guardada en tu diario personal");
+      trackDailyInteraction("diario");
+    }
+  };
+
+  const deleteDiaryEntry = async (entryId) => {
+    if (user?.code && !user?.isGuest) {
+      await fbDeleteDiaryEntry(entryId).catch(() => {});
+      toast("Entrada eliminada");
+    } else {
+      const nd = diario.filter(e => e.id !== entryId);
+      setDiario(nd);
+      toast("Entrada eliminada");
+    }
   // ─── DIARIO PERSONAL (private) ─────────────────────────
   const addDiario = async (entry) => {
     const enriched = { 
@@ -6130,22 +7239,30 @@ export default function App() {
   return (
     <div style={{ fontFamily:"'Nunito',sans-serif", maxWidth:480, margin:"0 auto", minHeight:"100vh", background:C.sandL, position:"relative" }}>
       <style>{STYLES}</style>
-      <div style={{ paddingBottom:72 }}>
+      <div style={{ paddingBottom:96 }}>
         {tab==="jardin" && <Jardin bamboo={bamboo} happiness={happiness} water={water} garden={garden} accessories={accessories} mochiHappy={mochiHappy} pandaBubble={pandaBubble} onPet={petMochi} onBuy={buyItem} onWater={waterGarden} onBuyAccessory={buyAccessory}/>}
         {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson}/>}
+        {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user}/>}
+        {tab==="burbuja" && (
+          <Burbuja
+            burbuja={burbuja}
+            onSaveMine={saveBurbujaMine}
+            onPropose={proposeBurbuja}
+            onApprove={approveBurbuja}
+            user={user}
+            notifs={notifs.filter(n => isNotifForUser(n, user))}
+            onMarkNotifRead={(notifId) => fbMarkNotifRead(notifId).catch(() => {})}
+          />
+        )}
+        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} garden={garden} accessories={accessories} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} lessonsDone={lessonsDone} coupleInfo={coupleInfo} streakInfo={streakData} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={retakeTest} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} diario={diario} onAddDiaryEntry={addDiaryEntry} onDeleteDiaryEntry={deleteDiaryEntry} onSendMessage={sendMsg} onClaimDailyTip={claimDailyTip}/>} 
         {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} onResetQuiz={resetQuiz} user={user}/>}
         {tab==="burbuja" && <Burbuja burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} user={user}/>}
         {tab==="perfil" && <Perfil user={user} bamboo={bamboo} garden={garden} accessories={accessories} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} lessonsDone={lessonsDone} coupleInfo={coupleInfo} streakInfo={streakData} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={()=>setScreen("reltest")} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} onSendMessage={sendMsg} onClaimDailyTip={claimDailyTip} diario={diario} onAddDiario={addDiario} onUpdateDiario={updateDiario} onDeleteDiario={deleteDiario}/>} 
       </div>
-      <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:480, background:C.white, borderTop:`1.5px solid ${C.border}`, display:"flex", zIndex:1000, boxShadow:`0 -3px 0 ${C.line}` }}>
+      <div style={{ position:"fixed", bottom:0, left:0, right:0, margin:"0 auto", width:"min(100vw, 480px)", background:C.white, borderTop:`1.5px solid ${C.border}`, display:"flex", zIndex:1000, boxShadow:`0 -3px 0 ${C.line}`, paddingBottom:"env(safe-area-inset-bottom)" }}>
         {NAV.map(n => {
           const active = tab === n.id;
-          const myNotifRole = user?.isOwner !== false ? "owner" : "partner";
-          const isNotifForMe = (x) => {
-            if (!x || x.read) return false;
-            if (x.fromUid && user?.uid && x.fromUid === user.uid) return false;
-            return x.forUid === user?.uid || x.forUid === myNotifRole || (x.forUid === "partner" && myNotifRole === "partner");
-          };
+          const isNotifForMe = (x) => isNotifForUser(x, user) && !x?.read;
           const notifTypes = { "ejerc":["ejercicio","leccion"], "conocete":["conoce"], "burbuja":["gratitud","momento","acuerdo"], "perfil":["racha","mensaje"] };
           const nBadge = notifTypes[n.id] ? notifs.filter(x => isNotifForMe(x) && notifTypes[n.id].includes(x.type)).length : 0;
           const badge = nBadge > 0 ? nBadge : null;
@@ -6542,6 +7659,8 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
   const [activeTab, setActiveTab] = useState("gratitud");
   const [showGForm, setShowGForm] = useState(false);
   const [showMForm, setShowMForm] = useState(false);
+  const [showAllGratitud, setShowAllGratitud] = useState(false);
+  const [showAllMomentos, setShowAllMomentos] = useState(false);
   const [gText, setGText] = useState(""); const [gWho, setGWho] = useState("A");
   const [mTitle, setMTitle] = useState(""); const [mText, setMText] = useState("");
   const [showAllHistory, setShowAllHistory] = useState(false);
@@ -6552,6 +7671,10 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
     if (entry?.time) return new Date(entry.time).getTime();
     return 0;
   };
+  const sortedGratitud = [...gratitud].sort((a, b) => getEntryTime(b) - getEntryTime(a));
+  const sortedMomentos = [...momentos].sort((a, b) => getEntryTime(b) - getEntryTime(a));
+  const visibleGratitud = showAllGratitud ? sortedGratitud : sortedGratitud.slice(0, 3);
+  const visibleMomentos = showAllMomentos ? sortedMomentos : sortedMomentos.slice(0, 3);
   const recentGratitud = [...gratitud].sort((a, b) => getEntryTime(b) - getEntryTime(a)).slice(0, 3);
   const recentMomentos = [...momentos].sort((a, b) => getEntryTime(b) - getEntryTime(a)).slice(0, 3);
   const allGratitud = [...gratitud].sort((a, b) => getEntryTime(b) - getEntryTime(a));
@@ -6656,7 +7779,7 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
                 </div>}
             {gratitud.length === 0
               ? <div style={{ textAlign:"center", padding:"20px 0", color:C.inkL, fontSize:"0.84rem" }}>💛 Todavía no hay entradas</div>
-              : recentGratitud.map((g,i) => (
+              : visibleGratitud.map((g,i) => (
                 <div key={g.id||i} style={{ background:"#fffde8", borderRadius:12, padding:"10px 14px", marginBottom:8, border:"1px solid #e8d84030" }}>
                   <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
                     <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.8rem", color:C.dark }}>🐼 {g.authorName || g.name || "Tú"}</div>
@@ -6666,6 +7789,8 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
                 </div>
               ))}
             {gratitud.length > 3 && (
+              <button onClick={() => setShowAllGratitud(v => !v)} style={{ width:"100%", background:"none", border:`1.5px solid ${C.border}`, borderRadius:10, padding:"8px 12px", fontSize:"0.78rem", fontWeight:800, color:C.inkM, cursor:"pointer", marginTop:4 }}>
+                {showAllGratitud ? "Ver menos ↑" : `Ver todo (${gratitud.length}) ↓`}
               <button 
                 onClick={() => setShowAllHistory(true)}
                 style={{ width:"100%", marginTop:8, background:C.sandL, border:`1.5px solid ${C.border}`, borderRadius:10, padding:"10px", fontSize:"0.8rem", fontWeight:800, color:C.dark, cursor:"pointer" }}
@@ -6687,7 +7812,7 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
                 </div>}
             {momentos.length === 0
               ? <div style={{ textAlign:"center", padding:"20px 0", color:C.inkL, fontSize:"0.84rem" }}>✨ Todavía no hay momentos guardados</div>
-              : recentMomentos.map((m,i) => (
+              : visibleMomentos.map((m,i) => (
                 <div key={m.id||i} style={{ background:"#f8f0ff", borderRadius:12, padding:"10px 14px", marginBottom:8, border:`1px solid #c8a8f830` }}>
                   <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
                     <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.88rem", color:C.dark }}>✨ {m.title}</div>
@@ -6697,6 +7822,8 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
                 </div>
               ))}
             {momentos.length > 3 && (
+              <button onClick={() => setShowAllMomentos(v => !v)} style={{ width:"100%", background:"none", border:`1.5px solid ${C.border}`, borderRadius:10, padding:"8px 12px", fontSize:"0.78rem", fontWeight:800, color:C.inkM, cursor:"pointer", marginTop:4 }}>
+                {showAllMomentos ? "Ver menos ↑" : `Ver todo (${momentos.length}) ↓`}
               <button 
                 onClick={() => setShowAllHistory(true)}
                 style={{ width:"100%", marginTop:8, background:C.sandL, border:`1.5px solid ${C.border}`, borderRadius:10, padding:"10px", fontSize:"0.8rem", fontWeight:800, color:C.dark, cursor:"pointer" }}

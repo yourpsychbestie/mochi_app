@@ -177,6 +177,14 @@ export const fbClaimPartnerCode = async (code, partner) => {
   const partnerName = String(partner.partnerName || "?").trim() || "?";
   const names = `${ownerName} & ${partnerName}`;
 
+    tx.set(ref, {
+      names,
+      ownerEmail: data.ownerEmail || null,
+      ownerUid: data.ownerUid || null,
+      partnerEmail: partner.partnerEmail,
+      partnerUid: partner.partnerUid,
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
   // Then, write the update (this will be allowed by the rules for new partners)
   await setDoc(ref, {
     names,
@@ -469,3 +477,33 @@ export const fbListenStreakProfile = (coupleCode, cb) =>
   onSnapshot(doc(db, "streaks", coupleCode), snap => {
     cb(snap.exists() ? snap.data() : null);
   }, () => cb(null));
+
+// ─── DIARIO PERSONAL ─────────────────────────────────
+export const fbSendDiaryEntry = (coupleCode, uid, entry) =>
+  addDoc(collection(db, "diario"), { 
+    ...entry, 
+    coupleCode, 
+    uid,
+    createdAt: serverTimestamp() 
+  });
+
+export const fbListenDiaryEntries = (coupleCode, cb) => {
+  const q = query(
+    collection(db, "diario"), 
+    where("coupleCode", "==", coupleCode),
+    orderBy("createdAt", "desc")
+  );
+  return onSnapshot(q, snap => {
+    const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    cb(items);
+  }, (error) => {
+    console.error("Diario listener error:", error);
+    cb([]);
+  });
+};
+
+export const fbDeleteDiaryEntry = (entryId) =>
+  deleteDoc(doc(db, "diario", entryId));
+
+export const fbGetDiaryAnalysis = async (entryId, analysis) =>
+  setDoc(doc(db, "diario", entryId), { analysis }, { merge: true });
