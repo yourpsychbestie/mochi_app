@@ -245,7 +245,7 @@ export const fbListenTest = (coupleCode, cb) => {
   });
 };
 export const fbResetTest = (coupleCode) =>
-  setDoc(doc(db, "tests", coupleCode), { ownerDone: false, partnerDone: false }, { merge: true });
+  setDoc(doc(db, "tests", coupleCode), { owner: {}, partner: {}, ownerDone: false, partnerDone: false }, { merge: true });
 
 // ─── EXERCISE SESSIONS ─────────────────────────────────
 export const fbListenExSession = (coupleCode, exId, cb) => {
