@@ -177,14 +177,6 @@ export const fbClaimPartnerCode = async (code, partner) => {
   const partnerName = String(partner.partnerName || "?").trim() || "?";
   const names = `${ownerName} & ${partnerName}`;
 
-    tx.set(ref, {
-      names,
-      ownerEmail: data.ownerEmail || null,
-      ownerUid: data.ownerUid || null,
-      partnerEmail: partner.partnerEmail,
-      partnerUid: partner.partnerUid,
-      updatedAt: serverTimestamp(),
-    }, { merge: true });
   // Then, write the update (this will be allowed by the rules for new partners)
   await setDoc(ref, {
     names,
