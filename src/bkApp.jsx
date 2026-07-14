@@ -293,26 +293,38 @@ const GARDEN_ITEMS = [
   {id:"peony",    cat:"plantas", name:"Peonía",        cost:15,  desc:"Flores de primavera"},
   {id:"cherry",   cat:"plantas", name:"Cerezo",        cost:80,  desc:"Belleza efímera"},
   {id:"lily",     cat:"plantas", name:"Lirio Azul",    cost:20,  desc:"Calma y claridad"},
+  {id:"maple",    cat:"plantas", name:"Arce Rojo",     cost:75,  desc:"Hojas rojitas para otoño eterno"},
+  {id:"wisteria", cat:"plantas", name:"Glicinia",      cost:48,  desc:"Cascada de flores colgantes"},
   // Agua
   {id:"pond",     cat:"agua",    name:"Estanque",      cost:60,  desc:"Espejo del cielo"},
   {id:"koi1",     cat:"agua",    name:"Pez Koi Rojo",  cost:40,  desc:"Buena fortuna"},
   {id:"koi2",     cat:"agua",    name:"Pez Koi Dorado",cost:55,  desc:"Prosperidad"},
   {id:"lotus_pad",cat:"agua",    name:"Hoja de Loto",  cost:20,  desc:"Reposa en el agua"},
+  {id:"waterfall",cat:"agua",    name:"Cascadita",     cost:85,  desc:"El jardín suena a calma"},
+  {id:"ducks",    cat:"agua",    name:"Patitos Mandarín", cost:50, desc:"Parejita fiel en el agua"},
   // Cielo
   {id:"sun",      cat:"cielo",   name:"Sol",           cost:30,  desc:"Calienta el jardín"},
   {id:"rainbow",  cat:"cielo",   name:"Arcoíris",      cost:100, desc:"Magia después de la lluvia"},
   {id:"swallow1", cat:"cielo",   name:"Golondrina",    cost:35,  desc:"Mensajera del amor"},
   {id:"swallow2", cat:"cielo",   name:"Par de Golondrinas",cost:55,desc:"Vuelo juntos"},
   {id:"clouds",   cat:"cielo",   name:"Nubes",         cost:25,  desc:"Sueños flotantes"},
+  {id:"shooting_stars", cat:"cielo", name:"Estrellas Fugaces", cost:110, desc:"Deseos cruzando la noche"},
+  {id:"heart_cloud", cat:"cielo", name:"Nube Corazón", cost:42,  desc:"Una nube enamorada"},
   // Decoración
   {id:"lantern",  cat:"deco",    name:"Farolito",      cost:25,  desc:"Luz cálida"},
   {id:"lantern2", cat:"deco",    name:"Farolitos",     cost:40,  desc:"Noche romántica"},
   {id:"heart",    cat:"deco",    name:"Corazón",       cost:50,  desc:"Amor visible"},
   {id:"bridge",   cat:"deco",    name:"Puente",        cost:70,  desc:"Un camino juntos"},
   {id:"pagoda",   cat:"deco",    name:"Pagoda",        cost:90,  desc:"Refugio sagrado"},
+  {id:"bench",    cat:"deco",    name:"Banco de Madera", cost:55, desc:"Un rincón para ustedes"},
+  {id:"wind_chime", cat:"deco",  name:"Campanitas de Viento", cost:38, desc:"Suena suave con la brisa"},
   // Especiales
   {id:"firefly",  cat:"especial",name:"Luciérnagas",   cost:65,  desc:"Magia nocturna"},
   {id:"moongate", cat:"especial",name:"Luna Llena",    cost:120, desc:"Romance bajo la luna"},
+  {id:"aurora",   cat:"especial",name:"Aurora Nocturna", cost:140, desc:"El cielo se pinta de magia"},
+  {id:"petal_rain", cat:"especial",name:"Lluvia de Pétalos", cost:95, desc:"Flores en movimiento"},
+  // Modo Noche - desbloqueable
+  {id:"night_mode", cat:"especial", name:"🌙 Modo Noche", cost:200, desc:"¡Desbloquea el jardín nocturno!", isNightMode:true},
 ];
 
 // Regar sigue siendo acción especial
@@ -1001,11 +1013,15 @@ function GardenItemIcon({ id, size = 38 }) {
     peony: (<svg viewBox="0 0 44 52" width={s} height={s}><rect x="20" y="28" width="5" height="22" rx="2.5" fill="#5a7e3c"/><ellipse cx="22" cy="16" rx="14" ry="12" fill="#d4a0d8"/><ellipse cx="22" cy="18" rx="10" ry="9" fill="#e0b8e8"/><ellipse cx="22" cy="20" rx="6" ry="6" fill="#f0d0f4"/><ellipse cx="22" cy="21" rx="3" ry="3" fill="#f8e0a0"/><ellipse cx="12" cy="22" rx="8" ry="10" fill="#c890cc" transform="rotate(20 12 22)" opacity="0.7"/><ellipse cx="32" cy="22" rx="8" ry="10" fill="#c890cc" transform="rotate(-20 32 22)" opacity="0.7"/></svg>),
     cherry: (<svg viewBox="0 0 52 52" width={s} height={s}><rect x="23" y="30" width="7" height="20" rx="3" fill="#9a7848"/><circle cx="26" cy="22" r="16" fill="#f4a8b8" opacity="0.8"/><circle cx="14" cy="28" r="11" fill="#f8b8c8" opacity="0.8"/><circle cx="38" cy="27" r="12" fill="#f0a0b0" opacity="0.8"/>{[16,24,32,20,28,22,30].map((x,i)=><circle key={i} cx={x} cy={15+i*2} r="2" fill="#f4d0d8" opacity="0.7"/>)}</svg>),
     lily: (<svg viewBox="0 0 40 50" width={s} height={s}><rect x="18" y="26" width="5" height="22" rx="2.5" fill="#5a7e3c"/>{[0,60,120,180,240,300].map((a,i)=><ellipse key={i} cx={20+Math.cos(a*Math.PI/180)*11} cy={18+Math.sin(a*Math.PI/180)*9} rx="7" ry="11" fill={i%2===0?"#8ab8e8":"#a8ccf0"} transform={`rotate(${a} ${20+Math.cos(a*Math.PI/180)*11} ${18+Math.sin(a*Math.PI/180)*9})`} opacity="0.85"/>)}<circle cx="20" cy="18" r="5" fill="#f8e060"/></svg>),
+    maple: (<svg viewBox="0 0 44 48" width={s} height={s}><rect x="20" y="24" width="4" height="22" rx="2" fill="#8e6a3f"/><path d="M22 24 L10 14 L14 26 L4 22 L16 30 L6 36 L18 32 L22 44 L26 32 L38 36 L28 30 L40 22 L30 26 L34 14 Z" fill="#d5563a"/></svg>),
+    wisteria: (<svg viewBox="0 0 40 50" width={s} height={s}><line x1="4" y1="4" x2="36" y2="4" stroke="#7f6a48" strokeWidth="3"/>{[10,20,30].map((x,i)=><g key={x}><path d={`M${x} 4 Q${x-3} 16 ${x} 30`} fill="none" stroke="#6aa049" strokeWidth="2"/><ellipse cx={x} cy={34} rx="4" ry="7" fill={i%2===0?"#c4b0ef":"#b596de"}/></g>)}</svg>),
     // Agua
     pond: (<svg viewBox="0 0 52 32" width={s} height={s*0.62}><ellipse cx="26" cy="18" rx="24" ry="12" fill="#7ac8b8" opacity="0.7"/><ellipse cx="26" cy="16" rx="20" ry="9" fill="#a8d8e8" opacity="0.6"/><ellipse cx="18" cy="18" rx="7" ry="5" fill="#6ab830" opacity="0.8"/><circle cx="18" cy="15" r="2.5" fill="#e8607a" opacity="0.9"/><ellipse cx="35" cy="20" rx="5" ry="3.5" fill="#6ab830" opacity="0.7"/>{[14,22,30,38].map((x,i)=><ellipse key={i} cx={x} cy={22+i%2} rx="2.5" ry="1.5" fill="#88c8d8" opacity="0.5"/>)}</svg>),
     koi1: (<svg viewBox="0 0 44 28" width={s} height={s*0.64}><ellipse cx="22" cy="14" rx="16" ry="8" fill="#e86040"/><ellipse cx="18" cy="14" rx="12" ry="6" fill="#f07848"/><path d="M6 14 Q2 8 0 14 Q2 20 6 14Z" fill="#e05030"/><circle cx="30" cy="12" r="2.5" fill="white"/><circle cx="30" cy="12" r="1.2" fill="#1a1a1a"/><path d="M12 8 Q16 4 20 8" fill="none" stroke="#f8a870" strokeWidth="1.5" opacity="0.6"/><path d="M12 20 Q16 24 20 20" fill="none" stroke="#f8a870" strokeWidth="1.5" opacity="0.6"/></svg>),
     koi2: (<svg viewBox="0 0 44 28" width={s} height={s*0.64}><ellipse cx="22" cy="14" rx="16" ry="8" fill="#d4a843"/><ellipse cx="18" cy="14" rx="12" ry="6" fill="#e8c060"/><path d="M6 14 Q2 8 0 14 Q2 20 6 14Z" fill="#c89830"/><circle cx="30" cy="12" r="2.5" fill="white"/><circle cx="30" cy="12" r="1.2" fill="#1a1a1a"/><circle cx="20" cy="10" r="2" fill="#e86040" opacity="0.7"/><circle cx="24" cy="16" r="1.5" fill="#e86040" opacity="0.6"/></svg>),
     lotus_pad: (<svg viewBox="0 0 44 28" width={s} height={s*0.64}><ellipse cx="22" cy="16" rx="20" ry="11" fill="#5a9840" opacity="0.85"/><ellipse cx="22" cy="16" rx="16" ry="8" fill="#6aac48" opacity="0.8"/><path d="M22 5 L22 16" stroke="#4a8030" strokeWidth="1.5"/>{[30,60,90,120,150,210,240,270,300,330].map((a,i)=><path key={i} d={`M22 16 L${22+Math.cos(a*Math.PI/180)*18} ${16+Math.sin(a*Math.PI/180)*10}`} stroke="#4a8030" strokeWidth="1" opacity="0.5"/>)}<circle cx="28" cy="8" r="4" fill="#f4a8b8" opacity="0.9"/><circle cx="28" cy="8" r="2.5" fill="#f8c4cc"/></svg>),
+    waterfall: (<svg viewBox="0 0 44 48" width={s} height={s}><path d="M12 48 C14 32 18 20 22 4 L30 4 C26 20 24 32 24 48Z" fill="#9e8960"/><path d="M20 4 C22 18 20 32 18 48" fill="none" stroke={"#80c8ea"} strokeWidth="6" strokeLinecap="round" opacity="0.85"/><ellipse cx="18" cy="48" rx="16" ry="5" fill="#90d8f0" opacity="0.6"/></svg>),
+    ducks: (<svg viewBox="0 0 48 28" width={s} height={s*0.58}><ellipse cx="14" cy="18" rx="10" ry="6" fill="#f2c487"/><circle cx="20" cy="14" r="3.8" fill="#f2c487"/><path d="M23 14 L28 16 L23 18Z" fill="#dd8734"/><ellipse cx="34" cy="22" rx="10" ry="6" fill="#eab670"/><circle cx="40" cy="18" r="3.8" fill="#eab670"/><path d="M43 18 L48 20 L43 22Z" fill="#d87727"/></svg>),
     // Cielo
     sun: (<svg viewBox="0 0 48 48" width={s} height={s}>
       {[0,30,60,90,120,150,180,210,240,270,300,330].map(a=>(
@@ -1053,15 +1069,22 @@ function GardenItemIcon({ id, size = 38 }) {
       <ellipse cx="40" cy="18" rx="11" ry="7" fill="white" opacity="0.9"/>
       <ellipse cx="28" cy="19" rx="21" ry="9" fill="none" stroke="#d5e0e8" strokeWidth="1" opacity="0.7"/>
     </svg>),
+    shooting_stars: (<svg viewBox="0 0 52 36" width={s} height={s*0.69}><path d="M8 8 L36 18" stroke="#ffe08a" strokeWidth="3" strokeLinecap="round" opacity="0.85"/><path d="M38 6 L56 14" stroke="#ffd068" strokeWidth="2.5" strokeLinecap="round" opacity="0.8"/><path d="M18 22 L40 30" stroke="#ffefb8" strokeWidth="2.5" strokeLinecap="round" opacity="0.85"/></svg>),
+    heart_cloud: (<svg viewBox="0 0 44 34" width={s} height={s*0.77}><path d="M22 30 C22 30 6 20 6 10 C6 4 11 1 16 3 C19 4 22 8 22 8 C22 8 25 4 28 3 C33 1 38 4 38 10 C38 20 22 30 22 30Z" fill="white" opacity="0.95"/></svg>),
     // Decoración
     lantern: (<svg viewBox="0 0 32 50" width={s} height={s}><rect x="14" y="2" width="4" height="7" rx="2" fill="#9a7848"/><rect x="10" y="12" width="12" height="22" rx="6" fill="#e86030"/><rect x="12" y="12" width="8" height="22" rx="4" fill="#f08050" opacity="0.7"/><ellipse cx="16" cy="12" rx="7" ry="3" fill="#9a7848"/><ellipse cx="16" cy="34" rx="7" ry="3" fill="#9a7848"/><rect x="14" y="34" width="4" height="8" rx="2" fill="#9a7848"/><circle cx="16" cy="23" r="4" fill="#f8e060" opacity="0.5"/></svg>),
     lantern2: (<svg viewBox="0 0 52 50" width={s} height={s}><line x1="8" y1="0" x2="44" y2="0" stroke="#9a7848" strokeWidth="2"/><line x1="16" y1="0" x2="12" y2="10" stroke="#9a7848" strokeWidth="1.5"/><line x1="36" y1="0" x2="40" y2="10" stroke="#9a7848" strokeWidth="1.5"/><rect x="6" y="10" width="10" height="18" rx="5" fill="#e86030"/><rect x="8" y="10" width="6" height="18" rx="3" fill="#f08050" opacity="0.7"/><ellipse cx="11" cy="10" rx="6" ry="2.5" fill="#9a7848"/><ellipse cx="11" cy="28" rx="6" ry="2.5" fill="#9a7848"/><rect x="30" y="10" width="10" height="18" rx="5" fill="#d4408a"/><rect x="32" y="10" width="6" height="18" rx="3" fill="#e060a0" opacity="0.7"/><ellipse cx="35" cy="10" rx="6" ry="2.5" fill="#9a7848"/><ellipse cx="35" cy="28" rx="6" ry="2.5" fill="#9a7848"/></svg>),
     heart: (<svg viewBox="0 0 40 36" width={s} height={s*0.9}><path d="M20 32 C20 32 3 20 3 10 C3 4 8 1 13 3.5 C16 4.5 20 8.5 20 8.5 C20 8.5 24 4.5 27 3.5 C32 1 37 4 37 10 C37 20 20 32 20 32Z" fill="#e8607a"/><path d="M20 26 C20 26 8 18 8 13 C8 10 10 8 12 9 C14 10 20 14 20 14" fill="#f4a8c0" opacity="0.5"/></svg>),
     bridge: (<svg viewBox="0 0 52 30" width={s} height={s*0.58}><path d="M2 22 Q26 4 50 22" fill="none" stroke="#9a7848" strokeWidth="4" strokeLinecap="round"/><line x1="2" y1="22" x2="2" y2="28" stroke="#8a6838" strokeWidth="3"/><line x1="50" y1="22" x2="50" y2="28" stroke="#8a6838" strokeWidth="3"/>{[10,18,26,34,42].map(x=><line key={x} x1={x} y1={16+(x-26)**2/200} x2={x} y2={28} stroke="#8a6838" strokeWidth="2"/>)}<path d="M0 28 L52 28" stroke="#8a6838" strokeWidth="3"/></svg>),
+    bench: (<svg viewBox="0 0 44 30" width={s} height={s*0.68}><rect x="4" y="14" width="36" height="5" rx="2" fill="#9b7a4a"/><rect x="4" y="20" width="36" height="4" rx="2" fill="#8c6a3f"/><rect x="8" y="24" width="4" height="6" rx="2" fill="#7c5c35"/><rect x="32" y="24" width="4" height="6" rx="2" fill="#7c5c35"/></svg>),
+    wind_chime: (<svg viewBox="0 0 36 44" width={s} height={s}><line x1="4" y1="4" x2="32" y2="4" stroke="#9a7848" strokeWidth="2.5"/>{[10,18,26].map((x,i)=><g key={x}><line x1={x} y1="4" x2={x} y2={18+i*2} stroke="#9a7848" strokeWidth="1.5"/><rect x={x-3} y={18+i*2} width="6" height="11" rx="2" fill={i===1?"#c89058":"#d8a85f"}/></g>)}<line x1="18" y1="20" x2="18" y2="34" stroke="#9a7848" strokeWidth="1.4"/><ellipse cx="18" cy="36" rx="6" ry="2.5" fill="#f0d090"/></svg>),
     pagoda: (<svg viewBox="0 0 44 52" width={s} height={s}><rect x="16" y="46" width="12" height="5" rx="1" fill="#c07840"/><rect x="12" y="38" width="20" height="9" rx="1" fill="#d08848"/><path d="M6 38 L22 28 L38 38Z" fill="#c07040"/><rect x="14" y="28" width="16" height="11" rx="1" fill="#d08848"/><path d="M10 28 L22 18 L34 28Z" fill="#c07040"/><rect x="16" y="18" width="12" height="11" rx="1" fill="#d08848"/><path d="M14 18 L22 8 L30 18Z" fill="#c07040"/><rect x="20" y="2" width="4" height="8" rx="1" fill="#e8a030"/></svg>),
     // Especiales
     firefly: (<svg viewBox="0 0 48 48" width={s} height={s}><circle cx="24" cy="24" r="20" fill="#1a2a1a" opacity="0.2"/>{[[12,15],[30,10],[8,30],[36,28],[20,36],[38,18],[16,22],[28,34]].map(([x,y],i)=><g key={i}><circle cx={x} cy={y} r="2.5" fill="#f8e840" opacity="0.9"/><circle cx={x} cy={y} r="4" fill="#f8e840" opacity="0.25"/></g>)}</svg>),
     moongate: (<svg viewBox="0 0 52 52" width={s} height={s}><circle cx="26" cy="22" r="20" fill="none" stroke="#f8e0a0" strokeWidth="3"/><path d="M6 40 L6 22 A20 20 0 0 1 46 22 L46 40" fill="#f8e0a0" opacity="0.1" stroke="#f8e0a0" strokeWidth="2"/><circle cx="26" cy="22" r="16" fill="#1a2a3a" opacity="0.5"/><circle cx="26" cy="22" r="15" fill="none"/>{[5,4,3,2].map((r,i)=><circle key={i} cx={26-r} cy={18+r} r={r} fill="#f8e0a0" opacity={0.4-i*0.08}/>)}<path d="M6 42 L6 52 L46 52 L46 42" fill="#7ab848" opacity="0.8"/></svg>),
+    aurora: (<svg viewBox="0 0 56 40" width={s} height={s*0.71}><path d="M0 22 Q28 4 56 16" fill="none" stroke="#77d8c6" strokeWidth="7" opacity="0.35" strokeLinecap="round"/><path d="M0 16 Q28 0 56 10" fill="none" stroke="#8fb8f2" strokeWidth="5" opacity="0.3" strokeLinecap="round"/><path d="M0 28 Q28 12 56 22" fill="none" stroke="#c4a8ef" strokeWidth="5" opacity="0.28" strokeLinecap="round"/></svg>),
+    petal_rain: (<svg viewBox="0 0 52 40" width={s} height={s*0.77}>{[[10,10],[22,6],[34,12],[46,8],[14,22],[26,18],[38,24],[18,32],[30,28],[42,34]].map(([x,y],i)=><ellipse key={i} cx={x} cy={y} rx="3" ry="5" fill={i%2===0?"#f4a8b8":"#f8c4d0"} transform={`rotate(${i%2===0?20:-20} ${x} ${y})`} opacity="0.85"/>)}</svg>),
+    night_mode: (<svg viewBox="0 0 44 44" width={s} height={s}><circle cx="22" cy="22" r="18" fill="none" stroke="#4a4a6a" strokeWidth="3"/><path d="M28 10 A14 14 0 1 1 18 36 A18 18 0 0 0 28 10Z" fill="#e8d060"/></svg>),
   };
   return icons[id] || <svg viewBox="0 0 40 40" width={s} height={s}><circle cx="20" cy="20" r="16" fill={C.sand}/></svg>;
 }
@@ -1540,6 +1563,10 @@ function GardenScene({ garden, waterLevel }) {
         <ellipse cx="280" cy="42" rx="20" ry="9" fill="white" opacity="0.4"/>
       </g>}
 
+      {g.heart_cloud && <g>
+        <path d="M252 62 C252 62 232 52 232 41 C232 35 237 32 242 34 C246 35 249 38 252 42 C255 38 258 35 262 34 C267 32 272 35 272 41 C272 52 252 62 252 62Z" fill="white" opacity="0.9"/>
+      </g>}
+
       {/* Sun / Moon */}
       {g.sun ? <>
         <circle cx="330" cy="55" r="28" fill="#f0b030" opacity="0.95"/>
@@ -1554,6 +1581,18 @@ function GardenScene({ garden, waterLevel }) {
       {g.rainbow && [["#e87878",0],["#e8a858",7],["#e8d860",14],["#8ac868",21],["#5ab8c8",28]].map(([c,o],i)=>(
         <path key={i} d={`M${10+o/2} 280 Q200 ${80+o} ${380-o/2} 280`} fill="none" stroke={c} strokeWidth="5" strokeLinecap="round" opacity="0.6"/>
       ))}
+
+      {g.shooting_stars && <g>
+        <path d="M54 36 L88 48" stroke="#ffe08a" strokeWidth="3" strokeLinecap="round" opacity="0.85"/>
+        <path d="M132 28 L166 42" stroke="#ffd068" strokeWidth="2.5" strokeLinecap="round" opacity="0.8"/>
+        <path d="M210 40 L242 52" stroke="#ffefb8" strokeWidth="2.5" strokeLinecap="round" opacity="0.85"/>
+      </g>}
+
+      {g.aurora && <g>
+        <path d="M0 120 Q70 70 150 95 Q230 120 320 85 Q360 72 390 78" fill="none" stroke="#77d8c6" strokeWidth="9" opacity="0.28"/>
+        <path d="M0 108 Q76 58 158 82 Q242 108 332 74 Q364 62 390 66" fill="none" stroke="#8fb8f2" strokeWidth="7" opacity="0.25"/>
+        <path d="M0 96 Q80 48 164 72 Q250 98 340 64 Q368 54 390 58" fill="none" stroke="#c4a8ef" strokeWidth="5" opacity="0.23"/>
+      </g>}
 
       {/* Misty mountains background */}
       <ellipse cx="100" cy="200" rx="130" ry="80" fill={MIST[lvl]} opacity="0.3"/>
@@ -1635,25 +1674,56 @@ function GardenScene({ garden, waterLevel }) {
         <circle cx="302" cy="145" r="24" fill={dry?"#d0a868":"#f0a0b0"} opacity={dry?0.55:0.75}/>
       </g>}
 
-      {/* Pond */}
+      {g.maple && <g>
+        <rect x="70" y="162" width="10" height="68" rx="4" fill="#8e6a3f"/>
+        <circle cx="75" cy="146" r="24" fill={dry?"#c89a62":"#d5563a"} opacity="0.82"/>
+        <circle cx="60" cy="154" r="17" fill={dry?"#b88952":"#e0784f"} opacity="0.76"/>
+        <circle cx="90" cy="154" r="17" fill={dry?"#b88952":"#c94931"} opacity="0.76"/>
+      </g>}
+
+      {g.wisteria && <g>
+        <line x1="320" y1="108" x2="380" y2="108" stroke="#7f6a48" strokeWidth="3"/>
+        {[334,348,362,376].map((x,i)=><g key={x}>
+          <path d={`M${x} 108 Q${x-4} 124 ${x} ${146+i*5}`} fill="none" stroke="#6aa049" strokeWidth="2"/>
+          <ellipse cx={x} cy={152+i*5} rx="5" ry="8" fill={i%2===0?"#c4b0ef":"#b596de"} opacity="0.9"/>
+        </g>)}
+      </g>}
+
+      {/* Pond — shifted right (+90) so pandas don't overlap and waterfall pool (cx=372) falls inside */}
       {g.pond && <g>
-        <ellipse cx="200" cy="262" rx="90" ry="22" fill={waterCol} opacity="0.55"/>
-        <ellipse cx="200" cy="259" rx="74" ry="15" fill={waterCol} opacity={dry?0.3:0.5}/>
-        {/* Koi fish */}
+        <ellipse cx="290" cy="262" rx="90" ry="22" fill={waterCol} opacity="0.55"/>
+        <ellipse cx="290" cy="259" rx="74" ry="15" fill={waterCol} opacity={dry?0.3:0.5}/>
+        {/* Koi fish — shifted +100 to sit in right portion of pond, away from ducks */}
         {g.koi1 && <g>
-          <ellipse cx="185" cy="260" rx="18" ry="7" fill="#e86040" opacity="0.8"/>
-          <path d="M167 260 Q163 254 160 260 Q163 266 167 260Z" fill="#e05030" opacity="0.8"/>
-          <circle cx="196" cy="258" r="2" fill="white" opacity="0.9"/>
+          <ellipse cx="285" cy="260" rx="18" ry="7" fill="#e86040" opacity="0.8"/>
+          <path d="M267 260 Q263 254 260 260 Q263 266 267 260Z" fill="#e05030" opacity="0.8"/>
+          <circle cx="296" cy="258" r="2" fill="white" opacity="0.9"/>
         </g>}
         {g.koi2 && <g>
-          <ellipse cx="215" cy="264" rx="16" ry="6" fill="#d4a843" opacity="0.8"/>
-          <path d="M231 264 Q235 258 238 264 Q235 270 231 264Z" fill="#c89030" opacity="0.8"/>
+          <ellipse cx="315" cy="264" rx="16" ry="6" fill="#d4a843" opacity="0.8"/>
+          <path d="M331 264 Q335 258 338 264 Q335 270 331 264Z" fill="#c89030" opacity="0.8"/>
         </g>}
         {/* Lotus pads */}
         {g.lotus_pad && <g>
-          <ellipse cx="175" cy="255" rx="18" ry="10" fill="#5a9840" opacity="0.8"/>
-          <ellipse cx="222" cy="260" rx="14" ry="8" fill="#5a9840" opacity="0.7"/>
+          <ellipse cx="265" cy="255" rx="18" ry="10" fill="#5a9840" opacity="0.8"/>
+          <ellipse cx="312" cy="260" rx="14" ry="8" fill="#5a9840" opacity="0.7"/>
         </g>}
+      </g>}
+
+      {g.waterfall && <g>
+        <path d="M344 228 C350 214 356 204 362 180 L384 180 C378 202 374 214 372 230" fill="#9e8960" opacity="0.85"/>
+        <path d="M365 180 C372 194 374 208 372 230" fill="none" stroke={dry?"#c8b870":"#80c8ea"} strokeWidth="10" strokeLinecap="round" opacity={dry?0.55:0.85}/>
+        <ellipse cx="372" cy="234" rx="24" ry="7" fill={dry?"#b8b080":"#90d8f0"} opacity="0.7"/>
+      </g>}
+
+      {/* Ducks — shifted +70, left portion of pond, clear of koi (+100) */}
+      {g.ducks && <g>
+        <ellipse cx="226" cy="264" rx="10" ry="6" fill="#f2c487" opacity="0.9"/>
+        <circle cx="233" cy="260" r="3.8" fill="#f2c487" opacity="0.95"/>
+        <path d="M236 260 L241 262 L236 264Z" fill="#dd8734"/>
+        <ellipse cx="246" cy="268" rx="10" ry="6" fill="#eab670" opacity="0.9"/>
+        <circle cx="253" cy="264" r="3.8" fill="#eab670" opacity="0.95"/>
+        <path d="M256 264 L261 266 L256 268Z" fill="#d87727"/>
       </g>}
 
       {/* Lotus flowers */}
@@ -1739,6 +1809,23 @@ function GardenScene({ garden, waterLevel }) {
         <rect x="322" y="162" width="12" height="8" rx="2" fill="#e8a030" opacity="0.9"/>
       </g>}
 
+      {g.bench && <g>
+        <rect x="232" y="248" width="54" height="8" rx="3" fill="#9b7a4a"/>
+        <rect x="232" y="257" width="54" height="6" rx="3" fill="#8c6a3f"/>
+        <rect x="238" y="263" width="5" height="9" rx="2" fill="#7c5c35"/>
+        <rect x="275" y="263" width="5" height="9" rx="2" fill="#7c5c35"/>
+      </g>}
+
+      {g.wind_chime && <g>
+        <line x1="300" y1="128" x2="342" y2="128" stroke="#9a7848" strokeWidth="2.5"/>
+        {[308,320,332].map((x,i)=><g key={x}>
+          <line x1={x} y1="128" x2={x} y2={148+i*2} stroke="#9a7848" strokeWidth="1.5"/>
+          <rect x={x-3} y={148+i*2} width="6" height="14" rx="2" fill={i===1?"#c89058":"#d8a85f"}/>
+        </g>)}
+        <line x1="320" y1="150" x2="320" y2="168" stroke="#9a7848" strokeWidth="1.4"/>
+        <ellipse cx="320" cy="170" rx="7" ry="2.8" fill="#f0d090"/>
+      </g>}
+
       {/* Lanterns */}
       {g.lantern && <g>
         <rect x="22" y="185" width="6" height="40" rx="3" fill="#9a7848"/>
@@ -1769,6 +1856,12 @@ function GardenScene({ garden, waterLevel }) {
         ))}
       </g>}
 
+      {g.petal_rain && <g>
+        {[[58,118],[92,98],[122,130],[166,106],[204,122],[242,102],[286,126],[326,108],[358,132],[188,142],[228,144],[268,150]].map(([x,y],i)=>(
+          <ellipse key={i} cx={x} cy={y} rx="4" ry="6" fill={i%2===0?"#f4a8b8":"#f8c4d0"} transform={`rotate(${i%2===0?18:-18} ${x} ${y})`} opacity="0.85"/>
+        ))}
+      </g>}
+
       {/* Moon gate */}
       {g.moongate && <g>
         <circle cx="195" cy="160" r="50" fill="none" stroke="#f8e0a0" strokeWidth="6" opacity="0.8"/>
@@ -1790,12 +1883,211 @@ function GardenScene({ garden, waterLevel }) {
 
 
 
+
+// ═══════════════════════════════════════════════
+// INBOX — recent couple activity feed
+// ═══════════════════════════════════════════════
+function InboxModal({ user, messages, gratitud, momentos, exDone, lessonsDone, conoce, burbuja, onClose }) {
+  const myEmail = user?.email || "guest";
+  const { nameA, nameB } = getCoupleNames(user);
+  const myRole = user?.isOwner !== false ? "owner" : "partner";
+  const myName = myRole === "owner" ? nameA : nameB;
+  const partnerName = myRole === "owner" ? nameB : nameA;
+
+  const getTime = (item) => {
+    if (item?.createdAt?.toDate) return item.createdAt.toDate().getTime();
+    if (item?.createdAt?.seconds) return item.createdAt.seconds * 1000;
+    if (item?.time) return new Date(item.time).getTime();
+    if (item?.approvedAt) return new Date(item.approvedAt).getTime();
+    if (item?.updatedAt) return new Date(item.updatedAt).getTime();
+    return 0;
+  };
+
+  const formatDate = (ts) => {
+    if (!ts) return "—";
+    const d = new Date(ts);
+    if (Number.isNaN(d.getTime())) return "—";
+    return d.toLocaleDateString("es", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  };
+
+  const items = [];
+
+  // Mensajes de amor
+  (messages || []).forEach(m => {
+    const isMine = m.senderEmail === myEmail;
+    items.push({
+      id: `msg-${m.id}`,
+      ts: getTime(m),
+      icon: "💌",
+      color: "#c05068",
+      title: isMine ? `Tú enviaste un mensajito a ${partnerName}` : `${m.sender || partnerName} te envió un mensajito`,
+      body: m.text,
+      badge: isMine ? "Enviado" : "Recibido",
+    });
+  });
+
+  // Momentos
+  (momentos || []).forEach(m => {
+    items.push({
+      id: `mom-${m.id}`,
+      ts: getTime(m),
+      icon: "✨",
+      color: "#8a6bc8",
+      title: `${m.authorName || "Alguien"} guardó un momento`,
+      body: `${m.title ? `“${m.title}”` : ""} ${m.text || ""}`.trim(),
+      badge: "Momento",
+    });
+  });
+
+  // Gratitud
+  (gratitud || []).forEach(g => {
+    items.push({
+      id: `grat-${g.id}`,
+      ts: getTime(g),
+      icon: "💛",
+      color: "#d4a82e",
+      title: `${g.authorName || "Alguien"} escribió gratitud`,
+      body: g.text,
+      badge: "Gratitud",
+    });
+  });
+
+  // Ejercicios completados (por mí, más recientes primero)
+  Object.entries(exDone || {}).forEach(([exId, count]) => {
+    const ex = EXERCISES.find(e => e.id === exId);
+    if (!ex || count <= 0) return;
+    // No tenemos timestamp exacto de cada repetición, mostramos una entrada resumen
+    items.push({
+      id: `ex-${exId}`,
+      ts: 0,
+      icon: "⭐",
+      color: "#6f56b8",
+      title: `${myName} completó “${ex.title}”`,
+      body: `Completado ${count} ${count === 1 ? "vez" : "veces"}. ${ex.desc}`,
+      badge: "Ejercicio",
+    });
+  });
+
+  // Lecciones leídas por ambos
+  Object.entries(lessonsDone || {}).forEach(([lessonId, data]) => {
+    const lesson = DAILY_LESSONS.find(l => l.id === lessonId);
+    if (!lesson) return;
+    const both = data.owner && data.partner;
+    const who = data.owner && data.partner ? "Ambos" : data.owner ? nameA : data.partner ? nameB : null;
+    if (!who) return;
+    items.push({
+      id: `lesson-${lessonId}`,
+      ts: getTime(data),
+      icon: "📖",
+      color: "#4a9a6e",
+      title: `${who} ${both ? "leyeron" : "leyó"} “${lesson.title}”`,
+      body: lesson.tag,
+      badge: "Lección",
+    });
+  });
+
+  // Conócete — respuestas nuevas
+  Object.entries(conoce || {}).forEach(([key, data]) => {
+    const [cat, idx] = key.split("-");
+    const catData = CONOCE_CATS[cat];
+    if (!catData) return;
+    const q = catData.preguntas?.[Number(idx)];
+    if (!q) return;
+    const ownerAns = data.owner;
+    const partnerAns = data.partner;
+    if (ownerAns) {
+      items.push({
+        id: `conoce-${key}-owner`,
+        ts: getTime(data),
+        icon: "💬",
+        color: "#4a7ab8",
+        title: `${nameA} respondió una pregunta de ${catData.label}`,
+        body: `“${q}”`,
+        badge: "Conócete",
+      });
+    }
+    if (partnerAns) {
+      items.push({
+        id: `conoce-${key}-partner`,
+        ts: getTime(data),
+        icon: "💬",
+        color: "#4a7ab8",
+        title: `${nameB} respondió una pregunta de ${catData.label}`,
+        body: `“${q}”`,
+        badge: "Conócete",
+      });
+    }
+  });
+
+  // Acuerdos aprobados en Burbuja
+  Object.entries(burbuja || {}).forEach(([id, data]) => {
+    if (data.status !== "approved") return;
+    const meta = BURBUJA_ITEM_MAP[id];
+    items.push({
+      id: `acuerdo-${id}`,
+      ts: getTime(data),
+      icon: "🫧",
+      color: "#6f56b8",
+      title: `Acuerdo aprobado: ${meta?.section || "La Burbuja"}`,
+      body: meta?.question || "Nuevo acuerdo entre ustedes",
+      badge: "Acuerdo",
+    });
+  });
+
+  const sorted = items
+    .filter(i => i.ts || i.id.startsWith("ex-"))
+    .sort((a, b) => (b.ts || 0) - (a.ts || 0));
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(15,25,15,0.62)", zIndex: 5000, display: "flex", alignItems: "flex-end" }} onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{ background: C.sandL, borderRadius: "22px 22px 0 0", width: "100%", maxWidth: 480, margin: "0 auto", maxHeight: "90vh", display: "flex", flexDirection: "column" }}>
+        <div style={{ background: C.dark, padding: "18px 18px 20px", borderRadius: "22px 22px 0 0", position: "relative", flexShrink: 0 }}>
+          <div style={{ width: 34, height: 5, background: "rgba(255,255,255,0.2)", borderRadius: 50, margin: "0 auto 12px" }} />
+          <button onClick={onClose} style={{ position: "absolute", right: 16, top: 14, background: C.sandL, border: `1.5px solid ${C.border}`, borderRadius: 9, width: 30, height: 30, fontSize: "0.85rem", cursor: "pointer", color: C.inkM }}>✕</button>
+          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.35rem", color: C.cream2, marginBottom: 4 }}>📬 Inbox del jardín</div>
+          <div style={{ fontSize: "0.78rem", color: `${C.cream}88`, fontWeight: 600 }}>Todo lo que han hecho en Mochi</div>
+        </div>
+        <div style={{ overflowY: "auto", padding: "14px 16px 32px", flex: 1 }}>
+          {sorted.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "40px 20px", color: C.inkL, fontSize: "0.9rem" }}>
+              <div style={{ fontSize: "2rem", marginBottom: 10 }}>🌿</div>
+              <div style={{ fontWeight: 700, marginBottom: 6 }}>Aún no hay actividad</div>
+              <div>Cuando manden mensajes, registren momentos o completen ejercicios, aparecerá aquí.</div>
+            </div>
+          ) : (
+            sorted.map(item => (
+              <div key={item.id} style={{ background: C.white, borderRadius: 14, padding: "12px 14px", marginBottom: 10, border: `1.5px solid ${C.border}`, boxShadow: `0 2px 0 ${C.border}` }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <div style={{ width: 34, height: 34, borderRadius: "50%", background: `${item.color}18`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.1rem", flexShrink: 0 }}>{item.icon}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                      <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.88rem", color: C.dark, lineHeight: 1.3 }}>{item.title}</div>
+                      <span style={{ background: `${item.color}18`, color: item.color, borderRadius: 6, padding: "2px 7px", fontSize: "0.6rem", fontWeight: 800, whiteSpace: "nowrap", flexShrink: 0 }}>{item.badge}</span>
+                    </div>
+                    {item.body && <div style={{ fontSize: "0.82rem", color: C.inkM, lineHeight: 1.55, wordBreak: "break-word" }}>{item.body}</div>}
+                    {item.ts ? <div style={{ fontSize: "0.65rem", color: C.inkL, fontWeight: 700, marginTop: 6 }}>{formatDate(item.ts)}</div> : null}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+
+
 // ═══════════════════════════════════════════════
 // JARDIN SCREEN — updated with accessories + multiple items + decay
 // ═══════════════════════════════════════════════
-function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pandaBubble, onPet, onBuy, onWater, onBuyAccessory, user }) {
+function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pandaBubble, onPet, onBuy, onWater, onBuyAccessory, user, nightModeUnlocked, nightModeActive, onBuyNightMode, onToggleNightMode, messages, gratitud, momentos, exDone, lessonsDone, conoce, burbuja }) {
   const [shopTab, setShopTab] = useState("plantas");
   const [showJuegos, setShowJuegos] = useState(false);
+  const [showInbox, setShowInbox] = useState(false);
   const cats = [{id:"plantas",label:"🌿 Plantas"},{id:"agua",label:"🐟 Agua"},{id:"cielo",label:"☁️ Cielo"},{id:"deco",label:"🏮 Deco"},{id:"especial",label:"✨ Especiales"},{id:"accesorios",label:"🐼 Pandas"}];
   const shopItems = (shopTab === "accesorios"
     ? PANDA_ACCESSORIES
@@ -1819,7 +2111,15 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
               {water < 20 ? "🏜️ JARDÍN SECO" : water < 40 ? "🌱 SEDIENTO" : water < 60 ? "🌿 SANO" : water < 80 ? "🌸 FLORECIENDO" : "🌺 RADIANTE"}
             </div>
           </div>
-          <div style={{ background: C.olive, borderRadius: 10, padding: "8px 16px", fontFamily: "'Fredoka One',cursive", fontSize: "1.05rem", color: C.cream2, boxShadow: "0 3px 0 rgba(0,0,0,0.2)" }}>🌿 {bamboo}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <button
+              onClick={() => setShowInbox(true)}
+              style={{ background: C.olive, border: "none", borderRadius: 10, padding: "8px 12px", fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.cream2, cursor: "pointer", boxShadow: "0 3px 0 rgba(0,0,0,0.2)" }}
+            >
+              📬 Inbox
+            </button>
+            <div style={{ background: C.olive, borderRadius: 10, padding: "8px 16px", fontFamily: "'Fredoka One',cursive", fontSize: "1.05rem", color: C.cream2, boxShadow: "0 3px 0 rgba(0,0,0,0.2)" }}>🌿 {bamboo}</div>
+          </div>
         </div>
         {/* Bars - solo AGUA */}
         {[{l:"💧 AGUA",v:water,c:dry?"#e86030":withering?"#e8a030":C.sky}].map(b => (
@@ -1839,6 +2139,18 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
       <div style={{ position:"relative" }}>
         <SectionErrorBoundary fallback={<div style={{ background:C.white, border:`1.5px solid ${C.border}`, borderRadius:16, margin:12, padding:12, textAlign:"center", color:C.inkM, fontWeight:700 }}>No se pudo cargar esta vista del jardín. Cambia de pestaña y vuelve a intentar.</div>}>
           <GardenScene garden={garden} waterLevel={water}/>
+          {nightModeActive && (
+            <div style={{ 
+              position: "absolute", 
+              top: 0, 
+              left: 0, 
+              right: 0, 
+              bottom: 0, 
+              background: "linear-gradient(180deg, rgba(20,20,40,0.4) 0%, rgba(10,10,30,0.6) 100%)",
+              borderRadius: "0 0 20px 20px",
+              pointerEvents: "none"
+            }}/>
+          )}
           <div onClick={onPet} style={{ position:"absolute", bottom:-5, left:"50%", transform:"translateX(-50%)", cursor:"pointer",
             animation: mochiHappy ? "floatHappy 1.6s ease-in-out infinite" : "float 3s ease-in-out infinite" }}>
             <div style={{ position:"relative", display:"inline-block" }}>
@@ -1874,15 +2186,22 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
         </SectionErrorBoundary>
       </div>
 
-      {/* Water button + Games button */}
+      {/* Water button + Games button + Night Mode button */}
       <div style={{ textAlign: "center", padding: "22px 14px 6px" }}>
-        <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+        <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
           <button onClick={onWater} style={{ background: dry ? "#e86030" : C.sky, color: C.white, border: "none", borderRadius: 12,
             padding: "10px 22px", fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", cursor: "pointer",
             boxShadow: "0 3px 0 rgba(0,0,0,0.18)" }}>💧 Regar el jardín</button>
           <button onClick={() => setShowJuegos(true)} style={{ background: C.olive, color: C.cream2, border: "none", borderRadius: 12,
             padding: "10px 22px", fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", cursor: "pointer",
             boxShadow: "0 3px 0 rgba(0,0,0,0.18)" }}>🎮 Juegos</button>
+          {nightModeUnlocked && (
+            <button onClick={onToggleNightMode} style={{ background: nightModeActive ? "#4a4a6a" : "#e8d060", color: nightModeActive ? C.cream2 : C.dark, border: "none", borderRadius: 12,
+              padding: "10px 22px", fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", cursor: "pointer",
+              boxShadow: "0 3px 0 rgba(0,0,0,0.18)" }}>
+              {nightModeActive ? "🌙 Noche" : "☀️ Día"}
+            </button>
+          )}
         </div>
       </div>
 
@@ -1907,12 +2226,18 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
         <div style={{ display:"flex", gap:10, overflowX:"auto", padding:"8px 14px 20px" }}>
           {shopItems.map(item => {
             const owned = shopTab === "accesorios" ? accessories?.[item.id] : garden?.[item.id];
+            const isNightModeItem = item.id === "night_mode";
+            const nightModeOwned = isNightModeItem && nightModeUnlocked;
             const POND_DEPS = ["koi1", "koi2", "lotus_pad"];
             const pondReady = garden?.pond === true || garden?.pond === "owned";
             const locked = shopTab !== "accesorios" && POND_DEPS.includes(item.id) && !pondReady && !owned;
             return (
               <div key={item.id} onClick={() => {
                 if (locked) return;
+                if (item.id === "night_mode") {
+                  onBuyNightMode();
+                  return;
+                }
                 shopTab === "accesorios" ? onBuyAccessory(item) : onBuy(item);
               }}
                 style={{ background:owned===true?"#d4e8c4":owned==="owned"?C.cream:locked?"#f0ede8":C.sandL,
@@ -1929,7 +2254,9 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
                 <div style={{ fontSize:"0.67rem", fontWeight:800, color:C.ink, marginBottom:2, lineHeight:1.2 }}>{item.name}</div>
                 <div style={{ fontSize:"0.62rem", color:C.inkL, marginBottom:5, lineHeight:1.2 }}>{locked ? "🔒 Requiere Estanque" : item.desc}</div>
                 {shopTab !== "accesorios" ? (
-                  owned === true
+                  nightModeOwned
+                    ? <div style={{ background:C.olive, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>✓ Desbloqueado</div>
+                    : owned === true
                     ? <div style={{ background:C.olive, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>Quitar</div>
                     : owned === "owned"
                     ? <div style={{ background:C.dark, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>Poner</div>
@@ -1948,6 +2275,20 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
           })}
         </div>
       </div>
+
+      {showInbox && (
+        <InboxModal
+          user={user}
+          messages={messages}
+          gratitud={gratitud}
+          momentos={momentos}
+          exDone={exDone}
+          lessonsDone={lessonsDone}
+          conoce={conoce}
+          burbuja={burbuja}
+          onClose={() => setShowInbox(false)}
+        />
+      )}
     </div>
   );
 }
@@ -2870,8 +3211,154 @@ function Conocete({ conoce, onSave, user }) {
   );
 }
 
+// BURBUJA NEGOTIATION INBOX — timeline of proposals/counter/approvals per item
+function BurbujaInbox({ burbuja, user, onPropose, onApprove, onEditApproved }) {
+  const { nameA, nameB } = getCoupleNames(user);
+  const myRole = user?.isOwner !== false ? "owner" : "partner";
+  const partnerRole = myRole === "owner" ? "partner" : "owner";
+  const myName = myRole === "owner" ? nameA : nameB;
+  const partnerName = myRole === "owner" ? nameB : nameA;
+  const [openItem, setOpenItem] = useState(null);
+  const [draft, setDraft] = useState("");
+
+  const items = BURBUJA_SECTIONS.flatMap(sec =>
+    sec.items
+      .filter(item => {
+        const entry = burbuja[item.id] || {};
+        return entry.history?.length || entry.proposalText || entry.status === "approved";
+      })
+      .map(item => {
+        const entry = burbuja[item.id] || {};
+        const history = (entry.history || []).slice().sort((a, b) => new Date(b.at) - new Date(a.at));
+        const lastTs = history[0]?.at || entry.approvedAt || entry.updatedAt;
+        return { item, entry, history, lastTs };
+      })
+  ).sort((a, b) => new Date(b.lastTs || 0) - new Date(a.lastTs || 0));
+
+  const getEventLabel = (h) => {
+    const byName = h.by === "owner" ? nameA : nameB;
+    if (h.type === "approved") return `${byName} aprobó el acuerdo ✅`;
+    if (h.type === "counter") return `${byName} envió una contraoferta ↔`;
+    return `${byName} envió una propuesta ✉️`;
+  };
+
+  const getStatus = (entry) => {
+    if (entry.status === "approved") return { text: "Aprobado ✅", color: C.olive };
+    if (entry.status === "pending") return { text: "Negociando ↔", color: "#c7a35a" };
+    return { text: "En borrador", color: C.inkL };
+  };
+
+  return (
+    <div style={{ margin: "0 14px 10px" }}>
+      {items.length === 0 ? (
+        <div style={{ background: C.white, borderRadius: 16, padding: 16, border: `1.5px solid ${C.border}`, textAlign: "center", color: C.inkL, fontSize: "0.85rem" }}>
+          <div style={{ fontSize: "1.8rem", marginBottom: 8 }}>🫧</div>
+          <div style={{ fontWeight: 700, marginBottom: 4 }}>Aún no hay negociaciones</div>
+          <div>Cuando envíen propuestas o contraofertas, aparecerá aquí el historial.</div>
+        </div>
+      ) : (
+        items.map(({ item, entry, history }) => {
+          const isOpen = openItem === item.id;
+          const status = getStatus(entry);
+          const approvedText = entry.approvedText || entry.proposalText || "";
+          const isApproved = entry.status === "approved";
+          const pendingByMe = entry.status === "pending" && entry.proposalBy === myRole;
+          const canApprove = entry.status === "pending" && entry.proposalBy !== myRole;
+
+          return (
+            <div key={item.id} style={{ background: C.white, borderRadius: 16, padding: 14, marginBottom: 10, border: `1.5px solid ${C.border}`, boxShadow: `0 2px 0 ${C.border}` }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: `${status.color}18`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.1rem" }}>🫧</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.88rem", color: C.dark, lineHeight: 1.3 }}>{item.q}</div>
+                  <div style={{ fontSize: "0.68rem", fontWeight: 800, color: status.color, marginTop: 2 }}>{status.text}</div>
+                </div>
+                <button
+                  onClick={() => setOpenItem(isOpen ? null : item.id)}
+                  style={{ background: C.sand, border: `1.5px solid ${C.border}`, borderRadius: 8, width: 28, height: 28, cursor: "pointer", color: C.inkM, fontSize: "0.75rem" }}
+                >
+                  {isOpen ? "▲" : "▼"}
+                </button>
+              </div>
+
+              {isApproved && (
+                <div style={{ background: "#f4fff4", borderRadius: 10, padding: "10px 12px", marginBottom: 10, border: `1px solid ${C.olive}40` }}>
+                  <div style={{ fontSize: "0.65rem", fontWeight: 800, color: C.olive, marginBottom: 3, letterSpacing: "0.4px" }}>ACUERDO FINAL</div>
+                  <div style={{ fontSize: "0.85rem", color: C.ink, fontWeight: 700, lineHeight: 1.55 }}>{approvedText}</div>
+                </div>
+              )}
+
+              {isOpen && (
+                <div style={{ marginTop: 8 }}>
+                  {history.map((h, i) => (
+                    <div key={h.id || i} style={{ display: "flex", gap: 10, marginBottom: 10 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: h.type === "approved" ? C.olive : h.type === "counter" ? "#c7a35a" : C.sand, marginTop: 6, flexShrink: 0 }} />
+                      <div style={{ flex: 1, background: C.sandL, borderRadius: 10, padding: 10, border: `1px solid ${C.border}` }}>
+                        <div style={{ fontSize: "0.72rem", fontWeight: 800, color: C.inkL, marginBottom: 3 }}>{getEventLabel(h)}</div>
+                        <div style={{ fontSize: "0.83rem", color: C.ink, fontWeight: 700, lineHeight: 1.55 }}>{h.text}</div>
+                        <div style={{ fontSize: "0.62rem", color: C.inkL, marginTop: 4 }}>{new Date(h.at).toLocaleDateString("es", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {canApprove && (
+                    <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                      <Btn onClick={() => onApprove(item.id)} variant="olive" style={{ flex: 1, fontSize: "0.85rem" }}>Aprobar ✅</Btn>
+                    </div>
+                  )}
+
+                  {!isApproved && pendingByMe && (
+                    <div style={{ fontSize: "0.74rem", color: C.inkL, fontWeight: 700, marginTop: 8 }}>Esperando respuesta de {partnerName}...</div>
+                  )}
+
+                  {isApproved ? (
+                    <div style={{ marginTop: 10 }}>
+                      <TA value={draft} onChange={setDraft} placeholder="¿Quieres reabrir o ajustar este acuerdo? Escribe la nueva propuesta..." rows={2} />
+                      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 6 }}>
+                        <Btn
+                          onClick={() => {
+                            if (!draft.trim()) return;
+                            onEditApproved(item.id, draft.trim());
+                            setDraft("");
+                          }}
+                          variant="sand"
+                          style={{ padding: "8px 12px", fontSize: "0.8rem" }}
+                        >
+                          Reabrir / Editar acuerdo
+                        </Btn>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ marginTop: 10 }}>
+                      <TA value={draft} onChange={setDraft} placeholder={`Responder a ${partnerName} con una contraoferta...`} rows={2} />
+                      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 6 }}>
+                        <Btn
+                          onClick={() => {
+                            if (!draft.trim()) return;
+                            onPropose(item.id, draft.trim(), true);
+                            setDraft("");
+                          }}
+                          variant="sand"
+                          style={{ padding: "8px 12px", fontSize: "0.8rem" }}
+                        >
+                          Enviar contraoferta
+                        </Btn>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
+}
+
+
 // BURBUJA
-function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
+function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, onEditApproved, user }) {
   const { nameA, nameB } = getCoupleNames(user);
   const myRole = user?.isOwner !== false ? "owner" : "partner";
   const partnerRole = myRole === "owner" ? "partner" : "owner";
@@ -2911,7 +3398,7 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
         </div>
       </div>
       <div style={{ display: "flex", gap: 8, margin: "0 14px 10px" }}>
-        {[ ["negociacion", "Negociación"], ["acuerdos", "Acuerdos hechos"] ].map(([id, label]) => (
+        {[ ["negociacion", "Negociación"], ["inbox", "📬 Inbox"], ["acuerdos", "Acuerdos hechos"] ].map(([id, label]) => (
           <button
             key={id}
             onClick={() => setBurbujaTab(id)}
@@ -2932,6 +3419,16 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
           </button>
         ))}
       </div>
+
+      {burbujaTab === "inbox" && (
+        <BurbujaInbox
+          burbuja={burbuja}
+          user={user}
+          onPropose={onPropose}
+          onApprove={onApprove}
+          onEditApproved={onEditApproved}
+        />
+      )}
 
       {burbujaTab === "negociacion" && BURBUJA_SECTIONS.map(sec => {
         const pendingItems = sec.items.filter(item => {
@@ -5749,6 +6246,17 @@ export default function App() {
     return saved ? JSON.parse(saved) : {};
   });
   const [streakInteractions, setStreakInteractions] = useState([]);
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // NIGHT MODE STATES
+  // ═══════════════════════════════════════════════════════════════════════════════
+  const [nightModeUnlocked, setNightModeUnlocked] = useState(() => {
+    const saved = localStorage.getItem('mochi_night_mode_unlocked');
+    return saved === 'true';
+  });
+  const [nightModeActive, setNightModeActive] = useState(() => {
+    const saved = localStorage.getItem('mochi_night_mode_active');
+    return saved === 'true';
+  });
   const [streakData, setStreakData] = useState({
     currentStreak: 0,
     longestStreak: 0,
@@ -6263,6 +6771,51 @@ export default function App() {
     }
   };
 
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // NIGHT MODE FUNCTIONS
+  // ═══════════════════════════════════════════════════════════════════════════════
+  const buyNightMode = () => {
+    const NIGHT_MODE_COST = 200;
+
+    if (nightModeUnlocked) {
+      toast("¡Ya tienes el Modo Noche desbloqueado! 🌙");
+      return;
+    }
+
+    if (bamboo < NIGHT_MODE_COST) {
+      toast(`Necesitas ${NIGHT_MODE_COST} bambú para desbloquear el Modo Noche 🎋`);
+      return;
+    }
+
+    const nb = bamboo - NIGHT_MODE_COST;
+    setBamboo(nb);
+    setNightModeUnlocked(true);
+    setNightModeActive(true);
+
+    localStorage.setItem('mochi_night_mode_unlocked', 'true');
+    localStorage.setItem('mochi_night_mode_active', 'true');
+
+    toast("¡🌙 Modo Noche desbloqueado! Ahora tienes items exclusivos nocturnos en la tienda ✨");
+
+    save(null, {
+      bamboo: nb, happiness, water, garden, accessories, exDone, messages, conoce, burbuja,
+      coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos
+    });
+  };
+
+  const toggleNightMode = () => {
+    if (!nightModeUnlocked) {
+      toast("Primero debes comprar el Modo Noche en la tienda 🌙");
+      return;
+    }
+
+    const newState = !nightModeActive;
+    setNightModeActive(newState);
+    localStorage.setItem('mochi_night_mode_active', newState ? 'true' : 'false');
+
+    toast(newState ? "🌙 Modo Noche activado" : "☀️ Modo Día activado");
+  };
+
   const waterGarden = () => {
     const nw = Math.min(100, water + 10), nh = Math.min(100, happiness + 2);
     const nv = new Date().toISOString();
@@ -6532,6 +7085,43 @@ export default function App() {
     save(null, { bamboo:nextBamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja:map, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
   };
 
+  const editApprovedBurbuja = async (id, text) => {
+    const clean = (text || "").trim();
+    if (!clean) return;
+    const myRole = user?.isOwner !== false ? "owner" : "partner";
+    const prev = burbuja[id] || {};
+    const history = [...(prev.history || []), { id: Date.now(), type: "counter", by: myRole, text: clean, at: new Date().toISOString() }];
+    const next = {
+      ...prev,
+      status: "pending",
+      proposalText: clean,
+      proposalBy: myRole,
+      approvedText: null,
+      approvedBy: null,
+      approvedAt: null,
+      history,
+    };
+    const map = { ...burbuja, [id]: next };
+    setBurbuja(map);
+    trigHappy();
+    toast("Edición enviada como nueva propuesta ✉️");
+
+    if (user?.code && !user?.isGuest) {
+      await fbSaveBurbuja(user.code, id, next).catch(() => {});
+      if (user?.uid) {
+        const me = getMyName(user, "Tu pareja");
+        fbSendNotif(user.code, {
+          type: "acuerdo",
+          msg: `${me} propuso editar un acuerdo aprobado ✉️`,
+          forUid: user?.isOwner !== false ? "partner" : "owner",
+          fromUid: user.uid
+        }).catch(() => {});
+      }
+    }
+
+    save(null, { bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja:map, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
+  };
+
   const saveCoupleInfo = (info) => {
     const isNew = Object.keys(coupleInfo).length === 0;
     setCoupleInfo(info);
@@ -6739,10 +7329,10 @@ export default function App() {
     <div style={{ fontFamily:"'Nunito',sans-serif", maxWidth:480, margin:"0 auto", minHeight:"100vh", background:C.sandL, position:"relative" }}>
       <style>{STYLES}</style>
       <div style={{ paddingBottom:72 }}>
-        {tab==="jardin" && <Jardin bamboo={bamboo} happiness={happiness} water={water} garden={garden} accessories={accessories} mochiHappy={mochiHappy} pandaBubble={pandaBubble} onPet={petMochi} onBuy={buyItem} onWater={waterGarden} onBuyAccessory={buyAccessory} user={user}/>}
+        {tab==="jardin" && <Jardin bamboo={bamboo} happiness={happiness} water={water} garden={garden} accessories={accessories} mochiHappy={mochiHappy} pandaBubble={pandaBubble} onPet={petMochi} onBuy={buyItem} onWater={waterGarden} onBuyAccessory={buyAccessory} user={user} nightModeUnlocked={nightModeUnlocked} nightModeActive={nightModeActive} onBuyNightMode={buyNightMode} onToggleNightMode={toggleNightMode} messages={messages} gratitud={gratitud} momentos={momentos} exDone={exDone} lessonsDone={lessonsDone} conoce={conoce} burbuja={burbuja}/>}
         {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson}/>}
         {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user}/>}
-        {tab==="burbuja" && <Burbuja burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} user={user}/>}
+        {tab==="burbuja" && <Burbuja burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} onEditApproved={editApprovedBurbuja} user={user}/>}
         {tab==="perfil" && <Perfil user={user} bamboo={bamboo} garden={garden} accessories={accessories} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} lessonsDone={lessonsDone} coupleInfo={coupleInfo} streakInfo={streakData} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={retakeTest} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} onSendMessage={sendMsg} onClaimDailyTip={claimDailyTip} diarioEntries={diarioEntries} onSaveDiarioEntry={saveDiarioEntry}/>} 
       </div>
       <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:480, background:C.white, borderTop:`1.5px solid ${C.border}`, display:"flex", zIndex:1000, boxShadow:`0 -3px 0 ${C.line}` }}>
