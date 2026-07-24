@@ -2235,7 +2235,7 @@ function Login({ onLogin }) {
 
   return (
     <div style={{ minHeight: "100vh", background: C.sandL, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "28px 20px", fontFamily: "'Nunito',sans-serif" }}>
-      <div style={{ fontFamily: "'Quicksand',sans-serif", fontSize: "3rem", fontWeight: 700, color: C.dark, letterSpacing: "2px" }}>mochi</div>
+      <div style={{ fontFamily: "'Fredoka',sans-serif", fontSize: "3.2rem", fontWeight: 700, color: C.dark, letterSpacing: "1px" }}>mochi</div>
       <div style={{ color: C.inkL, fontWeight: 700, marginBottom: 12, fontSize: "0.85rem", letterSpacing: "0.6px" }}>TU JARDÍN DE PAREJA 🌿</div>
       <div style={{ marginBottom: 18, animation: "float 3s ease-in-out infinite" }}>
         <CouplePandaSVG size={160} happy={true} />
@@ -4141,7 +4141,7 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
           <CouplePandaSVG happy size={130} />
         </div>
-        <div style={{ fontFamily: "'Quicksand',sans-serif", fontSize: "1.75rem", fontWeight: 600, color: C.cream2 }}>{user?.names || "Nosotros"}</div>
+        <div style={{ fontFamily: "'Fredoka',sans-serif", fontSize: "1.9rem", fontWeight: 700, color: C.cream2 }}>{user?.names || "Nosotros"}</div>
         <div style={{ color: `${C.cream}88`, fontSize: "0.85rem", fontWeight: 700, marginTop: 3 }}>{user?.since && user.since !== "Juntos desde hoy" ? user.since : ""}</div>
         {coupleInfo.anniversary && <div style={{ color: C.gold, fontSize: "0.82rem", fontWeight: 700, marginTop: 4 }}>💑 {coupleInfo.anniversary}</div>}
       </div>
