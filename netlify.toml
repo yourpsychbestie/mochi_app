@@ -1,6 +1,6 @@
 [build]
   command = "npm run build"
-  publish = "build"
+  publish = "dist"
 
 # Redirecciones para páginas estáticas (deben ir antes que la catch-all)
 [[redirects]]
@@ -27,6 +27,6 @@
     Expires = "0"
 
 [[headers]]
-  for = "/static/*"
+  for = "/assets/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"

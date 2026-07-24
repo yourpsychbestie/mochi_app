@@ -1,11 +1,11 @@
 {
   "appId": "com.mochi.app",
   "appName": "Mochi",
-  "webDir": "build",
+  "webDir": "dist",
   "bundledWebRuntime": false,
   "plugins": {
     "SplashScreen": {
-      "launchShowDuration": 3000,
+      "launchShowDuration": 2500,
       "launchAutoHide": true,
       "backgroundColor": "#2d3d2d",
       "androidSplashResourceName": "splash",
@@ -14,9 +14,18 @@
       "androidSpinnerStyle": "large",
       "iosSpinnerStyle": "small",
       "spinnerColor": "#ff6b9d"
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#2d3d2d"
+    },
+    "Keyboard": {
+      "resize": "body",
+      "style": "DARK"
     }
   },
   "server": {
-    "androidScheme": "https"
+    "androidScheme": "https",
+    "iosScheme": "mochi"
   }
 }

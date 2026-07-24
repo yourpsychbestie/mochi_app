@@ -26,14 +26,33 @@ import Cuestionarios, { getQuizAdviceFromConoce } from "./Cuestionarios";
 // is actively handling a fresh registration (avoids race conditions on new sign-ups).
 let _pendingLocalAuth = false;
 
+// Lightweight toast helper usable outside the main component (e.g. copy-code buttons).
+// The main component overrides this with its own state-driven toast when mounted.
+let _showToast = (msg) => {
+  if (typeof window !== "undefined" && window.Capacitor?.Plugins?.Toast) {
+    window.Capacitor.Plugins.Toast.show({ text: msg, duration: "short" });
+    return;
+  }
+  if (typeof window !== "undefined") {
+    const el = document.createElement("div");
+    el.textContent = msg;
+    el.style.cssText = "position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:rgba(58,42,82,0.92);color:#faf7fc;padding:10px 16px;border-radius:999px;fontSize:0.85rem;z-index:9999;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,0.2);";
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2500);
+  }
+};
+
+export const setGlobalToast = (fn) => { _showToast = fn; };
+const showToast = (msg) => { if (msg) _showToast(msg); };
+
 const C = {
-  cream:"#efe6ff", cream2:"#f8f3ff", dark:"#3f2f63",
-  olive:"#6f56b8", oliveL:"#9a7cff", gold:"#c7a35a",
-  salmon:"#d88ec8", sky:"#a89de8", sand:"#dfd0ff", sandL:"#f3ecff",
-  white:"#ffffff", ink:"#32264a", inkM:"#5f4d7f", inkL:"#8e7aad",
-  border:"rgba(63,47,99,0.16)", line:"rgba(63,47,99,0.09)",
-  pink:"#efb7e8", rose:"#d26ab3",
-  mint:"#d6c9ff", teal:"#7761be",
+  cream:"#ded0f2", cream2:"#f8f3fc", dark:"#3f2f5a",
+  olive:"#8b6fc9", oliveL:"#b8a0e8", gold:"#d9a441",
+  salmon:"#e8608c", sky:"#8b9fe0", sand:"#ddc9f0", sandL:"#f3ecfb",
+  white:"#faf7fc", ink:"#3a2a52", inkM:"#6b5a87", inkL:"#9c8cb5",
+  border:"rgba(58,42,82,0.16)", line:"rgba(58,42,82,0.09)",
+  pink:"#e8c4f0", rose:"#c77fc2",
+  mint:"#c8e8c0", teal:"#4f8a6e",
 };
 
 const ls = {
@@ -249,7 +268,10 @@ class SectionErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error) {
-    console.error("Section render error:", error);
+    if (process.env.NODE_ENV !== "production") {
+      // eslint-disable-next-line no-console
+      console.error("Section render error:", error);
+    }
   }
 
   render() {
@@ -293,38 +315,26 @@ const GARDEN_ITEMS = [
   {id:"peony",    cat:"plantas", name:"Peonía",        cost:15,  desc:"Flores de primavera"},
   {id:"cherry",   cat:"plantas", name:"Cerezo",        cost:80,  desc:"Belleza efímera"},
   {id:"lily",     cat:"plantas", name:"Lirio Azul",    cost:20,  desc:"Calma y claridad"},
-  {id:"maple",    cat:"plantas", name:"Arce Rojo",     cost:75,  desc:"Hojas rojitas para otoño eterno"},
-  {id:"wisteria", cat:"plantas", name:"Glicinia",      cost:48,  desc:"Cascada de flores colgantes"},
   // Agua
   {id:"pond",     cat:"agua",    name:"Estanque",      cost:60,  desc:"Espejo del cielo"},
   {id:"koi1",     cat:"agua",    name:"Pez Koi Rojo",  cost:40,  desc:"Buena fortuna"},
   {id:"koi2",     cat:"agua",    name:"Pez Koi Dorado",cost:55,  desc:"Prosperidad"},
   {id:"lotus_pad",cat:"agua",    name:"Hoja de Loto",  cost:20,  desc:"Reposa en el agua"},
-  {id:"waterfall",cat:"agua",    name:"Cascadita",     cost:85,  desc:"El jardín suena a calma"},
-  {id:"ducks",    cat:"agua",    name:"Patitos Mandarín", cost:50, desc:"Parejita fiel en el agua"},
   // Cielo
   {id:"sun",      cat:"cielo",   name:"Sol",           cost:30,  desc:"Calienta el jardín"},
   {id:"rainbow",  cat:"cielo",   name:"Arcoíris",      cost:100, desc:"Magia después de la lluvia"},
   {id:"swallow1", cat:"cielo",   name:"Golondrina",    cost:35,  desc:"Mensajera del amor"},
   {id:"swallow2", cat:"cielo",   name:"Par de Golondrinas",cost:55,desc:"Vuelo juntos"},
   {id:"clouds",   cat:"cielo",   name:"Nubes",         cost:25,  desc:"Sueños flotantes"},
-  {id:"shooting_stars", cat:"cielo", name:"Estrellas Fugaces", cost:110, desc:"Deseos cruzando la noche"},
-  {id:"heart_cloud", cat:"cielo", name:"Nube Corazón", cost:42,  desc:"Una nube enamorada"},
   // Decoración
   {id:"lantern",  cat:"deco",    name:"Farolito",      cost:25,  desc:"Luz cálida"},
   {id:"lantern2", cat:"deco",    name:"Farolitos",     cost:40,  desc:"Noche romántica"},
   {id:"heart",    cat:"deco",    name:"Corazón",       cost:50,  desc:"Amor visible"},
   {id:"bridge",   cat:"deco",    name:"Puente",        cost:70,  desc:"Un camino juntos"},
   {id:"pagoda",   cat:"deco",    name:"Pagoda",        cost:90,  desc:"Refugio sagrado"},
-  {id:"bench",    cat:"deco",    name:"Banco de Madera", cost:55, desc:"Un rincón para ustedes"},
-  {id:"wind_chime", cat:"deco",  name:"Campanitas de Viento", cost:38, desc:"Suena suave con la brisa"},
   // Especiales
   {id:"firefly",  cat:"especial",name:"Luciérnagas",   cost:65,  desc:"Magia nocturna"},
   {id:"moongate", cat:"especial",name:"Luna Llena",    cost:120, desc:"Romance bajo la luna"},
-  {id:"aurora",   cat:"especial",name:"Aurora Nocturna", cost:140, desc:"El cielo se pinta de magia"},
-  {id:"petal_rain", cat:"especial",name:"Lluvia de Pétalos", cost:95, desc:"Flores en movimiento"},
-  // Modo Noche - desbloqueable
-  {id:"night_mode", cat:"especial", name:"🌙 Modo Noche", cost:200, desc:"¡Desbloquea el jardín nocturno!", isNightMode:true},
 ];
 
 // Regar sigue siendo acción especial
@@ -492,7 +502,7 @@ const CONOCE_CATS = {
   sueños: {
     emoji: "🌙",
     label: "Sueños",
-    bg: "#e4e8f8",
+    bg: "#f2ecd8",
     descripcion: "Compartir lo que soñamos nos acerca. No tiene que ser realista, solo honesto.",
     preguntas: [
       "¿Qué te gustaría aprender a hacer este año?",
@@ -532,7 +542,7 @@ const BURBUJA_SECTIONS = [
       {id:"fidel2",q:"¿Qué le pides al otro para sentirte seguro/a?",phA:"Para sentirme seguro/a necesito...",phB:"Para sentirme seguro/a necesito..."},
       {id:"fidel3",q:"¿Cómo manejan la privacidad (teléfonos, contraseñas)?",phA:"Para mí la privacidad significa...",phB:"Para mí la privacidad significa..."},
     ]},
-  {id:"discusion",icon:"⚡",title:"Reglas para discutir",sub:"Cómo manejar conflictos juntos",itemBg:"#e8eafc",
+  {id:"discusion",icon:"⚡",title:"Reglas para discutir",sub:"Cómo manejar conflictos juntos",itemBg:"#f5e8d4",
     items:[
       {id:"disc1",q:"Señal de 'necesito pausa' — ¿cuál es la tuya?",phA:"Cuando me desborda...",phB:"Cuando me desborda..."},
       {id:"disc2",q:"¿Qué está PROHIBIDO en una discusión entre ustedes?",phA:"Ej: gritar, traer el pasado...",phB:"Ej: insultar, silencio de días..."},
@@ -720,81 +730,80 @@ const CONSEJOS_DIARIOS = [
 
 function CouplePandaSVG({ happy = false, size = 160 }) {
   const s = size;
+  // Vectorized to match the reference character sheet exactly: light warm
+  // gray patches (not charcoal), no eye-white/shine (pupil sits directly on
+  // the patch), pill-shaped nose, peach-orange cheeks, warm brown outline.
+  // Head pivots (76,88)/(176,88) and rotation angles are load-bearing:
+  // PandaAccessoryLayer positions hats/glasses/scarves/outfits relative to
+  // these exact same anchors — keep them unchanged.
+  const INK = "#3d2b1f", WHITE = "#fefdfb", GRAY = "#6c6c76", PUPIL = "#33201a", CHEEK = "#f5a878";
   return (
     <svg viewBox="0 0 260 220" width={s} height={s * 0.846} style={{ display: "block" }}>
-      <defs>
-        <radialGradient id="bodyL" cx="45%" cy="35%" r="60%"><stop offset="0%" stopColor="#fdf9f0"/><stop offset="100%" stopColor="#ede4d0"/></radialGradient>
-        <radialGradient id="bodyR" cx="55%" cy="35%" r="60%"><stop offset="0%" stopColor="#fdf9f0"/><stop offset="100%" stopColor="#ede4d0"/></radialGradient>
-        <radialGradient id="patchL" cx="40%" cy="30%" r="65%"><stop offset="0%" stopColor="#2d3d2d"/><stop offset="100%" stopColor="#1a261a"/></radialGradient>
-        <radialGradient id="patchR" cx="60%" cy="30%" r="65%"><stop offset="0%" stopColor="#2d3d2d"/><stop offset="100%" stopColor="#1a261a"/></radialGradient>
-        <radialGradient id="tummy" cx="50%" cy="40%" r="55%"><stop offset="0%" stopColor="#fefcf6"/><stop offset="100%" stopColor="#f5eede"/></radialGradient>
-        <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="#1a261a" floodOpacity="0.12"/></filter>
-        <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#f8d0e8" floodOpacity="0.6"/></filter>
-      </defs>
-
-      <ellipse cx="82" cy="208" rx="42" ry="7" fill="#1a261a" opacity="0.08"/>
-      <path d="M52 205 C35 205 28 185 30 165 C32 145 42 132 62 128 C72 126 82 126 92 128 C112 132 122 145 122 165 C124 185 117 205 100 205 Z" fill="url(#bodyL)" filter="url(#softShadow)"/>
-      <ellipse cx="76" cy="168" rx="18" ry="22" fill="url(#tummy)" opacity="0.9"/>
-      <path d="M116 150 C128 142 142 140 150 145 C155 148 152 158 145 158 C138 158 130 155 120 158" fill="none" stroke="#1a261a" strokeWidth="16" strokeLinecap="round"/>
-      <path d="M116 150 C128 142 142 140 150 145 C155 148 152 158 145 158" fill="none" stroke="#2d3d2d" strokeWidth="13" strokeLinecap="round"/>
-      <path d="M38 158 C28 165 24 178 28 188" fill="none" stroke="#1a261a" strokeWidth="15" strokeLinecap="round"/>
-      <path d="M38 158 C28 165 24 178 28 188" fill="none" stroke="#2d3d2d" strokeWidth="12" strokeLinecap="round"/>
-      <ellipse cx="57" cy="198" rx="20" ry="12" fill="#1a261a"/>
-      <ellipse cx="57" cy="196" rx="17" ry="10" fill="#2d3d2d"/>
-      <ellipse cx="98" cy="198" rx="20" ry="12" fill="#1a261a"/>
-      <ellipse cx="98" cy="196" rx="17" ry="10" fill="#2d3d2d"/>
-      <ellipse cx="57" cy="205" rx="11" ry="6" fill="#f0e8d8" opacity="0.6"/>
-      <ellipse cx="98" cy="205" rx="11" ry="6" fill="#f0e8d8" opacity="0.6"/>
+      <ellipse cx="82" cy="208" rx="42" ry="7" fill={INK} opacity="0.1"/>
+      {/* Shoulder yoke — connects into the arms to read as one continuous cape, no seam */}
+      <path d="M44 140 C48 130 62 124 76 124 C90 124 104 130 108 140 L108 160 L44 160Z" fill={GRAY} stroke="none"/>
+      <path d="M52 205 C35 205 28 185 30 165 C32 145 42 132 62 128 C72 126 82 126 92 128 C112 132 122 145 122 165 C124 185 117 205 100 205 Z" fill={WHITE} stroke={INK} strokeWidth="4"/>
+      <ellipse cx="134" cy="150" rx="19" ry="12" fill={GRAY} stroke={INK} strokeWidth="3" transform="rotate(-15 134 150)"/>
+      <ellipse cx="30" cy="173" rx="11" ry="17" fill={GRAY} stroke={INK} strokeWidth="3" transform="rotate(12 30 173)"/>
+      <ellipse cx="57" cy="198" rx="21" ry="13" fill={INK}/>
+      <ellipse cx="57" cy="197" rx="18" ry="11" fill={GRAY}/>
+      <line x1="50" y1="203" x2="49" y2="207" stroke={INK} strokeWidth="1.6" strokeLinecap="round"/>
+      <line x1="57" y1="204" x2="57" y2="208" stroke={INK} strokeWidth="1.6" strokeLinecap="round"/>
+      <line x1="64" y1="203" x2="65" y2="207" stroke={INK} strokeWidth="1.6" strokeLinecap="round"/>
+      <ellipse cx="98" cy="198" rx="21" ry="13" fill={INK}/>
+      <ellipse cx="98" cy="197" rx="18" ry="11" fill={GRAY}/>
+      <line x1="91" y1="203" x2="90" y2="207" stroke={INK} strokeWidth="1.6" strokeLinecap="round"/>
+      <line x1="98" y1="204" x2="98" y2="208" stroke={INK} strokeWidth="1.6" strokeLinecap="round"/>
+      <line x1="105" y1="203" x2="106" y2="207" stroke={INK} strokeWidth="1.6" strokeLinecap="round"/>
 
       <g transform="rotate(6, 76, 95)">
-        <ellipse cx="76" cy="88" rx="44" ry="42" fill="url(#bodyL)" filter="url(#softShadow)"/>
-        <circle cx="42" cy="54" r="16" fill="#1a261a"/>
-        <circle cx="42" cy="54" r="10" fill="#2d3d2d"/>
-        <circle cx="110" cy="54" r="16" fill="#1a261a"/>
-        <circle cx="110" cy="54" r="10" fill="#2d3d2d"/>
-        <circle cx="42" cy="54" r="6" fill="#d87888" opacity="0.25"/>
-        <circle cx="110" cy="54" r="6" fill="#d87888" opacity="0.25"/>
-        <ellipse cx="60" cy="85" rx="13" ry="11" fill="url(#patchL)" transform="rotate(-10 60 85)"/>
-        <ellipse cx="92" cy="85" rx="13" ry="11" fill="url(#patchR)" transform="rotate(10 92 85)"/>
-        {happy ? <><path d="M53 85 Q60 92 67 85" fill="none" stroke="#fdf9f0" strokeWidth="3" strokeLinecap="round"/><path d="M85 85 Q92 92 99 85" fill="none" stroke="#fdf9f0" strokeWidth="3" strokeLinecap="round"/></> : <><ellipse cx="60" cy="86" rx="7" ry="6" fill="#fdf9f0"/><ellipse cx="92" cy="86" rx="7" ry="6" fill="#fdf9f0"/><ellipse cx="61" cy="87" rx="4.5" ry="4" fill="#1a1a2a"/><ellipse cx="93" cy="87" rx="4.5" ry="4" fill="#1a1a2a"/><circle cx="63" cy="85" r="1.6" fill="white"/><circle cx="95" cy="85" r="1.6" fill="white"/></>}
-        <ellipse cx="76" cy="97" rx="4" ry="2.8" fill="#1a261a" opacity="0.7"/>
-        {happy ? <path d="M68 104 Q72 110 76 106 Q80 110 84 104" fill="none" stroke="#1a261a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/> : <path d="M70 103 Q73 107 76 104 Q79 107 82 103" fill="none" stroke="#1a261a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>}
-        <ellipse cx="44" cy="98" rx="10" ry="6" fill="#f0907a" opacity={happy ? "0.4" : "0.15"}/>
-        <ellipse cx="108" cy="98" rx="10" ry="6" fill="#f0907a" opacity={happy ? "0.4" : "0.15"}/>
+        {/* Ears drawn BEHIND the head — only the top peeks out above the head outline */}
+        <ellipse cx="44" cy="57" rx="17" ry="16" fill={GRAY} stroke={INK} strokeWidth="3.5"/>
+        <ellipse cx="108" cy="57" rx="17" ry="16" fill={GRAY} stroke={INK} strokeWidth="3.5"/>
+        <ellipse cx="76" cy="88" rx="44" ry="42" fill={WHITE} stroke={INK} strokeWidth="4"/>
+        <ellipse cx="57" cy="84" rx="13" ry="12" fill={GRAY} stroke={INK} strokeWidth="2.5" transform="rotate(-8 57 84)"/>
+        <ellipse cx="95" cy="84" rx="13" ry="12" fill={GRAY} stroke={INK} strokeWidth="2.5" transform="rotate(8 95 84)"/>
+        {happy ? <><path d="M48 86 Q57 93 66 86" fill="none" stroke={INK} strokeWidth="3" strokeLinecap="round"/><path d="M86 86 Q95 93 104 86" fill="none" stroke={INK} strokeWidth="3" strokeLinecap="round"/></> : <><ellipse cx="59" cy="85" rx="6" ry="5.5" fill={PUPIL}/><ellipse cx="93" cy="85" rx="6" ry="5.5" fill={PUPIL}/><circle cx="61" cy="82.8" r="1.3" fill="white" opacity="0.8"/><circle cx="95" cy="82.8" r="1.3" fill="white" opacity="0.8"/></>}
+        <rect x="71" y="95" width="10" height="6" rx="3" fill={INK}/>
+        {happy ? <path d="M68 105 Q72 110 76 106 Q80 110 84 105" fill="none" stroke={INK} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/> : <path d="M68 104 Q72 109 76 105 Q80 109 84 104" fill="none" stroke={INK} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>}
+        <ellipse cx="40" cy="99" rx="11" ry="7" fill={CHEEK} opacity={happy ? "0.95" : "0.85"}/>
+        <ellipse cx="112" cy="99" rx="11" ry="7" fill={CHEEK} opacity={happy ? "0.95" : "0.85"}/>
       </g>
 
-      <ellipse cx="182" cy="208" rx="44" ry="7" fill="#1a261a" opacity="0.08"/>
-      <path d="M148 205 C131 205 124 185 126 165 C128 144 138 131 160 128 C170 126 182 126 194 128 C214 131 224 145 224 165 C226 185 219 205 202 205 Z" fill="url(#bodyR)" filter="url(#softShadow)"/>
-      <ellipse cx="176" cy="168" rx="19" ry="23" fill="url(#tummy)" opacity="0.9"/>
-      <path d="M134 148 C126 140 118 138 112 142 C108 145 110 155 116 156" fill="none" stroke="#1a261a" strokeWidth="16" strokeLinecap="round"/>
-      <path d="M134 148 C126 140 118 138 112 142 C108 145 110 155 116 156" fill="none" stroke="#2d3d2d" strokeWidth="13" strokeLinecap="round"/>
-      <path d="M218 158 C228 165 232 178 228 188" fill="none" stroke="#1a261a" strokeWidth="15" strokeLinecap="round"/>
-      <path d="M218 158 C228 165 232 178 228 188" fill="none" stroke="#2d3d2d" strokeWidth="12" strokeLinecap="round"/>
-      <ellipse cx="157" cy="198" rx="21" ry="12" fill="#1a261a"/>
-      <ellipse cx="157" cy="196" rx="18" ry="10" fill="#2d3d2d"/>
-      <ellipse cx="198" cy="198" rx="21" ry="12" fill="#1a261a"/>
-      <ellipse cx="198" cy="196" rx="18" ry="10" fill="#2d3d2d"/>
-      <ellipse cx="157" cy="205" rx="12" ry="6" fill="#f0e8d8" opacity="0.6"/>
-      <ellipse cx="198" cy="205" rx="12" ry="6" fill="#f0e8d8" opacity="0.6"/>
+      <ellipse cx="182" cy="208" rx="44" ry="7" fill={INK} opacity="0.1"/>
+      <path d="M144 140 C148 130 162 124 176 124 C190 124 204 130 208 140 L208 160 L144 160Z" fill={GRAY} stroke="none"/>
+      <path d="M148 205 C131 205 124 185 126 165 C128 144 138 131 160 128 C170 126 182 126 194 128 C214 131 224 145 224 165 C226 185 219 205 202 205 Z" fill={WHITE} stroke={INK} strokeWidth="4"/>
+      <ellipse cx="122" cy="148" rx="19" ry="12" fill={GRAY} stroke={INK} strokeWidth="3" transform="rotate(15 122 148)"/>
+      <ellipse cx="225" cy="173" rx="11" ry="17" fill={GRAY} stroke={INK} strokeWidth="3" transform="rotate(-12 225 173)"/>
+      <ellipse cx="157" cy="198" rx="22" ry="13" fill={INK}/>
+      <ellipse cx="157" cy="197" rx="19" ry="11" fill={GRAY}/>
+      <line x1="150" y1="203" x2="149" y2="207" stroke={INK} strokeWidth="1.6" strokeLinecap="round"/>
+      <line x1="157" y1="204" x2="157" y2="208" stroke={INK} strokeWidth="1.6" strokeLinecap="round"/>
+      <line x1="164" y1="203" x2="165" y2="207" stroke={INK} strokeWidth="1.6" strokeLinecap="round"/>
+      <ellipse cx="198" cy="198" rx="22" ry="13" fill={INK}/>
+      <ellipse cx="198" cy="197" rx="19" ry="11" fill={GRAY}/>
+      <line x1="191" y1="203" x2="190" y2="207" stroke={INK} strokeWidth="1.6" strokeLinecap="round"/>
+      <line x1="198" y1="204" x2="198" y2="208" stroke={INK} strokeWidth="1.6" strokeLinecap="round"/>
+      <line x1="205" y1="203" x2="206" y2="207" stroke={INK} strokeWidth="1.6" strokeLinecap="round"/>
 
       <g transform="rotate(-4, 176, 90)">
-        <ellipse cx="176" cy="88" rx="46" ry="44" fill="url(#bodyR)" filter="url(#softShadow)"/>
-        <circle cx="140" cy="52" r="17" fill="#1a261a"/>
-        <circle cx="140" cy="52" r="11" fill="#2d3d2d"/>
-        <circle cx="212" cy="52" r="17" fill="#1a261a"/>
-        <circle cx="212" cy="52" r="11" fill="#2d3d2d"/>
-        <ellipse cx="162" cy="87" rx="14" ry="12" fill="url(#patchL)" transform="rotate(-8 162 87)"/>
-        <ellipse cx="190" cy="87" rx="14" ry="12" fill="url(#patchR)" transform="rotate(8 190 87)"/>
-        {happy ? <><path d="M155 87 Q162 94 169 87" fill="none" stroke="#fdf9f0" strokeWidth="3" strokeLinecap="round"/><path d="M183 87 Q190 94 197 87" fill="none" stroke="#fdf9f0" strokeWidth="3" strokeLinecap="round"/></> : <><ellipse cx="162" cy="88" rx="7" ry="6" fill="#fdf9f0"/><ellipse cx="190" cy="88" rx="7" ry="6" fill="#fdf9f0"/><ellipse cx="163" cy="89" rx="4.5" ry="4" fill="#1a1a2a"/><ellipse cx="191" cy="89" rx="4.5" ry="4" fill="#1a1a2a"/><circle cx="165" cy="87" r="1.6" fill="white"/><circle cx="193" cy="87" r="1.6" fill="white"/></>}
-        <ellipse cx="176" cy="100" rx="4" ry="2.8" fill="#1a261a" opacity="0.7"/>
-        {happy ? <path d="M168 107 Q172 113 176 109 Q180 113 184 107" fill="none" stroke="#1a261a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/> : <path d="M170 106 Q173 110 176 107 Q179 110 182 106" fill="none" stroke="#1a261a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>}
+        <ellipse cx="140" cy="57" rx="18" ry="17" fill={GRAY} stroke={INK} strokeWidth="3.5"/>
+        <ellipse cx="212" cy="57" rx="18" ry="17" fill={GRAY} stroke={INK} strokeWidth="3.5"/>
+        <ellipse cx="176" cy="88" rx="46" ry="44" fill={WHITE} stroke={INK} strokeWidth="4"/>
+        <ellipse cx="158" cy="83" rx="11" ry="13" fill={GRAY} stroke={INK} strokeWidth="2.5" transform="rotate(-14 158 83)"/>
+        <ellipse cx="193" cy="85" rx="14" ry="12" fill={GRAY} stroke={INK} strokeWidth="2.5" transform="rotate(6 193 85)"/>
+        {happy ? <><path d="M151 85 Q158 92 165 85" fill="none" stroke={INK} strokeWidth="3" strokeLinecap="round"/><path d="M186 86 Q193 93 200 86" fill="none" stroke={INK} strokeWidth="3" strokeLinecap="round"/></> : <><ellipse cx="159" cy="84" rx="5.5" ry="5" fill={PUPIL}/><ellipse cx="195" cy="85" rx="5.5" ry="5" fill={PUPIL}/><circle cx="161" cy="81.8" r="1.2" fill="white" opacity="0.8"/><circle cx="197" cy="82.8" r="1.3" fill="white" opacity="0.8"/></>}
+        <rect x="171" y="97" width="10" height="6" rx="3" fill={INK}/>
+        <path d="M167 106 Q170 109 173 106.5 Q176 109.5 179 106.5 Q182 109 185 106" fill="none" stroke={INK} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+        <ellipse cx="140" cy="101" rx="11" ry="7" fill={CHEEK} opacity={happy ? "0.9" : "0.8"}/>
+        <ellipse cx="214" cy="103" rx="11" ry="7" fill={CHEEK} opacity={happy ? "0.9" : "0.8"}/>
       </g>
 
       {happy && (
         <>
-          <g filter="url(#softGlow)"><path d="M122 100 C122 95 126 93 130 97 C134 93 138 95 138 100 C138 106 130 115 130 115 C130 115 122 106 122 100Z" fill="#e8607a" opacity="0.95"/></g>
-          <path d="M106 78 C106 75 108 74 110 76 C112 74 114 75 114 78 C114 81 110 85 110 85 C110 85 106 81 106 78Z" fill="#f4a0b8" opacity="0.7"/>
-          <path d="M144 72 C144 70 145.5 69 147 71 C148.5 69 150 70 150 72 C150 74.5 147 78 147 78 C147 78 144 74.5 144 72Z" fill="#f4a0b8" opacity="0.6"/>
+          <path d="M122 100 C122 95 126 93 130 97 C134 93 138 95 138 100 C138 106 130 115 130 115 C130 115 122 106 122 100Z" fill="#e8604c" stroke={INK} strokeWidth="1.5" opacity="0.95"/>
+          <path d="M106 78 C106 75 108 74 110 76 C112 74 114 75 114 78 C114 81 110 85 110 85 C110 85 106 81 106 78Z" fill={CHEEK} opacity="0.85"/>
+          <path d="M144 72 C144 70 145.5 69 147 71 C148.5 69 150 70 150 72 C150 74.5 147 78 147 78 C147 78 144 74.5 144 72Z" fill={CHEEK} opacity="0.75"/>
         </>
       )}
     </svg>
@@ -802,37 +811,31 @@ function CouplePandaSVG({ happy = false, size = 160 }) {
 }
 
 function SinglePandaSVG({ size = 100 }) {
+  const INK = "#3d2b1f", WHITE = "#fefdfb", GRAY = "#6c6c76", PUPIL = "#33201a", CHEEK = "#f5a878";
   return (
     <svg viewBox="0 0 160 200" width={size} height={size * 1.25} style={{ display: "block" }}>
-      <defs><radialGradient id="sb" cx="45%" cy="35%" r="60%"><stop offset="0%" stopColor="#fdf9f0"/><stop offset="100%" stopColor="#ede4d0"/></radialGradient></defs>
-      <ellipse cx="80" cy="196" rx="38" ry="6" fill="#1a261a" opacity="0.1"/>
-      <path d="M42 195 C28 195 22 175 24 155 C26 138 38 126 58 122 C66 120 80 120 94 122 C114 126 126 138 128 155 C130 175 124 195 110 195Z" fill="url(#sb)"/>
-      <ellipse cx="76" cy="162" rx="20" ry="24" fill="#fefcf6" opacity="0.85"/>
-      <ellipse cx="57" cy="190" rx="18" ry="10" fill="#1a261a"/>
-      <ellipse cx="97" cy="190" rx="18" ry="10" fill="#1a261a"/>
-      <ellipse cx="57" cy="196" rx="12" ry="5" fill="#f0e8d8" opacity="0.5"/>
-      <ellipse cx="97" cy="196" rx="12" ry="5" fill="#f0e8d8" opacity="0.5"/>
-      <path d="M34 150 C24 158 20 172 24 180" fill="none" stroke="#1a261a" strokeWidth="13" strokeLinecap="round"/>
-      <path d="M34 150 C24 158 20 172 24 180" fill="none" stroke="#2d3d2d" strokeWidth="10" strokeLinecap="round"/>
-      <path d="M118 150 C128 158 132 172 128 180" fill="none" stroke="#1a261a" strokeWidth="13" strokeLinecap="round"/>
-      <path d="M118 150 C128 158 132 172 128 180" fill="none" stroke="#2d3d2d" strokeWidth="10" strokeLinecap="round"/>
-      <circle cx="80" cy="76" r="50" fill="url(#sb)"/>
-      <circle cx="42" cy="38" r="22" fill="#1a261a"/>
-      <circle cx="42" cy="38" r="14" fill="#2d3d2d"/>
-      <circle cx="118" cy="38" r="22" fill="#1a261a"/>
-      <circle cx="118" cy="38" r="14" fill="#2d3d2d"/>
-      <ellipse cx="62" cy="76" rx="19" ry="18" fill="#1a261a" transform="rotate(-8 62 76)"/>
-      <ellipse cx="98" cy="76" rx="19" ry="18" fill="#1a261a" transform="rotate(8 98 76)"/>
-      <circle cx="62" cy="77" r="11" fill="#fdf9f0"/>
-      <circle cx="98" cy="77" r="11" fill="#fdf9f0"/>
-      <circle cx="64" cy="78" r="7" fill="#1a1a2a"/>
-      <circle cx="100" cy="78" r="7" fill="#1a1a2a"/>
-      <circle cx="66" cy="75" r="2.8" fill="white"/>
-      <circle cx="102" cy="75" r="2.8" fill="white"/>
-      <path d="M76 94 C76 91 78 90 80 92 C82 90 84 91 84 94 C84 97 80 100 80 100 C80 100 76 97 76 94Z" fill="#1a261a" opacity="0.85"/>
-      <path d="M72 103 Q80 112 88 103" fill="none" stroke="#1a261a" strokeWidth="2.5" strokeLinecap="round"/>
-      <ellipse cx="40" cy="92" rx="14" ry="8" fill="#f0907a" opacity="0.3"/>
-      <ellipse cx="120" cy="92" rx="14" ry="8" fill="#f0907a" opacity="0.3"/>
+      <ellipse cx="80" cy="196" rx="38" ry="6" fill={INK} opacity="0.12"/>
+      <path d="M40 128 C44 118 58 112 80 112 C102 112 116 118 120 128 L120 148 L40 148Z" fill={GRAY} stroke="none"/>
+      <path d="M42 195 C28 195 22 175 24 155 C26 138 38 126 58 122 C66 120 80 120 94 122 C114 126 126 138 128 155 C130 175 124 195 110 195Z" fill={WHITE} stroke={INK} strokeWidth="4"/>
+      <ellipse cx="57" cy="190" rx="19" ry="11" fill={INK}/>
+      <ellipse cx="57" cy="189" rx="16" ry="9" fill={GRAY}/>
+      <ellipse cx="97" cy="190" rx="19" ry="11" fill={INK}/>
+      <ellipse cx="97" cy="189" rx="16" ry="9" fill={GRAY}/>
+      <ellipse cx="26" cy="165" rx="10" ry="16" fill={GRAY} stroke={INK} strokeWidth="3" transform="rotate(12 26 165)"/>
+      <ellipse cx="126" cy="165" rx="10" ry="16" fill={GRAY} stroke={INK} strokeWidth="3" transform="rotate(-12 126 165)"/>
+      <ellipse cx="46" cy="42" rx="19" ry="18" fill={GRAY} stroke={INK} strokeWidth="3.5"/>
+      <ellipse cx="114" cy="42" rx="19" ry="18" fill={GRAY} stroke={INK} strokeWidth="3.5"/>
+      <circle cx="80" cy="76" r="50" fill={WHITE} stroke={INK} strokeWidth="4"/>
+      <ellipse cx="59" cy="76" rx="15" ry="14" fill={GRAY} stroke={INK} strokeWidth="2.5" transform="rotate(-8 59 76)"/>
+      <ellipse cx="101" cy="76" rx="15" ry="14" fill={GRAY} stroke={INK} strokeWidth="2.5" transform="rotate(8 101 76)"/>
+      <circle cx="62" cy="77" r="6.5" fill={PUPIL}/>
+      <circle cx="104" cy="77" r="6.5" fill={PUPIL}/>
+      <circle cx="64.5" cy="74.5" r="1.6" fill="white" opacity="0.8"/>
+      <circle cx="106.5" cy="74.5" r="1.6" fill="white" opacity="0.8"/>
+      <rect x="75" y="92" width="10" height="6" rx="3" fill={INK}/>
+      <path d="M72 103 Q80 112 88 103" fill="none" stroke={INK} strokeWidth="2.6" strokeLinecap="round"/>
+      <ellipse cx="38" cy="92" rx="14" ry="8.5" fill={CHEEK} opacity="0.85"/>
+      <ellipse cx="122" cy="92" rx="14" ry="8.5" fill={CHEEK} opacity="0.85"/>
     </svg>
   );
 }
@@ -854,7 +857,7 @@ function Btn({ children, onClick, disabled, variant = "dark", style = {} }) {
   const v = V[variant] || V.dark;
   return (
     <button onClick={disabled ? undefined : onClick}
-      style={{ fontFamily: "'Fredoka One',cursive", letterSpacing: "0.4px", background: v.bg, color: v.fg, border: v.border || "none", borderRadius: 12, padding: "12px 24px", fontSize: "0.98rem", cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.4 : 1, boxShadow: disabled ? "none" : "0 3px 0 rgba(0,0,0,0.18)", transition: "transform 0.12s", ...style }}
+      style={{ fontFamily: "'Baloo 2',sans-serif", letterSpacing: "0.4px", background: v.bg, color: v.fg, border: v.border || "none", borderRadius: 12, padding: "12px 24px", fontSize: "0.98rem", cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.4 : 1, boxShadow: disabled ? "none" : "0 3px 0 rgba(0,0,0,0.18)", transition: "transform 0.12s", ...style }}
       onMouseDown={e => { e.currentTarget.style.transform = "translateY(2px)"; e.currentTarget.style.boxShadow = "0 1px 0 rgba(0,0,0,0.18)"; }}
       onMouseUp={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 3px 0 rgba(0,0,0,0.18)"; }}>
       {children}
@@ -887,7 +890,7 @@ function PBadge({ who = "A", name }) {
 
 function ScreenTop({ title, sub, bg }) {
   return <div style={{ background: bg || C.dark, padding: "48px 20px 24px", textAlign: "center" }}>
-    <h1 style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.9rem", color: C.cream2, margin: 0, letterSpacing: "0.5px" }}>{title}</h1>
+    <h1 style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.9rem", color: C.cream2, margin: 0, letterSpacing: "0.5px" }}>{title}</h1>
     {sub && <p style={{ color: `${C.cream}88`, fontSize: "0.86rem", fontWeight: 600, margin: "4px 0 0" }}>{sub}</p>}
   </div>;
 }
@@ -1013,15 +1016,11 @@ function GardenItemIcon({ id, size = 38 }) {
     peony: (<svg viewBox="0 0 44 52" width={s} height={s}><rect x="20" y="28" width="5" height="22" rx="2.5" fill="#5a7e3c"/><ellipse cx="22" cy="16" rx="14" ry="12" fill="#d4a0d8"/><ellipse cx="22" cy="18" rx="10" ry="9" fill="#e0b8e8"/><ellipse cx="22" cy="20" rx="6" ry="6" fill="#f0d0f4"/><ellipse cx="22" cy="21" rx="3" ry="3" fill="#f8e0a0"/><ellipse cx="12" cy="22" rx="8" ry="10" fill="#c890cc" transform="rotate(20 12 22)" opacity="0.7"/><ellipse cx="32" cy="22" rx="8" ry="10" fill="#c890cc" transform="rotate(-20 32 22)" opacity="0.7"/></svg>),
     cherry: (<svg viewBox="0 0 52 52" width={s} height={s}><rect x="23" y="30" width="7" height="20" rx="3" fill="#9a7848"/><circle cx="26" cy="22" r="16" fill="#f4a8b8" opacity="0.8"/><circle cx="14" cy="28" r="11" fill="#f8b8c8" opacity="0.8"/><circle cx="38" cy="27" r="12" fill="#f0a0b0" opacity="0.8"/>{[16,24,32,20,28,22,30].map((x,i)=><circle key={i} cx={x} cy={15+i*2} r="2" fill="#f4d0d8" opacity="0.7"/>)}</svg>),
     lily: (<svg viewBox="0 0 40 50" width={s} height={s}><rect x="18" y="26" width="5" height="22" rx="2.5" fill="#5a7e3c"/>{[0,60,120,180,240,300].map((a,i)=><ellipse key={i} cx={20+Math.cos(a*Math.PI/180)*11} cy={18+Math.sin(a*Math.PI/180)*9} rx="7" ry="11" fill={i%2===0?"#8ab8e8":"#a8ccf0"} transform={`rotate(${a} ${20+Math.cos(a*Math.PI/180)*11} ${18+Math.sin(a*Math.PI/180)*9})`} opacity="0.85"/>)}<circle cx="20" cy="18" r="5" fill="#f8e060"/></svg>),
-    maple: (<svg viewBox="0 0 44 48" width={s} height={s}><rect x="20" y="24" width="4" height="22" rx="2" fill="#8e6a3f"/><path d="M22 24 L10 14 L14 26 L4 22 L16 30 L6 36 L18 32 L22 44 L26 32 L38 36 L28 30 L40 22 L30 26 L34 14 Z" fill="#d5563a"/></svg>),
-    wisteria: (<svg viewBox="0 0 40 50" width={s} height={s}><line x1="4" y1="4" x2="36" y2="4" stroke="#7f6a48" strokeWidth="3"/>{[10,20,30].map((x,i)=><g key={x}><path d={`M${x} 4 Q${x-3} 16 ${x} 30`} fill="none" stroke="#6aa049" strokeWidth="2"/><ellipse cx={x} cy={34} rx="4" ry="7" fill={i%2===0?"#c4b0ef":"#b596de"}/></g>)}</svg>),
     // Agua
     pond: (<svg viewBox="0 0 52 32" width={s} height={s*0.62}><ellipse cx="26" cy="18" rx="24" ry="12" fill="#7ac8b8" opacity="0.7"/><ellipse cx="26" cy="16" rx="20" ry="9" fill="#a8d8e8" opacity="0.6"/><ellipse cx="18" cy="18" rx="7" ry="5" fill="#6ab830" opacity="0.8"/><circle cx="18" cy="15" r="2.5" fill="#e8607a" opacity="0.9"/><ellipse cx="35" cy="20" rx="5" ry="3.5" fill="#6ab830" opacity="0.7"/>{[14,22,30,38].map((x,i)=><ellipse key={i} cx={x} cy={22+i%2} rx="2.5" ry="1.5" fill="#88c8d8" opacity="0.5"/>)}</svg>),
     koi1: (<svg viewBox="0 0 44 28" width={s} height={s*0.64}><ellipse cx="22" cy="14" rx="16" ry="8" fill="#e86040"/><ellipse cx="18" cy="14" rx="12" ry="6" fill="#f07848"/><path d="M6 14 Q2 8 0 14 Q2 20 6 14Z" fill="#e05030"/><circle cx="30" cy="12" r="2.5" fill="white"/><circle cx="30" cy="12" r="1.2" fill="#1a1a1a"/><path d="M12 8 Q16 4 20 8" fill="none" stroke="#f8a870" strokeWidth="1.5" opacity="0.6"/><path d="M12 20 Q16 24 20 20" fill="none" stroke="#f8a870" strokeWidth="1.5" opacity="0.6"/></svg>),
     koi2: (<svg viewBox="0 0 44 28" width={s} height={s*0.64}><ellipse cx="22" cy="14" rx="16" ry="8" fill="#d4a843"/><ellipse cx="18" cy="14" rx="12" ry="6" fill="#e8c060"/><path d="M6 14 Q2 8 0 14 Q2 20 6 14Z" fill="#c89830"/><circle cx="30" cy="12" r="2.5" fill="white"/><circle cx="30" cy="12" r="1.2" fill="#1a1a1a"/><circle cx="20" cy="10" r="2" fill="#e86040" opacity="0.7"/><circle cx="24" cy="16" r="1.5" fill="#e86040" opacity="0.6"/></svg>),
     lotus_pad: (<svg viewBox="0 0 44 28" width={s} height={s*0.64}><ellipse cx="22" cy="16" rx="20" ry="11" fill="#5a9840" opacity="0.85"/><ellipse cx="22" cy="16" rx="16" ry="8" fill="#6aac48" opacity="0.8"/><path d="M22 5 L22 16" stroke="#4a8030" strokeWidth="1.5"/>{[30,60,90,120,150,210,240,270,300,330].map((a,i)=><path key={i} d={`M22 16 L${22+Math.cos(a*Math.PI/180)*18} ${16+Math.sin(a*Math.PI/180)*10}`} stroke="#4a8030" strokeWidth="1" opacity="0.5"/>)}<circle cx="28" cy="8" r="4" fill="#f4a8b8" opacity="0.9"/><circle cx="28" cy="8" r="2.5" fill="#f8c4cc"/></svg>),
-    waterfall: (<svg viewBox="0 0 44 48" width={s} height={s}><path d="M12 48 C14 32 18 20 22 4 L30 4 C26 20 24 32 24 48Z" fill="#9e8960"/><path d="M20 4 C22 18 20 32 18 48" fill="none" stroke={"#80c8ea"} strokeWidth="6" strokeLinecap="round" opacity="0.85"/><ellipse cx="18" cy="48" rx="16" ry="5" fill="#90d8f0" opacity="0.6"/></svg>),
-    ducks: (<svg viewBox="0 0 48 28" width={s} height={s*0.58}><ellipse cx="14" cy="18" rx="10" ry="6" fill="#f2c487"/><circle cx="20" cy="14" r="3.8" fill="#f2c487"/><path d="M23 14 L28 16 L23 18Z" fill="#dd8734"/><ellipse cx="34" cy="22" rx="10" ry="6" fill="#eab670"/><circle cx="40" cy="18" r="3.8" fill="#eab670"/><path d="M43 18 L48 20 L43 22Z" fill="#d87727"/></svg>),
     // Cielo
     sun: (<svg viewBox="0 0 48 48" width={s} height={s}>
       {[0,30,60,90,120,150,180,210,240,270,300,330].map(a=>(
@@ -1069,22 +1068,15 @@ function GardenItemIcon({ id, size = 38 }) {
       <ellipse cx="40" cy="18" rx="11" ry="7" fill="white" opacity="0.9"/>
       <ellipse cx="28" cy="19" rx="21" ry="9" fill="none" stroke="#d5e0e8" strokeWidth="1" opacity="0.7"/>
     </svg>),
-    shooting_stars: (<svg viewBox="0 0 52 36" width={s} height={s*0.69}><path d="M8 8 L36 18" stroke="#ffe08a" strokeWidth="3" strokeLinecap="round" opacity="0.85"/><path d="M38 6 L56 14" stroke="#ffd068" strokeWidth="2.5" strokeLinecap="round" opacity="0.8"/><path d="M18 22 L40 30" stroke="#ffefb8" strokeWidth="2.5" strokeLinecap="round" opacity="0.85"/></svg>),
-    heart_cloud: (<svg viewBox="0 0 44 34" width={s} height={s*0.77}><path d="M22 30 C22 30 6 20 6 10 C6 4 11 1 16 3 C19 4 22 8 22 8 C22 8 25 4 28 3 C33 1 38 4 38 10 C38 20 22 30 22 30Z" fill="white" opacity="0.95"/></svg>),
     // Decoración
     lantern: (<svg viewBox="0 0 32 50" width={s} height={s}><rect x="14" y="2" width="4" height="7" rx="2" fill="#9a7848"/><rect x="10" y="12" width="12" height="22" rx="6" fill="#e86030"/><rect x="12" y="12" width="8" height="22" rx="4" fill="#f08050" opacity="0.7"/><ellipse cx="16" cy="12" rx="7" ry="3" fill="#9a7848"/><ellipse cx="16" cy="34" rx="7" ry="3" fill="#9a7848"/><rect x="14" y="34" width="4" height="8" rx="2" fill="#9a7848"/><circle cx="16" cy="23" r="4" fill="#f8e060" opacity="0.5"/></svg>),
     lantern2: (<svg viewBox="0 0 52 50" width={s} height={s}><line x1="8" y1="0" x2="44" y2="0" stroke="#9a7848" strokeWidth="2"/><line x1="16" y1="0" x2="12" y2="10" stroke="#9a7848" strokeWidth="1.5"/><line x1="36" y1="0" x2="40" y2="10" stroke="#9a7848" strokeWidth="1.5"/><rect x="6" y="10" width="10" height="18" rx="5" fill="#e86030"/><rect x="8" y="10" width="6" height="18" rx="3" fill="#f08050" opacity="0.7"/><ellipse cx="11" cy="10" rx="6" ry="2.5" fill="#9a7848"/><ellipse cx="11" cy="28" rx="6" ry="2.5" fill="#9a7848"/><rect x="30" y="10" width="10" height="18" rx="5" fill="#d4408a"/><rect x="32" y="10" width="6" height="18" rx="3" fill="#e060a0" opacity="0.7"/><ellipse cx="35" cy="10" rx="6" ry="2.5" fill="#9a7848"/><ellipse cx="35" cy="28" rx="6" ry="2.5" fill="#9a7848"/></svg>),
     heart: (<svg viewBox="0 0 40 36" width={s} height={s*0.9}><path d="M20 32 C20 32 3 20 3 10 C3 4 8 1 13 3.5 C16 4.5 20 8.5 20 8.5 C20 8.5 24 4.5 27 3.5 C32 1 37 4 37 10 C37 20 20 32 20 32Z" fill="#e8607a"/><path d="M20 26 C20 26 8 18 8 13 C8 10 10 8 12 9 C14 10 20 14 20 14" fill="#f4a8c0" opacity="0.5"/></svg>),
     bridge: (<svg viewBox="0 0 52 30" width={s} height={s*0.58}><path d="M2 22 Q26 4 50 22" fill="none" stroke="#9a7848" strokeWidth="4" strokeLinecap="round"/><line x1="2" y1="22" x2="2" y2="28" stroke="#8a6838" strokeWidth="3"/><line x1="50" y1="22" x2="50" y2="28" stroke="#8a6838" strokeWidth="3"/>{[10,18,26,34,42].map(x=><line key={x} x1={x} y1={16+(x-26)**2/200} x2={x} y2={28} stroke="#8a6838" strokeWidth="2"/>)}<path d="M0 28 L52 28" stroke="#8a6838" strokeWidth="3"/></svg>),
-    bench: (<svg viewBox="0 0 44 30" width={s} height={s*0.68}><rect x="4" y="14" width="36" height="5" rx="2" fill="#9b7a4a"/><rect x="4" y="20" width="36" height="4" rx="2" fill="#8c6a3f"/><rect x="8" y="24" width="4" height="6" rx="2" fill="#7c5c35"/><rect x="32" y="24" width="4" height="6" rx="2" fill="#7c5c35"/></svg>),
-    wind_chime: (<svg viewBox="0 0 36 44" width={s} height={s}><line x1="4" y1="4" x2="32" y2="4" stroke="#9a7848" strokeWidth="2.5"/>{[10,18,26].map((x,i)=><g key={x}><line x1={x} y1="4" x2={x} y2={18+i*2} stroke="#9a7848" strokeWidth="1.5"/><rect x={x-3} y={18+i*2} width="6" height="11" rx="2" fill={i===1?"#c89058":"#d8a85f"}/></g>)}<line x1="18" y1="20" x2="18" y2="34" stroke="#9a7848" strokeWidth="1.4"/><ellipse cx="18" cy="36" rx="6" ry="2.5" fill="#f0d090"/></svg>),
     pagoda: (<svg viewBox="0 0 44 52" width={s} height={s}><rect x="16" y="46" width="12" height="5" rx="1" fill="#c07840"/><rect x="12" y="38" width="20" height="9" rx="1" fill="#d08848"/><path d="M6 38 L22 28 L38 38Z" fill="#c07040"/><rect x="14" y="28" width="16" height="11" rx="1" fill="#d08848"/><path d="M10 28 L22 18 L34 28Z" fill="#c07040"/><rect x="16" y="18" width="12" height="11" rx="1" fill="#d08848"/><path d="M14 18 L22 8 L30 18Z" fill="#c07040"/><rect x="20" y="2" width="4" height="8" rx="1" fill="#e8a030"/></svg>),
     // Especiales
     firefly: (<svg viewBox="0 0 48 48" width={s} height={s}><circle cx="24" cy="24" r="20" fill="#1a2a1a" opacity="0.2"/>{[[12,15],[30,10],[8,30],[36,28],[20,36],[38,18],[16,22],[28,34]].map(([x,y],i)=><g key={i}><circle cx={x} cy={y} r="2.5" fill="#f8e840" opacity="0.9"/><circle cx={x} cy={y} r="4" fill="#f8e840" opacity="0.25"/></g>)}</svg>),
     moongate: (<svg viewBox="0 0 52 52" width={s} height={s}><circle cx="26" cy="22" r="20" fill="none" stroke="#f8e0a0" strokeWidth="3"/><path d="M6 40 L6 22 A20 20 0 0 1 46 22 L46 40" fill="#f8e0a0" opacity="0.1" stroke="#f8e0a0" strokeWidth="2"/><circle cx="26" cy="22" r="16" fill="#1a2a3a" opacity="0.5"/><circle cx="26" cy="22" r="15" fill="none"/>{[5,4,3,2].map((r,i)=><circle key={i} cx={26-r} cy={18+r} r={r} fill="#f8e0a0" opacity={0.4-i*0.08}/>)}<path d="M6 42 L6 52 L46 52 L46 42" fill="#7ab848" opacity="0.8"/></svg>),
-    aurora: (<svg viewBox="0 0 56 40" width={s} height={s*0.71}><path d="M0 22 Q28 4 56 16" fill="none" stroke="#77d8c6" strokeWidth="7" opacity="0.35" strokeLinecap="round"/><path d="M0 16 Q28 0 56 10" fill="none" stroke="#8fb8f2" strokeWidth="5" opacity="0.3" strokeLinecap="round"/><path d="M0 28 Q28 12 56 22" fill="none" stroke="#c4a8ef" strokeWidth="5" opacity="0.28" strokeLinecap="round"/></svg>),
-    petal_rain: (<svg viewBox="0 0 52 40" width={s} height={s*0.77}>{[[10,10],[22,6],[34,12],[46,8],[14,22],[26,18],[38,24],[18,32],[30,28],[42,34]].map(([x,y],i)=><ellipse key={i} cx={x} cy={y} rx="3" ry="5" fill={i%2===0?"#f4a8b8":"#f8c4d0"} transform={`rotate(${i%2===0?20:-20} ${x} ${y})`} opacity="0.85"/>)}</svg>),
-    night_mode: (<svg viewBox="0 0 44 44" width={s} height={s}><circle cx="22" cy="22" r="18" fill="none" stroke="#4a4a6a" strokeWidth="3"/><path d="M28 10 A14 14 0 1 1 18 36 A18 18 0 0 0 28 10Z" fill="#e8d060"/></svg>),
   };
   return icons[id] || <svg viewBox="0 0 40 40" width={s} height={s}><circle cx="20" cy="20" r="16" fill={C.sand}/></svg>;
 }
@@ -1133,7 +1125,7 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
             <g key={i} transform={`translate(${x},${y})`}>
               {[0,72,144,216,288].map((a,j) => (
                 <ellipse key={j} cx={Math.cos(a*Math.PI/180)*5} cy={Math.sin(a*Math.PI/180)*5}
-                  rx="4" ry="2.5" fill={[["#ffb8cc","#ffe0ea"],["#f4c860","#ffe898"],["#c8b8f8","#e8d8ff"],["#ffb8cc","#ffe0ea"]][i][j%2]}
+                  rx="4" ry="2.5" fill={[["#ffb8cc","#ffe0ea"],["#f4c860","#ffe898"],["#c8b8f8","#dcecc4"],["#ffb8cc","#ffe0ea"]][i][j%2]}
                   transform={`rotate(${a})`} opacity="0.95"/>
               ))}
               <circle cx="0" cy="0" r="3.5" fill="#fff8d0"/>
@@ -1205,58 +1197,58 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
       {/* GLASSES: HEART */}
       {owned.glasses_heart && (
         <g transform="rotate(6, 76, 88) translate(76, 84)">
-          <path d="M-20 -1 C-20 -5 -17 -7 -14 -4 C-11 -7 -8 -5 -8 -1 C-8 3 -14 8 -14 8 C-14 8 -20 3 -20 -1Z" fill="#ff84a7" stroke="#b93d62" strokeWidth="1.5"/>
-          <path d="M8 -1 C8 -5 11 -7 14 -4 C17 -7 20 -5 20 -1 C20 3 14 8 14 8 C14 8 8 3 8 -1Z" fill="#ff84a7" stroke="#b93d62" strokeWidth="1.5"/>
-          <line x1="-8" y1="0" x2="8" y2="0" stroke="#b93d62" strokeWidth="2" strokeLinecap="round"/>
-          <line x1="-20" y1="0" x2="-29" y2="-2" stroke="#b93d62" strokeWidth="2" strokeLinecap="round"/>
-          <line x1="20" y1="0" x2="29" y2="-2" stroke="#b93d62" strokeWidth="2" strokeLinecap="round"/>
+          <path d="M-25 -1 C-25 -5 -22 -7 -19 -4 C-16 -7 -13 -5 -13 -1 C-13 3 -19 8 -19 8 C-19 8 -25 3 -25 -1Z" fill="#ff84a7" stroke="#b93d62" strokeWidth="1.5"/>
+          <path d="M13 -1 C13 -5 16 -7 19 -4 C22 -7 25 -5 25 -1 C25 3 19 8 19 8 C19 8 13 3 13 -1Z" fill="#ff84a7" stroke="#b93d62" strokeWidth="1.5"/>
+          <line x1="-13" y1="0" x2="13" y2="0" stroke="#b93d62" strokeWidth="2" strokeLinecap="round"/>
+          <line x1="-25" y1="0" x2="-34" y2="-2" stroke="#b93d62" strokeWidth="2" strokeLinecap="round"/>
+          <line x1="25" y1="0" x2="34" y2="-2" stroke="#b93d62" strokeWidth="2" strokeLinecap="round"/>
         </g>
       )}
 
       {/* GLASSES: SUNGLASSES */}
       {owned.glasses_sun && (
         <g transform="rotate(6, 76, 88) translate(76, 84)">
-          <rect x="-24" y="-7" width="16" height="11" rx="5.5" fill="#1b2230"/>
-          <rect x="8" y="-7" width="16" height="11" rx="5.5" fill="#1b2230"/>
-          <line x1="-8" y1="-1" x2="8" y2="-1" stroke="#2f3540" strokeWidth="2" strokeLinecap="round"/>
-          <line x1="-24" y1="-2" x2="-32" y2="-3" stroke="#2f3540" strokeWidth="2" strokeLinecap="round"/>
-          <line x1="24" y1="-2" x2="32" y2="-3" stroke="#2f3540" strokeWidth="2" strokeLinecap="round"/>
-          <rect x="-21" y="-5" width="5" height="3" rx="1.5" fill="#ffffff" opacity="0.18"/>
-          <rect x="11" y="-5" width="5" height="3" rx="1.5" fill="#ffffff" opacity="0.18"/>
+          <rect x="-27" y="-7" width="16" height="11" rx="5.5" fill="#1b2230"/>
+          <rect x="11" y="-7" width="16" height="11" rx="5.5" fill="#1b2230"/>
+          <line x1="-11" y1="-1" x2="11" y2="-1" stroke="#2f3540" strokeWidth="2" strokeLinecap="round"/>
+          <line x1="-27" y1="-2" x2="-35" y2="-3" stroke="#2f3540" strokeWidth="2" strokeLinecap="round"/>
+          <line x1="27" y1="-2" x2="35" y2="-3" stroke="#2f3540" strokeWidth="2" strokeLinecap="round"/>
+          <rect x="-24" y="-5" width="5" height="3" rx="1.5" fill="#ffffff" opacity="0.18"/>
+          <rect x="14" y="-5" width="5" height="3" rx="1.5" fill="#ffffff" opacity="0.18"/>
         </g>
       )}
 
       {owned.glasses_round && (
         <g transform="rotate(6, 76, 88) translate(76, 84)">
-          <circle cx="-12" cy="-1" r="7.2" fill="none" stroke="#6a6f78" strokeWidth="2"/>
-          <circle cx="12" cy="-1" r="7.2" fill="none" stroke="#6a6f78" strokeWidth="2"/>
-          <line x1="-4.8" y1="-1" x2="4.8" y2="-1" stroke="#6a6f78" strokeWidth="1.8" strokeLinecap="round"/>
-          <line x1="-19" y1="-2" x2="-27" y2="-3" stroke="#6a6f78" strokeWidth="1.8" strokeLinecap="round"/>
-          <line x1="19" y1="-2" x2="27" y2="-3" stroke="#6a6f78" strokeWidth="1.8" strokeLinecap="round"/>
+          <circle cx="-19" cy="-1" r="7.2" fill="none" stroke="#6a6f78" strokeWidth="2"/>
+          <circle cx="19" cy="-1" r="7.2" fill="none" stroke="#6a6f78" strokeWidth="2"/>
+          <line x1="-11.8" y1="-1" x2="11.8" y2="-1" stroke="#6a6f78" strokeWidth="1.8" strokeLinecap="round"/>
+          <line x1="-26" y1="-2" x2="-34" y2="-3" stroke="#6a6f78" strokeWidth="1.8" strokeLinecap="round"/>
+          <line x1="26" y1="-2" x2="34" y2="-3" stroke="#6a6f78" strokeWidth="1.8" strokeLinecap="round"/>
         </g>
       )}
 
       {owned.glasses_clear && (
         <g transform="rotate(6, 76, 88) translate(76, 84)">
-          <rect x="-22" y="-7" width="14" height="11" rx="4" fill="#d9eef9" opacity="0.35" stroke="#7891a0" strokeWidth="1.6"/>
-          <rect x="8" y="-7" width="14" height="11" rx="4" fill="#d9eef9" opacity="0.35" stroke="#7891a0" strokeWidth="1.6"/>
-          <line x1="-8" y1="-1" x2="8" y2="-1" stroke="#7891a0" strokeWidth="1.8" strokeLinecap="round"/>
-          <line x1="-22" y1="-2" x2="-30" y2="-3" stroke="#7891a0" strokeWidth="1.8" strokeLinecap="round"/>
-          <line x1="22" y1="-2" x2="30" y2="-3" stroke="#7891a0" strokeWidth="1.8" strokeLinecap="round"/>
+          <rect x="-26" y="-7" width="14" height="11" rx="4" fill="#d9eef9" opacity="0.35" stroke="#7891a0" strokeWidth="1.6"/>
+          <rect x="12" y="-7" width="14" height="11" rx="4" fill="#d9eef9" opacity="0.35" stroke="#7891a0" strokeWidth="1.6"/>
+          <line x1="-12" y1="-1" x2="12" y2="-1" stroke="#7891a0" strokeWidth="1.8" strokeLinecap="round"/>
+          <line x1="-26" y1="-2" x2="-34" y2="-3" stroke="#7891a0" strokeWidth="1.8" strokeLinecap="round"/>
+          <line x1="26" y1="-2" x2="34" y2="-3" stroke="#7891a0" strokeWidth="1.8" strokeLinecap="round"/>
         </g>
       )}
 
       {owned.glasses_star && (
         <g transform="rotate(6, 76, 88) translate(76, 84)">
-          <path d="M-13 -8 L-11 -3 L-6 -3 L-10 -0.5 L-8.5 4.5 L-13 2 L-17.5 4.5 L-16 -0.5 L-20 -3 L-15 -3Z" fill="#ffd76a" stroke="#c28d1f" strokeWidth="1.2"/>
-          <path d="M13 -8 L15 -3 L20 -3 L16 -0.5 L17.5 4.5 L13 2 L8.5 4.5 L10 -0.5 L6 -3 L11 -3Z" fill="#ffd76a" stroke="#c28d1f" strokeWidth="1.2"/>
-          <line x1="-6" y1="-1" x2="6" y2="-1" stroke="#c28d1f" strokeWidth="1.8" strokeLinecap="round"/>
+          <path d="M-19 -8 L-17 -3 L-12 -3 L-16 -0.5 L-14.5 4.5 L-19 2 L-23.5 4.5 L-22 -0.5 L-26 -3 L-21 -3Z" fill="#ffd76a" stroke="#c28d1f" strokeWidth="1.2"/>
+          <path d="M19 -8 L21 -3 L26 -3 L22 -0.5 L23.5 4.5 L19 2 L14.5 4.5 L16 -0.5 L12 -3 L17 -3Z" fill="#ffd76a" stroke="#c28d1f" strokeWidth="1.2"/>
+          <line x1="-12" y1="-1" x2="12" y2="-1" stroke="#c28d1f" strokeWidth="1.8" strokeLinecap="round"/>
         </g>
       )}
 
       {/* ACC: BOW */}
       {owned.acc_bow && (
-        <g transform="rotate(6, 76, 88) translate(106, 60)">
+        <g transform="rotate(6, 76, 88) translate(108, 54)">
           <path d="M-12 0 C-18 -8 -24 -10 -20 -2 C-16 6 -6 4 0 0Z" fill="#ffb8d0"/>
           <path d="M12 0 C18 -8 24 -10 20 -2 C16 6 6 4 0 0Z" fill="#ff90b8"/>
           <circle cx="0" cy="0" r="5" fill="#ffcce0"/>
@@ -1294,7 +1286,7 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
       {owned.outfit_kimono && (
         <g>
           {/* Left panda kimono */}
-          <path d="M38 140 C34 150 32 170 34 195 C40 200 70 202 114 195 C116 170 114 150 110 140 C100 132 88 130 76 130 C64 130 52 132 38 140Z"
+          <path d="M34 140 C29 150 27 172 30 198 C38 203 70 205 118 198 C121 172 119 150 114 140 C102 131 88 129 76 129 C64 129 50 131 34 140Z"
             fill="#d4508a" opacity="0.92"/>
           {/* Collar fold */}
           <path d="M60 130 L76 155 L92 130" fill="none" stroke="#faeaf4" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
@@ -1308,7 +1300,7 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
             <circle key={i} cx={x} cy={y} r="2.5" fill="#f4a0c8" opacity="0.5"/>
           ))}
           {/* Right panda kimono */}
-          <path d="M138 140 C134 150 132 170 134 195 C140 200 170 202 214 195 C216 170 214 150 210 140 C200 132 188 130 176 130 C164 130 152 132 138 140Z"
+          <path d="M134 140 C129 150 127 172 130 198 C138 203 170 205 218 198 C221 172 219 150 214 140 C202 131 188 129 176 129 C164 129 150 131 134 140Z"
             fill="#508ad4" opacity="0.92"/>
           <path d="M160 130 L176 155 L192 130" fill="none" stroke="#eaf0fa" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
           <rect x="140" y="160" width="72" height="14" rx="4" fill="#3068a0" opacity="0.9"/>
@@ -1322,12 +1314,12 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
 
       {owned.outfit_sailor && (
         <g>
-          <path d="M45 136 C43 151 43 170 45 192 C56 197 95 197 107 192 C109 170 109 151 107 136 C92 131 61 131 45 136Z" fill="#f5f8ff" opacity="0.96"/>
+          <path d="M32 138 C28 154 28 176 32 198 C44 204 108 204 120 198 C124 176 124 154 120 138 C102 130 50 130 32 138Z" fill="#f5f8ff" opacity="0.96"/>
           <path d="M59 132 L76 152 L93 132" fill="none" stroke="#5d7bbd" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
           <rect x="47" y="161" width="58" height="10" rx="5" fill="#5d7bbd" opacity="0.85"/>
           <circle cx="76" cy="156" r="4" fill="#f4a8c0"/>
 
-          <path d="M145 136 C143 151 143 170 145 192 C156 197 195 197 207 192 C209 170 209 151 207 136 C192 131 161 131 145 136Z" fill="#f5f8ff" opacity="0.96"/>
+          <path d="M132 138 C128 154 128 176 132 198 C144 204 208 204 220 198 C224 176 224 154 220 138 C202 130 150 130 132 138Z" fill="#f5f8ff" opacity="0.96"/>
           <path d="M159 132 L176 152 L193 132" fill="none" stroke="#3f669f" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
           <rect x="147" y="161" width="58" height="10" rx="5" fill="#3f669f" opacity="0.9"/>
           <circle cx="176" cy="156" r="4" fill="#b8d8ff"/>
@@ -1336,11 +1328,11 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
 
       {owned.outfit_witch && (
         <g>
-          <path d="M44 138 C40 155 40 176 44 194 C56 201 97 201 108 194 C112 176 112 155 108 138 C92 132 60 132 44 138Z" fill="#7b5bb8" opacity="0.9"/>
+          <path d="M32 139 C28 157 28 178 32 200 C44 206 108 206 120 200 C124 178 124 157 120 139 C102 131 50 131 32 139Z" fill="#7b5bb8" opacity="0.9"/>
           <path d="M52 138 C60 145 69 149 76 149 C83 149 92 145 100 138" fill="none" stroke="#d6a55a" strokeWidth="2.5"/>
           <circle cx="76" cy="168" r="6" fill="#2f1d4a" opacity="0.8"/>
 
-          <path d="M144 138 C140 155 140 176 144 194 C156 201 197 201 208 194 C212 176 212 155 208 138 C192 132 160 132 144 138Z" fill="#5f4aa0" opacity="0.9"/>
+          <path d="M132 139 C128 157 128 178 132 200 C144 206 208 206 220 200 C224 178 224 157 220 139 C202 131 150 131 132 139Z" fill="#5f4aa0" opacity="0.9"/>
           <path d="M152 138 C160 145 169 149 176 149 C183 149 192 145 200 138" fill="none" stroke="#d6a55a" strokeWidth="2.5"/>
           <circle cx="176" cy="168" r="6" fill="#24163b" opacity="0.85"/>
         </g>
@@ -1348,13 +1340,13 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
 
       {owned.outfit_angel && (
         <g>
-          <path d="M44 137 C42 154 42 174 44 192 C56 199 96 199 108 192 C110 174 110 154 108 137 C92 132 60 132 44 137Z" fill="#fff8f0" opacity="0.97"/>
-          <ellipse cx="34" cy="151" rx="10" ry="18" fill="#f6fcff" opacity="0.8"/>
-          <ellipse cx="118" cy="151" rx="10" ry="18" fill="#f6fcff" opacity="0.8"/>
+          <path d="M30 138 C27 156 27 177 30 198 C42 205 110 205 122 198 C125 177 125 156 122 138 C102 130 50 130 30 138Z" fill="#fff8f0" opacity="0.97"/>
+          <ellipse cx="24" cy="153" rx="10" ry="18" fill="#f6fcff" opacity="0.8"/>
+          <ellipse cx="128" cy="153" rx="10" ry="18" fill="#f6fcff" opacity="0.8"/>
 
-          <path d="M144 137 C142 154 142 174 144 192 C156 199 196 199 208 192 C210 174 210 154 208 137 C192 132 160 132 144 137Z" fill="#fff8f0" opacity="0.97"/>
-          <ellipse cx="134" cy="151" rx="10" ry="18" fill="#f6fcff" opacity="0.8"/>
-          <ellipse cx="218" cy="151" rx="10" ry="18" fill="#f6fcff" opacity="0.8"/>
+          <path d="M130 138 C127 156 127 177 130 198 C142 205 210 205 222 198 C225 177 225 156 222 138 C202 130 150 130 130 138Z" fill="#fff8f0" opacity="0.97"/>
+          <ellipse cx="124" cy="153" rx="10" ry="18" fill="#f6fcff" opacity="0.8"/>
+          <ellipse cx="228" cy="153" rx="10" ry="18" fill="#f6fcff" opacity="0.8"/>
         </g>
       )}
 
@@ -1431,56 +1423,56 @@ function PandaAccessoryLayer({ accessories, pandaSize = 160 }) {
 
       {owned.glasses_heart && (
         <g transform="rotate(-4, 176, 88) translate(176, 84)">
-          <path d="M-20 -1 C-20 -5 -17 -7 -14 -4 C-11 -7 -8 -5 -8 -1 C-8 3 -14 8 -14 8 C-14 8 -20 3 -20 -1Z" fill="#ff84a7" stroke="#b93d62" strokeWidth="1.5"/>
-          <path d="M8 -1 C8 -5 11 -7 14 -4 C17 -7 20 -5 20 -1 C20 3 14 8 14 8 C14 8 8 3 8 -1Z" fill="#ff84a7" stroke="#b93d62" strokeWidth="1.5"/>
-          <line x1="-8" y1="0" x2="8" y2="0" stroke="#b93d62" strokeWidth="2" strokeLinecap="round"/>
-          <line x1="-20" y1="0" x2="-29" y2="-2" stroke="#b93d62" strokeWidth="2" strokeLinecap="round"/>
-          <line x1="20" y1="0" x2="29" y2="-2" stroke="#b93d62" strokeWidth="2" strokeLinecap="round"/>
+          <path d="M-25 -1 C-25 -5 -22 -7 -19 -4 C-16 -7 -13 -5 -13 -1 C-13 3 -19 8 -19 8 C-19 8 -25 3 -25 -1Z" fill="#ff84a7" stroke="#b93d62" strokeWidth="1.5"/>
+          <path d="M13 -1 C13 -5 16 -7 19 -4 C22 -7 25 -5 25 -1 C25 3 19 8 19 8 C19 8 13 3 13 -1Z" fill="#ff84a7" stroke="#b93d62" strokeWidth="1.5"/>
+          <line x1="-13" y1="0" x2="13" y2="0" stroke="#b93d62" strokeWidth="2" strokeLinecap="round"/>
+          <line x1="-25" y1="0" x2="-34" y2="-2" stroke="#b93d62" strokeWidth="2" strokeLinecap="round"/>
+          <line x1="25" y1="0" x2="34" y2="-2" stroke="#b93d62" strokeWidth="2" strokeLinecap="round"/>
         </g>
       )}
 
       {owned.glasses_sun && (
         <g transform="rotate(-4, 176, 88) translate(176, 84)">
-          <rect x="-24" y="-7" width="16" height="11" rx="5.5" fill="#1b2230"/>
-          <rect x="8" y="-7" width="16" height="11" rx="5.5" fill="#1b2230"/>
-          <line x1="-8" y1="-1" x2="8" y2="-1" stroke="#2f3540" strokeWidth="2" strokeLinecap="round"/>
-          <line x1="-24" y1="-2" x2="-32" y2="-3" stroke="#2f3540" strokeWidth="2" strokeLinecap="round"/>
-          <line x1="24" y1="-2" x2="32" y2="-3" stroke="#2f3540" strokeWidth="2" strokeLinecap="round"/>
-          <rect x="-21" y="-5" width="5" height="3" rx="1.5" fill="#ffffff" opacity="0.18"/>
-          <rect x="11" y="-5" width="5" height="3" rx="1.5" fill="#ffffff" opacity="0.18"/>
+          <rect x="-27" y="-7" width="16" height="11" rx="5.5" fill="#1b2230"/>
+          <rect x="11" y="-7" width="16" height="11" rx="5.5" fill="#1b2230"/>
+          <line x1="-11" y1="-1" x2="11" y2="-1" stroke="#2f3540" strokeWidth="2" strokeLinecap="round"/>
+          <line x1="-27" y1="-2" x2="-35" y2="-3" stroke="#2f3540" strokeWidth="2" strokeLinecap="round"/>
+          <line x1="27" y1="-2" x2="35" y2="-3" stroke="#2f3540" strokeWidth="2" strokeLinecap="round"/>
+          <rect x="-24" y="-5" width="5" height="3" rx="1.5" fill="#ffffff" opacity="0.18"/>
+          <rect x="14" y="-5" width="5" height="3" rx="1.5" fill="#ffffff" opacity="0.18"/>
         </g>
       )}
 
       {owned.glasses_round && (
         <g transform="rotate(-4, 176, 88) translate(176, 84)">
-          <circle cx="-12" cy="-1" r="7.2" fill="none" stroke="#6a6f78" strokeWidth="2"/>
-          <circle cx="12" cy="-1" r="7.2" fill="none" stroke="#6a6f78" strokeWidth="2"/>
-          <line x1="-4.8" y1="-1" x2="4.8" y2="-1" stroke="#6a6f78" strokeWidth="1.8" strokeLinecap="round"/>
-          <line x1="-19" y1="-2" x2="-27" y2="-3" stroke="#6a6f78" strokeWidth="1.8" strokeLinecap="round"/>
-          <line x1="19" y1="-2" x2="27" y2="-3" stroke="#6a6f78" strokeWidth="1.8" strokeLinecap="round"/>
+          <circle cx="-19" cy="-1" r="7.2" fill="none" stroke="#6a6f78" strokeWidth="2"/>
+          <circle cx="19" cy="-1" r="7.2" fill="none" stroke="#6a6f78" strokeWidth="2"/>
+          <line x1="-11.8" y1="-1" x2="11.8" y2="-1" stroke="#6a6f78" strokeWidth="1.8" strokeLinecap="round"/>
+          <line x1="-26" y1="-2" x2="-34" y2="-3" stroke="#6a6f78" strokeWidth="1.8" strokeLinecap="round"/>
+          <line x1="26" y1="-2" x2="34" y2="-3" stroke="#6a6f78" strokeWidth="1.8" strokeLinecap="round"/>
         </g>
       )}
 
       {owned.glasses_clear && (
         <g transform="rotate(-4, 176, 88) translate(176, 84)">
-          <rect x="-22" y="-7" width="14" height="11" rx="4" fill="#d9eef9" opacity="0.35" stroke="#7891a0" strokeWidth="1.6"/>
-          <rect x="8" y="-7" width="14" height="11" rx="4" fill="#d9eef9" opacity="0.35" stroke="#7891a0" strokeWidth="1.6"/>
-          <line x1="-8" y1="-1" x2="8" y2="-1" stroke="#7891a0" strokeWidth="1.8" strokeLinecap="round"/>
-          <line x1="-22" y1="-2" x2="-30" y2="-3" stroke="#7891a0" strokeWidth="1.8" strokeLinecap="round"/>
-          <line x1="22" y1="-2" x2="30" y2="-3" stroke="#7891a0" strokeWidth="1.8" strokeLinecap="round"/>
+          <rect x="-26" y="-7" width="14" height="11" rx="4" fill="#d9eef9" opacity="0.35" stroke="#7891a0" strokeWidth="1.6"/>
+          <rect x="12" y="-7" width="14" height="11" rx="4" fill="#d9eef9" opacity="0.35" stroke="#7891a0" strokeWidth="1.6"/>
+          <line x1="-12" y1="-1" x2="12" y2="-1" stroke="#7891a0" strokeWidth="1.8" strokeLinecap="round"/>
+          <line x1="-26" y1="-2" x2="-34" y2="-3" stroke="#7891a0" strokeWidth="1.8" strokeLinecap="round"/>
+          <line x1="26" y1="-2" x2="34" y2="-3" stroke="#7891a0" strokeWidth="1.8" strokeLinecap="round"/>
         </g>
       )}
 
       {owned.glasses_star && (
         <g transform="rotate(-4, 176, 88) translate(176, 84)">
-          <path d="M-13 -8 L-11 -3 L-6 -3 L-10 -0.5 L-8.5 4.5 L-13 2 L-17.5 4.5 L-16 -0.5 L-20 -3 L-15 -3Z" fill="#ffd76a" stroke="#c28d1f" strokeWidth="1.2"/>
-          <path d="M13 -8 L15 -3 L20 -3 L16 -0.5 L17.5 4.5 L13 2 L8.5 4.5 L10 -0.5 L6 -3 L11 -3Z" fill="#ffd76a" stroke="#c28d1f" strokeWidth="1.2"/>
-          <line x1="-6" y1="-1" x2="6" y2="-1" stroke="#c28d1f" strokeWidth="1.8" strokeLinecap="round"/>
+          <path d="M-19 -8 L-17 -3 L-12 -3 L-16 -0.5 L-14.5 4.5 L-19 2 L-23.5 4.5 L-22 -0.5 L-26 -3 L-21 -3Z" fill="#ffd76a" stroke="#c28d1f" strokeWidth="1.2"/>
+          <path d="M19 -8 L21 -3 L26 -3 L22 -0.5 L23.5 4.5 L19 2 L14.5 4.5 L16 -0.5 L12 -3 L17 -3Z" fill="#ffd76a" stroke="#c28d1f" strokeWidth="1.2"/>
+          <line x1="-12" y1="-1" x2="12" y2="-1" stroke="#c28d1f" strokeWidth="1.8" strokeLinecap="round"/>
         </g>
       )}
 
       {owned.acc_bow && (
-        <g transform="rotate(-4, 176, 88) translate(206, 58)">
+        <g transform="rotate(-4, 176, 88) translate(212, 54)">
           <path d="M-12 0 C-18 -8 -24 -10 -20 -2 C-16 6 -6 4 0 0Z" fill="#a8c8f8"/>
           <path d="M12 0 C18 -8 24 -10 20 -2 C16 6 6 4 0 0Z" fill="#80aaf4"/>
           <circle cx="0" cy="0" r="5" fill="#c8dcfc"/>
@@ -1563,10 +1555,6 @@ function GardenScene({ garden, waterLevel }) {
         <ellipse cx="280" cy="42" rx="20" ry="9" fill="white" opacity="0.4"/>
       </g>}
 
-      {g.heart_cloud && <g>
-        <path d="M252 62 C252 62 232 52 232 41 C232 35 237 32 242 34 C246 35 249 38 252 42 C255 38 258 35 262 34 C267 32 272 35 272 41 C272 52 252 62 252 62Z" fill="white" opacity="0.9"/>
-      </g>}
-
       {/* Sun / Moon */}
       {g.sun ? <>
         <circle cx="330" cy="55" r="28" fill="#f0b030" opacity="0.95"/>
@@ -1581,18 +1569,6 @@ function GardenScene({ garden, waterLevel }) {
       {g.rainbow && [["#e87878",0],["#e8a858",7],["#e8d860",14],["#8ac868",21],["#5ab8c8",28]].map(([c,o],i)=>(
         <path key={i} d={`M${10+o/2} 280 Q200 ${80+o} ${380-o/2} 280`} fill="none" stroke={c} strokeWidth="5" strokeLinecap="round" opacity="0.6"/>
       ))}
-
-      {g.shooting_stars && <g>
-        <path d="M54 36 L88 48" stroke="#ffe08a" strokeWidth="3" strokeLinecap="round" opacity="0.85"/>
-        <path d="M132 28 L166 42" stroke="#ffd068" strokeWidth="2.5" strokeLinecap="round" opacity="0.8"/>
-        <path d="M210 40 L242 52" stroke="#ffefb8" strokeWidth="2.5" strokeLinecap="round" opacity="0.85"/>
-      </g>}
-
-      {g.aurora && <g>
-        <path d="M0 120 Q70 70 150 95 Q230 120 320 85 Q360 72 390 78" fill="none" stroke="#77d8c6" strokeWidth="9" opacity="0.28"/>
-        <path d="M0 108 Q76 58 158 82 Q242 108 332 74 Q364 62 390 66" fill="none" stroke="#8fb8f2" strokeWidth="7" opacity="0.25"/>
-        <path d="M0 96 Q80 48 164 72 Q250 98 340 64 Q368 54 390 58" fill="none" stroke="#c4a8ef" strokeWidth="5" opacity="0.23"/>
-      </g>}
 
       {/* Misty mountains background */}
       <ellipse cx="100" cy="200" rx="130" ry="80" fill={MIST[lvl]} opacity="0.3"/>
@@ -1674,56 +1650,25 @@ function GardenScene({ garden, waterLevel }) {
         <circle cx="302" cy="145" r="24" fill={dry?"#d0a868":"#f0a0b0"} opacity={dry?0.55:0.75}/>
       </g>}
 
-      {g.maple && <g>
-        <rect x="70" y="162" width="10" height="68" rx="4" fill="#8e6a3f"/>
-        <circle cx="75" cy="146" r="24" fill={dry?"#c89a62":"#d5563a"} opacity="0.82"/>
-        <circle cx="60" cy="154" r="17" fill={dry?"#b88952":"#e0784f"} opacity="0.76"/>
-        <circle cx="90" cy="154" r="17" fill={dry?"#b88952":"#c94931"} opacity="0.76"/>
-      </g>}
-
-      {g.wisteria && <g>
-        <line x1="320" y1="108" x2="380" y2="108" stroke="#7f6a48" strokeWidth="3"/>
-        {[334,348,362,376].map((x,i)=><g key={x}>
-          <path d={`M${x} 108 Q${x-4} 124 ${x} ${146+i*5}`} fill="none" stroke="#6aa049" strokeWidth="2"/>
-          <ellipse cx={x} cy={152+i*5} rx="5" ry="8" fill={i%2===0?"#c4b0ef":"#b596de"} opacity="0.9"/>
-        </g>)}
-      </g>}
-
-      {/* Pond — shifted right (+90) so pandas don't overlap and waterfall pool (cx=372) falls inside */}
+      {/* Pond */}
       {g.pond && <g>
-        <ellipse cx="290" cy="262" rx="90" ry="22" fill={waterCol} opacity="0.55"/>
-        <ellipse cx="290" cy="259" rx="74" ry="15" fill={waterCol} opacity={dry?0.3:0.5}/>
-        {/* Koi fish — shifted +100 to sit in right portion of pond, away from ducks */}
+        <ellipse cx="200" cy="262" rx="90" ry="22" fill={waterCol} opacity="0.55"/>
+        <ellipse cx="200" cy="259" rx="74" ry="15" fill={waterCol} opacity={dry?0.3:0.5}/>
+        {/* Koi fish */}
         {g.koi1 && <g>
-          <ellipse cx="285" cy="260" rx="18" ry="7" fill="#e86040" opacity="0.8"/>
-          <path d="M267 260 Q263 254 260 260 Q263 266 267 260Z" fill="#e05030" opacity="0.8"/>
-          <circle cx="296" cy="258" r="2" fill="white" opacity="0.9"/>
+          <ellipse cx="185" cy="260" rx="18" ry="7" fill="#e86040" opacity="0.8"/>
+          <path d="M167 260 Q163 254 160 260 Q163 266 167 260Z" fill="#e05030" opacity="0.8"/>
+          <circle cx="196" cy="258" r="2" fill="white" opacity="0.9"/>
         </g>}
         {g.koi2 && <g>
-          <ellipse cx="315" cy="264" rx="16" ry="6" fill="#d4a843" opacity="0.8"/>
-          <path d="M331 264 Q335 258 338 264 Q335 270 331 264Z" fill="#c89030" opacity="0.8"/>
+          <ellipse cx="215" cy="264" rx="16" ry="6" fill="#d4a843" opacity="0.8"/>
+          <path d="M231 264 Q235 258 238 264 Q235 270 231 264Z" fill="#c89030" opacity="0.8"/>
         </g>}
         {/* Lotus pads */}
         {g.lotus_pad && <g>
-          <ellipse cx="265" cy="255" rx="18" ry="10" fill="#5a9840" opacity="0.8"/>
-          <ellipse cx="312" cy="260" rx="14" ry="8" fill="#5a9840" opacity="0.7"/>
+          <ellipse cx="175" cy="255" rx="18" ry="10" fill="#5a9840" opacity="0.8"/>
+          <ellipse cx="222" cy="260" rx="14" ry="8" fill="#5a9840" opacity="0.7"/>
         </g>}
-      </g>}
-
-      {g.waterfall && <g>
-        <path d="M344 228 C350 214 356 204 362 180 L384 180 C378 202 374 214 372 230" fill="#9e8960" opacity="0.85"/>
-        <path d="M365 180 C372 194 374 208 372 230" fill="none" stroke={dry?"#c8b870":"#80c8ea"} strokeWidth="10" strokeLinecap="round" opacity={dry?0.55:0.85}/>
-        <ellipse cx="372" cy="234" rx="24" ry="7" fill={dry?"#b8b080":"#90d8f0"} opacity="0.7"/>
-      </g>}
-
-      {/* Ducks — shifted +70, left portion of pond, clear of koi (+100) */}
-      {g.ducks && <g>
-        <ellipse cx="226" cy="264" rx="10" ry="6" fill="#f2c487" opacity="0.9"/>
-        <circle cx="233" cy="260" r="3.8" fill="#f2c487" opacity="0.95"/>
-        <path d="M236 260 L241 262 L236 264Z" fill="#dd8734"/>
-        <ellipse cx="246" cy="268" rx="10" ry="6" fill="#eab670" opacity="0.9"/>
-        <circle cx="253" cy="264" r="3.8" fill="#eab670" opacity="0.95"/>
-        <path d="M256 264 L261 266 L256 268Z" fill="#d87727"/>
       </g>}
 
       {/* Lotus flowers */}
@@ -1809,23 +1754,6 @@ function GardenScene({ garden, waterLevel }) {
         <rect x="322" y="162" width="12" height="8" rx="2" fill="#e8a030" opacity="0.9"/>
       </g>}
 
-      {g.bench && <g>
-        <rect x="232" y="248" width="54" height="8" rx="3" fill="#9b7a4a"/>
-        <rect x="232" y="257" width="54" height="6" rx="3" fill="#8c6a3f"/>
-        <rect x="238" y="263" width="5" height="9" rx="2" fill="#7c5c35"/>
-        <rect x="275" y="263" width="5" height="9" rx="2" fill="#7c5c35"/>
-      </g>}
-
-      {g.wind_chime && <g>
-        <line x1="300" y1="128" x2="342" y2="128" stroke="#9a7848" strokeWidth="2.5"/>
-        {[308,320,332].map((x,i)=><g key={x}>
-          <line x1={x} y1="128" x2={x} y2={148+i*2} stroke="#9a7848" strokeWidth="1.5"/>
-          <rect x={x-3} y={148+i*2} width="6" height="14" rx="2" fill={i===1?"#c89058":"#d8a85f"}/>
-        </g>)}
-        <line x1="320" y1="150" x2="320" y2="168" stroke="#9a7848" strokeWidth="1.4"/>
-        <ellipse cx="320" cy="170" rx="7" ry="2.8" fill="#f0d090"/>
-      </g>}
-
       {/* Lanterns */}
       {g.lantern && <g>
         <rect x="22" y="185" width="6" height="40" rx="3" fill="#9a7848"/>
@@ -1856,12 +1784,6 @@ function GardenScene({ garden, waterLevel }) {
         ))}
       </g>}
 
-      {g.petal_rain && <g>
-        {[[58,118],[92,98],[122,130],[166,106],[204,122],[242,102],[286,126],[326,108],[358,132],[188,142],[228,144],[268,150]].map(([x,y],i)=>(
-          <ellipse key={i} cx={x} cy={y} rx="4" ry="6" fill={i%2===0?"#f4a8b8":"#f8c4d0"} transform={`rotate(${i%2===0?18:-18} ${x} ${y})`} opacity="0.85"/>
-        ))}
-      </g>}
-
       {/* Moon gate */}
       {g.moongate && <g>
         <circle cx="195" cy="160" r="50" fill="none" stroke="#f8e0a0" strokeWidth="6" opacity="0.8"/>
@@ -1883,211 +1805,12 @@ function GardenScene({ garden, waterLevel }) {
 
 
 
-
-// ═══════════════════════════════════════════════
-// INBOX — recent couple activity feed
-// ═══════════════════════════════════════════════
-function InboxModal({ user, messages, gratitud, momentos, exDone, lessonsDone, conoce, burbuja, onClose }) {
-  const myEmail = user?.email || "guest";
-  const { nameA, nameB } = getCoupleNames(user);
-  const myRole = user?.isOwner !== false ? "owner" : "partner";
-  const myName = myRole === "owner" ? nameA : nameB;
-  const partnerName = myRole === "owner" ? nameB : nameA;
-
-  const getTime = (item) => {
-    if (item?.createdAt?.toDate) return item.createdAt.toDate().getTime();
-    if (item?.createdAt?.seconds) return item.createdAt.seconds * 1000;
-    if (item?.time) return new Date(item.time).getTime();
-    if (item?.approvedAt) return new Date(item.approvedAt).getTime();
-    if (item?.updatedAt) return new Date(item.updatedAt).getTime();
-    return 0;
-  };
-
-  const formatDate = (ts) => {
-    if (!ts) return "—";
-    const d = new Date(ts);
-    if (Number.isNaN(d.getTime())) return "—";
-    return d.toLocaleDateString("es", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-  };
-
-  const items = [];
-
-  // Mensajes de amor
-  (messages || []).forEach(m => {
-    const isMine = m.senderEmail === myEmail;
-    items.push({
-      id: `msg-${m.id}`,
-      ts: getTime(m),
-      icon: "💌",
-      color: "#c05068",
-      title: isMine ? `Tú enviaste un mensajito a ${partnerName}` : `${m.sender || partnerName} te envió un mensajito`,
-      body: m.text,
-      badge: isMine ? "Enviado" : "Recibido",
-    });
-  });
-
-  // Momentos
-  (momentos || []).forEach(m => {
-    items.push({
-      id: `mom-${m.id}`,
-      ts: getTime(m),
-      icon: "✨",
-      color: "#8a6bc8",
-      title: `${m.authorName || "Alguien"} guardó un momento`,
-      body: `${m.title ? `“${m.title}”` : ""} ${m.text || ""}`.trim(),
-      badge: "Momento",
-    });
-  });
-
-  // Gratitud
-  (gratitud || []).forEach(g => {
-    items.push({
-      id: `grat-${g.id}`,
-      ts: getTime(g),
-      icon: "💛",
-      color: "#d4a82e",
-      title: `${g.authorName || "Alguien"} escribió gratitud`,
-      body: g.text,
-      badge: "Gratitud",
-    });
-  });
-
-  // Ejercicios completados (por mí, más recientes primero)
-  Object.entries(exDone || {}).forEach(([exId, count]) => {
-    const ex = EXERCISES.find(e => e.id === exId);
-    if (!ex || count <= 0) return;
-    // No tenemos timestamp exacto de cada repetición, mostramos una entrada resumen
-    items.push({
-      id: `ex-${exId}`,
-      ts: 0,
-      icon: "⭐",
-      color: "#6f56b8",
-      title: `${myName} completó “${ex.title}”`,
-      body: `Completado ${count} ${count === 1 ? "vez" : "veces"}. ${ex.desc}`,
-      badge: "Ejercicio",
-    });
-  });
-
-  // Lecciones leídas por ambos
-  Object.entries(lessonsDone || {}).forEach(([lessonId, data]) => {
-    const lesson = DAILY_LESSONS.find(l => l.id === lessonId);
-    if (!lesson) return;
-    const both = data.owner && data.partner;
-    const who = data.owner && data.partner ? "Ambos" : data.owner ? nameA : data.partner ? nameB : null;
-    if (!who) return;
-    items.push({
-      id: `lesson-${lessonId}`,
-      ts: getTime(data),
-      icon: "📖",
-      color: "#4a9a6e",
-      title: `${who} ${both ? "leyeron" : "leyó"} “${lesson.title}”`,
-      body: lesson.tag,
-      badge: "Lección",
-    });
-  });
-
-  // Conócete — respuestas nuevas
-  Object.entries(conoce || {}).forEach(([key, data]) => {
-    const [cat, idx] = key.split("-");
-    const catData = CONOCE_CATS[cat];
-    if (!catData) return;
-    const q = catData.preguntas?.[Number(idx)];
-    if (!q) return;
-    const ownerAns = data.owner;
-    const partnerAns = data.partner;
-    if (ownerAns) {
-      items.push({
-        id: `conoce-${key}-owner`,
-        ts: getTime(data),
-        icon: "💬",
-        color: "#4a7ab8",
-        title: `${nameA} respondió una pregunta de ${catData.label}`,
-        body: `“${q}”`,
-        badge: "Conócete",
-      });
-    }
-    if (partnerAns) {
-      items.push({
-        id: `conoce-${key}-partner`,
-        ts: getTime(data),
-        icon: "💬",
-        color: "#4a7ab8",
-        title: `${nameB} respondió una pregunta de ${catData.label}`,
-        body: `“${q}”`,
-        badge: "Conócete",
-      });
-    }
-  });
-
-  // Acuerdos aprobados en Burbuja
-  Object.entries(burbuja || {}).forEach(([id, data]) => {
-    if (data.status !== "approved") return;
-    const meta = BURBUJA_ITEM_MAP[id];
-    items.push({
-      id: `acuerdo-${id}`,
-      ts: getTime(data),
-      icon: "🫧",
-      color: "#6f56b8",
-      title: `Acuerdo aprobado: ${meta?.section || "La Burbuja"}`,
-      body: meta?.question || "Nuevo acuerdo entre ustedes",
-      badge: "Acuerdo",
-    });
-  });
-
-  const sorted = items
-    .filter(i => i.ts || i.id.startsWith("ex-"))
-    .sort((a, b) => (b.ts || 0) - (a.ts || 0));
-
-  return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(15,25,15,0.62)", zIndex: 5000, display: "flex", alignItems: "flex-end" }} onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} style={{ background: C.sandL, borderRadius: "22px 22px 0 0", width: "100%", maxWidth: 480, margin: "0 auto", maxHeight: "90vh", display: "flex", flexDirection: "column" }}>
-        <div style={{ background: C.dark, padding: "18px 18px 20px", borderRadius: "22px 22px 0 0", position: "relative", flexShrink: 0 }}>
-          <div style={{ width: 34, height: 5, background: "rgba(255,255,255,0.2)", borderRadius: 50, margin: "0 auto 12px" }} />
-          <button onClick={onClose} style={{ position: "absolute", right: 16, top: 14, background: C.sandL, border: `1.5px solid ${C.border}`, borderRadius: 9, width: 30, height: 30, fontSize: "0.85rem", cursor: "pointer", color: C.inkM }}>✕</button>
-          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.35rem", color: C.cream2, marginBottom: 4 }}>📬 Inbox del jardín</div>
-          <div style={{ fontSize: "0.78rem", color: `${C.cream}88`, fontWeight: 600 }}>Todo lo que han hecho en Mochi</div>
-        </div>
-        <div style={{ overflowY: "auto", padding: "14px 16px 32px", flex: 1 }}>
-          {sorted.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "40px 20px", color: C.inkL, fontSize: "0.9rem" }}>
-              <div style={{ fontSize: "2rem", marginBottom: 10 }}>🌿</div>
-              <div style={{ fontWeight: 700, marginBottom: 6 }}>Aún no hay actividad</div>
-              <div>Cuando manden mensajes, registren momentos o completen ejercicios, aparecerá aquí.</div>
-            </div>
-          ) : (
-            sorted.map(item => (
-              <div key={item.id} style={{ background: C.white, borderRadius: 14, padding: "12px 14px", marginBottom: 10, border: `1.5px solid ${C.border}`, boxShadow: `0 2px 0 ${C.border}` }}>
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                  <div style={{ width: 34, height: 34, borderRadius: "50%", background: `${item.color}18`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.1rem", flexShrink: 0 }}>{item.icon}</div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                      <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.88rem", color: C.dark, lineHeight: 1.3 }}>{item.title}</div>
-                      <span style={{ background: `${item.color}18`, color: item.color, borderRadius: 6, padding: "2px 7px", fontSize: "0.6rem", fontWeight: 800, whiteSpace: "nowrap", flexShrink: 0 }}>{item.badge}</span>
-                    </div>
-                    {item.body && <div style={{ fontSize: "0.82rem", color: C.inkM, lineHeight: 1.55, wordBreak: "break-word" }}>{item.body}</div>}
-                    {item.ts ? <div style={{ fontSize: "0.65rem", color: C.inkL, fontWeight: 700, marginTop: 6 }}>{formatDate(item.ts)}</div> : null}
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-
-
-
-
 // ═══════════════════════════════════════════════
 // JARDIN SCREEN — updated with accessories + multiple items + decay
 // ═══════════════════════════════════════════════
-function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pandaBubble, onPet, onBuy, onWater, onBuyAccessory, user, nightModeUnlocked, nightModeActive, onBuyNightMode, onToggleNightMode, messages, gratitud, momentos, exDone, lessonsDone, conoce, burbuja }) {
+function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pandaBubble, onPet, onBuy, onWater, onBuyAccessory, user }) {
   const [shopTab, setShopTab] = useState("plantas");
   const [showJuegos, setShowJuegos] = useState(false);
-  const [showInbox, setShowInbox] = useState(false);
   const cats = [{id:"plantas",label:"🌿 Plantas"},{id:"agua",label:"🐟 Agua"},{id:"cielo",label:"☁️ Cielo"},{id:"deco",label:"🏮 Deco"},{id:"especial",label:"✨ Especiales"},{id:"accesorios",label:"🐼 Pandas"}];
   const shopItems = (shopTab === "accesorios"
     ? PANDA_ACCESSORIES
@@ -2106,20 +1829,12 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
       <div style={{ background: C.dark, padding: "44px 18px 14px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
           <div>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.55rem", color: C.cream2 }}>El Jardín</div>
+            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.55rem", color: C.cream2 }}>El Jardín</div>
             <div style={{ fontSize: "0.72rem", color: `${C.cream}88`, fontWeight: 700, letterSpacing: "0.5px" }}>
               {water < 20 ? "🏜️ JARDÍN SECO" : water < 40 ? "🌱 SEDIENTO" : water < 60 ? "🌿 SANO" : water < 80 ? "🌸 FLORECIENDO" : "🌺 RADIANTE"}
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <button
-              onClick={() => setShowInbox(true)}
-              style={{ background: C.olive, border: "none", borderRadius: 10, padding: "8px 12px", fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.cream2, cursor: "pointer", boxShadow: "0 3px 0 rgba(0,0,0,0.2)" }}
-            >
-              📬 Inbox
-            </button>
-            <div style={{ background: C.olive, borderRadius: 10, padding: "8px 16px", fontFamily: "'Fredoka One',cursive", fontSize: "1.05rem", color: C.cream2, boxShadow: "0 3px 0 rgba(0,0,0,0.2)" }}>🌿 {bamboo}</div>
-          </div>
+          <div style={{ background: C.olive, borderRadius: 10, padding: "8px 16px", fontFamily: "'Baloo 2',sans-serif", fontSize: "1.05rem", color: C.cream2, boxShadow: "0 3px 0 rgba(0,0,0,0.2)" }}>🌿 {bamboo}</div>
         </div>
         {/* Bars - solo AGUA */}
         {[{l:"💧 AGUA",v:water,c:dry?"#e86030":withering?"#e8a030":C.sky}].map(b => (
@@ -2139,18 +1854,6 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
       <div style={{ position:"relative" }}>
         <SectionErrorBoundary fallback={<div style={{ background:C.white, border:`1.5px solid ${C.border}`, borderRadius:16, margin:12, padding:12, textAlign:"center", color:C.inkM, fontWeight:700 }}>No se pudo cargar esta vista del jardín. Cambia de pestaña y vuelve a intentar.</div>}>
           <GardenScene garden={garden} waterLevel={water}/>
-          {nightModeActive && (
-            <div style={{ 
-              position: "absolute", 
-              top: 0, 
-              left: 0, 
-              right: 0, 
-              bottom: 0, 
-              background: "linear-gradient(180deg, rgba(20,20,40,0.4) 0%, rgba(10,10,30,0.6) 100%)",
-              borderRadius: "0 0 20px 20px",
-              pointerEvents: "none"
-            }}/>
-          )}
           <div onClick={onPet} style={{ position:"absolute", bottom:-5, left:"50%", transform:"translateX(-50%)", cursor:"pointer",
             animation: mochiHappy ? "floatHappy 1.6s ease-in-out infinite" : "float 3s ease-in-out infinite" }}>
             <div style={{ position:"relative", display:"inline-block" }}>
@@ -2186,29 +1889,22 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
         </SectionErrorBoundary>
       </div>
 
-      {/* Water button + Games button + Night Mode button */}
+      {/* Water button + Games button */}
       <div style={{ textAlign: "center", padding: "22px 14px 6px" }}>
-        <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
           <button onClick={onWater} style={{ background: dry ? "#e86030" : C.sky, color: C.white, border: "none", borderRadius: 12,
-            padding: "10px 22px", fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", cursor: "pointer",
+            padding: "10px 22px", fontFamily: "'Baloo 2',sans-serif", fontSize: "0.95rem", cursor: "pointer",
             boxShadow: "0 3px 0 rgba(0,0,0,0.18)" }}>💧 Regar el jardín</button>
           <button onClick={() => setShowJuegos(true)} style={{ background: C.olive, color: C.cream2, border: "none", borderRadius: 12,
-            padding: "10px 22px", fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", cursor: "pointer",
+            padding: "10px 22px", fontFamily: "'Baloo 2',sans-serif", fontSize: "0.95rem", cursor: "pointer",
             boxShadow: "0 3px 0 rgba(0,0,0,0.18)" }}>🎮 Juegos</button>
-          {nightModeUnlocked && (
-            <button onClick={onToggleNightMode} style={{ background: nightModeActive ? "#4a4a6a" : "#e8d060", color: nightModeActive ? C.cream2 : C.dark, border: "none", borderRadius: 12,
-              padding: "10px 22px", fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", cursor: "pointer",
-              boxShadow: "0 3px 0 rgba(0,0,0,0.18)" }}>
-              {nightModeActive ? "🌙 Noche" : "☀️ Día"}
-            </button>
-          )}
         </div>
       </div>
 
       {/* Shop */}
       <div style={{ background:C.white, borderRadius:"22px 22px 0 0", border:`1.5px solid ${C.border}`, boxShadow:`0 -3px 0 ${C.border}`, marginTop:10 }}>
         <div style={{ padding:"16px 16px 0" }}>
-          <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.1rem", color:C.dark }}>Tienda del jardín</div>
+          <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"1.1rem", color:C.dark }}>Tienda del jardín</div>
         </div>
         {/* Category tabs */}
         <div style={{ display:"flex", gap:6, overflowX:"auto", padding:"10px 14px 6px" }}>
@@ -2226,18 +1922,12 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
         <div style={{ display:"flex", gap:10, overflowX:"auto", padding:"8px 14px 20px" }}>
           {shopItems.map(item => {
             const owned = shopTab === "accesorios" ? accessories?.[item.id] : garden?.[item.id];
-            const isNightModeItem = item.id === "night_mode";
-            const nightModeOwned = isNightModeItem && nightModeUnlocked;
             const POND_DEPS = ["koi1", "koi2", "lotus_pad"];
             const pondReady = garden?.pond === true || garden?.pond === "owned";
             const locked = shopTab !== "accesorios" && POND_DEPS.includes(item.id) && !pondReady && !owned;
             return (
               <div key={item.id} onClick={() => {
                 if (locked) return;
-                if (item.id === "night_mode") {
-                  onBuyNightMode();
-                  return;
-                }
                 shopTab === "accesorios" ? onBuyAccessory(item) : onBuy(item);
               }}
                 style={{ background:owned===true?"#d4e8c4":owned==="owned"?C.cream:locked?"#f0ede8":C.sandL,
@@ -2254,9 +1944,7 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
                 <div style={{ fontSize:"0.67rem", fontWeight:800, color:C.ink, marginBottom:2, lineHeight:1.2 }}>{item.name}</div>
                 <div style={{ fontSize:"0.62rem", color:C.inkL, marginBottom:5, lineHeight:1.2 }}>{locked ? "🔒 Requiere Estanque" : item.desc}</div>
                 {shopTab !== "accesorios" ? (
-                  nightModeOwned
-                    ? <div style={{ background:C.olive, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>✓ Desbloqueado</div>
-                    : owned === true
+                  owned === true
                     ? <div style={{ background:C.olive, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>Quitar</div>
                     : owned === "owned"
                     ? <div style={{ background:C.dark, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>Poner</div>
@@ -2275,20 +1963,6 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
           })}
         </div>
       </div>
-
-      {showInbox && (
-        <InboxModal
-          user={user}
-          messages={messages}
-          gratitud={gratitud}
-          momentos={momentos}
-          exDone={exDone}
-          lessonsDone={lessonsDone}
-          conoce={conoce}
-          burbuja={burbuja}
-          onClose={() => setShowInbox(false)}
-        />
-      )}
     </div>
   );
 }
@@ -2561,7 +2235,7 @@ function Login({ onLogin }) {
 
   return (
     <div style={{ minHeight: "100vh", background: C.sandL, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "28px 20px", fontFamily: "'Nunito',sans-serif" }}>
-      <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "3rem", color: C.dark, letterSpacing: "2px" }}>mochi</div>
+      <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "3rem", color: C.dark, letterSpacing: "2px" }}>mochi</div>
       <div style={{ color: C.inkL, fontWeight: 700, marginBottom: 12, fontSize: "0.85rem", letterSpacing: "0.6px" }}>TU JARDÍN DE PAREJA 🌿</div>
       <div style={{ marginBottom: 18, animation: "float 3s ease-in-out infinite" }}>
         <CouplePandaSVG size={160} happy={true} />
@@ -2569,7 +2243,7 @@ function Login({ onLogin }) {
       <div style={{ background: C.white, borderRadius: 24, padding: "22px 20px", width: "100%", maxWidth: 380, boxShadow: `0 4px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
         <div style={{ display: "flex", background: C.sand, borderRadius: 12, padding: 3, marginBottom: 18, gap: 3 }}>
           {TABS.map(t => (
-            <div key={t.id} onClick={() => { setTab(t.id); setErr(""); }} style={{ flex: 1, padding: "8px 0", textAlign: "center", borderRadius: 9, fontFamily: "'Fredoka One',cursive", fontSize: "0.9rem", cursor: "pointer", background: tab === t.id ? C.white : "transparent", color: tab === t.id ? C.dark : C.inkL, boxShadow: tab === t.id ? `0 2px 0 ${C.border}` : "none", border: tab === t.id ? `1.5px solid ${C.border}` : "1.5px solid transparent", transition: "all 0.18s" }}>
+            <div key={t.id} onClick={() => { setTab(t.id); setErr(""); }} style={{ flex: 1, padding: "8px 0", textAlign: "center", borderRadius: 9, fontFamily: "'Baloo 2',sans-serif", fontSize: "0.9rem", cursor: "pointer", background: tab === t.id ? C.white : "transparent", color: tab === t.id ? C.dark : C.inkL, boxShadow: tab === t.id ? `0 2px 0 ${C.border}` : "none", border: tab === t.id ? `1.5px solid ${C.border}` : "1.5px solid transparent", transition: "all 0.18s" }}>
               {t.label}
             </div>
           ))}
@@ -2613,7 +2287,7 @@ function Login({ onLogin }) {
           <Btn onClick={doReg} style={{ width: "100%", marginBottom: 14 }} disabled={loading}>{loading ? "Creando..." : "Crear cuenta 🌱"}</Btn>
           <div style={{ background: C.cream, borderRadius: 16, padding: 14, textAlign: "center", border: `1.5px solid ${C.border}` }}>
             <div style={{ fontSize: "0.7rem", fontWeight: 800, color: C.inkL, letterSpacing: "0.6px", marginBottom: 7 }}>TU CÓDIGO DE PAREJA</div>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "2.2rem", letterSpacing: 9, color: C.dark, background: C.white, borderRadius: 10, padding: "10px", marginBottom: 6, border: `1.5px solid ${C.border}` }}>{code}</div>
+            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "2.2rem", letterSpacing: 9, color: C.dark, background: C.white, borderRadius: 10, padding: "10px", marginBottom: 6, border: `1.5px solid ${C.border}` }}>{code}</div>
             <div style={{ fontSize: "0.72rem", fontWeight: 800, marginBottom: 8, color: codeStatus === "available" ? C.olive : codeStatus === "taken" ? "#c04040" : C.inkL }}>
               {codeStatus === "checking" && "Verificando disponibilidad..."}
               {codeStatus === "available" && "Código disponible ✓"}
@@ -2627,12 +2301,12 @@ function Login({ onLogin }) {
           </div>
         </>}
         {tab === "pair" && <>
-          <div style={{ textAlign: "center", marginBottom: 16 }}><div style={{ fontSize: "1.8rem", marginBottom: 4 }}>🔗</div><div style={{ fontFamily: "'Fredoka One',cursive", color: C.dark, fontSize: "1.1rem" }}>Únete al jardín de tu pareja</div></div>
+          <div style={{ textAlign: "center", marginBottom: 16 }}><div style={{ fontSize: "1.8rem", marginBottom: 4 }}>🔗</div><div style={{ fontFamily: "'Baloo 2',sans-serif", color: C.dark, fontSize: "1.1rem" }}>Únete al jardín de tu pareja</div></div>
           <div style={{ marginBottom:10 }}>
             <label style={LBL}>🐾 Tu nombre</label>
             <Inp value={nameB} onChange={setNameB} placeholder="Rodrigo" type="text"/>
           </div>
-          <input value={pCode} onChange={e => setPCode(e.target.value.toUpperCase())} maxLength={6} placeholder="CÓDIGO" style={{ width: "100%", border: `2px solid ${C.border}`, borderRadius: 12, padding: "10px", fontFamily: "'Fredoka One',cursive", fontSize: "1.8rem", letterSpacing: 9, textAlign: "center", outline: "none", marginBottom: 12, color: C.dark, background: C.cream2, boxSizing: "border-box" }} />
+          <input value={pCode} onChange={e => setPCode(e.target.value.toUpperCase())} maxLength={6} placeholder="CÓDIGO" style={{ width: "100%", border: `2px solid ${C.border}`, borderRadius: 12, padding: "10px", fontFamily: "'Baloo 2',sans-serif", fontSize: "1.8rem", letterSpacing: 9, textAlign: "center", outline: "none", marginBottom: 12, color: C.dark, background: C.cream2, boxSizing: "border-box" }} />
           {[["Tu correo", pEmail, setPEmail, "tu@correo.com", "email"], ["Contraseña", pPass, setPPass, "Mínimo 6 caracteres", "password"]].map(([l, v, fn, ph, t]) => (
             <div key={l}><label style={LBL}>{l}</label><Inp value={v} onChange={fn} placeholder={ph} type={t} style={{ marginBottom: 10 }} /></div>
           ))}
@@ -2741,7 +2415,7 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
     return (
       <div style={{ textAlign:"center", padding:"24px 0" }}>
         <div style={{ fontSize:"2.5rem", marginBottom:8 }}>✨</div>
-        <div style={{ fontFamily:"'Fredoka One',cursive", color:C.dark, fontSize:"1.1rem", marginBottom:6 }}>¡Ejercicio completado!</div>
+        <div style={{ fontFamily:"'Baloo 2',sans-serif", color:C.dark, fontSize:"1.1rem", marginBottom:6 }}>¡Ejercicio completado!</div>
         <div style={{ fontSize:"0.85rem", color:C.inkM }}>Bien hecho, {nameA} y {nameB} 🐼🐾</div>
       </div>
     );
@@ -2838,14 +2512,14 @@ function TimerEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B" }) {
 
   if (!done) return (
     <div style={{ textAlign: "center", padding: "20px 0" }}>
-      <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "4.8rem", color: C.dark, letterSpacing: 4 }}>{Math.floor(secs / 60)}:{String(secs % 60).padStart(2, "0")}</div>
+      <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "4.8rem", color: C.dark, letterSpacing: 4 }}>{Math.floor(secs / 60)}:{String(secs % 60).padStart(2, "0")}</div>
       <div style={{ fontSize: "0.85rem", color: C.inkM, fontWeight: 700, marginTop: 8 }}>{ex.timerLabel}</div>
     </div>
   );
 
   return (
     <div>
-      <div style={{ background: C.cream, borderRadius: 12, padding: 12, textAlign: "center", fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark, marginBottom: 14, border: `1.5px solid ${C.border}` }}>¡{Math.floor(ex.timer / 60)} minutos completados! 🎉</div>
+      <div style={{ background: C.cream, borderRadius: 12, padding: 12, textAlign: "center", fontFamily: "'Baloo 2',sans-serif", fontSize: "1rem", color: C.dark, marginBottom: 14, border: `1.5px solid ${C.border}` }}>¡{Math.floor(ex.timer / 60)} minutos completados! 🎉</div>
       {ex.afterPrompts.map((p, i) => <div key={i} style={{ marginBottom: 10 }}><PBadge who={i === 0 ? "A" : "B"} name={i === 0 ? nameA : nameB} /><TA value={vals[i]} onChange={v => { const n = [...vals]; n[i] = v; setVals(n); }} placeholder={p.ph} /></div>)}
       <Btn onClick={() => { if (!vals.some(v => v.length < 2)) onDone(); }} style={{ width: "100%" }}>Finalizar ✓</Btn>
     </div>
@@ -2863,9 +2537,9 @@ function ExModal({ ex, onClose, onComplete, nameA, nameB, user }) {
   if (done) return (
     <div style={{ textAlign: "center", padding: "8px 0" }}>
       <div style={{ marginBottom: 14 }}><CouplePandaSVG happy size={120} /></div>
-      <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.6rem", color: C.dark, marginBottom: 5 }}>¡Lo hicieron juntos!</div>
+      <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.6rem", color: C.dark, marginBottom: 5 }}>¡Lo hicieron juntos!</div>
       <div style={{ fontSize: "0.88rem", color: C.inkM, marginBottom: 16 }}>Sus pandas están muy felices de verlos crecer</div>
-      <div style={{ background: C.gold, color: C.ink, borderRadius: 12, padding: "10px 24px", fontFamily: "'Fredoka One',cursive", fontSize: "1.15rem", display: "inline-block", marginBottom: 18, boxShadow: "0 3px 0 rgba(0,0,0,0.14)" }}>+{pts} bambú 🌿</div>
+      <div style={{ background: C.gold, color: C.ink, borderRadius: 12, padding: "10px 24px", fontFamily: "'Baloo 2',sans-serif", fontSize: "1.15rem", display: "inline-block", marginBottom: 18, boxShadow: "0 3px 0 rgba(0,0,0,0.14)" }}>+{pts} bambú 🌿</div>
       <Btn onClick={onClose} variant="olive" style={{ width: "100%", fontSize: "1.05rem" }}>Reclamar recompensa</Btn>
     </div>
   );
@@ -2875,7 +2549,7 @@ function ExModal({ ex, onClose, onComplete, nameA, nameB, user }) {
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: 14 }}>
         <div style={{ fontSize: "2.5rem", marginBottom: 5 }}>{ex.emoji}</div>
-        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.4rem", color: C.dark }}>{ex.title}</div>
+        <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.4rem", color: C.dark }}>{ex.title}</div>
         <div style={{ display: "flex", gap: 6, justifyContent: "center", marginTop: 6, flexWrap: "wrap" }}>
           <Tag bg={C.cream} color={C.inkM}>{ex.tags}</Tag>
           <Tag bg={C.sandL} color={C.olive}>{ex.time}</Tag>
@@ -2894,7 +2568,7 @@ function ExModal({ ex, onClose, onComplete, nameA, nameB, user }) {
         <div style={{ background: C.sandL, borderRadius: 14, padding: 14, marginBottom: 14, border: `1.5px solid ${C.border}` }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}
             onClick={() => setShowInstructions(!showInstructions)}>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark }}>📋 Cómo hacerlo</div>
+            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "0.95rem", color: C.dark }}>📋 Cómo hacerlo</div>
             <div style={{ color: C.inkL, transition: "transform 0.2s", transform: showInstructions ? "rotate(180deg)" : "none", fontSize: "0.8rem" }}>▼</div>
           </div>
           {showInstructions && (
@@ -2928,7 +2602,7 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
       <div style={{ background: C.sandL, minHeight: ejTab === "ejerc" ? "100vh" : "auto", paddingBottom: 90 }}>
         {/* Header with sub-tabs */}
         <div style={{ background: C.dark, padding:"44px 18px 0" }}>
-          <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.9rem", color:C.cream2, marginBottom:4 }}>Ejercicios ⭐</div>
+          <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"1.9rem", color:C.cream2, marginBottom:4 }}>Ejercicios ⭐</div>
           <div style={{ color:`${C.cream}88`, fontSize:"0.84rem", fontWeight:600, marginBottom:14 }}>Actividades y aprendizaje en pareja</div>
           
           {/* Instrucciones */}
@@ -2943,7 +2617,7 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
           <div style={{ display:"flex", gap:4 }}>
             {[["ejerc","🌿 Ejercicios"],["lecciones","📖 Lecciones"]].map(([id,label]) => (
               <div key={id} onClick={() => setEjTab(id)}
-                style={{ flex:1, padding:"10px 0", textAlign:"center", fontFamily:"'Fredoka One',cursive",
+                style={{ flex:1, padding:"10px 0", textAlign:"center", fontFamily:"'Baloo 2',sans-serif",
                   fontSize:"0.9rem", cursor:"pointer", borderRadius:"12px 12px 0 0",
                   background: ejTab===id ? C.sandL : "transparent",
                   color: ejTab===id ? C.dark : `${C.cream}88`,
@@ -2963,7 +2637,7 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 9 }}>
                 <div style={{ width: 50, height: 50, borderRadius: 14, background: C.cream, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.5rem", flexShrink: 0, border: `1.5px solid ${C.border}` }}>{e.emoji}</div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", color: C.dark }}>{e.title}</div>
+                  <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.1rem", color: C.dark }}>{e.title}</div>
                   <Tag bg={C.cream} color={C.inkM} style={{ marginTop: 3 }}>{e.tags}</Tag>
                 </div>
                 <div style={{ display: "flex", gap: 3 }}>{[0, 1, 2].map(i => <div key={i} style={{ width: 9, height: 9, borderRadius: "50%", background: i < count ? (count >= 3 ? C.gold : C.olive) : C.sand }} />)}</div>
@@ -2981,7 +2655,7 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
       <div style={{ background: C.sandL, minHeight:"60vh", paddingBottom:14 }}>
         {/* Instrucciones de Lecciones */}
         <div style={{ margin: "12px 14px 0", background: C.white, borderRadius: 16, padding: "14px 16px", boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
-          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark, marginBottom: 6 }}>📖 ¿Qué son las Lecciones?</div>
+          <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "0.95rem", color: C.dark, marginBottom: 6 }}>📖 ¿Qué son las Lecciones?</div>
           <div style={{ fontSize: "0.8rem", color: C.inkM, lineHeight: 1.6 }}>
             Herramientas reales de psicología de pareja, explicadas de forma simple. 
             Lee una al día — cada lección te da +10 bambú 🌿. Las puedes releer cuando quieras.
@@ -3009,7 +2683,7 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
                 <div style={{ display:"flex", alignItems:"center", gap:10 }}>
                   <div style={{ fontSize:"1.6rem" }}>{lesson.emoji}</div>
                   <div style={{ flex:1 }}>
-                    <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.92rem", color:isToday&&!iDone?C.cream2:C.dark }}>{lesson.title}</div>
+                    <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"0.92rem", color:isToday&&!iDone?C.cream2:C.dark }}>{lesson.title}</div>
                     <div style={{ fontSize:"0.7rem", fontWeight:700, marginTop:2, color:isToday&&!iDone?`${C.cream}88`:C.inkL }}>{lesson.tag}{isToday?" · HOY":""}</div>
                   </div>
                   <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:3 }}>
@@ -3034,7 +2708,7 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
               <div style={{ width:34, height:5, background:"rgba(255,255,255,0.2)", borderRadius:50, margin:"0 auto 12px" }}/>
               <button onClick={() => setOpenLesson(null)} style={{ position:"absolute", right:16, top:14, background:C.sandL, border:`1.5px solid ${C.border}`, borderRadius:9, width:30, height:30, fontSize:"0.85rem", cursor:"pointer", color:C.inkM }}>✕</button>
               <div style={{ fontSize:"2rem", marginBottom:5 }}>{openLesson.emoji}</div>
-              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.35rem", color:C.cream2, marginBottom:4 }}>{openLesson.title}</div>
+              <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"1.35rem", color:C.cream2, marginBottom:4 }}>{openLesson.title}</div>
               <span style={{ background:C.olive, color:C.cream2, borderRadius:6, padding:"3px 10px", fontSize:"0.68rem", fontWeight:800 }}>{openLesson.tag}</span>
             </div>
             <div style={{ padding:"14px 16px 80px" }}>
@@ -3043,7 +2717,7 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
               </div>
               {openLesson.sections.map((s,i) => (
                 <div key={i} style={{ background:C.white, borderRadius:14, padding:14, marginBottom:9, border:`1.5px solid ${C.border}` }}>
-                  <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", color:C.dark, marginBottom:5 }}>{s.icon} {s.title}</div>
+                  <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"0.95rem", color:C.dark, marginBottom:5 }}>{s.icon} {s.title}</div>
                   <div style={{ fontSize:"0.85rem", color:C.inkM, lineHeight:1.7 }}>{s.body}</div>
                 </div>
               ))}
@@ -3053,11 +2727,11 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
               </div>
               {!(lessonsDone?.[openLesson.id]?.[user?.isOwner !== false ? "owner" : "partner"])
                 ? <button onClick={() => { onCompleteLesson(openLesson.id); setOpenLesson(null); }}
-                    style={{ width:"100%", background:C.olive, color:C.cream2, border:"none", borderRadius:14, padding:15, fontFamily:"'Fredoka One',cursive", fontSize:"1rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.2)" }}>
+                    style={{ width:"100%", background:C.olive, color:C.cream2, border:"none", borderRadius:14, padding:15, fontFamily:"'Baloo 2',sans-serif", fontSize:"1rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.2)" }}>
                     ✓ Leímos esto juntos · +10 bambú 🌿
                   </button>
                 : <div style={{ textAlign:"center", background:C.cream, borderRadius:12, padding:12, border:`1.5px solid ${C.border}` }}>
-                    <div style={{ fontFamily:"'Fredoka One',cursive", color:C.olive, marginBottom:6 }}>✓ Ya la completaste</div>
+                    <div style={{ fontFamily:"'Baloo 2',sans-serif", color:C.olive, marginBottom:6 }}>✓ Ya la completaste</div>
                     <div style={{ display:"flex", gap:10, justifyContent:"center" }}>
                       <div style={{ fontSize:"0.75rem", fontWeight:800, color: lessonsDone?.[openLesson?.id]?.owner ? C.olive : C.sand }}>🐼 {nameA} {lessonsDone?.[openLesson?.id]?.owner ? "✓" : "pendiente"}</div>
                       <div style={{ fontSize:"0.75rem", fontWeight:800, color: lessonsDone?.[openLesson?.id]?.partner ? C.teal : C.sand }}>🐾 {nameB} {lessonsDone?.[openLesson?.id]?.partner ? "✓" : "pendiente"}</div>
@@ -3153,14 +2827,14 @@ function Conocete({ conoce, onSave, user }) {
         <div style={{ background: CONOCE_CATS[cat].bg, borderRadius: 14, padding: "14px 16px", marginBottom: 12, border: `1.5px solid ${C.border}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
             <span style={{ fontSize: "1.6rem" }}>{CONOCE_CATS[cat].emoji}</span>
-            <span style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", color: C.dark }}>{CONOCE_CATS[cat].label}</span>
+            <span style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.1rem", color: C.dark }}>{CONOCE_CATS[cat].label}</span>
           </div>
           <div style={{ fontSize: "0.82rem", color: C.inkM, lineHeight: 1.6 }}>{CONOCE_CATS[cat].descripcion}</div>
         </div>
 
         <div style={{ background: C.white, borderRadius: 20, padding: 18, boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", color: C.dark }}>Preguntas</div>
+            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.1rem", color: C.dark }}>Preguntas</div>
             <button onClick={() => setCat(null)} style={{ background: C.sand, border: `1.5px solid ${C.border}`, borderRadius: 8, width: 30, height: 30, cursor: "pointer", fontSize: "0.85rem", color: C.inkM }}>✕</button>
           </div>
           {CONOCE_CATS[cat].preguntas.map((q, i) => {
@@ -3185,20 +2859,20 @@ function Conocete({ conoce, onSave, user }) {
       
       {/* Instrucciones introductorias */}
       <div style={{ margin: "12px 14px", background: C.white, borderRadius: 16, padding: "16px 18px", boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
-        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark, marginBottom: 8 }}>💬 ¿Cómo funciona?</div>
+        <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "0.95rem", color: C.dark, marginBottom: 8 }}>💬 ¿Cómo funciona?</div>
         <div style={{ fontSize: "0.82rem", color: C.inkM, lineHeight: 1.7 }}>
           Responde las preguntas por separado. Cuando ambos contesten, podrán ver las respuestas del otro. 
           No hay respuestas correctas — se trata de conocerse mejor. Cada respuesta te da +15 bambú 🌿
         </div>
       </div>
 
-      <div style={{ padding: "8px 14px 0", fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark }}>Elige una categoría</div>
+      <div style={{ padding: "8px 14px 0", fontFamily: "'Baloo 2',sans-serif", fontSize: "1rem", color: C.dark }}>Elige una categoría</div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 11, padding: "10px 14px" }}>
         {Object.entries(CONOCE_CATS).map(([key, data]) => {
           const done = data.preguntas.filter((_, i) => !!conoce[`${key}-${i}`]?.[myRole]).length;
           return <div key={key} onClick={() => setCat(key)} style={{ background: data.bg, borderRadius: 18, padding: 18, textAlign: "center", cursor: "pointer", boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}`, transition: "transform 0.13s" }} onMouseOver={e => e.currentTarget.style.transform = "translateY(-2px)"} onMouseOut={e => e.currentTarget.style.transform = "none"}>
             <div style={{ fontSize: "2.2rem", marginBottom: 7 }}>{data.emoji}</div>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.97rem", color: C.dark }}>{data.label}</div>
+            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "0.97rem", color: C.dark }}>{data.label}</div>
             <div style={{ fontSize: "0.7rem", color: C.inkM, fontWeight: 700, marginTop: 3 }}>{done} / {data.preguntas.length}</div>
             <ProgBar value={done} max={data.preguntas.length} color={C.olive} style={{ marginTop: 8 }} />
           </div>;
@@ -3211,154 +2885,8 @@ function Conocete({ conoce, onSave, user }) {
   );
 }
 
-// BURBUJA NEGOTIATION INBOX — timeline of proposals/counter/approvals per item
-function BurbujaInbox({ burbuja, user, onPropose, onApprove, onEditApproved }) {
-  const { nameA, nameB } = getCoupleNames(user);
-  const myRole = user?.isOwner !== false ? "owner" : "partner";
-  const partnerRole = myRole === "owner" ? "partner" : "owner";
-  const myName = myRole === "owner" ? nameA : nameB;
-  const partnerName = myRole === "owner" ? nameB : nameA;
-  const [openItem, setOpenItem] = useState(null);
-  const [draft, setDraft] = useState("");
-
-  const items = BURBUJA_SECTIONS.flatMap(sec =>
-    sec.items
-      .filter(item => {
-        const entry = burbuja[item.id] || {};
-        return entry.history?.length || entry.proposalText || entry.status === "approved";
-      })
-      .map(item => {
-        const entry = burbuja[item.id] || {};
-        const history = (entry.history || []).slice().sort((a, b) => new Date(b.at) - new Date(a.at));
-        const lastTs = history[0]?.at || entry.approvedAt || entry.updatedAt;
-        return { item, entry, history, lastTs };
-      })
-  ).sort((a, b) => new Date(b.lastTs || 0) - new Date(a.lastTs || 0));
-
-  const getEventLabel = (h) => {
-    const byName = h.by === "owner" ? nameA : nameB;
-    if (h.type === "approved") return `${byName} aprobó el acuerdo ✅`;
-    if (h.type === "counter") return `${byName} envió una contraoferta ↔`;
-    return `${byName} envió una propuesta ✉️`;
-  };
-
-  const getStatus = (entry) => {
-    if (entry.status === "approved") return { text: "Aprobado ✅", color: C.olive };
-    if (entry.status === "pending") return { text: "Negociando ↔", color: "#c7a35a" };
-    return { text: "En borrador", color: C.inkL };
-  };
-
-  return (
-    <div style={{ margin: "0 14px 10px" }}>
-      {items.length === 0 ? (
-        <div style={{ background: C.white, borderRadius: 16, padding: 16, border: `1.5px solid ${C.border}`, textAlign: "center", color: C.inkL, fontSize: "0.85rem" }}>
-          <div style={{ fontSize: "1.8rem", marginBottom: 8 }}>🫧</div>
-          <div style={{ fontWeight: 700, marginBottom: 4 }}>Aún no hay negociaciones</div>
-          <div>Cuando envíen propuestas o contraofertas, aparecerá aquí el historial.</div>
-        </div>
-      ) : (
-        items.map(({ item, entry, history }) => {
-          const isOpen = openItem === item.id;
-          const status = getStatus(entry);
-          const approvedText = entry.approvedText || entry.proposalText || "";
-          const isApproved = entry.status === "approved";
-          const pendingByMe = entry.status === "pending" && entry.proposalBy === myRole;
-          const canApprove = entry.status === "pending" && entry.proposalBy !== myRole;
-
-          return (
-            <div key={item.id} style={{ background: C.white, borderRadius: 16, padding: 14, marginBottom: 10, border: `1.5px solid ${C.border}`, boxShadow: `0 2px 0 ${C.border}` }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: `${status.color}18`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.1rem" }}>🫧</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.88rem", color: C.dark, lineHeight: 1.3 }}>{item.q}</div>
-                  <div style={{ fontSize: "0.68rem", fontWeight: 800, color: status.color, marginTop: 2 }}>{status.text}</div>
-                </div>
-                <button
-                  onClick={() => setOpenItem(isOpen ? null : item.id)}
-                  style={{ background: C.sand, border: `1.5px solid ${C.border}`, borderRadius: 8, width: 28, height: 28, cursor: "pointer", color: C.inkM, fontSize: "0.75rem" }}
-                >
-                  {isOpen ? "▲" : "▼"}
-                </button>
-              </div>
-
-              {isApproved && (
-                <div style={{ background: "#f4fff4", borderRadius: 10, padding: "10px 12px", marginBottom: 10, border: `1px solid ${C.olive}40` }}>
-                  <div style={{ fontSize: "0.65rem", fontWeight: 800, color: C.olive, marginBottom: 3, letterSpacing: "0.4px" }}>ACUERDO FINAL</div>
-                  <div style={{ fontSize: "0.85rem", color: C.ink, fontWeight: 700, lineHeight: 1.55 }}>{approvedText}</div>
-                </div>
-              )}
-
-              {isOpen && (
-                <div style={{ marginTop: 8 }}>
-                  {history.map((h, i) => (
-                    <div key={h.id || i} style={{ display: "flex", gap: 10, marginBottom: 10 }}>
-                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: h.type === "approved" ? C.olive : h.type === "counter" ? "#c7a35a" : C.sand, marginTop: 6, flexShrink: 0 }} />
-                      <div style={{ flex: 1, background: C.sandL, borderRadius: 10, padding: 10, border: `1px solid ${C.border}` }}>
-                        <div style={{ fontSize: "0.72rem", fontWeight: 800, color: C.inkL, marginBottom: 3 }}>{getEventLabel(h)}</div>
-                        <div style={{ fontSize: "0.83rem", color: C.ink, fontWeight: 700, lineHeight: 1.55 }}>{h.text}</div>
-                        <div style={{ fontSize: "0.62rem", color: C.inkL, marginTop: 4 }}>{new Date(h.at).toLocaleDateString("es", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</div>
-                      </div>
-                    </div>
-                  ))}
-
-                  {canApprove && (
-                    <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                      <Btn onClick={() => onApprove(item.id)} variant="olive" style={{ flex: 1, fontSize: "0.85rem" }}>Aprobar ✅</Btn>
-                    </div>
-                  )}
-
-                  {!isApproved && pendingByMe && (
-                    <div style={{ fontSize: "0.74rem", color: C.inkL, fontWeight: 700, marginTop: 8 }}>Esperando respuesta de {partnerName}...</div>
-                  )}
-
-                  {isApproved ? (
-                    <div style={{ marginTop: 10 }}>
-                      <TA value={draft} onChange={setDraft} placeholder="¿Quieres reabrir o ajustar este acuerdo? Escribe la nueva propuesta..." rows={2} />
-                      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 6 }}>
-                        <Btn
-                          onClick={() => {
-                            if (!draft.trim()) return;
-                            onEditApproved(item.id, draft.trim());
-                            setDraft("");
-                          }}
-                          variant="sand"
-                          style={{ padding: "8px 12px", fontSize: "0.8rem" }}
-                        >
-                          Reabrir / Editar acuerdo
-                        </Btn>
-                      </div>
-                    </div>
-                  ) : (
-                    <div style={{ marginTop: 10 }}>
-                      <TA value={draft} onChange={setDraft} placeholder={`Responder a ${partnerName} con una contraoferta...`} rows={2} />
-                      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 6 }}>
-                        <Btn
-                          onClick={() => {
-                            if (!draft.trim()) return;
-                            onPropose(item.id, draft.trim(), true);
-                            setDraft("");
-                          }}
-                          variant="sand"
-                          style={{ padding: "8px 12px", fontSize: "0.8rem" }}
-                        >
-                          Enviar contraoferta
-                        </Btn>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })
-      )}
-    </div>
-  );
-}
-
-
 // BURBUJA
-function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, onEditApproved, user }) {
+function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
   const { nameA, nameB } = getCoupleNames(user);
   const myRole = user?.isOwner !== false ? "owner" : "partner";
   const partnerRole = myRole === "owner" ? "partner" : "owner";
@@ -3382,11 +2910,11 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, onEditApproved, us
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
       <div style={{ background: C.olive, padding: "48px 20px 24px", textAlign: "center" }}>
-        <h1 style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.9rem", color: C.cream2, margin: 0 }}>La Burbuja</h1>
+        <h1 style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.9rem", color: C.cream2, margin: 0 }}>La Burbuja</h1>
         <p style={{ color: `${C.cream}88`, fontSize: "0.86rem", fontWeight: 600, margin: "4px 0 0" }}>Sus reglas, acuerdos y mundo compartido · +10 bambú c/u</p>
       </div>
       <div style={{ background: C.cream, borderRadius: 18, margin: "14px 14px 8px", padding: 16, border: `1.5px solid ${C.border}`, boxShadow: `0 3px 0 ${C.border}` }}>
-        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.05rem", color: C.dark, marginBottom: 5 }}>🫧 ¿Qué es la Burbuja?</div>
+        <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.05rem", color: C.dark, marginBottom: 5 }}>🫧 ¿Qué es la Burbuja?</div>
         <div style={{ fontSize: "0.85rem", color: C.inkM, lineHeight: 1.7 }}>
           Acá construyen juntos las reglas y acuerdos de su relación. En <strong>Negociación</strong>: cada uno propone su respuesta a preguntas clave — 
           si ambos aprueban, se guarda como acuerdo. En <strong>Acuerdos</strong>: ven todo lo que han acordado y pueden editarlo. 
@@ -3398,7 +2926,7 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, onEditApproved, us
         </div>
       </div>
       <div style={{ display: "flex", gap: 8, margin: "0 14px 10px" }}>
-        {[ ["negociacion", "Negociación"], ["inbox", "📬 Inbox"], ["acuerdos", "Acuerdos hechos"] ].map(([id, label]) => (
+        {[ ["negociacion", "Negociación"], ["acuerdos", "Acuerdos hechos"] ].map(([id, label]) => (
           <button
             key={id}
             onClick={() => setBurbujaTab(id)}
@@ -3409,7 +2937,7 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, onEditApproved, us
               border: `1.5px solid ${burbujaTab === id ? C.dark : C.border}`,
               background: burbujaTab === id ? C.dark : C.white,
               color: burbujaTab === id ? C.cream2 : C.ink,
-              fontFamily: "'Fredoka One',cursive",
+              fontFamily: "'Baloo 2',sans-serif",
               fontSize: "0.82rem",
               cursor: "pointer",
               boxShadow: burbujaTab === id ? "0 2px 0 rgba(0,0,0,0.18)" : `0 2px 0 ${C.border}`,
@@ -3419,16 +2947,6 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, onEditApproved, us
           </button>
         ))}
       </div>
-
-      {burbujaTab === "inbox" && (
-        <BurbujaInbox
-          burbuja={burbuja}
-          user={user}
-          onPropose={onPropose}
-          onApprove={onApprove}
-          onEditApproved={onEditApproved}
-        />
-      )}
 
       {burbujaTab === "negociacion" && BURBUJA_SECTIONS.map(sec => {
         const pendingItems = sec.items.filter(item => {
@@ -3442,7 +2960,7 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, onEditApproved, us
           <div onClick={() => setOpen(p => ({ ...p, [sec.id]: !p[sec.id] }))} style={{ display: "flex", alignItems: "center", gap: 12, padding: 16, cursor: "pointer" }}>
             <div style={{ width: 44, height: 44, background: sec.itemBg, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.7rem", flexShrink: 0 }}>{sec.icon}</div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.05rem", color: C.dark }}>{sec.title}</div>
+              <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.05rem", color: C.dark }}>{sec.title}</div>
               <div style={{ fontSize: "0.72rem", color: C.inkL, fontWeight: 700 }}>{sec.sub}</div>
             </div>
             <div style={{ color: C.inkL, transition: "transform 0.25s", transform: open[sec.id] ? "rotate(180deg)" : "none" }}>▼</div>
@@ -3623,7 +3141,7 @@ function StreakSection({ streakInfo, streakAnalytics, onUpdateSettings, user }) 
     <div style={{ margin: "0 14px 12px", background: C.white, borderRadius: 18, padding: 16, boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
         <div>
-          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark }}>Racha de conexion diaria</div>
+          <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1rem", color: C.dark }}>Racha de conexion diaria</div>
           <div style={{ fontSize: "0.76rem", color: C.inkL, fontWeight: 700 }}>Comuniquense con calidez cada dia para cuidar su vinculo</div>
         </div>
         <div style={{ background: todayDone ? C.mint : C.sandL, borderRadius: 999, padding: "6px 10px", fontSize: "0.68rem", fontWeight: 800, color: todayDone ? C.teal : C.inkL }}>
@@ -3634,11 +3152,11 @@ function StreakSection({ streakInfo, streakAnalytics, onUpdateSettings, user }) 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
         <div style={{ background: C.cream, borderRadius: 12, padding: "10px 12px", border: `1px solid ${C.border}` }}>
           <div style={{ fontSize: "0.68rem", color: C.inkL, fontWeight: 800 }}>Racha actual</div>
-          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.45rem", color: C.dark }}>{current} dias</div>
+          <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.45rem", color: C.dark }}>{current} dias</div>
         </div>
         <div style={{ background: C.cream, borderRadius: 12, padding: "10px 12px", border: `1px solid ${C.border}` }}>
           <div style={{ fontSize: "0.68rem", color: C.inkL, fontWeight: 800 }}>Mejor racha</div>
-          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.45rem", color: C.dark }}>{longest} dias</div>
+          <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.45rem", color: C.dark }}>{longest} dias</div>
         </div>
       </div>
 
@@ -3650,7 +3168,7 @@ function StreakSection({ streakInfo, streakAnalytics, onUpdateSettings, user }) 
           </div>
         </div>
         <div style={{ width: "100%", height: 12, borderRadius: 999, background: C.sand, overflow: "hidden", border: `1px solid ${C.border}` }}>
-          <div style={{ width: `${streakInfo?.progressPct || 0}%`, height: "100%", background: "linear-gradient(90deg, #7ab848 0%, #4a9a8a 100%)", transition: "width 0.35s ease" }} />
+          <div style={{ width: `${streakInfo?.progressPct || 0}%`, height: "100%", background: "linear-gradient(90deg, #8bbe6a 0%, #4f7a5e 100%)", transition: "width 0.35s ease" }} />
         </div>
       </div>
 
@@ -3810,12 +3328,12 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
         onClick={handleOpen}
         style={{
           width: "100%",
-          background: "linear-gradient(130deg, #f7f1ff 0%, #eee3ff 100%)",
+          background: "linear-gradient(130deg, #faf3df 0%, #f0e2bd 100%)",
           color: C.dark,
           border: `1.5px solid ${C.border}`,
           borderRadius: 14,
           padding: "14px 16px",
-          fontFamily: "'Fredoka One',cursive",
+          fontFamily: "'Baloo 2',sans-serif",
           fontSize: "1rem",
           cursor: "pointer",
           boxShadow: `0 3px 0 ${C.border}`,
@@ -3841,7 +3359,7 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
             border: `1.5px solid ${C.border}`,
             borderRadius: 12,
             padding: "10px 14px",
-            fontFamily: "'Fredoka One',cursive",
+            fontFamily: "'Baloo 2',sans-serif",
             fontSize: "0.85rem",
             cursor: "pointer",
             display: "flex",
@@ -3889,7 +3407,7 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontSize: "1.8rem" }}>💡</span>
                 <div>
-                  <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.2rem", color: C.dark }}>Consejo del Día</div>
+                  <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.2rem", color: C.dark }}>Consejo del Día</div>
                   <div style={{ fontSize: "0.75rem", color: C.inkL, fontWeight: 700 }}>#{consejo.id} · +15 bambú 🌿</div>
                 </div>
               </div>
@@ -3912,7 +3430,7 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
             </div>
 
             {/* El consejo principal */}
-            <div style={{ background: "linear-gradient(130deg, #f7f1ff 0%, #eee3ff 100%)", borderRadius: 18, padding: "18px 20px", border: `2px solid ${C.border}`, marginBottom: 14 }}>
+            <div style={{ background: "linear-gradient(130deg, #faf3df 0%, #f0e2bd 100%)", borderRadius: 18, padding: "18px 20px", border: `2px solid ${C.border}`, marginBottom: 14 }}>
               <div style={{ fontSize: "1.15rem", color: C.dark, lineHeight: 1.6, fontWeight: 800, textAlign: "center" }}>
                 {consejo.texto}
               </div>
@@ -3960,7 +3478,7 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
                 border: "none",
                 borderRadius: 14,
                 padding: "14px",
-                fontFamily: "'Fredoka One',cursive",
+                fontFamily: "'Baloo 2',sans-serif",
                 fontSize: "1rem",
                 cursor: "pointer",
                 boxShadow: "0 4px 0 rgba(0,0,0,0.2)"
@@ -4006,7 +3524,7 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontSize: "1.8rem" }}>💜</span>
                 <div>
-                  <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.2rem", color: C.dark }}>Mis Favoritos</div>
+                  <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.2rem", color: C.dark }}>Mis Favoritos</div>
                   <div style={{ fontSize: "0.75rem", color: C.inkL, fontWeight: 700 }}>{favs.length} consejo{favs.length !== 1 ? 's' : ''} guardado{favs.length !== 1 ? 's' : ''}</div>
                 </div>
               </div>
@@ -4032,7 +3550,7 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
             {favsList.length === 0 ? (
               <div style={{ textAlign: "center", padding: "40px 20px", color: C.inkL }}>
                 <div style={{ fontSize: "3rem", marginBottom: 10 }}>💜</div>
-                <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", marginBottom: 8 }}>No tienes favoritos aún</div>
+                <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.1rem", marginBottom: 8 }}>No tienes favoritos aún</div>
                 <div style={{ fontSize: "0.85rem" }}>Guarda los consejos que más te gusten para verlos aquí</div>
               </div>
             ) : selectedFav ? (
@@ -4061,7 +3579,7 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontSize: "1.8rem" }}>💡</span>
                     <div>
-                      <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.2rem", color: C.dark }}>Consejo #{selectedFav.id}</div>
+                      <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.2rem", color: C.dark }}>Consejo #{selectedFav.id}</div>
                       <div style={{ fontSize: "0.75rem", color: C.inkL, fontWeight: 700 }}>Guardado en favoritos</div>
                     </div>
                   </div>
@@ -4084,7 +3602,7 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
                 </div>
 
                 {/* El consejo principal */}
-                <div style={{ background: "linear-gradient(130deg, #f7f1ff 0%, #eee3ff 100%)", borderRadius: 18, padding: "18px 20px", border: `2px solid ${C.border}`, marginBottom: 14 }}>
+                <div style={{ background: "linear-gradient(130deg, #faf3df 0%, #f0e2bd 100%)", borderRadius: 18, padding: "18px 20px", border: `2px solid ${C.border}`, marginBottom: 14 }}>
                   <div style={{ fontSize: "1.15rem", color: C.dark, lineHeight: 1.6, fontWeight: 800, textAlign: "center" }}>
                     {selectedFav.texto}
                   </div>
@@ -4165,7 +3683,7 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
                 border: "none",
                 borderRadius: 14,
                 padding: "14px",
-                fontFamily: "'Fredoka One',cursive",
+                fontFamily: "'Baloo 2',sans-serif",
                 fontSize: "1rem",
                 cursor: "pointer",
                 boxShadow: "0 4px 0 rgba(0,0,0,0.2)"
@@ -4217,7 +3735,7 @@ function TestStatsSection({ testScores, onRetakeTest, lastTestDate, streakInfo }
   return (
     <div style={{ background: C.white, borderRadius: 18, padding: 16, border: `1.5px solid ${C.border}`, boxShadow: `0 3px 0 ${C.border}` }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark }}>
+        <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "0.95rem", color: C.dark }}>
           📊 Estadísticas del test
         </div>
         <button 
@@ -4232,7 +3750,7 @@ function TestStatsSection({ testScores, onRetakeTest, lastTestDate, streakInfo }
         <div style={{ fontSize: "2.2rem" }}>{progEmoji}</div>
         <div style={{ flex: 1 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-            <div style={{ background: progColor, color: "white", borderRadius: 50, padding: "4px 14px", fontFamily: "'Fredoka One',cursive", fontSize: "1rem" }}>
+            <div style={{ background: progColor, color: "white", borderRadius: 50, padding: "4px 14px", fontFamily: "'Baloo 2',sans-serif", fontSize: "1rem" }}>
               {total.toFixed(1)} / 5.0
             </div>
           </div>
@@ -4275,7 +3793,7 @@ function TestStatsSection({ testScores, onRetakeTest, lastTestDate, streakInfo }
 
       <button 
         onClick={onRetakeTest}
-        style={{ width: "100%", background: C.dark, color: C.cream2, border: "none", borderRadius: 12, padding: "10px 14px", fontFamily: "'Fredoka One',cursive", fontSize: "0.85rem", cursor: "pointer", marginTop: 8, boxShadow: "0 3px 0 rgba(0,0,0,0.2)" }}
+        style={{ width: "100%", background: C.dark, color: C.cream2, border: "none", borderRadius: 12, padding: "10px 14px", fontFamily: "'Baloo 2',sans-serif", fontSize: "0.85rem", cursor: "pointer", marginTop: 8, boxShadow: "0 3px 0 rgba(0,0,0,0.2)" }}
       >
         🔄 Volver a hacer el test
       </button>
@@ -4376,13 +3894,13 @@ function DiarioPersonal({ entries, onSave, user }) {
       <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
         <div style={{ background: C.dark, padding: "44px 20px 20px" }}>
           <button onClick={() => setView("list")} style={{ background: "none", border: "none", color: C.cream2, fontSize: "1.5rem", cursor: "pointer", marginBottom: 10, display: "block" }}>←</button>
-          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.4rem", color: C.cream2, marginBottom: 4 }}>{type.label}</div>
+          <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.4rem", color: C.cream2, marginBottom: 4 }}>{type.label}</div>
           <div style={{ fontSize: "0.8rem", color: `${C.cream}88` }}>{type.sub}</div>
         </div>
         <div style={{ padding: "10px 14px 0" }}>
           {/* Mensaje de privacidad */}
           <div style={{ background:"#fff3cd", borderRadius:14, padding:14, marginBottom:10, border:`1.5px solid #ffc107` }}>
-            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", color:"#856404", marginBottom:6 }}>🔒 Solo tú puedes ver esto</div>
+            <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"0.9rem", color:"#856404", marginBottom:6 }}>🔒 Solo tú puedes ver esto</div>
             <div style={{ fontSize:"0.8rem", color:"#856404", lineHeight:1.6 }}>
               Este diario es 100% privado. Tu pareja NO tiene acceso a estas entradas. 
               Si escribes algo negativo, solo se guardará tu conclusión positiva final.
@@ -4391,7 +3909,7 @@ function DiarioPersonal({ entries, onSave, user }) {
           
           {selType === "abcd" && (
             <div style={{ background:"#eef6ea", borderRadius:14, padding:14, marginBottom:10, border:`1.5px solid ${C.border}` }}>
-              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", color:C.dark, marginBottom:6 }}>¿Qué es ABCD y qué significa reestructurar?</div>
+              <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"0.9rem", color:C.dark, marginBottom:6 }}>¿Qué es ABCD y qué significa reestructurar?</div>
               <div style={{ fontSize:"0.8rem", color:C.inkM, lineHeight:1.6, marginBottom:8 }}>
                 ABCD es una forma simple de ordenar tu mente cuando te activas. Reestructurar no es mentirte:
                 es pasar de un pensamiento automático que duele a una idea más completa y justa.
@@ -4404,7 +3922,7 @@ function DiarioPersonal({ entries, onSave, user }) {
           )}
           {type.prompts.map(p => (
             <div key={p.key} style={{ background: C.white, borderRadius: 14, padding: 14, marginBottom: 10, border: `1.5px solid ${C.border}` }}>
-              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", color:C.dark, marginBottom:7 }}>{p.label}</div>
+              <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"0.9rem", color:C.dark, marginBottom:7 }}>{p.label}</div>
               {selType === "abcd" && abcdFieldHelp[p.key] && (
                 <div style={{ fontSize:"0.76rem", color:C.inkL, lineHeight:1.55, marginBottom:8, background:C.cream, border:`1px solid ${C.border}`, borderRadius:9, padding:"7px 9px" }}>
                   {abcdFieldHelp[p.key]}
@@ -4420,8 +3938,8 @@ function DiarioPersonal({ entries, onSave, user }) {
             </div>
           ))}
           <div style={{ display:"flex", gap:10, marginTop:4 }}>
-            <button onClick={() => { setSelType(null); setView("new"); }} style={{ flex:1, padding:13, background:C.cream, border:`1.5px solid ${C.border}`, borderRadius:14, fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", cursor:"pointer", color:C.inkM }}>← Tipo</button>
-            <button onClick={handleSave} style={{ flex:2, padding:13, background:C.dark, color:C.cream2, border:"none", borderRadius:14, fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.2)" }}>Guardar entrada ✓</button>
+            <button onClick={() => { setSelType(null); setView("new"); }} style={{ flex:1, padding:13, background:C.cream, border:`1.5px solid ${C.border}`, borderRadius:14, fontFamily:"'Baloo 2',sans-serif", fontSize:"0.95rem", cursor:"pointer", color:C.inkM }}>← Tipo</button>
+            <button onClick={handleSave} style={{ flex:2, padding:13, background:C.dark, color:C.cream2, border:"none", borderRadius:14, fontFamily:"'Baloo 2',sans-serif", fontSize:"0.95rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.2)" }}>Guardar entrada ✓</button>
           </div>
         </div>
       </div>
@@ -4433,18 +3951,18 @@ function DiarioPersonal({ entries, onSave, user }) {
       <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
         <div style={{ background: C.dark, padding: "44px 20px 20px" }}>
           <button onClick={() => setView("list")} style={{ background: "none", border: "none", color: C.cream2, fontSize: "1.5rem", cursor: "pointer", marginBottom: 10, display: "block" }}>←</button>
-          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.4rem", color: C.cream2, marginBottom: 4 }}>📓 Diario</div>
+          <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.4rem", color: C.cream2, marginBottom: 4 }}>📓 Diario</div>
           <div style={{ fontSize: "0.8rem", color: `${C.cream}88` }}>¿Qué tipo de entrada?</div>
         </div>
         <div style={{ padding: "10px 14px 0" }}>
           {DIARIO_TYPES.map(t => (
             <div key={t.id} onClick={() => setSelType(t.id)}
               style={{ background:C.white, borderRadius:16, padding:"14px 16px", marginBottom:10, cursor:"pointer", border:`1.5px solid ${C.border}`, boxShadow:`0 3px 0 ${C.border}` }}>
-              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.05rem", color:C.dark }}>{t.label}</div>
+              <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"1.05rem", color:C.dark }}>{t.label}</div>
               <div style={{ fontSize:"0.8rem", color:C.inkM, marginTop:3 }}>{t.sub}</div>
             </div>
           ))}
-          <button onClick={() => setView("list")} style={{ width:"100%", padding:12, background:"transparent", border:`1.5px solid ${C.border}`, borderRadius:14, fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", cursor:"pointer", color:C.inkM, marginTop:4 }}>← Volver</button>
+          <button onClick={() => setView("list")} style={{ width:"100%", padding:12, background:"transparent", border:`1.5px solid ${C.border}`, borderRadius:14, fontFamily:"'Baloo 2',sans-serif", fontSize:"0.9rem", cursor:"pointer", color:C.inkM, marginTop:4 }}>← Volver</button>
         </div>
       </div>
     );
@@ -4455,7 +3973,7 @@ function DiarioPersonal({ entries, onSave, user }) {
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
       <div style={{ background: C.dark, padding: "44px 20px 20px" }}>
         <button onClick={() => {}} style={{ background: "none", border: "none", color: C.cream2, fontSize: "1.5rem", cursor: "pointer", marginBottom: 10, display: "block", opacity: 0 }}>←</button>
-        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.4rem", color: C.cream2, marginBottom: 4 }}>📓 Diario Privado</div>
+        <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.4rem", color: C.cream2, marginBottom: 4 }}>📓 Diario Privado</div>
         <div style={{ fontSize: "0.8rem", color: `${C.cream}88` }}>Solo tú puedes ver esto 🔒</div>
       </div>
       <div style={{ padding: "10px 14px 0" }}>
@@ -4465,7 +3983,7 @@ function DiarioPersonal({ entries, onSave, user }) {
             Las entradas negativas se guardan solo con tu conclusión positiva final.
           </div>
         </div>
-        <button onClick={() => setView("new")} style={{ width:"100%", background:C.dark, color:C.cream2, border:"none", borderRadius:14, padding:"13px 16px", fontFamily:"'Fredoka One',cursive", fontSize:"1rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.25)", marginBottom:14, textAlign:"left" }}>
+        <button onClick={() => setView("new")} style={{ width:"100%", background:C.dark, color:C.cream2, border:"none", borderRadius:14, padding:"13px 16px", fontFamily:"'Baloo 2',sans-serif", fontSize:"1rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.25)", marginBottom:14, textAlign:"left" }}>
           + Nueva entrada 📝
         </button>
         {sortedEntries.length === 0 && (
@@ -4497,7 +4015,7 @@ function DiarioPersonal({ entries, onSave, user }) {
             <div onClick={e => e.stopPropagation()} style={{ background:C.sandL, borderRadius:"22px 22px 0 0", width:"100%", maxHeight:"88vh", overflowY:"auto", border:`1.5px solid ${C.border}` }}>
               <div style={{ background:C.dark, padding:"16px 18px 18px", borderRadius:"22px 22px 0 0" }}>
                 <div style={{ width:34, height:5, background:"rgba(255,255,255,0.2)", borderRadius:50, margin:"0 auto 12px" }}/>
-                <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.1rem", color:C.cream2 }}>{type?.label}</div>
+                <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"1.1rem", color:C.cream2 }}>{type?.label}</div>
                 <div style={{ fontSize:"0.75rem", color:`${C.cream}88`, marginTop:3 }}>{fmtDate(selEntry.ts)} · {fmtTime(selEntry.ts)}</div>
               </div>
               <div style={{ padding:"14px 16px 32px" }}>
@@ -4623,7 +4141,7 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
           <CouplePandaSVG happy size={130} />
         </div>
-        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.75rem", color: C.cream2 }}>{user?.names || "Nosotros"}</div>
+        <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.75rem", color: C.cream2 }}>{user?.names || "Nosotros"}</div>
         <div style={{ color: `${C.cream}88`, fontSize: "0.85rem", fontWeight: 700, marginTop: 3 }}>{user?.since && user.since !== "Juntos desde hoy" ? user.since : ""}</div>
         {coupleInfo.anniversary && <div style={{ color: C.gold, fontSize: "0.82rem", fontWeight: 700, marginTop: 4 }}>💑 {coupleInfo.anniversary}</div>}
       </div>
@@ -4631,17 +4149,17 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, padding: "10px 14px" }}>
         {[["Bambú 🌿", bamboo], ["Días de racha 🔥", streakInfo?.currentStreak || 0]].map(([l, v]) => (
           <div key={l} style={{ background: C.white, borderRadius: 16, padding: "14px 10px", textAlign: "center", boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.7rem", color: C.dark }}>{v}</div>
+            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.7rem", color: C.dark }}>{v}</div>
             <div style={{ fontSize: "0.7rem", color: C.inkL, fontWeight: 700 }}>{l}</div>
           </div>
         ))}
       </div>
       <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:16, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
-        <button onClick={() => setShowLoveModal(true)} style={{ width:"100%", background:"#c05068", color:C.cream2, border:"none", borderRadius:12, padding:"12px 16px", fontFamily:"'Fredoka One',cursive", fontSize:"1rem", cursor:"pointer", boxShadow:"0 3px 0 rgba(0,0,0,0.18)" }}>
+        <button onClick={() => setShowLoveModal(true)} style={{ width:"100%", background:"#c05068", color:C.cream2, border:"none", borderRadius:12, padding:"12px 16px", fontFamily:"'Baloo 2',sans-serif", fontSize:"1rem", cursor:"pointer", boxShadow:"0 3px 0 rgba(0,0,0,0.18)" }}>
           Manda un mensaje de amor
         </button>
         <div style={{ marginTop:12, background:C.cream, borderRadius:12, padding:12, border:`1px solid ${C.border}` }}>
-          <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.88rem", color:C.dark, marginBottom:6 }}>💌 Últimos 3 mensajes de tu pareja</div>
+          <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"0.88rem", color:C.dark, marginBottom:6 }}>💌 Últimos 3 mensajes de tu pareja</div>
           {!recentPartnerMsgs.length ? (
             <div style={{ fontSize:"0.8rem", color:C.inkL, lineHeight:1.6 }}>Aquí aparecerán los últimos mensajitos que te enviaron. Lo que mandes desde aquí seguirá saliendo en los globos del jardín.</div>
           ) : (
@@ -4671,7 +4189,7 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
       {/* ── DIARIO PERSONAL ── */}
       <div style={{ margin:"0 14px 12px" }}>
         <div style={{ background: C.white, borderRadius: 16, padding: "14px 16px", border: `1.5px solid ${C.border}`, boxShadow: `0 2px 0 ${C.border}` }}>
-          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark, marginBottom: 8 }}>
+          <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "0.95rem", color: C.dark, marginBottom: 8 }}>
             📓 Diario personal
           </div>
           <div style={{ fontSize: "0.78rem", color: C.inkM, marginBottom: 12, lineHeight: 1.5 }}>
@@ -4702,18 +4220,18 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
             </div>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.4rem", letterSpacing: 6, color: C.dark, background: C.cream, borderRadius: 10, padding: "8px 14px", flex: 1, textAlign: "center", border: `1.5px solid ${C.border}` }}>{user?.code || "----"}</div>
+            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.4rem", letterSpacing: 6, color: C.dark, background: C.cream, borderRadius: 10, padding: "8px 14px", flex: 1, textAlign: "center", border: `1.5px solid ${C.border}` }}>{user?.code || "----"}</div>
             <Btn onClick={() => { 
               const c = (user?.code || "").toUpperCase();
-              if(navigator.clipboard) { navigator.clipboard.writeText(c).then(()=>alert("Código copiado: "+c)).catch(()=>alert("Tu código: "+c)); }
-              else { alert("Tu código: "+c); }
+              if(navigator.clipboard) { navigator.clipboard.writeText(c).then(()=>showToast("Código copiado: "+c)).catch(()=>showToast("Tu código: "+c)); }
+              else { showToast("Tu código: "+c); }
             }} variant="sand" style={{ padding: "10px 14px", fontSize: "0.8rem" }}>Copiar</Btn>
           </div>
         </div>}
 
         {/* ── CAMBIAR NOMBRE ── */}
         <div style={{ background: C.white, borderRadius: 16, padding: "16px", border: `1.5px solid ${C.border}`, marginBottom: 12, boxShadow: `0 2px 0 ${C.border}` }}>
-          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "0.95rem", color: C.dark, marginBottom: 10 }}>✏️ Nombre de la pareja</div>
+          <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "0.95rem", color: C.dark, marginBottom: 10 }}>✏️ Nombre de la pareja</div>
           {editingName ? (
             <div>
               <div style={{ fontSize: "0.72rem", color: C.inkL, marginBottom: 6, fontWeight: 700 }}>Escribe ambos nombres separados por &</div>
@@ -4732,7 +4250,7 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
             </div>
           ) : (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", color: C.ink }}>
+              <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.1rem", color: C.ink }}>
                 {user?.names || "Sin nombre"}
               </div>
               <Btn onClick={() => { setNameInput(user?.names || ""); setEditingName(true); }} variant="sand" style={{ fontSize: "0.8rem", padding: "7px 14px" }}>
@@ -4771,7 +4289,7 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
               <div style={{ width:34, height:5, background:C.sand, borderRadius:50 }}/>
               <div onClick={() => { setShowLoveModal(false); setLoveText(""); setQuickLove(null); }} style={{ width:30, height:30, borderRadius:"50%", background:C.sand, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", fontSize:"1rem", color:C.inkM, fontWeight:800 }}>✕</div>
             </div>
-            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.3rem", color:C.dark, marginBottom:2 }}>💌 Mensajito de amor</div>
+            <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"1.3rem", color:C.dark, marginBottom:2 }}>💌 Mensajito de amor</div>
             <div style={{ fontSize:"0.78rem", color:C.inkL, marginBottom:14, fontWeight:600 }}>+5 bambú 🌿 · Lo que envíes aparece también en los globos del jardín</div>
             <div style={{ display:"flex", flexDirection:"column", gap:6, marginBottom:14 }}>
               {LOVE_PROMPTS.map((p, i) => (
@@ -4800,7 +4318,7 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
           }}
         >
           <div style={{ width:"100%", maxWidth:430, background:C.white, border:`1.5px solid ${C.border}`, borderRadius:18, boxShadow:"0 10px 34px rgba(0,0,0,0.22)", padding:"16px 16px 14px", animation: deleteModalClosing ? "popOutCard 0.18s ease forwards" : "popInCard 0.24s cubic-bezier(.2,.9,.2,1) forwards" }}>
-            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.05rem", color:"#8b2020", marginBottom:6 }}>Eliminar cuenta</div>
+            <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"1.05rem", color:"#8b2020", marginBottom:6 }}>Eliminar cuenta</div>
             <div style={{ fontSize:"0.8rem", color:C.inkM, lineHeight:1.6, fontWeight:700, marginBottom:10 }}>
               Esta acción borra tu acceso y tus datos. Escribe <b>ELIMINAR</b> para confirmar.
             </div>
@@ -4851,7 +4369,7 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
             <div style={{ padding: "0 16px 20px", background: C.sandL }}>
               <button 
                 onClick={() => setShowDiarioModal(false)}
-                style={{ width: "100%", background: C.dark, color: C.cream2, border: "none", borderRadius: 14, padding: "14px", fontFamily: "'Fredoka One',cursive", fontSize: "1rem", cursor: "pointer" }}
+                style={{ width: "100%", background: C.dark, color: C.cream2, border: "none", borderRadius: 14, padding: "14px", fontFamily: "'Baloo 2',sans-serif", fontSize: "1rem", cursor: "pointer" }}
               >
                 Cerrar diario ✕
               </button>
@@ -4868,14 +4386,16 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
 // ═══════════════════════════════════════════════════════
 
 const STYLES = `
-@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap');
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: #f3ecff; }
+body { background: #f3ecfb; }
+*[style*="Baloo 2"] { font-weight: 800 !important; letter-spacing: 0.2px; }
 @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
 @keyframes floatHappy { 0%,100%{transform:translateY(0) rotate(-1.5deg)} 50%{transform:translateY(-18px) rotate(1.5deg)} }
-textarea:focus, input:focus { border-color: #6f56b8 !important; box-shadow: 0 0 0 3px rgba(111,86,184,0.18) !important; outline: none !important; }
+@keyframes breathe { 0%,100%{transform:scale(1)} 50%{transform:scale(1.025)} }
+textarea:focus, input:focus { border-color: #8b6fc9 !important; box-shadow: 0 0 0 3px rgba(139,111,201,0.18) !important; outline: none !important; }
 ::-webkit-scrollbar { width:4px; height:4px; }
-::-webkit-scrollbar-thumb { background:#dfd0ff; border-radius:50px; }
+::-webkit-scrollbar-thumb { background:#ddc9f0; border-radius:50px; }
 select { appearance: none; }
 @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
 @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
@@ -5164,7 +4684,7 @@ function RelTest({ user, onDone }) {
   if (!hasValidAreas || !area) {
     return (
       <div style={{ minHeight:"100vh", background:C.sandL, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"24px 20px", fontFamily:"'Nunito',sans-serif" }}>
-        <div style={{ fontFamily:"'Fredoka One',cursive", color:C.dark, fontSize:"1.2rem", marginBottom:8 }}>No pudimos cargar el test</div>
+        <div style={{ fontFamily:"'Baloo 2',sans-serif", color:C.dark, fontSize:"1.2rem", marginBottom:8 }}>No pudimos cargar el test</div>
         <div style={{ fontSize:"0.9rem", color:C.inkM, textAlign:"center", lineHeight:1.6, maxWidth:320 }}>Intenta salir y volver a entrar. Si sigue pasando, avísame y lo depuramos contigo paso a paso.</div>
       </div>
     );
@@ -5198,8 +4718,8 @@ function RelTest({ user, onDone }) {
       <div style={{ minHeight:"100vh", background:C.sandL, padding:"32px 20px 80px", fontFamily:"'Nunito',sans-serif" }}>
         <div style={{ textAlign:"center", marginBottom:24 }}>
           <div style={{ fontSize:"3rem", marginBottom:8 }}>{progEmoji}</div>
-          <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.7rem", color:C.dark, marginBottom:6 }}>Su diagnóstico inicial</div>
-          <div style={{ background:progColor, color:"white", borderRadius:50, padding:"6px 20px", display:"inline-block", fontFamily:"'Fredoka One',cursive", fontSize:"1.1rem", marginBottom:12 }}>
+          <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"1.7rem", color:C.dark, marginBottom:6 }}>Su diagnóstico inicial</div>
+          <div style={{ background:progColor, color:"white", borderRadius:50, padding:"6px 20px", display:"inline-block", fontFamily:"'Baloo 2',sans-serif", fontSize:"1.1rem", marginBottom:12 }}>
             {total.toFixed(1)} / 5.0
           </div>
           <div style={{ fontSize:"0.9rem", color:C.inkM, lineHeight:1.6, maxWidth:320, margin:"0 auto" }}>{prognosis}</div>
@@ -5231,7 +4751,7 @@ function RelTest({ user, onDone }) {
             </div>
           ))}
         </div>
-        <button onClick={() => onDone(combinedScores)} style={{ width:"100%", background:C.dark, color:C.cream2, border:"none", borderRadius:14, padding:16, fontFamily:"'Fredoka One',cursive", fontSize:"1.1rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.2)" }}>
+        <button onClick={() => onDone(combinedScores)} style={{ width:"100%", background:C.dark, color:C.cream2, border:"none", borderRadius:14, padding:16, fontFamily:"'Baloo 2',sans-serif", fontSize:"1.1rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.2)" }}>
           Comenzar juntos 🐼
         </button>
       </div>
@@ -5243,7 +4763,7 @@ function RelTest({ user, onDone }) {
     return (
       <div style={{ minHeight:"100vh", background:C.sandL, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"32px 20px", fontFamily:"'Nunito',sans-serif" }}>
         <div style={{ fontSize:"3.5rem", marginBottom:16, animation:"float 3s ease-in-out infinite" }}>🐼</div>
-        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.5rem", color:C.dark, marginBottom:8, textAlign:"center" }}>
+        <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"1.5rem", color:C.dark, marginBottom:8, textAlign:"center" }}>
           ¡Ya contestaste! 🌿
         </div>
         <div style={{ fontSize:"0.9rem", color:C.inkM, textAlign:"center", lineHeight:1.6, marginBottom:24, maxWidth:300 }}>
@@ -5251,11 +4771,11 @@ function RelTest({ user, onDone }) {
         </div>
         <div style={{ background:C.white, borderRadius:18, padding:18, border:`1.5px solid ${C.border}`, width:"100%", maxWidth:340, textAlign:"center" }}>
           <div style={{ fontSize:"0.72rem", fontWeight:800, color:C.inkL, letterSpacing:"0.6px", marginBottom:10 }}>COMPARTE ESTE CÓDIGO</div>
-            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"2rem", letterSpacing:8, color:C.dark, marginBottom:10 }}>{safeCode || "----"}</div>
+            <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"2rem", letterSpacing:8, color:C.dark, marginBottom:10 }}>{safeCode || "----"}</div>
           <Btn onClick={() => { 
               const c = safeCode;
-              if(navigator.clipboard) { navigator.clipboard.writeText(c).then(()=>alert("Código copiado: "+c)).catch(()=>alert("Tu código: "+c)); }
-              else { alert("Tu código: "+c); }
+              if(navigator.clipboard) { navigator.clipboard.writeText(c).then(()=>showToast("Código copiado: "+c)).catch(()=>showToast("Tu código: "+c)); }
+              else { showToast("Tu código: "+c); }
             }} variant="sand" style={{ width:"100%" }}>Copiar código 📋</Btn>
         </div>
         <div style={{ fontSize:"0.75rem", color:C.inkL, marginTop:20, textAlign:"center" }}>
@@ -5284,13 +4804,13 @@ function RelTest({ user, onDone }) {
         <div style={{ background: isOwner ? "#fce8d8" : "#d8ece8", borderRadius:12, padding:"10px 16px", marginBottom:20, display:"flex", alignItems:"center", gap:10, border:`1.5px solid ${isOwner ? "#e8907a40" : "#4a9a8a40"}` }}>
           <div style={{ fontSize:"1.4rem" }}>{isOwner ? "🐼" : "🐾"}</div>
           <div>
-            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", color:C.dark }}>Tus respuestas son privadas</div>
+            <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"0.95rem", color:C.dark }}>Tus respuestas son privadas</div>
             <div style={{ fontSize:"0.72rem", color:C.inkL, fontWeight:700 }}>Solo verán el resultado combinado al final</div>
           </div>
         </div>
 
         <div style={{ fontSize:"1.8rem", textAlign:"center", marginBottom:10 }}>{area.emoji}</div>
-        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.35rem", color:C.dark, textAlign:"center", marginBottom:6 }}>{area.label}</div>
+        <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"1.35rem", color:C.dark, textAlign:"center", marginBottom:6 }}>{area.label}</div>
         <div style={{ fontSize:"0.84rem", color:C.inkL, textAlign:"center", marginBottom:8 }}>{area.sub}</div>
         <div style={{ fontSize:"1rem", color:C.inkM, textAlign:"center", lineHeight:1.6, marginBottom:28, fontWeight:700 }}>{area.q}</div>
 
@@ -5315,7 +4835,7 @@ function RelTest({ user, onDone }) {
 
         <button onClick={next} disabled={!canNext || saving}
           style={{ width:"100%", background: canNext ? C.dark : C.sand, color: canNext ? C.cream2 : C.inkL,
-            border:"none", borderRadius:14, padding:15, fontFamily:"'Fredoka One',cursive", fontSize:"1.05rem",
+            border:"none", borderRadius:14, padding:15, fontFamily:"'Baloo 2',sans-serif", fontSize:"1.05rem",
             cursor: canNext ? "pointer" : "default", boxShadow: canNext ? "0 4px 0 rgba(0,0,0,0.2)" : "none",
             marginTop:8, transition:"all 0.2s" }}>
           {saving ? "Guardando..." : step < TEST_AREAS.length - 1 ? "Siguiente área →" : "Enviar mis respuestas ✨"}
@@ -5345,7 +4865,7 @@ function LeccionDia({ lessonsDone, onComplete }) {
         <div style={{ background:C.dark, padding:"44px 20px 24px" }}>
           <button onClick={() => setReading(false)} style={{ background:"none", border:"none", color:C.cream2, fontSize:"1.5rem", cursor:"pointer", marginBottom:10, display:"block" }}>←</button>
           <div style={{ fontSize:"2.5rem", marginBottom:6 }}>{open.emoji}</div>
-          <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.5rem", color:C.cream2, marginBottom:4 }}>{open.title}</div>
+          <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"1.5rem", color:C.cream2, marginBottom:4 }}>{open.title}</div>
           <span style={{ background:C.olive, color:C.cream2, borderRadius:6, padding:"3px 10px", fontSize:"0.72rem", fontWeight:800 }}>{open.tag}</span>
         </div>
 
@@ -5356,7 +4876,7 @@ function LeccionDia({ lessonsDone, onComplete }) {
 
           {open.sections.map((s, i) => (
             <div key={i} style={{ background:C.white, borderRadius:16, padding:16, marginBottom:10, border:`1.5px solid ${C.border}` }}>
-              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, marginBottom:6 }}>
+              <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"1rem", color:C.dark, marginBottom:6 }}>
                 {s.icon} {s.title}
               </div>
               <div style={{ fontSize:"0.88rem", color:C.inkM, lineHeight:1.7 }}>{s.body}</div>
@@ -5371,12 +4891,12 @@ function LeccionDia({ lessonsDone, onComplete }) {
           {!isDone ? (
             <button onClick={() => { onComplete(open.id); setReading(false); }}
               style={{ width:"100%", background:C.olive, color:C.cream2, border:"none", borderRadius:14, padding:16,
-                fontFamily:"'Fredoka One',cursive", fontSize:"1.05rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.2)" }}>
+                fontFamily:"'Baloo 2',sans-serif", fontSize:"1.05rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.2)" }}>
               ✓ Leímos esto juntos · +10 bambú 🌿
             </button>
           ) : (
             <div style={{ textAlign:"center", background:C.cream, borderRadius:14, padding:14, border:`1.5px solid ${C.border}` }}>
-              <div style={{ fontFamily:"'Fredoka One',cursive", color:C.olive, marginBottom:6 }}>✓ Ya la completaste</div>
+              <div style={{ fontFamily:"'Baloo 2',sans-serif", color:C.olive, marginBottom:6 }}>✓ Ya la completaste</div>
               <div style={{ display:"flex", gap:10, justifyContent:"center" }}>
                 <div style={{ fontSize:"0.75rem", fontWeight:800, color: lessonsDone?.[open?.id]?.owner ? C.olive : C.sand }}>🐼 Persona A {lessonsDone?.[open?.id]?.owner ? "✓" : "pendiente"}</div>
                 <div style={{ fontSize:"0.75rem", fontWeight:800, color: lessonsDone?.[open?.id]?.partner ? C.teal : C.sand }}>🐾 Persona B {lessonsDone?.[open?.id]?.partner ? "✓" : "pendiente"}</div>
@@ -5391,7 +4911,7 @@ function LeccionDia({ lessonsDone, onComplete }) {
   return (
     <div style={{ background:C.sandL, minHeight:"100vh", paddingBottom:80 }}>
       <div style={{ background:C.dark, padding:"44px 20px 24px" }}>
-        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.9rem", color:C.cream2 }}>Lecciones</div>
+        <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"1.9rem", color:C.cream2 }}>Lecciones</div>
         <div style={{ color:`${C.cream}88`, fontSize:"0.86rem", fontWeight:600, marginTop:4 }}>Psicología de parejas · +10 bambú cada una 🌿</div>
       </div>
 
@@ -5404,7 +4924,7 @@ function LeccionDia({ lessonsDone, onComplete }) {
           <div style={{ display:"flex", alignItems:"center", gap:12 }}>
             <div style={{ fontSize:"2.5rem" }}>{todayLesson.emoji}</div>
             <div style={{ flex:1 }}>
-              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.15rem", color: todayDone ? C.ink : C.cream2 }}>{todayLesson.title}</div>
+              <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"1.15rem", color: todayDone ? C.ink : C.cream2 }}>{todayLesson.title}</div>
               <div style={{ fontSize:"0.75rem", color: todayDone ? C.inkL : `${C.cream}88`, fontWeight:700, marginTop:3 }}>{todayLesson.tag}</div>
             </div>
             {todayDone
@@ -5428,7 +4948,7 @@ function LeccionDia({ lessonsDone, onComplete }) {
               <div style={{ display:"flex", alignItems:"center", gap:12 }}>
                 <div style={{ fontSize:"1.8rem" }}>{lesson.emoji}</div>
                 <div style={{ flex:1 }}>
-                  <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", color:C.dark }}>{lesson.title}</div>
+                  <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"0.95rem", color:C.dark }}>{lesson.title}</div>
                   <div style={{ fontSize:"0.72rem", color:C.inkL, fontWeight:700, marginTop:2 }}>{lesson.tag}</div>
                 </div>
                 {done
@@ -5450,7 +4970,7 @@ function Onboarding({ onDone }) {
   const isLast = i === OB.length - 1;
 
   return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(180deg, #f8f4ff 0%, #f0e8ff 100%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "28px 20px" }}>
+    <div style={{ minHeight: "100vh", background: "linear-gradient(180deg, #f5edd8 0%, #e8dcb8 100%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "28px 20px" }}>
       <div style={{ textAlign: "center", maxWidth: 340, width: "100%" }}>
         {/* Icono grande */}
         <div style={{ animation: "float 3s ease-in-out infinite", marginBottom: 20, fontSize: "5rem" }}>
@@ -5458,7 +4978,7 @@ function Onboarding({ onDone }) {
         </div>
 
         {/* Título */}
-        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.6rem", color: C.dark, marginBottom: 12 }}>
+        <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.6rem", color: C.dark, marginBottom: 12 }}>
           {current.title}
         </div>
 
@@ -5491,7 +5011,7 @@ function Onboarding({ onDone }) {
             </button>
             <button onClick={() => setI(i + 1)} style={{
               background: C.dark, color: C.cream2, border: "none", borderRadius: 14,
-              padding: "14px 28px", fontFamily: "'Fredoka One',cursive", fontSize: "1rem",
+              padding: "14px 28px", fontFamily: "'Baloo 2',sans-serif", fontSize: "1rem",
               cursor: "pointer", boxShadow: "0 4px 0 rgba(0,0,0,0.2)"
             }}>
               Siguiente →
@@ -5500,7 +5020,7 @@ function Onboarding({ onDone }) {
         ) : (
           <button onClick={onDone} style={{
             width: "100%", background: C.olive, color: C.cream2, border: "none",
-            borderRadius: 14, padding: "16px", fontFamily: "'Fredoka One',cursive",
+            borderRadius: 14, padding: "16px", fontFamily: "'Baloo 2',sans-serif",
             fontSize: "1.15rem", cursor: "pointer", boxShadow: "0 4px 0 rgba(0,0,0,0.2)"
           }}>
             Comenzar juntos 💜
@@ -5533,7 +5053,7 @@ function Juegos({ onBack, user }) {
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
       <div style={{ background: C.dark, padding: "44px 20px 24px" }}>
         <button onClick={onBack} style={{ background: "none", border: "none", color: C.cream2, fontSize: "1.5rem", cursor: "pointer", marginBottom: 10, display: "block" }}>←</button>
-        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.5rem", color: C.cream2, marginBottom: 4 }}>
+        <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.5rem", color: C.cream2, marginBottom: 4 }}>
           🎮 Juegos para parejas
         </div>
         <div style={{ fontSize: "0.85rem", color: `${C.cream}88` }}>
@@ -5557,7 +5077,7 @@ function Juegos({ onBack, user }) {
           }}
         >
           <div style={{ fontSize: "2.2rem", marginBottom: 8 }}>🧠</div>
-          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", color: C.dark, marginBottom: 4 }}>
+          <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.1rem", color: C.dark, marginBottom: 4 }}>
             Memoria sincronizada
           </div>
           <div style={{ fontSize: "0.8rem", color: C.inkM, lineHeight: 1.5 }}>
@@ -5580,7 +5100,7 @@ function Juegos({ onBack, user }) {
           }}
         >
           <div style={{ fontSize: "2.2rem", marginBottom: 8 }}>🔤</div>
-          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", color: C.dark, marginBottom: 4 }}>
+          <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.1rem", color: C.dark, marginBottom: 4 }}>
             Scrabble de parejas
           </div>
           <div style={{ fontSize: "0.8rem", color: C.inkM, lineHeight: 1.5 }}>
@@ -5693,12 +5213,12 @@ function JuegoMemoria({ onBack, user }) {
       <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
         <div style={{ background: C.dark, padding: "44px 20px 20px" }}>
           <button onClick={onBack} style={{ background: "none", border: "none", color: C.cream2, fontSize: "1.5rem", cursor: "pointer", marginBottom: 10, display: "block" }}>←</button>
-          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.4rem", color: C.cream2 }}>🧠 Memoria</div>
+          <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.4rem", color: C.cream2 }}>🧠 Memoria</div>
         </div>
 
         <div style={{ padding: "20px 16px" }}>
           <div style={{ background: C.white, borderRadius: 16, padding: "20px", marginBottom: 16, border: `1.5px solid ${C.border}` }}>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", color: C.dark, marginBottom: 12 }}>
+            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.1rem", color: C.dark, marginBottom: 12 }}>
               📋 Cómo jugar
             </div>
             <div style={{ fontSize: "0.9rem", color: C.inkM, lineHeight: 1.7 }}>
@@ -5712,17 +5232,17 @@ function JuegoMemoria({ onBack, user }) {
 
           {/* Historial */}
           <div style={{ background: C.cream, borderRadius: 16, padding: "16px", marginBottom: 16, border: `1.5px solid ${C.border}` }}>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: C.dark, marginBottom: 10 }}>
+            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1rem", color: C.dark, marginBottom: 10 }}>
               🏆 Victorias
             </div>
             <div style={{ display: "flex", gap: 10 }}>
               <div style={{ flex: 1, textAlign: "center", background: C.white, borderRadius: 10, padding: "10px" }}>
                 <div style={{ fontSize: "0.8rem", color: C.inkL }}>{nameA}</div>
-                <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.5rem", color: C.dark }}>{historial[nameA] || 0}</div>
+                <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.5rem", color: C.dark }}>{historial[nameA] || 0}</div>
               </div>
               <div style={{ flex: 1, textAlign: "center", background: C.white, borderRadius: 10, padding: "10px" }}>
                 <div style={{ fontSize: "0.8rem", color: C.inkL }}>{nameB}</div>
-                <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.5rem", color: C.dark }}>{historial[nameB] || 0}</div>
+                <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.5rem", color: C.dark }}>{historial[nameB] || 0}</div>
               </div>
             </div>
           </div>
@@ -5736,7 +5256,7 @@ function JuegoMemoria({ onBack, user }) {
               border: "none",
               borderRadius: 14,
               padding: "16px",
-              fontFamily: "'Fredoka One',cursive",
+              fontFamily: "'Baloo 2',sans-serif",
               fontSize: "1.1rem",
               cursor: "pointer"
             }}
@@ -5752,7 +5272,7 @@ function JuegoMemoria({ onBack, user }) {
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
       <div style={{ background: C.dark, padding: "44px 20px 20px" }}>
         <button onClick={onBack} style={{ background: "none", border: "none", color: C.cream2, fontSize: "1.5rem", cursor: "pointer", marginBottom: 10, display: "block" }}>←</button>
-        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.4rem", color: C.cream2 }}>🧠 Memoria</div>
+        <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.4rem", color: C.cream2 }}>🧠 Memoria</div>
         <div style={{ fontSize: "0.8rem", color: `${C.cream}88` }}>Turno de: {turn === 0 ? nameA : nameB}</div>
       </div>
 
@@ -5761,11 +5281,11 @@ function JuegoMemoria({ onBack, user }) {
         <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
           <div style={{ flex: 1, background: turn === 0 ? C.olive : C.white, borderRadius: 12, padding: "12px", textAlign: "center", border: `1.5px solid ${C.border}` }}>
             <div style={{ fontSize: "0.75rem", color: turn === 0 ? C.cream : C.inkL }}>{nameA}</div>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.5rem", color: turn === 0 ? C.cream2 : C.dark }}>{scores[0]}</div>
+            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.5rem", color: turn === 0 ? C.cream2 : C.dark }}>{scores[0]}</div>
           </div>
           <div style={{ flex: 1, background: turn === 1 ? C.olive : C.white, borderRadius: 12, padding: "12px", textAlign: "center", border: `1.5px solid ${C.border}` }}>
             <div style={{ fontSize: "0.75rem", color: turn === 1 ? C.cream : C.inkL }}>{nameB}</div>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.5rem", color: turn === 1 ? C.cream2 : C.dark }}>{scores[1]}</div>
+            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.5rem", color: turn === 1 ? C.cream2 : C.dark }}>{scores[1]}</div>
           </div>
         </div>
 
@@ -5801,7 +5321,7 @@ function JuegoMemoria({ onBack, user }) {
         ) : (
           <div style={{ textAlign: "center", padding: "40px 20px" }}>
             <div style={{ fontSize: "4rem", marginBottom: 16 }}>🏆</div>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.5rem", color: C.dark, marginBottom: 8 }}>
+            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.5rem", color: C.dark, marginBottom: 8 }}>
               ¡Juego terminado!
             </div>
             <div style={{ fontSize: "1.1rem", color: C.inkM, marginBottom: 12 }}>
@@ -5824,7 +5344,7 @@ function JuegoMemoria({ onBack, user }) {
                 border: "none",
                 borderRadius: 14,
                 padding: "14px 28px",
-                fontFamily: "'Fredoka One',cursive",
+                fontFamily: "'Baloo 2',sans-serif",
                 fontSize: "1rem",
                 cursor: "pointer"
               }}
@@ -5995,12 +5515,12 @@ function JuegoScrabble({ onBack, user }) {
       <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
         <div style={{ background: C.dark, padding: "44px 20px 20px" }}>
           <button onClick={onBack} style={{ background: "none", border: "none", color: C.cream2, fontSize: "1.5rem", cursor: "pointer", marginBottom: 10, display: "block" }}>←</button>
-          <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.4rem", color: C.cream2 }}>🔤 Scrabble</div>
+          <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.4rem", color: C.cream2 }}>🔤 Scrabble</div>
         </div>
 
         <div style={{ padding: "20px 16px" }}>
           <div style={{ background: C.white, borderRadius: 16, padding: "20px", marginBottom: 16, border: `1.5px solid ${C.border}` }}>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.1rem", color: C.dark, marginBottom: 12 }}>
+            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.1rem", color: C.dark, marginBottom: 12 }}>
               📋 Cómo jugar
             </div>
             <div style={{ fontSize: "0.9rem", color: C.inkM, lineHeight: 1.7 }}>
@@ -6021,7 +5541,7 @@ function JuegoScrabble({ onBack, user }) {
               border: "none",
               borderRadius: 14,
               padding: "16px",
-              fontFamily: "'Fredoka One',cursive",
+              fontFamily: "'Baloo 2',sans-serif",
               fontSize: "1.1rem",
               cursor: "pointer"
             }}
@@ -6037,7 +5557,7 @@ function JuegoScrabble({ onBack, user }) {
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
       <div style={{ background: C.dark, padding: "44px 20px 20px" }}>
         <button onClick={onBack} style={{ background: "none", border: "none", color: C.cream2, fontSize: "1.5rem", cursor: "pointer", marginBottom: 10, display: "block" }}>←</button>
-        <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.4rem", color: C.cream2 }}>🔤 Scrabble</div>
+        <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.4rem", color: C.cream2 }}>🔤 Scrabble</div>
         <div style={{ fontSize: "0.8rem", color: `${C.cream}88` }}>
           Turno de: {turno === 0 ? nameA : nameB}
         </div>
@@ -6048,12 +5568,12 @@ function JuegoScrabble({ onBack, user }) {
         <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
           <div style={{ flex: 1, background: turno === 0 ? C.olive : C.white, borderRadius: 12, padding: "12px", textAlign: "center", border: `1.5px solid ${C.border}` }}>
             <div style={{ fontSize: "0.75rem", color: turno === 0 ? C.cream : C.inkL }}>{nameA}</div>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.8rem", color: turno === 0 ? C.cream2 : C.dark }}>{scoreA}</div>
+            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.8rem", color: turno === 0 ? C.cream2 : C.dark }}>{scoreA}</div>
             <div style={{ fontSize: "0.65rem", color: turno === 0 ? `${C.cream}88` : C.inkL }}>{palabrasA.length} palabras</div>
           </div>
           <div style={{ flex: 1, background: turno === 1 ? C.olive : C.white, borderRadius: 12, padding: "12px", textAlign: "center", border: `1.5px solid ${C.border}` }}>
             <div style={{ fontSize: "0.75rem", color: turno === 1 ? C.cream : C.inkL }}>{nameB}</div>
-            <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.8rem", color: turno === 1 ? C.cream2 : C.dark }}>{scoreB}</div>
+            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.8rem", color: turno === 1 ? C.cream2 : C.dark }}>{scoreB}</div>
             <div style={{ fontSize: "0.65rem", color: turno === 1 ? `${C.cream}88` : C.inkL }}>{palabrasB.length} palabras</div>
           </div>
         </div>
@@ -6079,7 +5599,7 @@ function JuegoScrabble({ onBack, user }) {
                   background: C.olive,
                   border: "none",
                   borderRadius: 8,
-                  fontFamily: "'Fredoka One',cursive",
+                  fontFamily: "'Baloo 2',sans-serif",
                   fontSize: "1.2rem",
                   color: C.cream2,
                   cursor: "pointer"
@@ -6105,7 +5625,7 @@ function JuegoScrabble({ onBack, user }) {
                   background: C.white,
                   border: `2px solid ${C.border}`,
                   borderRadius: 8,
-                  fontFamily: "'Fredoka One',cursive",
+                  fontFamily: "'Baloo 2',sans-serif",
                   fontSize: "1.2rem",
                   color: C.dark,
                   cursor: "pointer"
@@ -6128,7 +5648,7 @@ function JuegoScrabble({ onBack, user }) {
               border: "none",
               borderRadius: 12,
               padding: "12px",
-              fontFamily: "'Fredoka One',cursive",
+              fontFamily: "'Baloo 2',sans-serif",
               fontSize: "0.9rem",
               cursor: "pointer"
             }}
@@ -6145,7 +5665,7 @@ function JuegoScrabble({ onBack, user }) {
               border: "none",
               borderRadius: 12,
               padding: "12px",
-              fontFamily: "'Fredoka One',cursive",
+              fontFamily: "'Baloo 2',sans-serif",
               fontSize: "0.85rem",
               cursor: cambiosRestantes[turno] > 0 ? "pointer" : "not-allowed"
             }}
@@ -6161,7 +5681,7 @@ function JuegoScrabble({ onBack, user }) {
               border: `2px solid ${C.border}`,
               borderRadius: 12,
               padding: "12px",
-              fontFamily: "'Fredoka One',cursive",
+              fontFamily: "'Baloo 2',sans-serif",
               fontSize: "0.85rem",
               cursor: "pointer"
             }}
@@ -6246,17 +5766,6 @@ export default function App() {
     return saved ? JSON.parse(saved) : {};
   });
   const [streakInteractions, setStreakInteractions] = useState([]);
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // NIGHT MODE STATES
-  // ═══════════════════════════════════════════════════════════════════════════════
-  const [nightModeUnlocked, setNightModeUnlocked] = useState(() => {
-    const saved = localStorage.getItem('mochi_night_mode_unlocked');
-    return saved === 'true';
-  });
-  const [nightModeActive, setNightModeActive] = useState(() => {
-    const saved = localStorage.getItem('mochi_night_mode_active');
-    return saved === 'true';
-  });
   const [streakData, setStreakData] = useState({
     currentStreak: 0,
     longestStreak: 0,
@@ -6275,6 +5784,7 @@ export default function App() {
 
   const saveKey = u => u?.email ? "mochi_prog_" + u.email : null;
   const toast = msg => { setToastMsg(msg); setTimeout(() => setToastMsg(null), 3000); };
+  useEffect(() => { setGlobalToast(toast); return () => setGlobalToast(() => {}); }, []);
   const trigHappy = useCallback(() => {
     setMochiHappy(true);
     clearTimeout(happyTimer.current);
@@ -6695,7 +6205,10 @@ export default function App() {
               toast("Necesitas más bambú — completa ejercicios");
               return;
             }
-            console.error("buyItem error:", e);
+            if (process.env.NODE_ENV !== "production") {
+              // eslint-disable-next-line no-console
+              console.error("buyItem error:", e);
+            }
             toast("No se pudo comprar ese item");
           });
         return;
@@ -6704,7 +6217,10 @@ export default function App() {
       toast(`${item.name} plantado 🌿`);
       save(null, { bamboo:nb, happiness:nh, water, garden:ng, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit:nv, testScores, lessonsDone, gratitud, momentos });
     } catch (e) {
-      console.error("buyItem error:", e);
+      if (process.env.NODE_ENV !== "production") {
+        // eslint-disable-next-line no-console
+        console.error("buyItem error:", e);
+      }
       toast("No se pudo comprar ese item");
     }
   };
@@ -6757,7 +6273,10 @@ export default function App() {
               toast("Necesitas más bambú");
               return;
             }
-            console.error("buyAccessory error:", e);
+            if (process.env.NODE_ENV !== "production") {
+              // eslint-disable-next-line no-console
+              console.error("buyAccessory error:", e);
+            }
             toast("No se pudo comprar ese accesorio");
           });
         return;
@@ -6766,54 +6285,12 @@ export default function App() {
       toast(`${item.name} puesto ${item.emoji} +5 amor`);
       save(null, { bamboo:nb, happiness:nh, water, garden, accessories:na, exDone, messages, conoce, burbuja, coupleInfo, lastVisit:nv, testScores, lessonsDone, gratitud, momentos });
     } catch (e) {
-      console.error("buyAccessory error:", e);
+      if (process.env.NODE_ENV !== "production") {
+        // eslint-disable-next-line no-console
+        console.error("buyAccessory error:", e);
+      }
       toast("No se pudo comprar ese accesorio");
     }
-  };
-
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // NIGHT MODE FUNCTIONS
-  // ═══════════════════════════════════════════════════════════════════════════════
-  const buyNightMode = () => {
-    const NIGHT_MODE_COST = 200;
-
-    if (nightModeUnlocked) {
-      toast("¡Ya tienes el Modo Noche desbloqueado! 🌙");
-      return;
-    }
-
-    if (bamboo < NIGHT_MODE_COST) {
-      toast(`Necesitas ${NIGHT_MODE_COST} bambú para desbloquear el Modo Noche 🎋`);
-      return;
-    }
-
-    const nb = bamboo - NIGHT_MODE_COST;
-    setBamboo(nb);
-    setNightModeUnlocked(true);
-    setNightModeActive(true);
-
-    localStorage.setItem('mochi_night_mode_unlocked', 'true');
-    localStorage.setItem('mochi_night_mode_active', 'true');
-
-    toast("¡🌙 Modo Noche desbloqueado! Ahora tienes items exclusivos nocturnos en la tienda ✨");
-
-    save(null, {
-      bamboo: nb, happiness, water, garden, accessories, exDone, messages, conoce, burbuja,
-      coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos
-    });
-  };
-
-  const toggleNightMode = () => {
-    if (!nightModeUnlocked) {
-      toast("Primero debes comprar el Modo Noche en la tienda 🌙");
-      return;
-    }
-
-    const newState = !nightModeActive;
-    setNightModeActive(newState);
-    localStorage.setItem('mochi_night_mode_active', newState ? 'true' : 'false');
-
-    toast(newState ? "🌙 Modo Noche activado" : "☀️ Modo Día activado");
   };
 
   const waterGarden = () => {
@@ -6924,7 +6401,12 @@ export default function App() {
     setMessages(nextMessages);
     if (user?.code && !user?.isGuest) {
       // Fire and forget — listener will sync
-      fbSendMessage(user.code, msg).catch(e => console.warn("Send failed:", e));
+      fbSendMessage(user.code, msg).catch(e => {
+        if (process.env.NODE_ENV !== "production") {
+          // eslint-disable-next-line no-console
+          console.warn("Send failed:", e);
+        }
+      });
       if (user?.uid) {
         const me = getMyName(user, "Tu pareja");
         fbSendNotif(user.code, { type:"mensaje", msg:`${me} te envió un mensajito 💌`, forUid:user?.isOwner !== false ? "partner" : "owner", fromUid: user.uid }).catch(()=>{});
@@ -7083,43 +6565,6 @@ export default function App() {
     }
 
     save(null, { bamboo:nextBamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja:map, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
-  };
-
-  const editApprovedBurbuja = async (id, text) => {
-    const clean = (text || "").trim();
-    if (!clean) return;
-    const myRole = user?.isOwner !== false ? "owner" : "partner";
-    const prev = burbuja[id] || {};
-    const history = [...(prev.history || []), { id: Date.now(), type: "counter", by: myRole, text: clean, at: new Date().toISOString() }];
-    const next = {
-      ...prev,
-      status: "pending",
-      proposalText: clean,
-      proposalBy: myRole,
-      approvedText: null,
-      approvedBy: null,
-      approvedAt: null,
-      history,
-    };
-    const map = { ...burbuja, [id]: next };
-    setBurbuja(map);
-    trigHappy();
-    toast("Edición enviada como nueva propuesta ✉️");
-
-    if (user?.code && !user?.isGuest) {
-      await fbSaveBurbuja(user.code, id, next).catch(() => {});
-      if (user?.uid) {
-        const me = getMyName(user, "Tu pareja");
-        fbSendNotif(user.code, {
-          type: "acuerdo",
-          msg: `${me} propuso editar un acuerdo aprobado ✉️`,
-          forUid: user?.isOwner !== false ? "partner" : "owner",
-          fromUid: user.uid
-        }).catch(() => {});
-      }
-    }
-
-    save(null, { bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja:map, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
   };
 
   const saveCoupleInfo = (info) => {
@@ -7294,7 +6739,10 @@ export default function App() {
         toast("Por seguridad, vuelve a iniciar sesión y repite la eliminación de cuenta.");
         return;
       }
-      console.error("deleteAccount error:", e);
+      if (process.env.NODE_ENV !== "production") {
+        // eslint-disable-next-line no-console
+        console.error("deleteAccount error:", e);
+      }
       toast("No se pudo eliminar la cuenta completa. Intenta de nuevo.");
       return;
     }
@@ -7316,7 +6764,7 @@ export default function App() {
   if (screen === "onboarding") return <><style>{STYLES}</style><Onboarding onDone={()=>setScreen("reltest")}/></>;
   const relTestFallback = (
     <div style={{ minHeight:"100vh", background:C.sandL, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"24px 20px", fontFamily:"'Nunito',sans-serif" }}>
-      <div style={{ fontFamily:"'Fredoka One',cursive", color:C.dark, fontSize:"1.2rem", marginBottom:8 }}>Hubo un error en el test</div>
+      <div style={{ fontFamily:"'Baloo 2',sans-serif", color:C.dark, fontSize:"1.2rem", marginBottom:8 }}>Hubo un error en el test</div>
       <div style={{ fontSize:"0.9rem", color:C.inkM, textAlign:"center", lineHeight:1.6, maxWidth:320, marginBottom:14 }}>No te preocupes, tus datos siguen guardados. Puedes reintentar sin cerrar sesión.</div>
       <Btn onClick={() => setScreen("reltest")}>Reintentar test</Btn>
     </div>
@@ -7329,10 +6777,10 @@ export default function App() {
     <div style={{ fontFamily:"'Nunito',sans-serif", maxWidth:480, margin:"0 auto", minHeight:"100vh", background:C.sandL, position:"relative" }}>
       <style>{STYLES}</style>
       <div style={{ paddingBottom:72 }}>
-        {tab==="jardin" && <Jardin bamboo={bamboo} happiness={happiness} water={water} garden={garden} accessories={accessories} mochiHappy={mochiHappy} pandaBubble={pandaBubble} onPet={petMochi} onBuy={buyItem} onWater={waterGarden} onBuyAccessory={buyAccessory} user={user} nightModeUnlocked={nightModeUnlocked} nightModeActive={nightModeActive} onBuyNightMode={buyNightMode} onToggleNightMode={toggleNightMode} messages={messages} gratitud={gratitud} momentos={momentos} exDone={exDone} lessonsDone={lessonsDone} conoce={conoce} burbuja={burbuja}/>}
+        {tab==="jardin" && <Jardin bamboo={bamboo} happiness={happiness} water={water} garden={garden} accessories={accessories} mochiHappy={mochiHappy} pandaBubble={pandaBubble} onPet={petMochi} onBuy={buyItem} onWater={waterGarden} onBuyAccessory={buyAccessory} user={user}/>}
         {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson}/>}
         {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user}/>}
-        {tab==="burbuja" && <Burbuja burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} onEditApproved={editApprovedBurbuja} user={user}/>}
+        {tab==="burbuja" && <Burbuja burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} user={user}/>}
         {tab==="perfil" && <Perfil user={user} bamboo={bamboo} garden={garden} accessories={accessories} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} lessonsDone={lessonsDone} coupleInfo={coupleInfo} streakInfo={streakData} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={retakeTest} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} onSendMessage={sendMsg} onClaimDailyTip={claimDailyTip} diarioEntries={diarioEntries} onSaveDiarioEntry={saveDiarioEntry}/>} 
       </div>
       <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:480, background:C.white, borderTop:`1.5px solid ${C.border}`, display:"flex", zIndex:1000, boxShadow:`0 -3px 0 ${C.line}` }}>
@@ -7405,7 +6853,7 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
       <div style={{ display:"flex", background:C.sandL, borderBottom:`1.5px solid ${C.border}` }}>
         {[["gratitud","💛 Gratitud"],["momentos","✨ Momentos"]].map(([id,label]) => (
           <div key={id} onClick={() => setActiveTab(id)}
-            style={{ flex:1, padding:"11px 0", textAlign:"center", fontFamily:"'Fredoka One',cursive",
+            style={{ flex:1, padding:"11px 0", textAlign:"center", fontFamily:"'Baloo 2',sans-serif",
               fontSize:"0.88rem", cursor:"pointer",
               background: activeTab===id ? C.white : "transparent",
               color: activeTab===id ? C.dark : C.inkL,
@@ -7420,7 +6868,7 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
         {activeTab === "gratitud" && (
           <>
             {!showGForm
-              ? <button onClick={() => setShowGForm(true)} style={{ width:"100%", background:C.dark, color:C.cream2, border:"none", borderRadius:12, padding:"11px 0", fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", cursor:"pointer", boxShadow:"0 3px 0 rgba(0,0,0,0.18)", marginBottom:12 }}>+ Anotar acto de bondad</button>
+              ? <button onClick={() => setShowGForm(true)} style={{ width:"100%", background:C.dark, color:C.cream2, border:"none", borderRadius:12, padding:"11px 0", fontFamily:"'Baloo 2',sans-serif", fontSize:"0.95rem", cursor:"pointer", boxShadow:"0 3px 0 rgba(0,0,0,0.18)", marginBottom:12 }}>+ Anotar acto de bondad</button>
               : <div style={{ background:C.sandL, borderRadius:14, padding:14, marginBottom:12, border:`1.5px solid ${C.border}` }}>
                   <TA value={gText} onChange={setGText} placeholder="¿Qué le agradeces a tu pareja hoy?" rows={2} style={{ marginBottom:10 }}/>
                   <div style={{ display:"flex", gap:8 }}><Btn onClick={submitG} style={{ flex:1 }}>Guardar 💛</Btn><Btn onClick={() => { setShowGForm(false); setGText(""); }} variant="ghost" style={{ padding:"10px 12px" }}>✕</Btn></div>
@@ -7430,14 +6878,14 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
               : recentGratitud.map((g,i) => (
                 <div key={g.id||i} style={{ background:"#fffde8", borderRadius:12, padding:"10px 14px", marginBottom:8, border:"1px solid #e8d84030" }}>
                   <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
-                    <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.8rem", color:C.dark }}>🐼 {g.authorName || g.name || "Tú"}</div>
+                    <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"0.8rem", color:C.dark }}>🐼 {g.authorName || g.name || "Tú"}</div>
                     <div style={{ fontSize:"0.68rem", color:C.inkL, fontWeight:700 }}>{g.date}</div>
                   </div>
                   <div style={{ fontSize:"0.86rem", color:C.inkM, lineHeight:1.6 }}>{g.text}</div>
                 </div>
               ))}
             {gratitud.length > 3 && (
-              <button onClick={() => setShowAllModal(true)} style={{ width:"100%", marginTop:8, padding:"10px", background:C.cream, border:`1.5px solid ${C.border}`, borderRadius:12, fontFamily:"'Fredoka One',cursive", fontSize:"0.85rem", color:C.dark, cursor:"pointer" }}>
+              <button onClick={() => setShowAllModal(true)} style={{ width:"100%", marginTop:8, padding:"10px", background:C.cream, border:`1.5px solid ${C.border}`, borderRadius:12, fontFamily:"'Baloo 2',sans-serif", fontSize:"0.85rem", color:C.dark, cursor:"pointer" }}>
                 Ver todas ({gratitud.length})
               </button>
             )}
@@ -7447,7 +6895,7 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
         {activeTab === "momentos" && (
           <>
             {!showMForm
-              ? <button onClick={() => setShowMForm(true)} style={{ width:"100%", background:C.dark, color:C.cream2, border:"none", borderRadius:12, padding:"11px 0", fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", cursor:"pointer", boxShadow:"0 3px 0 rgba(0,0,0,0.18)", marginBottom:12 }}>+ Guardar un momento</button>
+              ? <button onClick={() => setShowMForm(true)} style={{ width:"100%", background:C.dark, color:C.cream2, border:"none", borderRadius:12, padding:"11px 0", fontFamily:"'Baloo 2',sans-serif", fontSize:"0.95rem", cursor:"pointer", boxShadow:"0 3px 0 rgba(0,0,0,0.18)", marginBottom:12 }}>+ Guardar un momento</button>
               : <div style={{ background:C.sandL, borderRadius:14, padding:14, marginBottom:12, border:`1.5px solid ${C.border}` }}>
                   <input value={mTitle} onChange={e => setMTitle(e.target.value)} placeholder="Título del momento" style={{ width:"100%", border:`2px solid ${C.border}`, borderRadius:10, padding:"9px 12px", fontFamily:"'Nunito',sans-serif", fontSize:"0.88rem", outline:"none", color:C.ink, background:C.cream2, marginBottom:8, boxSizing:"border-box" }}/>
                   <TA value={mText} onChange={setMText} placeholder="¿Qué pasó? ¿Cómo se sintieron?" rows={3} style={{ marginBottom:10 }}/>
@@ -7456,16 +6904,16 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
             {momentos.length === 0
               ? <div style={{ textAlign:"center", padding:"20px 0", color:C.inkL, fontSize:"0.84rem" }}>✨ Todavía no hay momentos guardados</div>
               : recentMomentos.map((m,i) => (
-                <div key={m.id||i} style={{ background:"#f8f0ff", borderRadius:12, padding:"10px 14px", marginBottom:8, border:`1px solid #c8a8f830` }}>
+                <div key={m.id||i} style={{ background:"#f2f6e6", borderRadius:12, padding:"10px 14px", marginBottom:8, border:`1px solid #a8d48830` }}>
                   <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
-                    <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.88rem", color:C.dark }}>✨ {m.title}</div>
+                    <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"0.88rem", color:C.dark }}>✨ {m.title}</div>
                     <div style={{ fontSize:"0.68rem", color:C.inkL, fontWeight:700 }}>{m.date}</div>
                   </div>
                   <div style={{ fontSize:"0.85rem", color:C.inkM, lineHeight:1.65 }}>{m.text}</div>
                 </div>
               ))}
             {momentos.length > 3 && (
-              <button onClick={() => setShowAllModal(true)} style={{ width:"100%", marginTop:8, padding:"10px", background:C.cream, border:`1.5px solid ${C.border}`, borderRadius:12, fontFamily:"'Fredoka One',cursive", fontSize:"0.85rem", color:C.dark, cursor:"pointer" }}>
+              <button onClick={() => setShowAllModal(true)} style={{ width:"100%", marginTop:8, padding:"10px", background:C.cream, border:`1.5px solid ${C.border}`, borderRadius:12, fontFamily:"'Baloo 2',sans-serif", fontSize:"0.85rem", color:C.dark, cursor:"pointer" }}>
                 Ver todos ({momentos.length})
               </button>
             )}
@@ -7479,7 +6927,7 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
           <div onClick={e => e.stopPropagation()} style={{ background:C.sandL, borderRadius:"22px 22px 0 0", width:"100%", maxHeight:"85vh", overflowY:"auto" }}>
             <div style={{ background:C.dark, padding:"16px 18px 18px", borderRadius:"22px 22px 0 0" }}>
               <div style={{ width:34, height:5, background:"rgba(255,255,255,0.2)", borderRadius:50, margin:"0 auto 12px" }}/>
-              <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.2rem", color:C.cream2 }}>
+              <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"1.2rem", color:C.cream2 }}>
                 {activeTab === "gratitud" ? "💛 Todas las gratitudes" : "✨ Todos los momentos"}
               </div>
               <div style={{ fontSize:"0.75rem", color:`${C.cream}88`, marginTop:3 }}>
@@ -7491,7 +6939,7 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
                 allGratitud.map((g,i) => (
                   <div key={g.id||i} style={{ background:"#fffde8", borderRadius:12, padding:"12px 14px", marginBottom:10, border:"1px solid #e8d84030" }}>
                     <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
-                      <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.85rem", color:C.dark }}>🐼 {g.authorName || g.name || "Tú"}</div>
+                      <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"0.85rem", color:C.dark }}>🐼 {g.authorName || g.name || "Tú"}</div>
                       <div style={{ fontSize:"0.7rem", color:C.inkL, fontWeight:700 }}>{g.date}</div>
                     </div>
                     <div style={{ fontSize:"0.9rem", color:C.inkM, lineHeight:1.6 }}>{g.text}</div>
@@ -7499,16 +6947,16 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
                 ))
               ) : (
                 allMomentos.map((m,i) => (
-                  <div key={m.id||i} style={{ background:"#f8f0ff", borderRadius:12, padding:"12px 14px", marginBottom:10, border:`1px solid #c8a8f830` }}>
+                  <div key={m.id||i} style={{ background:"#f2f6e6", borderRadius:12, padding:"12px 14px", marginBottom:10, border:`1px solid #a8d48830` }}>
                     <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
-                      <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem", color:C.dark }}>✨ {m.title}</div>
+                      <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"0.9rem", color:C.dark }}>✨ {m.title}</div>
                       <div style={{ fontSize:"0.7rem", color:C.inkL, fontWeight:700 }}>{m.date}</div>
                     </div>
                     <div style={{ fontSize:"0.88rem", color:C.inkM, lineHeight:1.65 }}>{m.text}</div>
                   </div>
                 ))
               )}
-              <button onClick={() => setShowAllModal(false)} style={{ width:"100%", marginTop:10, padding:"12px", background:C.dark, color:C.cream2, border:"none", borderRadius:14, fontFamily:"'Fredoka One',cursive", fontSize:"0.95rem", cursor:"pointer" }}>
+              <button onClick={() => setShowAllModal(false)} style={{ width:"100%", marginTop:10, padding:"12px", background:C.dark, color:C.cream2, border:"none", borderRadius:14, fontFamily:"'Baloo 2',sans-serif", fontSize:"0.95rem", cursor:"pointer" }}>
                 Cerrar ✕
               </button>
             </div>
@@ -7550,13 +6998,13 @@ function Baul({ user, gratitud, momentos, onAddGratitud, onAddMomento }) {
     <div style={{ background:C.sandL, minHeight:"100vh", paddingBottom:90 }}>
       {/* Header */}
       <div style={{ background:C.dark, padding:"44px 20px 0" }}>
-        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1.9rem", color:C.cream2, marginBottom:4 }}>Baúl 💝</div>
+        <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"1.9rem", color:C.cream2, marginBottom:4 }}>Baúl 💝</div>
         <div style={{ color:`${C.cream}88`, fontSize:"0.84rem", fontWeight:600, marginBottom:14 }}>Gratitud y momentos hermosos</div>
         {/* Tabs */}
         <div style={{ display:"flex", gap:4 }}>
           {[["gratitud","💛 Gratitud"],["momentos","✨ Momentos"]].map(([id,label]) => (
             <div key={id} onClick={() => setActiveTab(id)}
-              style={{ flex:1, padding:"10px 0", textAlign:"center", fontFamily:"'Fredoka One',cursive",
+              style={{ flex:1, padding:"10px 0", textAlign:"center", fontFamily:"'Baloo 2',sans-serif",
                 fontSize:"0.9rem", cursor:"pointer", borderRadius:"12px 12px 0 0",
                 background: activeTab===id ? C.sandL : "transparent",
                 color: activeTab===id ? C.dark : `${C.cream}88`,
@@ -7582,7 +7030,7 @@ function Baul({ user, gratitud, momentos, onAddGratitud, onAddMomento }) {
             {!showForm ? (
               <button onClick={() => setShowForm(true)}
                 style={{ width:"100%", background:C.dark, color:C.cream2, border:"none", borderRadius:14, padding:14,
-                  fontFamily:"'Fredoka One',cursive", fontSize:"1rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.2)", marginBottom:14 }}>
+                  fontFamily:"'Baloo 2',sans-serif", fontSize:"1rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.2)", marginBottom:14 }}>
                 + Añadir acto de bondad
               </button>
             ) : (
@@ -7595,7 +7043,7 @@ function Baul({ user, gratitud, momentos, onAddGratitud, onAddMomento }) {
                         background: who===w ? C.dark : C.sandL,
                         color: who===w ? C.cream2 : C.inkM,
                         border: `1.5px solid ${who===w ? C.dark : C.border}`,
-                        fontFamily:"'Fredoka One',cursive", fontSize:"0.9rem",
+                        fontFamily:"'Baloo 2',sans-serif", fontSize:"0.9rem",
                         boxShadow: who===w ? "0 3px 0 rgba(0,0,0,0.2)" : `0 2px 0 ${C.border}` }}>
                       {emoji} {name}
                     </div>
@@ -7614,7 +7062,7 @@ function Baul({ user, gratitud, momentos, onAddGratitud, onAddMomento }) {
             {gratitud.length === 0 ? (
               <div style={{ textAlign:"center", padding:"40px 20px", color:C.inkL }}>
                 <div style={{ fontSize:"2.5rem", marginBottom:8 }}>💛</div>
-                <div style={{ fontFamily:"'Fredoka One',cursive", color:C.inkM }}>Todavía no hay entradas</div>
+                <div style={{ fontFamily:"'Baloo 2',sans-serif", color:C.inkM }}>Todavía no hay entradas</div>
                 <div style={{ fontSize:"0.82rem", marginTop:6 }}>Empieza anotando algo lindo que hizo tu pareja hoy</div>
               </div>
             ) : gratitud.map((g, i) => (
@@ -7622,7 +7070,7 @@ function Baul({ user, gratitud, momentos, onAddGratitud, onAddMomento }) {
                 border:`1.5px solid ${C.border}`, boxShadow:`0 2px 0 ${C.border}` }}>
                 <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
                   <div style={{ background:"#fff0d0", borderRadius:8, padding:"3px 10px",
-                    fontFamily:"'Fredoka One',cursive", fontSize:"0.82rem", color:C.dark }}>
+                    fontFamily:"'Baloo 2',sans-serif", fontSize:"0.82rem", color:C.dark }}>
                     🐼 {g.authorName || g.name || "Tú"}
                   </div>
                   <div style={{ fontSize:"0.7rem", color:C.inkL, marginLeft:"auto", fontWeight:700 }}>{g.date}</div>
@@ -7636,8 +7084,8 @@ function Baul({ user, gratitud, momentos, onAddGratitud, onAddMomento }) {
         {/* ── MOMENTOS TAB ── */}
         {activeTab === "momentos" && (
           <>
-            <div style={{ background:"#f0e8ff", borderRadius:16, padding:14, marginBottom:14, border:`1.5px solid #c8a8f8` }}>
-              <div style={{ fontSize:"0.84rem", color:"#6840a0", lineHeight:1.6 }}>
+            <div style={{ background:"#eef6e4", borderRadius:16, padding:14, marginBottom:14, border:`1.5px solid #a8d488` }}>
+              <div style={{ fontSize:"0.84rem", color:"#3e5e28", lineHeight:1.6 }}>
                 ✨ Guarden aquí los momentos que no quieren olvidar. Su historia de pareja, escrita por ustedes.
               </div>
             </div>
@@ -7645,7 +7093,7 @@ function Baul({ user, gratitud, momentos, onAddGratitud, onAddMomento }) {
             {!showMomentoForm ? (
               <button onClick={() => setShowMomentoForm(true)}
                 style={{ width:"100%", background:C.dark, color:C.cream2, border:"none", borderRadius:14, padding:14,
-                  fontFamily:"'Fredoka One',cursive", fontSize:"1rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.2)", marginBottom:14 }}>
+                  fontFamily:"'Baloo 2',sans-serif", fontSize:"1rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.2)", marginBottom:14 }}>
                 + Guardar un momento
               </button>
             ) : (
@@ -7668,14 +7116,14 @@ function Baul({ user, gratitud, momentos, onAddGratitud, onAddMomento }) {
             {momentos.length === 0 ? (
               <div style={{ textAlign:"center", padding:"40px 20px", color:C.inkL }}>
                 <div style={{ fontSize:"2.5rem", marginBottom:8 }}>✨</div>
-                <div style={{ fontFamily:"'Fredoka One',cursive", color:C.inkM }}>Todavía no hay momentos</div>
+                <div style={{ fontFamily:"'Baloo 2',sans-serif", color:C.inkM }}>Todavía no hay momentos</div>
                 <div style={{ fontSize:"0.82rem", marginTop:6 }}>Guarden aquí sus recuerdos más lindos</div>
               </div>
             ) : momentos.map((m, i) => (
               <div key={m.id || i} style={{ background:C.white, borderRadius:16, padding:"14px 16px", marginBottom:10,
-                border:`1.5px solid #c8a8f8`, boxShadow:`0 2px 0 #e8d8ff` }}>
+                border:`1.5px solid #a8d488`, boxShadow:`0 2px 0 #dcecc4` }}>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:8 }}>
-                  <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:"1rem", color:C.dark, flex:1 }}>✨ {m.title}</div>
+                  <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"1rem", color:C.dark, flex:1 }}>✨ {m.title}</div>
                   <div style={{ fontSize:"0.7rem", color:C.inkL, fontWeight:700, marginLeft:8, whiteSpace:"nowrap" }}>{m.date}</div>
                 </div>
                 <div style={{ fontSize:"0.88rem", color:C.inkM, lineHeight:1.7 }}>{m.text}</div>
