@@ -2885,6 +2885,289 @@ function Conocete({ conoce, onSave, user }) {
   );
 }
 
+// BURBUJA — INBOX DE NEGOCIACIÓN
+// Hilo tipo chat por pregunta: propuesta → contraoferta → ... → acuerdo.
+// Ambos teléfonos ven el mismo hilo en vivo vía fbListenBurbuja.
+const BURBUJA_EVENT_META = {
+  proposal:    { label: "envió una propuesta ✉️",     dot: C.sky,   toast: "Propuesta enviada ✉️",     notif: me => `${me} te envió una propuesta de acuerdo ✉️` },
+  counter:     { label: "propuso un ajuste 🌿",       dot: C.gold,  toast: "Ajuste propuesto 🌿",       notif: me => `${me} propuso un ajuste para un acuerdo 🌿` },
+  renegotiate: { label: "abrió una re-negociación ↺", dot: C.rose,  toast: "Re-negociación enviada ↺", notif: me => `${me} quiere re-negociar un acuerdo ↺` },
+  approved:    { label: "aprobó el acuerdo ✅",       dot: C.olive, toast: "Acuerdo aprobado ✓",       notif: me => `${me} aprobó su acuerdo ✅` },
+  pause:       { label: "pidió una pausa 🕊️",         dot: C.inkL,  toast: "Pausa de 24h activada 🕊️",  notif: me => `${me} pidió pausar la negociación 24h 🕊️` },
+};
+
+const fmtBurbujaTs = (at) => {
+  const d = toJsDate(at);
+  if (!d) return "";
+  return d.toLocaleDateString("es", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+};
+
+const MS_24H = 24 * 60 * 60 * 1000;
+const fmtTimeLeft = (ms) => {
+  if (ms <= 0) return "0s";
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  return `${h}h ${m}m`;
+};
+
+// Construye los hilos de Negociación: cada item con actividad (respuestas, propuesta, contraoferta o acuerdo),
+// ordenados por prioridad: tu turno → listos para proponer → esperando → sin propuesta → acordados.
+function buildBurbujaThreads(burbuja, myRole) {
+  const threads = BURBUJA_SECTIONS.flatMap(sec =>
+    sec.items
+      .filter(item => {
+        const e = burbuja[item.id] || {};
+        const bothAnswered = !!e.owner && !!e.partner;
+        return !!(e.history?.length || e.proposalText || e.status === "approved" || bothAnswered);
+      })
+      .map(item => {
+        const entry = burbuja[item.id] || {};
+        const history = (entry.history || []).slice().sort((a, b) => new Date(a.at || 0) - new Date(b.at || 0));
+        const last = history[history.length - 1];
+        const isPending = entry.status === "pending" && !!entry.proposalText;
+        const bothAnswered = !!entry.owner && !!entry.partner;
+        const readyToPropose = bothAnswered && !isPending && entry.status !== "approved" && history.length === 0;
+        const pausedUntil = entry.pausedUntil ? new Date(entry.pausedUntil).getTime() : 0;
+        const isPaused = pausedUntil > Date.now();
+        return {
+          item,
+          section: sec,
+          entry,
+          history,
+          lastTs: last?.at || entry.approvedAt || null,
+          isApproved: entry.status === "approved",
+          myTurn: isPending && entry.proposalBy !== myRole && !isPaused,
+          waiting: isPending && entry.proposalBy === myRole && !isPaused,
+          readyToPropose: readyToPropose && !isPaused,
+          isPaused,
+          pausedUntil,
+        };
+      })
+  );
+  const rank = t => (t.myTurn ? 0 : t.readyToPropose ? 1 : t.waiting ? 2 : t.isPaused ? 3 : t.isApproved ? 5 : 4);
+  return threads.sort((a, b) => rank(a) - rank(b) || new Date(b.lastTs || 0) - new Date(a.lastTs || 0));
+}
+
+function BurbujaThread({ thread, myRole, myName, partnerName, isOpen, onToggle, onPropose, onApprove }) {
+  const { item, section, entry, history, isApproved, myTurn, waiting, readyToPropose } = thread;
+  const [draft, setDraft] = useState("");
+  const [renegOpen, setRenegOpen] = useState(false);
+  const agreementText = entry.approvedText || "";
+  const previous = entry.previousAgreement || "";
+
+  const status = isApproved
+    ? { text: "Acordado ✅", color: C.olive, bg: `${C.olive}1a` }
+    : myTurn
+      ? { text: "Te propusieron algo ↔", color: C.rose, bg: `${C.rose}1a` }
+      : waiting
+        ? { text: `Esperando a ${partnerName}`, color: C.gold, bg: `${C.gold}1a` }
+        : readyToPropose
+          ? { text: "Listos para proponer ✍️", color: C.sky, bg: `${C.sky}1a` }
+          : { text: "Sin propuesta", color: C.inkL, bg: C.sandL };
+
+  const send = (mode) => {
+    const clean = draft.trim();
+    if (!clean) return;
+    onPropose(item.id, clean, mode);
+    setDraft("");
+    setRenegOpen(false);
+  };
+
+  return (
+    <div style={{ background: C.white, borderRadius: 16, padding: 14, marginBottom: 10, border: `1.5px solid ${myTurn ? C.rose : C.border}`, boxShadow: `0 2px 0 ${C.border}` }}>
+      <div onClick={onToggle} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: section?.itemBg || status.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.05rem", flexShrink: 0 }}>{section?.icon || "🫧"}</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {section?.title && <div style={{ fontSize: "0.62rem", fontWeight: 800, color: C.inkL, letterSpacing: "0.3px", marginBottom: 1 }}>{section.title.toUpperCase()}</div>}
+          <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "0.9rem", color: C.dark, lineHeight: 1.35 }}>{item.q}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
+            <span style={{ fontSize: "0.68rem", fontWeight: 800, color: status.color }}>{status.text}</span>
+            <span style={{ fontSize: "0.62rem", color: C.inkL, fontWeight: 700 }}>· {history.length} {history.length === 1 ? "mensaje" : "mensajes"}</span>
+          </div>
+        </div>
+        <div style={{ color: C.inkL, fontSize: "0.8rem", flexShrink: 0, transition: "transform 0.25s", transform: isOpen ? "rotate(180deg)" : "none" }}>▼</div>
+      </div>
+
+      {isApproved && agreementText && (
+        <div style={{ background: `${C.mint}66`, borderRadius: 10, padding: "10px 12px", marginTop: 10, border: `1px solid ${C.olive}40` }}>
+          <div style={{ fontSize: "0.64rem", fontWeight: 800, color: C.teal, marginBottom: 3, letterSpacing: "0.4px" }}>ACUERDO FINAL</div>
+          <div style={{ fontSize: "0.85rem", color: C.ink, fontWeight: 700, lineHeight: 1.55 }}>{agreementText}</div>
+          {entry.approvedAt && <div style={{ fontSize: "0.62rem", color: C.inkL, marginTop: 4, fontWeight: 700 }}>{fmtBurbujaTs(entry.approvedAt)}</div>}
+        </div>
+      )}
+
+      {isApproved && (
+        <div style={{ marginTop: 10 }}>
+          {!renegOpen ? (
+            <Btn onClick={() => { setRenegOpen(true); setDraft(agreementText); }} variant="sand" style={{ width: "100%", fontSize: "0.84rem", padding: "10px 14px" }}>Re-negociar este acuerdo ↺</Btn>
+          ) : (
+            <>
+              <div style={{ fontSize: "0.72rem", color: C.inkM, fontWeight: 700, marginBottom: 6 }}>
+                Al enviar, el acuerdo vuelve a negociación y {partnerName} deberá aprobar la nueva versión.
+              </div>
+              <TA value={draft} onChange={setDraft} placeholder="Escribe la nueva versión del acuerdo..." rows={3} />
+              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
+                <Btn onClick={() => { setRenegOpen(false); setDraft(""); }} variant="ghost" style={{ padding: "9px 12px", fontSize: "0.82rem" }}>Cancelar</Btn>
+                <Btn onClick={() => send("renegotiate")} variant="olive" style={{ padding: "9px 12px", fontSize: "0.82rem" }}>Enviar re-negociación ↺</Btn>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {isOpen && (
+        <div style={{ marginTop: 12 }}>
+          {!isApproved && previous && (
+            <div style={{ background: C.sandL, borderRadius: 10, padding: "9px 11px", marginBottom: 10, border: `1px dashed ${C.border}` }}>
+              <div style={{ fontSize: "0.62rem", fontWeight: 800, color: C.inkL, letterSpacing: "0.4px", marginBottom: 3 }}>ACUERDO ANTERIOR (EN RE-NEGOCIACIÓN)</div>
+              <div style={{ fontSize: "0.8rem", color: C.inkM, lineHeight: 1.5 }}>{previous}</div>
+            </div>
+          )}
+
+          {history.length === 0 ? (
+            <div style={{ fontSize: "0.78rem", color: C.inkL, fontWeight: 700, marginBottom: 10 }}>
+              Todavía no hay propuestas en este tema. Envía la primera abajo.
+            </div>
+          ) : history.map((h, i) => {
+            const meta = BURBUJA_EVENT_META[h.type] || BURBUJA_EVENT_META.proposal;
+            const mine = h.by === myRole;
+            const who = mine ? myName : partnerName;
+            return (
+              <div key={h.id || i} style={{ display: "flex", justifyContent: mine ? "flex-end" : "flex-start", marginBottom: 9 }}>
+                <div style={{ maxWidth: "88%" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3, justifyContent: mine ? "flex-end" : "flex-start" }}>
+                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: meta.dot, display: "inline-block" }} />
+                    <span style={{ fontSize: "0.66rem", fontWeight: 800, color: C.inkL }}>{who} {meta.label}</span>
+                  </div>
+                  <div style={{ background: mine ? C.cream : C.sandL, borderRadius: 12, padding: "9px 11px", border: `1px solid ${C.border}`, borderBottomRightRadius: mine ? 4 : 12, borderBottomLeftRadius: mine ? 12 : 4 }}>
+                    <div style={{ fontSize: "0.84rem", color: C.ink, fontWeight: 700, lineHeight: 1.55 }}>{h.text}</div>
+                    <div style={{ fontSize: "0.6rem", color: C.inkL, marginTop: 4, fontWeight: 700, textAlign: mine ? "right" : "left" }}>{fmtBurbujaTs(h.at)}</div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          {myTurn && (
+            <div style={{ marginTop: 12 }}>
+              <Btn onClick={() => onApprove(item.id)} variant="olive" style={{ width: "100%", fontSize: "0.86rem", padding: "11px 14px" }}>Aceptar acuerdo ✅</Btn>
+              <div style={{ marginTop: 9 }}>
+                <TA value={draft} onChange={setDraft} placeholder={`O responde a ${partnerName} con tu contraoferta...`} rows={2} />
+                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 6 }}>
+                  <Btn onClick={() => send("counter")} variant="sand" style={{ padding: "9px 12px", fontSize: "0.82rem" }}>Negociar de nuevo ↺</Btn>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {waiting && (
+            <div style={{ marginTop: 12 }}>
+              <div style={{ background: C.sandL, borderRadius: 10, padding: "9px 11px", fontSize: "0.76rem", color: C.inkM, fontWeight: 700, border: `1px solid ${C.border}` }}>
+                Ya enviaste tu propuesta. Esperando que {partnerName} la acepte o te responda ↔
+              </div>
+              <div style={{ marginTop: 9 }}>
+                <TA value={draft} onChange={setDraft} placeholder="¿Quieres ajustar tu propuesta antes de que responda?" rows={2} />
+                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 6 }}>
+                  <Btn onClick={() => send("proposal")} variant="ghost" style={{ padding: "9px 12px", fontSize: "0.82rem" }}>Reemplazar propuesta</Btn>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!isApproved && !myTurn && !waiting && (
+            <div style={{ marginTop: 12 }}>
+              <TA value={draft} onChange={setDraft} placeholder="Propón el acuerdo final para enviarlo a tu pareja..." rows={2} />
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 6 }}>
+                <Btn onClick={() => send("proposal")} variant="olive" style={{ padding: "9px 12px", fontSize: "0.82rem" }}>Enviar propuesta ✉️</Btn>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BurbujaInbox({ threads, myRole, myName, partnerName, onPropose, onApprove }) {
+  const [openMap, setOpenMap] = useState({});
+  const [filter, setFilter] = useState("todos");
+
+  const counts = {
+    todos: threads.length,
+    turno: threads.filter(t => t.myTurn).length,
+    listos: threads.filter(t => t.readyToPropose).length,
+    esperando: threads.filter(t => t.waiting).length,
+    acordados: threads.filter(t => t.isApproved).length,
+  };
+
+  const visible = threads.filter(t => {
+    if (filter === "turno") return t.myTurn;
+    if (filter === "listos") return t.readyToPropose;
+    if (filter === "esperando") return t.waiting;
+    if (filter === "acordados") return t.isApproved;
+    return true;
+  });
+
+  return (
+    <div style={{ margin: "0 14px 10px" }}>
+      <div style={{ background: C.cream, borderRadius: 14, padding: "11px 13px", marginBottom: 10, border: `1.5px solid ${C.border}` }}>
+        <div style={{ fontSize: "0.78rem", color: C.inkM, fontWeight: 700, lineHeight: 1.6 }}>
+          Acá negocian hasta llegar a un acuerdo. Cada propuesta puede recibir una contraoferta. Cuando uno acepta, el acuerdo queda guardado.
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 6, marginBottom: 10, overflowX: "auto", paddingBottom: 2 }}>
+        {[["todos", "Todos"], ["turno", "Te propusieron"], ["listos", "Listos"], ["esperando", "Esperando"], ["acordados", "Acordados"]].map(([id, label]) => (
+          <button
+            key={id}
+            onClick={() => setFilter(id)}
+            style={{
+              borderRadius: 999,
+              padding: "7px 12px",
+              whiteSpace: "nowrap",
+              border: `1.5px solid ${filter === id ? C.dark : C.border}`,
+              background: filter === id ? C.dark : C.white,
+              color: filter === id ? C.cream2 : C.inkM,
+              fontFamily: "'Nunito',sans-serif",
+              fontWeight: 800,
+              fontSize: "0.74rem",
+              cursor: "pointer",
+            }}
+          >
+            {label} {counts[id]}
+          </button>
+        ))}
+      </div>
+
+      {visible.length === 0 ? (
+        <div style={{ background: C.white, borderRadius: 16, padding: 18, border: `1.5px solid ${C.border}`, textAlign: "center" }}>
+          <div style={{ fontSize: "1.8rem", marginBottom: 8 }}>🫧</div>
+          <div style={{ fontWeight: 800, color: C.ink, fontSize: "0.88rem", marginBottom: 4 }}>
+            {threads.length === 0 ? "Aún no hay negociaciones" : "Nada en este filtro"}
+          </div>
+          <div style={{ fontSize: "0.8rem", color: C.inkM, lineHeight: 1.6 }}>
+            {threads.length === 0
+              ? "Ve a Preguntas, responde un acuerdo y envía la propuesta. El ida y vuelta aparecerá acá."
+              : "Cambia de filtro para ver los otros hilos."}
+          </div>
+        </div>
+      ) : visible.map(thread => (
+        <BurbujaThread
+          key={thread.item.id}
+          thread={thread}
+          myRole={myRole}
+          myName={myName}
+          partnerName={partnerName}
+          isOpen={openMap[thread.item.id] ?? thread.myTurn}
+          onToggle={() => setOpenMap(p => ({ ...p, [thread.item.id]: !(p[thread.item.id] ?? thread.myTurn) }))}
+          onPropose={onPropose}
+          onApprove={onApprove}
+        />
+      ))}
+    </div>
+  );
+}
+
 // BURBUJA
 function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
   const { nameA, nameB } = getCoupleNames(user);
@@ -2895,7 +3178,7 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
   const [open, setOpen] = useState({});
   const [tmp, setTmp] = useState({});
   const [editingApproved, setEditingApproved] = useState({});
-  const [burbujaTab, setBurbujaTab] = useState("negociacion");
+  const [burbujaTab, setBurbujaTab] = useState("preguntas");
 
   const get = (id, f) => tmp[id]?.[f] ?? burbuja[id]?.[f] ?? "";
   const set_ = (id, f, v) => setTmp(p => ({ ...p, [id]: { ...p[id], [f]: v } }));
@@ -2907,6 +3190,9 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
       .map(item => ({ item, entry: burbuja[item.id] || {} }))
   );
 
+  const threads = buildBurbujaThreads(burbuja, myRole);
+  const myTurnCount = threads.filter(t => t.myTurn || t.readyToPropose).length;
+
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
       <div style={{ background: C.olive, padding: "48px 20px 24px", textAlign: "center" }}>
@@ -2916,8 +3202,9 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
       <div style={{ background: C.cream, borderRadius: 18, margin: "14px 14px 8px", padding: 16, border: `1.5px solid ${C.border}`, boxShadow: `0 3px 0 ${C.border}` }}>
         <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.05rem", color: C.dark, marginBottom: 5 }}>🫧 ¿Qué es la Burbuja?</div>
         <div style={{ fontSize: "0.85rem", color: C.inkM, lineHeight: 1.7 }}>
-          Acá construyen juntos las reglas y acuerdos de su relación. En <strong>Negociación</strong>: cada uno propone su respuesta a preguntas clave — 
-          si ambos aprueban, se guarda como acuerdo. En <strong>Acuerdos</strong>: ven todo lo que han acordado y pueden editarlo. 
+          Acá construyen juntos las reglas y acuerdos de su relación. En <strong>Preguntas</strong>: cada uno responde su parte del acuerdo.
+          En <strong>Negociación</strong>: el ida y vuelta de propuestas y contraofertas hasta que uno acepte.
+          En <strong>Acuerdos</strong>: todo lo acordado, con opción de <strong>re-negociar</strong> cuando quieran.
           Cada acuerdo aprobado da +10 bambú 🌿 a los dos.
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
@@ -2925,30 +3212,45 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
           <div style={{ fontSize: "0.76rem", fontWeight: 800, color: C.olive, whiteSpace: "nowrap" }}>{approvedCount} / {total}</div>
         </div>
       </div>
-      <div style={{ display: "flex", gap: 8, margin: "0 14px 10px" }}>
-        {[ ["negociacion", "Negociación"], ["acuerdos", "Acuerdos hechos"] ].map(([id, label]) => (
+      <div style={{ display: "flex", gap: 6, margin: "0 14px 10px" }}>
+        {[ ["preguntas", "Preguntas"], ["inbox", "Negociación"], ["acuerdos", "Acuerdos"] ].map(([id, label]) => (
           <button
             key={id}
             onClick={() => setBurbujaTab(id)}
             style={{
               flex: 1,
+              position: "relative",
               borderRadius: 12,
-              padding: "10px 12px",
+              padding: "10px 8px",
               border: `1.5px solid ${burbujaTab === id ? C.dark : C.border}`,
               background: burbujaTab === id ? C.dark : C.white,
               color: burbujaTab === id ? C.cream2 : C.ink,
               fontFamily: "'Baloo 2',sans-serif",
-              fontSize: "0.82rem",
+              fontSize: "0.78rem",
               cursor: "pointer",
               boxShadow: burbujaTab === id ? "0 2px 0 rgba(0,0,0,0.18)" : `0 2px 0 ${C.border}`,
             }}
           >
             {label}
+            {id === "inbox" && myTurnCount > 0 && (
+              <span style={{ position: "absolute", top: -5, right: -4, background: "#c05068", color: C.white, borderRadius: 8, minWidth: 17, height: 17, padding: "0 4px", fontSize: "0.62rem", fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", boxSizing: "border-box" }}>{myTurnCount}</span>
+            )}
           </button>
         ))}
       </div>
 
-      {burbujaTab === "negociacion" && BURBUJA_SECTIONS.map(sec => {
+      {burbujaTab === "inbox" && (
+        <BurbujaInbox
+          threads={threads}
+          myRole={myRole}
+          myName={myName}
+          partnerName={partnerName}
+          onPropose={onPropose}
+          onApprove={onApprove}
+        />
+      )}
+
+      {burbujaTab === "preguntas" && BURBUJA_SECTIONS.map(sec => {
         const pendingItems = sec.items.filter(item => {
           const entry = burbuja[item.id] || {};
           return entry.status !== "approved";
@@ -3003,7 +3305,7 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
                   <div style={{ marginTop: 8 }}>
                     <TA value={proposalText} onChange={v => set_(item.id, "proposalText", v)} placeholder="Propón el acuerdo final para enviarlo a tu pareja..." rows={2} />
                     <div style={{ display:"flex", justifyContent:"flex-end", marginTop:6 }}>
-                      <Btn onClick={() => onPropose(item.id, proposalText, false)} variant="olive" style={{ padding:"9px 12px", fontSize:"0.82rem" }}>Enviar propuesta</Btn>
+                      <Btn onClick={() => onPropose(item.id, proposalText, "proposal")} variant="olive" style={{ padding:"9px 12px", fontSize:"0.82rem" }}>Enviar propuesta</Btn>
                     </div>
                   </div>
                 )}
@@ -3020,14 +3322,15 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
                     ) : (
                       <>
                         <div style={{ display:"flex", gap:8, marginTop:10 }}>
-                          <Btn onClick={() => onApprove(item.id)} variant="olive" style={{ flex:1, fontSize:"0.82rem", padding:"10px 12px" }}>Aprobar ✅</Btn>
+                          <Btn onClick={() => onApprove(item.id)} variant="olive" style={{ flex:1, fontSize:"0.82rem", padding:"10px 12px" }}>Aceptar acuerdo ✅</Btn>
                         </div>
                         <div style={{ marginTop:8 }}>
                           <TA value={proposalText} onChange={v => set_(item.id, "proposalText", v)} placeholder="Si no te convence, propone ajuste para negociar..." rows={2} />
                           <div style={{ display:"flex", justifyContent:"flex-end", marginTop:6 }}>
-                            <Btn onClick={() => onPropose(item.id, proposalText, true)} variant="sand" style={{ padding:"9px 12px", fontSize:"0.82rem" }}>Negociar ↔</Btn>
+                            <Btn onClick={() => onPropose(item.id, proposalText, "counter")} variant="sand" style={{ padding:"9px 12px", fontSize:"0.82rem" }}>Negociar de nuevo ↺</Btn>
                           </div>
                         </div>
+                        <div style={{ marginTop:8, fontSize:"0.72rem", color:C.inkL, fontWeight:700 }}>El ida y vuelta completo queda en Negociación.</div>
                       </>
                     )}
                   </div>
@@ -3039,10 +3342,10 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
         </div>
       )})}
 
-      {burbujaTab === "negociacion" && !BURBUJA_SECTIONS.some(sec => sec.items.some(item => (burbuja[item.id] || {}).status !== "approved")) && (
+      {burbujaTab === "preguntas" && !BURBUJA_SECTIONS.some(sec => sec.items.some(item => (burbuja[item.id] || {}).status !== "approved")) && (
         <div style={{ margin: "0 14px 10px", background: C.white, borderRadius: 16, padding: 14, border: `1.5px solid ${C.border}` }}>
           <div style={{ fontSize: "0.82rem", color: C.inkM, fontWeight: 700, lineHeight: 1.6 }}>
-            No hay acuerdos pendientes de negociación. Revisa la pestaña de acuerdos hechos.
+            No hay preguntas pendientes. Revisa Negociación o la pestaña de Acuerdos.
           </div>
         </div>
       )}
@@ -3077,11 +3380,14 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
                       variant="sand"
                       style={{ padding: "8px 12px", fontSize: "0.8rem" }}
                     >
-                      Editar acuerdo
+                      Re-negociar ↺
                     </Btn>
                   </div>
                 ) : (
                   <div style={{ marginTop: 8 }}>
+                    <div style={{ fontSize: "0.72rem", color: C.inkM, fontWeight: 700, marginBottom: 6 }}>
+                      El acuerdo vuelve a negociación y {partnerName} deberá aprobar la nueva versión.
+                    </div>
                     <TA value={proposalText} onChange={v => set_(item.id, "proposalText", v)} placeholder="Escribe la nueva versión del acuerdo..." rows={2} />
                     <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
                       <Btn
@@ -3096,13 +3402,13 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
                       </Btn>
                       <Btn
                         onClick={() => {
-                          onPropose(item.id, proposalText, true);
+                          onPropose(item.id, proposalText, "renegotiate");
                           setEditingApproved(p => ({ ...p, [item.id]: false }));
                         }}
                         variant="olive"
                         style={{ padding: "8px 12px", fontSize: "0.8rem" }}
                       >
-                        Enviar edición
+                        Enviar re-negociación ↺
                       </Btn>
                     </div>
                   </div>
@@ -3847,21 +4153,44 @@ const DIARIO_TYPES = [
       { key:"q3", label:"Lo que necesito pedirle", hint:"Una petición clara..." },
     ]
   },
+  {
+    id: "autocompasion",
+    label: "🫧 Autocompasión",
+    sub: "Hablarte como le hablarías a quien quieres",
+    prompts: [
+      { key:"q1", label:"¿Qué me está costando hoy?", hint:"Sin adornarlo y sin exagerarlo..." },
+      { key:"q2", label:"Si esto le pasara a alguien que quiero, ¿qué le diría?", hint:"Con las palabras que usarías con tu mejor amiga..." },
+      { key:"q3", label:"Lo mismo, dicho para mí", hint:"Escríbetelo a ti: 'estás haciendo lo que puedes con...'" },
+      { key:"q4", label:"Lo que necesito hoy", hint:"Descansar, pedir ayuda, poner un límite..." },
+    ]
+  },
+  {
+    id: "valores",
+    label: "🧭 Mis valores",
+    sub: "Volver a lo que te importa, no a lo que te duele",
+    prompts: [
+      { key:"q1", label:"El valor que quiero honrar hoy", hint:"Ej: calma, honestidad, cuidarme, valentía..." },
+      { key:"q2", label:"¿Dónde me alejé de él?", hint:"Sin juicio, solo observar..." },
+      { key:"q3", label:"Un paso pequeñísimo hacia ese valor", hint:"Tan pequeño que sea imposible fallar..." },
+    ]
+  },
 ];
 
-function DiarioPersonal({ entries, onSave, user }) {
-  const [view, setView] = useState("list"); // "list" | "new" | "detail"
-  const [selType, setSelType] = useState(null);
+function DiarioPersonal({ entries, onSave, user, onBack, initialType = null }) {
+  const [view, setView] = useState(initialType ? "new" : "list"); // "list" | "new" | "detail"
+  const [selType, setSelType] = useState(initialType);
   const [draft, setDraft] = useState({});
   const [selEntry, setSelEntry] = useState(null);
+  const [err, setErr] = useState("");
+  const [keepOnly, setKeepOnly] = useState(false);
 
   // Filtrar solo las entradas del usuario actual (privadas)
-  const userKey = user?.email || user?.uid || 'guest';
-  const myEntries = Object.values(entries || {}).filter(entry => 
-    entry.authorEmail === user?.email || entry.authorUid === user?.uid || !entry.authorEmail
+  const myEntries = Object.values(entries || {}).filter(entry =>
+    entry.authorEmail === user?.email || entry.authorUid === user?.uid || (!entry.authorEmail && !entry.authorUid)
   );
-  
-  const sortedEntries = myEntries.sort((a, b) => b.ts.localeCompare(a.ts));
+
+  const sortedEntries = [...myEntries].sort((a, b) => String(b.ts || "").localeCompare(String(a.ts || "")));
+  const firstFilled = entry => Object.values(entry?.prompts || {}).find(v => String(v || "").trim().length > 0) || "";
 
   const fmtDate = ts => {
     const d = new Date(ts);
@@ -3876,10 +4205,13 @@ function DiarioPersonal({ entries, onSave, user }) {
     const type = DIARIO_TYPES.find(t => t.id === selType);
     if (!type) return;
     const filled = type.prompts.filter(p => (draft[p.key] || "").trim().length > 0);
-    if (filled.length === 0) return;
-    const ts = new Date().toISOString();
-    onSave({ id: ts, ts, type: selType, prompts: { ...draft } });
-    setDraft({}); setSelType(null); setView("list");
+    if (filled.length === 0) { setErr("Escribe al menos una respuesta para poder guardar."); return; }
+    const now = new Date();
+    const ts = now.toISOString();
+    onSave({ id: ts, ts, dateKey: getDateKeyLocal(now), type: selType, prompts: { ...draft }, keepOnlyConclusion: keepOnly });
+    setDraft({}); setSelType(null); setErr(""); setKeepOnly(false);
+    if (initialType && onBack) { onBack(); return; }
+    setView("list");
   };
 
   if (view === "new" && selType) {
@@ -3893,7 +4225,7 @@ function DiarioPersonal({ entries, onSave, user }) {
     return (
       <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
         <div style={{ background: C.dark, padding: "44px 20px 20px" }}>
-          <button onClick={() => setView("list")} style={{ background: "none", border: "none", color: C.cream2, fontSize: "1.5rem", cursor: "pointer", marginBottom: 10, display: "block" }}>←</button>
+          <button onClick={() => { if (initialType && onBack) onBack(); else setView("list"); }} style={{ background: "none", border: "none", color: C.cream2, fontSize: "1.5rem", cursor: "pointer", marginBottom: 10, display: "block" }}>←</button>
           <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.4rem", color: C.cream2, marginBottom: 4 }}>{type.label}</div>
           <div style={{ fontSize: "0.8rem", color: `${C.cream}88` }}>{type.sub}</div>
         </div>
@@ -3902,8 +4234,8 @@ function DiarioPersonal({ entries, onSave, user }) {
           <div style={{ background:"#fff3cd", borderRadius:14, padding:14, marginBottom:10, border:`1.5px solid #ffc107` }}>
             <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"0.9rem", color:"#856404", marginBottom:6 }}>🔒 Solo tú puedes ver esto</div>
             <div style={{ fontSize:"0.8rem", color:"#856404", lineHeight:1.6 }}>
-              Este diario es 100% privado. Tu pareja NO tiene acceso a estas entradas. 
-              Si escribes algo negativo, solo se guardará tu conclusión positiva final.
+              Este diario es tuyo. Tu pareja no tiene acceso a estas entradas: se guardan en tu cuenta personal,
+              nunca en el espacio compartido. Puedes escribir sin filtro.
             </div>
           </div>
           
@@ -3930,15 +4262,30 @@ function DiarioPersonal({ entries, onSave, user }) {
               )}
               <textarea
                 value={draft[p.key] || ""}
-                onChange={e => setDraft(d => ({ ...d, [p.key]: e.target.value }))}
+                onChange={e => { setDraft(d => ({ ...d, [p.key]: e.target.value })); if (err) setErr(""); }}
                 placeholder={p.hint}
                 rows={3}
                 style={{ width:"100%", border:`1.5px solid ${C.border}`, borderRadius:10, padding:"9px 11px", fontSize:"0.84rem", fontFamily:"'Nunito',sans-serif", resize:"none", outline:"none", boxSizing:"border-box", color:C.ink, lineHeight:1.6 }}
               />
             </div>
           ))}
+          {(selType === "abcd" || selType === "discusion") && (
+            <label style={{ display:"flex", gap:10, alignItems:"flex-start", background:C.white, borderRadius:14, padding:"12px 14px", marginBottom:10, border:`1.5px solid ${C.border}`, cursor:"pointer" }}>
+              <input type="checkbox" checked={keepOnly} onChange={e => setKeepOnly(e.target.checked)} style={{ width:18, height:18, marginTop:2, accentColor:C.dark, flexShrink:0 }} />
+              <span>
+                <span style={{ display:"block", fontFamily:"'Baloo 2',sans-serif", fontSize:"0.88rem", color:C.dark }}>Guardar solo mi conclusión</span>
+                <span style={{ display:"block", fontSize:"0.76rem", color:C.inkM, lineHeight:1.5, marginTop:2 }}>
+                  Borra lo demás y deja únicamente {selType === "abcd" ? "la reestructuración (D)" : "el aprendizaje final"}.
+                  Si lo dejas sin marcar guardas todo, que es lo que te va a servir después para ver tus patrones.
+                </span>
+              </span>
+            </label>
+          )}
+          {err && (
+            <div style={{ background:"#fdecea", border:"1.5px solid #f5c2c0", borderRadius:12, padding:"10px 12px", marginBottom:10, fontSize:"0.8rem", color:"#a83a34", lineHeight:1.5 }}>{err}</div>
+          )}
           <div style={{ display:"flex", gap:10, marginTop:4 }}>
-            <button onClick={() => { setSelType(null); setView("new"); }} style={{ flex:1, padding:13, background:C.cream, border:`1.5px solid ${C.border}`, borderRadius:14, fontFamily:"'Baloo 2',sans-serif", fontSize:"0.95rem", cursor:"pointer", color:C.inkM }}>← Tipo</button>
+            <button onClick={() => { if (initialType && onBack) onBack(); else { setSelType(null); setErr(""); setView("new"); } }} style={{ flex:1, padding:13, background:C.cream, border:`1.5px solid ${C.border}`, borderRadius:14, fontFamily:"'Baloo 2',sans-serif", fontSize:"0.95rem", cursor:"pointer", color:C.inkM }}>← {initialType ? "Volver" : "Tipo"}</button>
             <button onClick={handleSave} style={{ flex:2, padding:13, background:C.dark, color:C.cream2, border:"none", borderRadius:14, fontFamily:"'Baloo 2',sans-serif", fontSize:"0.95rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.2)" }}>Guardar entrada ✓</button>
           </div>
         </div>
@@ -3956,7 +4303,7 @@ function DiarioPersonal({ entries, onSave, user }) {
         </div>
         <div style={{ padding: "10px 14px 0" }}>
           {DIARIO_TYPES.map(t => (
-            <div key={t.id} onClick={() => setSelType(t.id)}
+            <div key={t.id} onClick={() => { setSelType(t.id); setErr(""); }}
               style={{ background:C.white, borderRadius:16, padding:"14px 16px", marginBottom:10, cursor:"pointer", border:`1.5px solid ${C.border}`, boxShadow:`0 3px 0 ${C.border}` }}>
               <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"1.05rem", color:C.dark }}>{t.label}</div>
               <div style={{ fontSize:"0.8rem", color:C.inkM, marginTop:3 }}>{t.sub}</div>
@@ -3972,15 +4319,15 @@ function DiarioPersonal({ entries, onSave, user }) {
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
       <div style={{ background: C.dark, padding: "44px 20px 20px" }}>
-        <button onClick={() => {}} style={{ background: "none", border: "none", color: C.cream2, fontSize: "1.5rem", cursor: "pointer", marginBottom: 10, display: "block", opacity: 0 }}>←</button>
+        <button onClick={() => onBack && onBack()} style={{ background: "none", border: "none", color: C.cream2, fontSize: "1.5rem", cursor: "pointer", marginBottom: 10, display: "block", opacity: onBack ? 1 : 0, pointerEvents: onBack ? "auto" : "none" }}>←</button>
         <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.4rem", color: C.cream2, marginBottom: 4 }}>📓 Diario Privado</div>
         <div style={{ fontSize: "0.8rem", color: `${C.cream}88` }}>Solo tú puedes ver esto 🔒</div>
       </div>
       <div style={{ padding: "10px 14px 0" }}>
         <div style={{ background:"#fff3cd", borderRadius:14, padding:12, marginBottom:10, border:`1.5px solid #ffc107` }}>
           <div style={{ fontSize:"0.8rem", color:"#856404", lineHeight:1.55 }}>
-            <strong>🔒 100% Privado:</strong> Tu pareja NO tiene acceso a este diario. 
-            Las entradas negativas se guardan solo con tu conclusión positiva final.
+            <strong>🔒 Tu espacio:</strong> tu pareja no tiene acceso a este diario. Se guarda en tu cuenta personal,
+            fuera del espacio compartido, y solo tú puedes abrirlo.
           </div>
         </div>
         <button onClick={() => setView("new")} style={{ width:"100%", background:C.dark, color:C.cream2, border:"none", borderRadius:14, padding:"13px 16px", fontFamily:"'Baloo 2',sans-serif", fontSize:"1rem", cursor:"pointer", boxShadow:"0 4px 0 rgba(0,0,0,0.25)", marginBottom:14, textAlign:"left" }}>
@@ -3995,7 +4342,7 @@ function DiarioPersonal({ entries, onSave, user }) {
         {sortedEntries.map(entry => {
           const type = DIARIO_TYPES.find(t => t.id === entry.type);
           const firstPromptKey = type?.prompts?.[0]?.key;
-          const preview = firstPromptKey ? (entry.prompts?.[firstPromptKey] || "") : "";
+          const preview = (firstPromptKey ? (entry.prompts?.[firstPromptKey] || "") : "") || firstFilled(entry);
           return (
             <div key={entry.id} onClick={() => { setSelEntry(entry); }}
               style={{ background:C.white, borderRadius:16, padding:"13px 15px", marginBottom:9, border:`1.5px solid ${C.border}`, boxShadow:`0 2px 0 ${C.border}`, cursor:"pointer" }}>
@@ -4029,6 +4376,19 @@ function DiarioPersonal({ entries, onSave, user }) {
                     </div>
                   );
                 })}
+                {Object.entries(selEntry.prompts || {})
+                  .filter(([k, v]) => v && !(type?.prompts || []).some(p => p.key === k))
+                  .map(([k, v]) => (
+                    <div key={k} style={{ background:C.white, borderRadius:12, padding:"11px 13px", marginBottom:9, border:`1.5px solid ${C.border}` }}>
+                      <div style={{ fontSize:"0.72rem", fontWeight:800, color:C.inkL, marginBottom:5, textTransform:"uppercase", letterSpacing:"0.5px" }}>{k}</div>
+                      <div style={{ fontSize:"0.86rem", color:C.ink, lineHeight:1.65 }}>{String(v)}</div>
+                    </div>
+                  ))}
+                {selEntry.isPositiveOnly && (
+                  <div style={{ fontSize:"0.75rem", color:C.inkL, lineHeight:1.55, textAlign:"center", marginTop:4 }}>
+                    De esta entrada elegiste guardar solo tu conclusión.
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -4038,8 +4398,212 @@ function DiarioPersonal({ entries, onSave, user }) {
   );
 }
 
+// ═══════════════════════════════════════════════════════
+// CARRIL "YO" — amor propio: racha personal + diario privado
+// ═══════════════════════════════════════════════════════
+const YO_MOODS = [
+  { k: "muy_bajo", e: "😞", l: "Muy bajo" },
+  { k: "bajo",     e: "😕", l: "Bajito" },
+  { k: "neutro",   e: "😐", l: "Neutro" },
+  { k: "bien",     e: "🙂", l: "Bien" },
+  { k: "en_paz",   e: "😌", l: "En paz" },
+];
+
+const AUTOCOMPASION_PROMPTS = [
+  "Si alguien que quieres hubiera vivido tu día de hoy, ¿qué le dirías?",
+  "Nombra una cosa que hiciste bien hoy, aunque sea diminuta.",
+  "¿Qué necesitas hoy que todavía no le has pedido a nadie?",
+  "¿Qué emoción está pidiendo tu atención ahora mismo?",
+  "¿Qué estás cargando que no te toca cargar?",
+  "¿En qué te pareciste hoy a la persona que quieres ser?",
+  "¿Cuál es el paso más pequeño posible hacia lo que te importa?",
+  "¿Dónde te exigiste hoy más de lo que le exigirías a alguien más?",
+];
+
+function CarrilYo({ user, entries, yo, streak, onCheckin, onSaveEntry }) {
+  const [view, setView] = useState("home");
+  const [quickType, setQuickType] = useState(null);
+
+  if (view === "diario") {
+    return <DiarioPersonal entries={entries} onSave={onSaveEntry} user={user} onBack={() => setView("home")} />;
+  }
+  if (view === "quick" && quickType) {
+    return (
+      <DiarioPersonal
+        entries={entries}
+        onSave={onSaveEntry}
+        user={user}
+        initialType={quickType}
+        onBack={() => { setQuickType(null); setView("home"); }}
+      />
+    );
+  }
+
+  const openQuick = id => { setQuickType(id); setView("quick"); };
+
+  const todayKey = getDateKeyLocal();
+  const todayCheckin = yo?.checkins?.[todayKey] || null;
+  const myEntries = Object.values(entries || {}).filter(e =>
+    e.authorEmail === user?.email || e.authorUid === user?.uid || (!e.authorEmail && !e.authorUid)
+  );
+  const lastEntry = [...myEntries].sort((a, b) => String(b.ts || "").localeCompare(String(a.ts || "")))[0] || null;
+
+  const dayIndex = Math.floor(new Date(`${todayKey}T00:00:00`).getTime() / 86400000);
+  const prompt = AUTOCOMPASION_PROMPTS[Math.abs(dayIndex) % AUTOCOMPASION_PROMPTS.length];
+
+  const cur = streak?.currentStreak || 0;
+  const best = Math.max(streak?.longestStreak || 0, cur);
+  const week = streak?.last7 || [];
+  const weekDone = week.filter(d => d.done).length;
+  const weekGoal = 4;
+  const card = { background: C.white, borderRadius: 18, padding: "15px 16px", marginBottom: 12, border: `1.5px solid ${C.border}`, boxShadow: `0 3px 0 ${C.border}` };
+  const h = { fontFamily: "'Baloo 2',sans-serif", fontSize: "1.05rem", color: C.dark, marginBottom: 4 };
+
+  return (
+    <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 96 }}>
+      <div style={{ background: C.dark, padding: "44px 20px 22px" }}>
+        <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.5rem", color: C.cream2, marginBottom: 4 }}>🪷 Yo</div>
+        <div style={{ fontSize: "0.82rem", color: `${C.cream}99`, lineHeight: 1.55 }}>
+          Tu carril propio. No necesitas a nadie más para avanzar aquí.
+        </div>
+      </div>
+
+      <div style={{ padding: "12px 14px 0" }}>
+        {/* ─── Racha personal ─── */}
+        <div style={{ ...card, background: C.cream }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div style={{ minWidth: 64, textAlign: "center" }}>
+              <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "2.4rem", color: C.dark, lineHeight: 1 }}>{cur}</div>
+              <div style={{ fontSize: "0.66rem", fontWeight: 800, color: C.inkL, textTransform: "uppercase", letterSpacing: "0.5px", marginTop: 2 }}>
+                {cur === 1 ? "día" : "días"}
+              </div>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={h}>Mi racha personal</div>
+              <div style={{ fontSize: "0.78rem", color: C.inkM, lineHeight: 1.55 }}>
+                Días seguidos en que te dedicaste algo a ti. Es tuya: no depende de tu pareja.
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 6, marginTop: 14 }}>
+            {week.map(d => (
+              <div key={d.key} style={{ flex: 1, textAlign: "center" }}>
+                <div style={{
+                  height: 30, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center",
+                  background: d.done ? C.dark : C.white,
+                  border: `1.5px solid ${d.done ? C.dark : C.border}`,
+                  color: d.done ? C.cream2 : C.inkL, fontSize: "0.8rem",
+                }}>{d.done ? "🌿" : ""}</div>
+                <div style={{ fontSize: "0.6rem", fontWeight: 800, color: d.key === todayKey ? C.dark : C.inkL, marginTop: 3 }}>{d.name}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ marginTop: 12, background: C.white, borderRadius: 12, padding: "10px 12px", border: `1.5px solid ${C.border}` }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+              <span style={{ fontSize: "0.78rem", fontWeight: 800, color: C.dark }}>
+                {weekDone >= weekGoal ? "Meta de la semana cumplida 🌿" : `Meta amable: ${weekGoal} de 7 días`}
+              </span>
+              <span style={{ fontSize: "0.74rem", fontWeight: 800, color: C.inkL }}>{weekDone}/7</span>
+            </div>
+            <div style={{ height: 8, background: C.border, borderRadius: 50, overflow: "hidden" }}>
+              <div style={{ width: `${Math.min(100, Math.round((weekDone / weekGoal) * 100))}%`, height: "100%", background: C.dark, borderRadius: 50, transition: "width .4s" }} />
+            </div>
+            {streak?.nextMilestone && (
+              <div style={{ fontSize: "0.72rem", color: C.inkL, marginTop: 8 }}>
+                Siguiente marca: {streak.nextMilestone} días ({streak.progressPct}%)
+              </div>
+            )}
+          </div>
+
+          <div style={{ fontSize: "0.75rem", color: C.inkM, lineHeight: 1.55, marginTop: 10 }}>
+            Un día sin aparecer no borra nada. Tu récord sigue siendo <b>{best} {best === 1 ? "día" : "días"}</b>:
+            aquí volver cuenta más que no fallar.
+          </div>
+        </div>
+
+        {/* ─── Check-in de hoy ─── */}
+        <div style={card}>
+          <div style={h}>¿Cómo estoy hoy?</div>
+          <div style={{ fontSize: "0.78rem", color: C.inkM, lineHeight: 1.55, marginBottom: 12 }}>
+            Un toque. Ponerle nombre a lo que sientes ya baja un poco la intensidad.
+          </div>
+          <div style={{ display: "flex", gap: 7 }}>
+            {YO_MOODS.map(m => {
+              const on = todayCheckin?.mood === m.k;
+              return (
+                <button
+                  key={m.k}
+                  onClick={() => onCheckin(m)}
+                  style={{
+                    flex: 1, padding: "11px 2px 8px", borderRadius: 14, cursor: "pointer",
+                    background: on ? C.dark : C.cream,
+                    border: `1.5px solid ${on ? C.dark : C.border}`,
+                    color: on ? C.cream2 : C.inkM, fontFamily: "'Nunito',sans-serif",
+                  }}>
+                  <div style={{ fontSize: "1.4rem", lineHeight: 1 }}>{m.e}</div>
+                  <div style={{ fontSize: "0.6rem", fontWeight: 800, marginTop: 5 }}>{m.l}</div>
+                </button>
+              );
+            })}
+          </div>
+          {todayCheckin && (
+            <div style={{ fontSize: "0.75rem", color: C.inkL, marginTop: 10, textAlign: "center" }}>
+              Hoy registraste {todayCheckin.emoji} {todayCheckin.label}. Puedes cambiarlo si te cambió el día.
+            </div>
+          )}
+        </div>
+
+        {/* ─── Autocompasión del día ─── */}
+        <div style={{ ...card, background: "#eef6ea" }}>
+          <div style={{ fontSize: "0.66rem", fontWeight: 800, color: C.inkL, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 6 }}>
+            🫧 Pregunta de hoy
+          </div>
+          <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1rem", color: C.dark, lineHeight: 1.5, marginBottom: 12 }}>
+            {prompt}
+          </div>
+          <button onClick={() => openQuick("autocompasion")}
+            style={{ width: "100%", padding: 12, background: C.dark, color: C.cream2, border: "none", borderRadius: 14, fontFamily: "'Baloo 2',sans-serif", fontSize: "0.92rem", cursor: "pointer", boxShadow: "0 3px 0 rgba(0,0,0,0.2)" }}>
+            Escribir sobre esto
+          </button>
+        </div>
+
+        {/* ─── Diario privado ─── */}
+        <div style={card}>
+          <div style={h}>📓 Mi diario privado</div>
+          <div style={{ fontSize: "0.78rem", color: C.inkM, lineHeight: 1.55, marginBottom: 12 }}>
+            {myEntries.length === 0
+              ? "Todavía no tienes entradas. Aquí puedes escribir sin cuidar a nadie."
+              : `${myEntries.length} ${myEntries.length === 1 ? "entrada" : "entradas"}${lastEntry ? ` · última: ${new Date(lastEntry.ts).toLocaleDateString("es-MX", { day: "numeric", month: "short" })}` : ""}`}
+          </div>
+          <button onClick={() => setView("diario")}
+            style={{ width: "100%", padding: 12, background: C.dark, color: C.cream2, border: "none", borderRadius: 14, fontFamily: "'Baloo 2',sans-serif", fontSize: "0.92rem", cursor: "pointer", boxShadow: "0 3px 0 rgba(0,0,0,0.2)", marginBottom: 9 }}>
+            {myEntries.length === 0 ? "Escribir mi primera entrada" : "Abrir mi diario"}
+          </button>
+          <div style={{ display: "flex", gap: 9 }}>
+            <button onClick={() => openQuick("valores")}
+              style={{ flex: 1, padding: "10px 6px", background: C.cream, color: C.dark, border: `1.5px solid ${C.border}`, borderRadius: 12, fontFamily: "'Baloo 2',sans-serif", fontSize: "0.8rem", cursor: "pointer" }}>
+              🧭 Mis valores
+            </button>
+            <button onClick={() => openQuick("abcd")}
+              style={{ flex: 1, padding: "10px 6px", background: C.cream, color: C.dark, border: `1.5px solid ${C.border}`, borderRadius: 12, fontFamily: "'Baloo 2',sans-serif", fontSize: "0.8rem", cursor: "pointer" }}>
+              🧠 Ordenar mi mente
+            </button>
+          </div>
+        </div>
+
+        <div style={{ fontSize: "0.73rem", color: C.inkL, lineHeight: 1.6, textAlign: "center", padding: "4px 8px 8px" }}>
+          🔒 Nada de esta pestaña se comparte: ni tus entradas, ni tu ánimo, ni tu racha personal.
+          Se guarda en tu cuenta y tu pareja no tiene acceso.
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // PROFILE — Enhanced with more info fields
-function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, conoce, lessonsDone, coupleInfo, streakInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento, onSendMessage, onClaimDailyTip, diarioEntries, onSaveDiarioEntry }) {
+function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, conoce, lessonsDone, coupleInfo, streakInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento, onSendMessage, onClaimDailyTip, onGoYo }) {
   const [editMode, setEditMode] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [showLoveModal, setShowLoveModal] = useState(false);
@@ -4065,7 +4629,6 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
     nextAdventure: coupleInfo.nextAdventure || "",
     bucketList: coupleInfo.bucketList || "",
   });
-  const [showDiarioModal, setShowDiarioModal] = useState(false);
 
   const myEmail = user?.email || "guest";
   const myRole = user?.isOwner !== false ? "owner" : "partner";
@@ -4186,17 +4749,17 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
         />
       </div>
 
-      {/* ── DIARIO PERSONAL ── */}
+      {/* ── DIARIO PERSONAL (vive en la pestaña Yo) ── */}
       <div style={{ margin:"0 14px 12px" }}>
         <div style={{ background: C.white, borderRadius: 16, padding: "14px 16px", border: `1.5px solid ${C.border}`, boxShadow: `0 2px 0 ${C.border}` }}>
           <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "0.95rem", color: C.dark, marginBottom: 8 }}>
-            📓 Diario personal
+            🪷 Tu espacio personal
           </div>
           <div style={{ fontSize: "0.78rem", color: C.inkM, marginBottom: 12, lineHeight: 1.5 }}>
-            Tu espacio privado para reflexionar: técnica ABCD, registrar conflictos, o simplemente cómo te sentiste hoy.
+            Tu diario privado y tu racha personal ahora viven en la pestaña <b>Yo</b>, con tu check-in diario y los ejercicios de autocompasión.
           </div>
-          <Btn onClick={() => setShowDiarioModal(true)} variant="sand" style={{ width:"100%", fontSize: "0.85rem" }}>
-            Abrir diario 📝
+          <Btn onClick={() => onGoYo && onGoYo()} variant="sand" style={{ width:"100%", fontSize: "0.85rem" }}>
+            Ir a mi espacio 🪷
           </Btn>
         </div>
       </div>
@@ -4356,23 +4919,6 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
               >
                 {deletingAccount ? "Eliminando..." : "Eliminar ahora"}
               </Btn>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal del Diario Personal */}
-      {showDiarioModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(15,25,15,0.65)", zIndex: 6000, display: "flex", alignItems: "flex-end" }} onClick={() => setShowDiarioModal(false)}>
-          <div onClick={e => e.stopPropagation()} style={{ background: C.sandL, borderRadius: "22px 22px 0 0", width: "100%", maxHeight: "95vh", overflowY: "auto" }}>
-            <DiarioPersonal entries={diarioEntries} onSave={onSaveDiarioEntry} user={user} />
-            <div style={{ padding: "0 16px 20px", background: C.sandL }}>
-              <button 
-                onClick={() => setShowDiarioModal(false)}
-                style={{ width: "100%", background: C.dark, color: C.cream2, border: "none", borderRadius: 14, padding: "14px", fontFamily: "'Baloo 2',sans-serif", fontSize: "1rem", cursor: "pointer" }}
-              >
-                Cerrar diario ✕
-              </button>
             </div>
           </div>
         </div>
@@ -5729,6 +6275,7 @@ const NAV = [
   { id: "ejerc", emoji: "⭐", label: "Ejerc." },
   { id: "conocete", emoji: "💬", label: "Conócete" },
   { id: "burbuja", emoji: "🫧", label: "Burbuja" },
+  { id: "yo", emoji: "🪷", label: "Yo" },
   { id: "perfil", emoji: "👤", label: "Nosotros" },
 ];
 
@@ -5759,12 +6306,8 @@ export default function App() {
   const [lessonsDone, setLessonsDone] = useState({});
   const [gratitud, setGratitud] = useState([]);
   const [momentos, setMomentos] = useState([]);
-  const [diarioEntries, setDiarioEntries] = useState(() => {
-    // Cargar solo las entradas del usuario actual (privado)
-    const userKey = user?.email || user?.uid || 'guest';
-    const saved = localStorage.getItem(`mochi_diario_privado_${userKey}`);
-    return saved ? JSON.parse(saved) : {};
-  });
+  const [diarioEntries, setDiarioEntries] = useState({});
+  const [yo, setYo] = useState({ checkins: {}, longestStreak: 0 });
   const [streakInteractions, setStreakInteractions] = useState([]);
   const [streakData, setStreakData] = useState({
     currentStreak: 0,
@@ -5903,6 +6446,7 @@ export default function App() {
         if (s.gratitud) setGratitud(s.gratitud);
         if (s.momentos) setMomentos(s.momentos);
         if (s.diarioEntries) setDiarioEntries(s.diarioEntries);
+        if (s.yo) setYo(prev => ({ ...prev, ...s.yo, checkins: { ...(prev.checkins || {}), ...(s.yo.checkins || {}) } }));
         if (s.streakInteractions) setStreakInteractions(s.streakInteractions);
         if (s.streakData) setStreakData(prev => ({ ...prev, ...s.streakData }));
       }
@@ -6145,6 +6689,86 @@ export default function App() {
       }).catch(() => {});
     }
   }, [streakInteractions, streakData, user?.code, user?.isGuest, user?.uid, trigHappy]);
+
+  // ─── CARRIL "YO": persistencia privada + racha personal ───
+  const yoKey = user?.email || user?.uid || "guest";
+
+  // Se guarda en progress/{uid} (solo legible por su dueño) y en localStorage.
+  // Nunca en las colecciones compartidas por coupleCode.
+  const persistYoPrivate = useCallback((patch) => {
+    try {
+      if (patch.diarioEntries) localStorage.setItem(`mochi_diario_privado_${yoKey}`, JSON.stringify(patch.diarioEntries));
+      if (patch.yo) localStorage.setItem(`mochi_yo_${yoKey}`, JSON.stringify(patch.yo));
+    } catch (e) {}
+    if (user?.uid && !user?.isGuest) fbSaveProgress(user.uid, patch).catch(() => {});
+  }, [yoKey, user?.uid, user?.isGuest]);
+
+  // Hidrata lo privado del dispositivo cuando cambia de usuario (lo remoto ya ganó en afterLogin)
+  useEffect(() => {
+    if (!user) return;
+    try {
+      const d = JSON.parse(localStorage.getItem(`mochi_diario_privado_${yoKey}`) || "null");
+      if (d && typeof d === "object") setDiarioEntries(prev => ({ ...d, ...prev }));
+      const y = JSON.parse(localStorage.getItem(`mochi_yo_${yoKey}`) || "null");
+      if (y && typeof y === "object") {
+        setYo(prev => ({
+          ...y,
+          ...prev,
+          checkins: { ...(y.checkins || {}), ...(prev.checkins || {}) },
+          longestStreak: Math.max(y.longestStreak || 0, prev.longestStreak || 0),
+        }));
+      }
+    } catch (e) {}
+  }, [yoKey, user]);
+
+  const yoStreak = useMemo(() => {
+    const dates = new Set(Object.keys(yo?.checkins || {}));
+    Object.values(diarioEntries || {}).forEach(e => {
+      const k = e?.dateKey || (e?.ts ? getDateKeyLocal(new Date(e.ts)) : null);
+      if (k) dates.add(k);
+    });
+    const base = computeDailyStreakData([...dates].map(d => ({ date: d, completed: true })), yo?.longestStreak || 0);
+    const todayKey = getDateKeyLocal();
+    const last7 = [];
+    for (let i = 6; i >= 0; i -= 1) {
+      const key = addDaysToKey(todayKey, -i);
+      const [yy, mm, dd] = key.split("-").map(Number);
+      last7.push({ key, name: WEEKDAY_NAMES[new Date(yy, mm - 1, dd).getDay()], done: !!base.byDate[key] });
+    }
+    return { ...base, last7 };
+  }, [yo, diarioEntries]);
+
+  // El récord personal se conserva aunque la racha actual se corte
+  useEffect(() => {
+    if (yoStreak.longestStreak > (yo?.longestStreak || 0)) {
+      const nextYo = { ...(yo || {}), longestStreak: yoStreak.longestStreak };
+      setYo(nextYo);
+      persistYoPrivate({ yo: nextYo });
+    }
+  }, [yoStreak.longestStreak, yo, persistYoPrivate]);
+
+  const saveYoCheckin = (mood) => {
+    const dateKey = getDateKeyLocal();
+    const isFirstToday = !yo?.checkins?.[dateKey];
+    const nextYo = {
+      ...(yo || {}),
+      checkins: {
+        ...((yo || {}).checkins || {}),
+        [dateKey]: { mood: mood.k, emoji: mood.e, label: mood.l, ts: new Date().toISOString() },
+      },
+    };
+    setYo(nextYo);
+    persistYoPrivate({ yo: nextYo });
+    trigHappy();
+    if (isFirstToday) {
+      const reward = 5;
+      setBamboo(b => b + reward);
+      if (user?.code && !user?.isGuest) fbIncrementBamboo(user.code, reward).catch(() => {});
+      toast(`${mood.e} Anotado. Cuidarte también riega el jardín (+${reward} 🌿)`);
+    } else {
+      toast(`${mood.e} Actualizado. Gracias por escucharte`);
+    }
+  };
 
   const buyItem = item => {
     try {
@@ -6464,33 +7088,48 @@ export default function App() {
     const map = { ...burbuja, [id]: next };
     setBurbuja(map);
     trigHappy();
-    toast("Tu parte quedó guardada ✓");
+    const otherRole = myRole === "owner" ? "partner" : "owner";
+    const bothAnsweredNow = !!next[otherRole];
+    toast(bothAnsweredNow ? "Tu parte quedó guardada. Ya pueden negociar el acuerdo ✓" : "Tu parte quedó guardada ✓");
     if (user?.code && !user?.isGuest) {
       await fbSaveBurbuja(user.code, id, next).catch(() => {});
       if (user?.uid) {
         const me = getMyName(user, "Tu pareja");
-        fbSendNotif(user.code, { type:"acuerdo", msg:`${me} actualizó su parte de un acuerdo 🫧`, forUid:user?.isOwner !== false ? "partner" : "owner", fromUid: user.uid }).catch(()=>{});
+        fbSendNotif(user.code, {
+          type:"acuerdo",
+          msg: bothAnsweredNow
+            ? `${me} respondió un acuerdo — ya puedes proponer el acuerdo final 🫧`
+            : `${me} actualizó su parte de un acuerdo 🫧`,
+          forUid:user?.isOwner !== false ? "partner" : "owner",
+          fromUid: user.uid
+        }).catch(()=>{});
       }
     }
     save(null, { bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja:map, coupleInfo, lastVisit, testScores, lessonsDone, gratitud, momentos });
   };
 
-  const proposeBurbuja = async (id, text, isCounter = false) => {
+  const proposeBurbuja = async (id, text, mode = "proposal") => {
     const clean = (text || "").trim();
     if (!clean) return;
+    const kind = BURBUJA_EVENT_META[mode] ? mode : "proposal";
+    const meta = BURBUJA_EVENT_META[kind];
     const myRole = user?.isOwner !== false ? "owner" : "partner";
     const prev = burbuja[id] || {};
     if (!prev.owner || !prev.partner) {
       toast("Primero ambos deben escribir su parte");
       return;
     }
-    const history = [...(prev.history || []), { id: Date.now(), type: isCounter ? "counter" : "proposal", by: myRole, text: clean, at: new Date().toISOString() }];
+    const history = [...(prev.history || []), { id: Date.now(), type: kind, by: myRole, text: clean, at: new Date().toISOString() }];
     const next = {
       ...prev,
       status: "pending",
       proposalText: clean,
       proposalBy: myRole,
       history,
+      bambooAwarded: !!prev.bambooAwarded || !!prev.approvedAt,
+      previousAgreement: kind === "renegotiate"
+        ? (prev.approvedText || prev.previousAgreement || null)
+        : (prev.previousAgreement || null),
       approvedText: null,
       approvedBy: null,
       approvedAt: null,
@@ -6498,7 +7137,7 @@ export default function App() {
     const map = { ...burbuja, [id]: next };
     setBurbuja(map);
     trigHappy();
-    toast(isCounter ? "Contraoferta enviada ↔" : "Propuesta enviada ✉️");
+    toast(meta.toast);
 
     if (user?.code && !user?.isGuest) {
       await fbSaveBurbuja(user.code, id, next).catch(() => {});
@@ -6506,7 +7145,7 @@ export default function App() {
         const me = getMyName(user, "Tu pareja");
         fbSendNotif(user.code, {
           type: "acuerdo",
-          msg: isCounter ? `${me} envió una contraoferta de acuerdo ↔` : `${me} te envió una propuesta de acuerdo ✉️`,
+          msg: meta.notif(me),
           forUid: user?.isOwner !== false ? "partner" : "owner",
           fromUid: user.uid
         }).catch(() => {});
@@ -6524,7 +7163,7 @@ export default function App() {
       toast("Tu pareja debe aprobar esta propuesta");
       return;
     }
-    const wasApproved = prev.status === "approved";
+    const alreadyAwarded = !!prev.bambooAwarded;
     const history = [...(prev.history || []), { id: Date.now(), type: "approved", by: myRole, text: prev.proposalText, at: new Date().toISOString() }];
     const next = {
       ...prev,
@@ -6532,13 +7171,15 @@ export default function App() {
       approvedText: prev.proposalText,
       approvedBy: myRole,
       approvedAt: new Date().toISOString(),
+      previousAgreement: null,
+      bambooAwarded: true,
       history,
     };
     const map = { ...burbuja, [id]: next };
     setBurbuja(map);
 
     let nextBamboo = bamboo;
-    if (!wasApproved) {
+    if (!alreadyAwarded) {
       if (user?.code && !user?.isGuest) {
         nextBamboo = await fbIncrementBamboo(user.code, 10).catch(() => bamboo + 10);
       } else {
@@ -6548,7 +7189,7 @@ export default function App() {
     }
 
     trigHappy();
-    toast("Acuerdo aprobado ✓ +10 bambú 🌿");
+    toast(alreadyAwarded ? "Acuerdo actualizado ✓" : "Acuerdo aprobado ✓ +10 bambú 🌿");
     trackDailyInteraction("agreement");
 
     if (user?.code && !user?.isGuest) {
@@ -6557,7 +7198,7 @@ export default function App() {
         const me = getMyName(user, "Tu pareja");
         fbSendNotif(user.code, {
           type: "acuerdo",
-          msg: `${me} aprobó su acuerdo ✅`,
+          msg: BURBUJA_EVENT_META.approved.notif(me),
           forUid: user?.isOwner !== false ? "partner" : "owner",
           fromUid: user.uid
         }).catch(() => {});
@@ -6626,56 +7267,46 @@ export default function App() {
   };
 
   const saveDiarioEntry = (entry) => {
-    // Procesar entrada: si es negativa, extraer solo la conclusión positiva
-    let processedEntry = { ...entry };
-    
-    // Detectar si es una entrada de conflicto o negativa (ABCD tipo D o Discusión)
-    if (entry.type === 'abcd' || entry.type === 'discusion') {
-      const prompts = entry.prompts || {};
-      
-      // Para ABCD, solo guardar la parte D (perspectiva alternativa/reestructuración)
-      if (entry.type === 'abcd' && prompts.d) {
-        processedEntry = {
-          ...entry,
-          prompts: { d: prompts.d }, // Solo guardar la conclusión positiva
-          isPositiveOnly: true,
-          originalType: entry.type
-        };
-      }
-      
-      // Para discusión, crear una conclusión positiva resumida
-      if (entry.type === 'discusion') {
-        const conclusion = prompts.q4 || prompts.q3 || 'Reflexión guardada';
-        processedEntry = {
-          ...entry,
-          prompts: { 
-            conclusion: `💡 Aprendizaje: ${conclusion}`,
-            fecha: new Date().toLocaleDateString('es-MX')
-          },
-          isPositiveOnly: true,
-          originalType: entry.type
-        };
+    const ts = entry?.ts || new Date().toISOString();
+    const dateKey = entry?.dateKey || getDateKeyLocal(new Date(ts));
+    let prompts = { ...(entry?.prompts || {}) };
+    let isPositiveOnly = false;
+
+    // Por defecto se guarda todo (es lo que sirve para ver patrones).
+    // Solo se recorta si la persona lo pidió explícitamente en la casilla.
+    if (entry?.keepOnlyConclusion) {
+      if (entry.type === "abcd" && prompts.d) {
+        prompts = { d: prompts.d };
+        isPositiveOnly = true;
+      } else if (entry.type === "discusion") {
+        const conclusion = prompts.q4 || prompts.q3 || "";
+        if (conclusion) {
+          prompts = { q4: conclusion };
+          isPositiveOnly = true;
+        }
       }
     }
-    
-    // Marcar como privado del usuario actual
-    const userKey = user?.email || user?.uid || 'guest';
+
     const privateEntry = {
-      ...processedEntry,
+      id: entry?.id || ts,
+      ts,
+      dateKey,
+      type: entry?.type,
+      prompts,
+      isPositiveOnly,
       isPrivate: true,
-      authorEmail: user?.email,
-      authorUid: user?.uid,
-      visibleToPartner: false // La pareja NUNCA puede ver esto
+      authorEmail: user?.email || null,
+      authorUid: user?.uid || null,
+      visibleToPartner: false, // La pareja NUNCA puede ver esto
     };
-    
-    const next = { ...(diarioEntries || {}), [entry.id]: privateEntry };
+
+    const next = { ...(diarioEntries || {}), [privateEntry.id]: privateEntry };
     setDiarioEntries(next);
-    
-    // Guardar SOLO en localStorage con clave privada del usuario
-    localStorage.setItem(`mochi_diario_privado_${userKey}`, JSON.stringify(next));
-    
-    // NO guardar en Firebase para mantener privacidad
-    toast("📓 Entrada guardada en tu diario privado");
+
+    // localStorage + progress/{uid} (documento privado del dueño, nunca el compartido)
+    persistYoPrivate({ diarioEntries: next });
+
+    toast(isPositiveOnly ? "📓 Guardé solo tu conclusión 🔒" : "📓 Entrada guardada en tu diario privado 🔒");
   };
 
   const claimDailyTip = async () => {
@@ -6703,7 +7334,7 @@ export default function App() {
     ls.set("mochi_last", null); setUser(null); setScreen("login");
     setBamboo(0); setHappiness(20); setWater(40); setGarden({});
     setAccessories({}); setExDone({}); setMessages([]); setConoce({}); setBurbuja({}); setCoupleInfo({});
-    setGratitud([]); setMomentos([]); setDiarioEntries({});
+    setGratitud([]); setMomentos([]); setDiarioEntries({}); setYo({ checkins: {}, longestStreak: 0 });
     setStreakInteractions([]);
     setStreakData({
       currentStreak: 0,
@@ -6756,6 +7387,11 @@ export default function App() {
     }
     ls.set("mochi_users", u); ls.set("mochi_codes", c);
     ls.set("mochi_prog_" + (user?.email || ""), null);
+    // Diario y carril "Yo" (privados, viven fuera del progreso compartido)
+    try {
+      localStorage.removeItem(`mochi_diario_privado_${yoKey}`);
+      localStorage.removeItem(`mochi_yo_${yoKey}`);
+    } catch (e) {}
     toast("Cuenta eliminada correctamente");
     await logout();
   };
@@ -6781,7 +7417,8 @@ export default function App() {
         {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson}/>}
         {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user}/>}
         {tab==="burbuja" && <Burbuja burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} user={user}/>}
-        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} garden={garden} accessories={accessories} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} lessonsDone={lessonsDone} coupleInfo={coupleInfo} streakInfo={streakData} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={retakeTest} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} onSendMessage={sendMsg} onClaimDailyTip={claimDailyTip} diarioEntries={diarioEntries} onSaveDiarioEntry={saveDiarioEntry}/>} 
+        {tab==="yo" && <CarrilYo user={user} entries={diarioEntries} yo={yo} streak={yoStreak} onCheckin={saveYoCheckin} onSaveEntry={saveDiarioEntry}/>}
+        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} garden={garden} accessories={accessories} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} lessonsDone={lessonsDone} coupleInfo={coupleInfo} streakInfo={streakData} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={retakeTest} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} onSendMessage={sendMsg} onClaimDailyTip={claimDailyTip} onGoYo={() => setTab("yo")}/>} 
       </div>
       <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:480, background:C.white, borderTop:`1.5px solid ${C.border}`, display:"flex", zIndex:1000, boxShadow:`0 -3px 0 ${C.line}` }}>
         {NAV.map(n => {
