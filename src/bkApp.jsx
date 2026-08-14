@@ -4603,7 +4603,7 @@ function CarrilYo({ user, entries, yo, streak, onCheckin, onSaveEntry }) {
 }
 
 // PROFILE — Enhanced with more info fields
-function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, conoce, lessonsDone, coupleInfo, streakInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento, onSendMessage, onClaimDailyTip, onGoYo }) {
+function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, conoce, lessonsDone, coupleInfo, streakInfo, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento, onSendMessage, onClaimDailyTip, diarioEntries, onSaveDiarioEntry }) {
   const [editMode, setEditMode] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [showLoveModal, setShowLoveModal] = useState(false);
@@ -4613,6 +4613,7 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [loveText, setLoveText] = useState("");
   const [quickLove, setQuickLove] = useState(null);
+  const [diarioView, setDiarioView] = useState(false);
   const [nameInput, setNameInput] = useState(user?.names || "");
   const deleteCloseTimer = useRef(null);
   const [form, setForm] = useState({
@@ -4698,6 +4699,17 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
 
   useEffect(() => () => clearTimeout(deleteCloseTimer.current), []);
 
+  if (diarioView) {
+    return (
+      <DiarioPersonal
+        entries={diarioEntries}
+        onSave={onSaveDiarioEntry}
+        user={user}
+        onBack={() => setDiarioView(false)}
+      />
+    );
+  }
+
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
       <div style={{ background: C.dark, padding: "38px 20px 28px", textAlign: "center" }}>
@@ -4749,17 +4761,17 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
         />
       </div>
 
-      {/* ── DIARIO PERSONAL (vive en la pestaña Yo) ── */}
+      {/* ── DIARIO PERSONAL ── */}
       <div style={{ margin:"0 14px 12px" }}>
         <div style={{ background: C.white, borderRadius: 16, padding: "14px 16px", border: `1.5px solid ${C.border}`, boxShadow: `0 2px 0 ${C.border}` }}>
           <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "0.95rem", color: C.dark, marginBottom: 8 }}>
-            🪷 Tu espacio personal
+            📓 Mi diario privado
           </div>
           <div style={{ fontSize: "0.78rem", color: C.inkM, marginBottom: 12, lineHeight: 1.5 }}>
-            Tu diario privado y tu racha personal ahora viven en la pestaña <b>Yo</b>, con tu check-in diario y los ejercicios de autocompasión.
+            Un espacio solo para ti dentro de Mochi. Tu pareja no tiene acceso a estas entradas.
           </div>
-          <Btn onClick={() => onGoYo && onGoYo()} variant="sand" style={{ width:"100%", fontSize: "0.85rem" }}>
-            Ir a mi espacio 🪷
+          <Btn onClick={() => setDiarioView(true)} variant="sand" style={{ width:"100%", fontSize: "0.85rem" }}>
+            Abrir mi diario 📓
           </Btn>
         </div>
       </div>
@@ -6275,7 +6287,6 @@ const NAV = [
   { id: "ejerc", emoji: "⭐", label: "Ejerc." },
   { id: "conocete", emoji: "💬", label: "Conócete" },
   { id: "burbuja", emoji: "🫧", label: "Burbuja" },
-  { id: "yo", emoji: "🪷", label: "Yo" },
   { id: "perfil", emoji: "👤", label: "Nosotros" },
 ];
 
@@ -7417,8 +7428,7 @@ export default function App() {
         {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson}/>}
         {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user}/>}
         {tab==="burbuja" && <Burbuja burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} user={user}/>}
-        {tab==="yo" && <CarrilYo user={user} entries={diarioEntries} yo={yo} streak={yoStreak} onCheckin={saveYoCheckin} onSaveEntry={saveDiarioEntry}/>}
-        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} garden={garden} accessories={accessories} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} lessonsDone={lessonsDone} coupleInfo={coupleInfo} streakInfo={streakData} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={retakeTest} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} onSendMessage={sendMsg} onClaimDailyTip={claimDailyTip} onGoYo={() => setTab("yo")}/>} 
+        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} garden={garden} accessories={accessories} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} lessonsDone={lessonsDone} coupleInfo={coupleInfo} streakInfo={streakData} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={retakeTest} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} onSendMessage={sendMsg} onClaimDailyTip={claimDailyTip} diarioEntries={diarioEntries} onSaveDiarioEntry={saveDiarioEntry}/>} 
       </div>
       <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:480, background:C.white, borderTop:`1.5px solid ${C.border}`, display:"flex", zIndex:1000, boxShadow:`0 -3px 0 ${C.line}` }}>
         {NAV.map(n => {
