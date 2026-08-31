@@ -8,200 +8,332 @@ const SCALE_OPTIONS = [
   { id: "5", label: "Siempre", color: "#d2bfff" },
 ];
 
-const QUIZZES = [
+// ─── PERSONALITY TESTS DATA ───────────────────────────────────────────
+
+const BIGFIVE_QUESTIONS = [
+  // Extraversion (E) — directo
+  { text: "Soy alguien que disfruta estar rodeado/a de gente.", domain: "E", key: "direct" },
+  { text: "En reuniones sociales suelo ser el alma de la fiesta.", domain: "E", key: "direct" },
+  { text: "Me cuesta iniciar conversaciones con desconocidos.", domain: "E", key: "reverse" },
+  { text: "Prefiero actividades tranquilas en casa a eventos grandes.", domain: "E", key: "reverse" },
+  { text: "Me siento con energía después de pasar tiempo con otros.", domain: "E", key: "direct" },
+  // Agreeableness (A) — directo
+  { text: "Me preocupo por los sentimientos de los demás.", domain: "A", key: "direct" },
+  { text: "Tengo empatía cuando alguien me cuenta un problema.", domain: "A", key: "direct" },
+  { text: "A veces me cuesta confiar en las intenciones de otros.", domain: "A", key: "reverse" },
+  { text: "Me gusta cooperar más que competir.", domain: "A", key: "direct" },
+  { text: "Suelo ser directo/a aunque eso moleste a alguien.", domain: "A", key: "reverse" },
+  // Conscientiousness (C) — directo
+  { text: "Me gusta tener las cosas ordenadas y planificadas.", domain: "C", key: "direct" },
+  { text: "Cumplo con mis compromisos aunque cueste.", domain: "C", key: "direct" },
+  { text: "A veces dejo tareas para después sin querer.", domain: "C", key: "reverse" },
+  { text: "Presto atención a los detalles.", domain: "C", key: "direct" },
+  { text: "Sigo una rutina que me ayuda a sentirme estable.", domain: "C", key: "direct" },
+  // Neuroticism (N) — directo
+  { text: "Me estreso con facilidad cuando hay mucho en juego.", domain: "N", key: "direct" },
+  { text: "A veces mi mente se queda dando vueltas por preocupaciones.", domain: "N", key: "direct" },
+  { text: "Suelo mantener la calma bajo presión.", domain: "N", key: "reverse" },
+  { text: "Me afectan más las críticas de lo que me gustaría.", domain: "N", key: "direct" },
+  { text: "Tiendo a ver primero lo que podría salir mal.", domain: "N", key: "direct" },
+  // Openness (O) — directo
+  { text: "Me gusta probar cosas nuevas y diferentes.", domain: "O", key: "direct" },
+  { text: "Disfruto reflexionar sobre ideas abstractas o creativas.", domain: "O", key: "direct" },
+  { text: "Prefiero lo práctico y concreto a lo imaginativo.", domain: "O", key: "reverse" },
+  { text: "Me interesa explorar nuevas formas de ver el mundo.", domain: "O", key: "direct" },
+  { text: "La rutina me da más seguridad que la novedad.", domain: "O", key: "reverse" },
+];
+
+const LOVE_STYLES_QUESTIONS = [
+  // Eros (pasión romántica)
+  { text: "Siento que mi pareja y yo nos conectamos desde el primer momento.", style: "eros" },
+  { text: "Para mí el amor incluye mucha intensidad emocional y física.", style: "eros" },
+  { text: "Me gusta que la relación tenga magia y química constante.", style: "eros" },
+  { text: "Cuando elijo pareja, me guío mucho por la atracción y la conexión inmediata.", style: "eros" },
+  // Ludus (juego)
+  { text: "Prefiero mantener cierta libertad incluso en una relación.", style: "ludus" },
+  { text: "Me cuesta planear a largo plazo en el amor.", style: "ludus" },
+  { text: "A veces disfruto el coqueteo y la incertidumbre.", style: "ludus" },
+  { text: "Me incomoda sentirme atrapado/a en la relación.", style: "ludus" },
+  // Storge (amistad)
+  { text: "Para mí lo mejor de la relación es la amistad profunda.", style: "storge" },
+  { text: "Quiero que mi pareja sea también mi mejor amigo/a.", style: "storge" },
+  { text: "El amor crece con el tiempo y la confianza.", style: "storge" },
+  { text: "Valoro más la compañía constante que los gestos dramáticos.", style: "storge" },
+  // Pragma (práctico)
+  { text: "Busco en una pareja que encaje bien en mi proyecto de vida.", style: "pragma" },
+  { text: "Pienso en metas, valores y estilo de vida antes de enamorarme.", style: "pragma" },
+  { text: "Me gusta que la relación sea estable y predecible.", style: "pragma" },
+  { text: "La lógica y la compatibilidad práctica son importantes para mí.", style: "pragma" },
+  // Mania (obsesivo)
+  { text: "Cuando estoy enamorado/a, pienso en la persona todo el tiempo.", style: "mania" },
+  { text: "Necesito mucha seguridad de que mi pareja siente lo mismo.", style: "mania" },
+  { text: "El amor me hace sentir altos y bajos muy intensos.", style: "mania" },
+  { text: "Me cuesta calmarme si siento distancia emocional.", style: "mania" },
+  // Agape (desinteresado)
+  { text: "Amo sin esperar nada a cambio.", style: "agape" },
+  { text: "El bienestar de mi pareja me importa tanto como el mío.", style: "agape" },
+  { text: "Me gusta cuidar y apoyar, aunque no sea correspondido al instante.", style: "agape" },
+  { text: "Creo que el amor verdadero es dar, no solo recibir.", style: "agape" },
+];
+
+const ATTACHMENT_QUESTIONS = [
+  // Ansiedad
+  { text: "Me preocupa que mi pareja deje de quererme.", dim: "anxiety", key: "direct" },
+  { text: "Necesito mucha seguridad de que todo está bien en la relación.", dim: "anxiety", key: "direct" },
+  { text: "Si mi pareja está distante, siento que hice algo mal.", dim: "anxiety", key: "direct" },
+  { text: "Me siento tranquilo/a cuando sé que mi pareja está ahí para mí.", dim: "anxiety", key: "reverse" },
+  { text: "Me cuesta sentirme realmente querido/a aunque me lo digan.", dim: "anxiety", key: "direct" },
+  // Evitación
+  { text: "Prefiero no depender emocionalmente de mi pareja.", dim: "avoidance", key: "direct" },
+  { text: "Me incomoda hablar mucho de mis sentimientos íntimos.", dim: "avoidance", key: "direct" },
+  { text: "Necesito mi espacio personal para sentirme bien en la relación.", dim: "avoidance", key: "direct" },
+  { text: "Me gusta poder contar con mi pareja cuando lo necesito.", dim: "avoidance", key: "reverse" },
+  { text: "Suelo procesar mis emociones solo/a antes de compartirlas.", dim: "avoidance", key: "direct" },
+];
+
+const BIGFIVE_LABELS = {
+  E: "Extraversión",
+  A: "Amabilidad",
+  C: "Responsabilidad",
+  N: "Neuroticismo",
+  O: "Apertura",
+};
+
+const LOVE_STYLE_LABELS = {
+  eros: "Eros (pasión)",
+  ludus: "Ludus (juego/libertad)",
+  storge: "Storge (amistad)",
+  pragma: "Pragma (práctico)",
+  mania: "Mania (intenso)",
+  agape: "Agape (entrega)",
+};
+
+const ATTACHMENT_STYLES = [
   {
-    id: "fortalezas",
-    catKey: "quizFortalezas",
-    title: "Fortalezas de pareja",
-    emoji: "💪",
-    subtitle: "Cómo se sostienen cuando la vida aprieta",
-    type: "scale",
-    questions: [
-      { text: "Escucho de verdad antes de responder.", trait: "escucha" },
-      { text: "Busco reparar rápido después de un malentendido.", trait: "reparacion" },
-      { text: "Expreso cariño con acciones concretas.", trait: "afecto" },
-      { text: "Pido apoyo sin atacar ni culpar.", trait: "vulnerabilidad" },
-      { text: "Cuidamos espacios de calidad juntos.", trait: "presencia" },
-    ],
+    key: "secure",
+    label: "Seguro",
+    emoji: "🌿",
+    desc: "Te sientes cómodo/a con la cercanía y también con la independencia. Confías en que la relación está bien.",
   },
   {
-    id: "valores",
-    catKey: "quizValores",
-    title: "Valores que guian su relacion",
-    emoji: "🧭",
-    subtitle: "Lo no negociable para construir confianza",
-    type: "value",
-    questions: [
-      {
-        text: "Cuando hay conflicto, priorizo...",
-        options: [
-          { id: "honestidad", label: "Decir la verdad aunque incomode" },
-          { id: "calma", label: "Bajar intensidad y cuidar el tono" },
-          { id: "justicia", label: "Que ambos se sientan tratados justamente" },
-          { id: "union", label: "Recordar que somos equipo" },
-        ],
-      },
-      {
-        text: "En una relacion sana, para mi es clave...",
-        options: [
-          { id: "lealtad", label: "Lealtad en lo publico y en lo privado" },
-          { id: "crecimiento", label: "Crecer juntos sin dejar de ser uno mismo" },
-          { id: "respeto", label: "Respetar limites y diferencias" },
-          { id: "ternura", label: "Ternura diaria en detalles pequenos" },
-        ],
-      },
-      {
-        text: "Cuando tomo decisiones de pareja, me mueve...",
-        options: [
-          { id: "proyecto", label: "Construir un proyecto compartido" },
-          { id: "estabilidad", label: "Cuidar seguridad y estabilidad" },
-          { id: "libertad", label: "Conservar libertad y autenticidad" },
-          { id: "conexion", label: "Profundizar la conexion emocional" },
-        ],
-      },
-    ],
+    key: "anxious",
+    label: "Ansioso",
+    emoji: "🌧️",
+    desc: "Buscas mucha cercanía y seguridad. A veces la distancia se siente como abandono.",
   },
   {
-    id: "sternberg",
-    catKey: "quizSternberg",
-    title: "Triangulo de Sternberg",
-    emoji: "🔺",
-    subtitle: "Intimidad, pasion y compromiso en su vinculo",
-    type: "scale",
-    questions: [
-      { text: "Siento una conexión emocional profunda con mi pareja.", trait: "intimidad_1" },
-      { text: "Puedo hablar de temas íntimos y vulnerables con mi pareja.", trait: "intimidad_2" },
-      { text: "Mi pareja realmente me comprende como persona.", trait: "intimidad_3" },
-      { text: "Siento atracción y deseo hacia mi pareja.", trait: "pasion_1" },
-      { text: "Buscamos activamente momentos de cercanía romántica.", trait: "pasion_2" },
-      { text: "La química entre nosotros se mantiene viva.", trait: "pasion_3" },
-      { text: "Estoy comprometido/a a cuidar esta relación a largo plazo.", trait: "compromiso_1" },
-      { text: "Cuando hay dificultades, sigo eligiendo construir juntos.", trait: "compromiso_2" },
-      { text: "Siento que ambos protegemos este vínculo con decisiones concretas.", trait: "compromiso_3" },
-    ],
+    key: "avoidant",
+    label: "Evitativo",
+    emoji: "🛡️",
+    desc: "Valoras tu autonomía. La cercanía intensa puede hacerte sentir expuesto/a.",
+  },
+  {
+    key: "fearful",
+    label: "Temeroso",
+    emoji: "🌊",
+    desc: "Deseas cercanía pero también te da miedo. Puedes sentirte atrapado/a entre ambas necesidades.",
   },
 ];
 
-const TRAIT_LABELS = {
-  escucha: "escucha empatica",
-  reparacion: "capacidad de reparacion",
-  afecto: "demostracion de afecto",
-  vulnerabilidad: "vulnerabilidad sana",
-  presencia: "presencia de calidad",
-  intimidad_1: "intimidad emocional",
-  intimidad_2: "vulnerabilidad compartida",
-  intimidad_3: "comprension mutua",
-  pasion_1: "deseo",
-  pasion_2: "cercania romantica",
-  pasion_3: "quimica",
-  compromiso_1: "compromiso",
-  compromiso_2: "eleccion mutua",
-  compromiso_3: "proteccion del vinculo",
-};
+const QUIZZES = [
+  {
+    id: "bigfive",
+    catKey: "quizBigFive",
+    title: "Big Five",
+    emoji: "🌊",
+    subtitle: "Tus 5 dimensiones de personalidad",
+    type: "scale",
+    questions: BIGFIVE_QUESTIONS,
+  },
+  {
+    id: "lovestyles",
+    catKey: "quizLoveStyles",
+    title: "Estilos de amor",
+    emoji: "💖",
+    subtitle: "Cómo das y recibes cariño",
+    type: "scale",
+    questions: LOVE_STYLES_QUESTIONS,
+  },
+  {
+    id: "attachment",
+    catKey: "quizAttachment",
+    title: "Apego en pareja",
+    emoji: "🫂",
+    subtitle: "Cómo vives la cercanía",
+    type: "scale",
+    questions: ATTACHMENT_QUESTIONS,
+    disclaimer: "Inspirado en la teoría del apego adulto (Bowlby, Ainsworth, Hazan & Shaver). No es el ECR-R ni un instrumento clínico.",
+  },
+];
 
 function parseScale(v) {
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
 }
 
-function calculateFortalezas(respuestas) {
-  const entries = Object.entries(respuestas).filter(([, score]) => Number.isFinite(score));
-  if (!entries.length) return { avg: 0, top: [] };
-  const avg = entries.reduce((acc, [, score]) => acc + score, 0) / entries.length;
-  const top = [...entries].sort((a, b) => b[1] - a[1]).slice(0, 2).map(([trait]) => TRAIT_LABELS[trait] || trait);
-  return { avg, top };
+function calculateBigFive(respuestas) {
+  const sums = { E: 0, A: 0, C: 0, N: 0, O: 0 };
+  const counts = { E: 0, A: 0, C: 0, N: 0, O: 0 };
+  QUIZZES.find((q) => q.id === "bigfive").questions.forEach((q, idx) => {
+    const raw = parseScale(respuestas[idx]);
+    if (raw == null) return;
+    const val = q.key === "reverse" ? 6 - raw : raw; // 1->5, 5->1
+    sums[q.domain] += val;
+    counts[q.domain] += 1;
+  });
+  const scores = {};
+  Object.keys(sums).forEach((k) => {
+    const raw = counts[k] ? sums[k] / counts[k] : 0; // 1-5
+    scores[k] = {
+      score: Math.round(((raw - 1) / 4) * 100),
+      level: raw >= 3.6 ? "alto" : raw <= 2.4 ? "bajo" : "medio",
+      raw,
+    };
+  });
+  return scores;
 }
 
-function calculateValores(respuestas) {
-  const tally = Object.values(respuestas).reduce((acc, valueId) => {
-    if (!valueId) return acc;
-    acc[valueId] = (acc[valueId] || 0) + 1;
-    return acc;
-  }, {});
-  const topValues = Object.entries(tally).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([key]) => key);
-  return { topValues };
+function calculateLoveStyles(respuestas) {
+  const sums = { eros: 0, ludus: 0, storge: 0, pragma: 0, mania: 0, agape: 0 };
+  const counts = { eros: 0, ludus: 0, storge: 0, pragma: 0, mania: 0, agape: 0 };
+  QUIZZES.find((q) => q.id === "lovestyles").questions.forEach((q, idx) => {
+    const raw = parseScale(respuestas[idx]);
+    if (raw == null) return;
+    sums[q.style] += raw;
+    counts[q.style] += 1;
+  });
+  const styles = Object.entries(sums)
+    .map(([key, total]) => ({ key, score: counts[key] ? total / counts[key] : 0, total, count: counts[key] }))
+    .sort((a, b) => b.score - a.score);
+  const primary = styles[0]?.key;
+  const secondary = styles[1]?.key;
+  return { styles, primary, secondary };
 }
 
-function calculatePersonalidad(respuestas) {
-  const entries = Object.entries(respuestas).filter(([, score]) => Number.isFinite(score));
-  if (!entries.length) return { avg: 0, top: [] };
-  const avg = entries.reduce((acc, [, score]) => acc + score, 0) / entries.length;
-  const top = [...entries].sort((a, b) => b[1] - a[1]).slice(0, 2).map(([trait]) => TRAIT_LABELS[trait] || trait);
-  return { avg, top };
-}
-
-function normalizeValueLabel(valueId) {
-  const map = {
-    honestidad: "honestidad",
-    calma: "calma",
-    justicia: "justicia",
-    union: "union",
-    lealtad: "lealtad",
-    crecimiento: "crecimiento",
-    respeto: "respeto",
-    ternura: "ternura",
-    proyecto: "proyecto compartido",
-    estabilidad: "estabilidad",
-    libertad: "libertad",
-    conexion: "conexion emocional",
-  };
-  return map[valueId] || valueId || "";
-}
-
-function generateAdvice(fortalezas, valores, personalidad, complete) {
-  if (!complete) return [];
-  const fTop = fortalezas.top[0] || "cuidado mutuo";
-  const pTop = personalidad.top[0] || "estilo personal";
-  const vTop = normalizeValueLabel(valores.topValues[0]);
-  const vSecond = normalizeValueLabel(valores.topValues[1]);
-
-  return [
-    `Conviertan su ${fTop} en ritual semanal: 20 minutos sin pantallas para escucharse.`,
-    `Si su valor central es ${vTop}, definan una regla pequena que lo aterrice esta semana.`,
-    `Aprovechen su ${pTop}: usenlo como fortaleza durante conversaciones dificiles.`,
-    `Antes de discutir, acuerden una frase de pausa y retorno para cuidar el tono.`,
-    `Elijan una micro-meta de 7 dias que combine ${vTop}${vSecond ? ` y ${vSecond}` : ""}.`,
-  ];
+function calculateAttachment(respuestas) {
+  const dims = { anxiety: { sum: 0, count: 0 }, avoidance: { sum: 0, count: 0 } };
+  QUIZZES.find((q) => q.id === "attachment").questions.forEach((q, idx) => {
+    const raw = parseScale(respuestas[idx]);
+    if (raw == null) return;
+    const val = q.key === "reverse" ? 6 - raw : raw;
+    dims[q.dim].sum += val;
+    dims[q.dim].count += 1;
+  });
+  const anxiety = dims.anxiety.count ? dims.anxiety.sum / dims.anxiety.count : 0;
+  const avoidance = dims.avoidance.count ? dims.avoidance.sum / dims.avoidance.count : 0;
+  let style = "secure";
+  if (anxiety >= 3.6 && avoidance < 3.6) style = "anxious";
+  else if (anxiety < 3.6 && avoidance >= 3.6) style = "avoidant";
+  else if (anxiety >= 3.6 && avoidance >= 3.6) style = "fearful";
+  return { anxiety: Math.round(((anxiety - 1) / 4) * 100), avoidance: Math.round(((avoidance - 1) / 4) * 100), style };
 }
 
 function getQuizRoleAnswers(conoce, role) {
-  const fort = {};
-  const val = {};
-  const pers = {};
+  const bigfive = {};
+  const lovestyles = {};
+  const attachment = {};
 
   QUIZZES.forEach((quiz) => {
-    quiz.questions.forEach((q, idx) => {
+    quiz.questions.forEach((_, idx) => {
       const key = `${quiz.catKey}-${idx}`;
       const raw = conoce?.[key]?.[role];
       if (raw == null) return;
-
-      if (quiz.id === "fortalezas") {
-        const score = parseScale(raw);
-        if (score != null) fort[q.trait] = score;
-      }
-      if (quiz.id === "valores") {
-        val[`q${idx}`] = String(raw);
-      }
-      if (quiz.id === "sternberg") {
-        const score = parseScale(raw);
-        if (score != null) pers[q.trait] = score;
-      }
+      if (quiz.id === "bigfive") bigfive[idx] = Number(raw);
+      if (quiz.id === "lovestyles") lovestyles[idx] = Number(raw);
+      if (quiz.id === "attachment") attachment[idx] = Number(raw);
     });
   });
 
-  return { fort, val, pers };
+  return { bigfive, lovestyles, attachment };
 }
 
-export function getQuizAdviceFromConoce(conoce, role) {
-  const { fort, val, pers } = getQuizRoleAnswers(conoce || {}, role);
-  const fortalezas = calculateFortalezas(fort);
-  const valores = calculateValores(val);
-  const personalidad = calculatePersonalidad(pers);
-  const totalAnswered = Object.keys(fort).length + Object.keys(val).length + Object.keys(pers).length;
-  const totalNeeded = QUIZZES.reduce((acc, q) => acc + q.questions.length, 0);
-  const complete = totalAnswered === totalNeeded;
-  const tips = generateAdvice(fortalezas, valores, personalidad, complete);
-  return { complete, tips, progress: { answered: totalAnswered, total: totalNeeded } };
+function generateComparison(me, partner) {
+  const tips = [];
+  if (!me || !partner) return tips;
+
+  // Big Five tips
+  const bfMe = calculateBigFive(me.bigfive || {});
+  const bfPartner = calculateBigFive(partner.bigfive || {});
+  if (bfMe.N && bfPartner.N) {
+    const diff = bfMe.N.score - bfPartner.N.score;
+    if (Math.abs(diff) > 25) {
+      tips.push(
+        `Uno de ustedes vive el estrés más intenso que el otro. Acuerden una señal de "necesito pausa" para no sobrecargarse.`
+      );
+    }
+  }
+  if (bfMe.E && bfPartner.E) {
+    const diff = bfMe.E.score - bfPartner.E.score;
+    if (Math.abs(diff) > 25) {
+      tips.push(
+        `Tienen niveles de energía social distintos. Negocien cuántos planes compartidos al mes se sienten bien para ambos.`
+      );
+    }
+  }
+
+  // Love styles tips
+  const lsMe = calculateLoveStyles(me.lovestyles || {});
+  const lsPartner = calculateLoveStyles(partner.lovestyles || {});
+  if (lsMe.primary && lsPartner.primary && lsMe.primary !== lsPartner.primary) {
+    const myPrimary = LOVE_STYLE_LABELS[lsMe.primary].split(" (")[0];
+    const theirPrimary = LOVE_STYLE_LABELS[lsPartner.primary].split(" (")[0];
+    tips.push(
+      `Tus estilos de amor principales son ${myPrimary} y ${theirPrimary}. Lo que a uno le dice "te quiero" puede no ser lo mismo para el otro: pregúntense "¿cómo te sientes amado/a hoy?".`
+    );
+  }
+
+  // Attachment tips
+  const atMe = calculateAttachment(me.attachment || {});
+  const atPartner = calculateAttachment(partner.attachment || {});
+  if (atMe.style === "secure" && atPartner.style !== "secure") {
+    tips.push(
+      `Uno tiene un apego más seguro. Esa calma puede ser un ancla para el otro: ofrezcan seguridad sin presionar.`
+    );
+  } else if (atMe.style !== "secure" && atPartner.style !== "secure") {
+    tips.push(
+      `Ambos tienen inquietudes en la cercanía. Acuerden pequeños rituales de conexión diarios para construir confianza poco a poco.`
+    );
+  }
+  if ((atMe.style === "anxious" && atPartner.style === "avoidant") || (atMe.style === "avoidant" && atPartner.style === "anxious")) {
+    tips.push(
+      `Uno busca cercanía y el otro espacio: esto puede crear un ciclo de persecución-distancia. Pídanse lo que necesitan en lugar de exigirlo.`
+    );
+  }
+
+  return tips.slice(0, 5);
+}
+
+export function getQuizResultsFromConoce(conoce, role) {
+  const { bigfive, lovestyles, attachment } = getQuizRoleAnswers(conoce || {}, role);
+  const bigfiveComplete = Object.keys(bigfive).length === BIGFIVE_QUESTIONS.length;
+  const lovestylesComplete = Object.keys(lovestyles).length === LOVE_STYLES_QUESTIONS.length;
+  const attachmentComplete = Object.keys(attachment).length === ATTACHMENT_QUESTIONS.length;
+  const complete = bigfiveComplete && lovestylesComplete && attachmentComplete;
+  const progress = {
+    answered: Object.keys(bigfive).length + Object.keys(lovestyles).length + Object.keys(attachment).length,
+    total: BIGFIVE_QUESTIONS.length + LOVE_STYLES_QUESTIONS.length + ATTACHMENT_QUESTIONS.length,
+  };
+  if (!complete) return { complete, progress };
+  return {
+    complete,
+    progress,
+    bigfive: calculateBigFive(bigfive),
+    lovestyles: calculateLoveStyles(lovestyles),
+    attachment: calculateAttachment(attachment),
+  };
+}
+
+export function getCoupleComparison(conoce) {
+  const owner = getQuizResultsFromConoce(conoce, "owner");
+  const partner = getQuizResultsFromConoce(conoce, "partner");
+  if (!owner.complete || !partner.complete) return null;
+  const raw = getQuizRoleAnswers(conoce, "owner");
+  const rawPartner = getQuizRoleAnswers(conoce, "partner");
+  return {
+    owner,
+    partner,
+    tips: generateComparison(raw, rawPartner),
+  };
 }
 
 export default function Cuestionarios({ conoce, onSave, onQuizComplete, onReset, user }) {
@@ -214,6 +346,7 @@ export default function Cuestionarios({ conoce, onSave, onQuizComplete, onReset,
   const otherName = myRole === "owner" ? partnerName : ownerName;
   const [openQuiz, setOpenQuiz] = useState(null);
   const [quizNoticeById, setQuizNoticeById] = useState({});
+  const [showResults, setShowResults] = useState(false);
   const rewardedByQuizRef = useRef({});
 
   const progressByQuiz = useMemo(() => {
@@ -229,8 +362,9 @@ export default function Cuestionarios({ conoce, onSave, onQuizComplete, onReset,
     return map;
   }, [conoce, myRole]);
 
-  const myAdvice = useMemo(() => getQuizAdviceFromConoce(conoce || {}, myRole), [conoce, myRole]);
-  const partnerAdvice = useMemo(() => getQuizAdviceFromConoce(conoce || {}, partnerRole), [conoce, partnerRole]);
+  const myResults = useMemo(() => getQuizResultsFromConoce(conoce || {}, myRole), [conoce, myRole]);
+  const partnerResults = useMemo(() => getQuizResultsFromConoce(conoce || {}, partnerRole), [conoce, partnerRole]);
+  const comparison = useMemo(() => getCoupleComparison(conoce || {}), [conoce]);
 
   const saveResponse = (quiz, idx, value, alreadyAnswered, answeredBefore) => {
     const key = `${quiz.catKey}-${idx}`;
@@ -252,7 +386,7 @@ export default function Cuestionarios({ conoce, onSave, onQuizComplete, onReset,
         3 test para conocerse mejor
       </div>
       <div style={{ fontSize: "0.78rem", color: "#5f4d7f", marginBottom: 10, lineHeight: 1.55 }}>
-        Respondan individualmente y luego comparen resultados. Mochi les sugiere 5 consejos personalizados cuando terminen los tres.
+        Respondan individualmente y luego comparen resultados. Mochi les sugiere consejos personalizados cuando ambos terminen.
       </div>
 
       {QUIZZES.map((quiz) => {
@@ -261,7 +395,7 @@ export default function Cuestionarios({ conoce, onSave, onQuizComplete, onReset,
         return (
           <div key={quiz.id} style={{ background: "#f3ecff", borderRadius: 14, padding: 12, border: "1px solid rgba(63,47,99,0.12)", marginBottom: 8 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-              <div>
+              <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 800, color: "#3f2f63", fontSize: "0.88rem" }}>
                   {quiz.emoji} {quiz.title}
                 </div>
@@ -289,6 +423,11 @@ export default function Cuestionarios({ conoce, onSave, onQuizComplete, onReset,
 
             {isOpen && (
               <div style={{ marginTop: 10 }}>
+                {quiz.disclaimer && (
+                  <div style={{ fontSize: "0.68rem", color: "#6b5a8a", background: "#f8f6ff", borderRadius: 8, padding: 8, marginBottom: 10, lineHeight: 1.5 }}>
+                    ℹ️ {quiz.disclaimer}
+                  </div>
+                )}
                 {quiz.questions.map((q, idx) => {
                   const key = `${quiz.catKey}-${idx}`;
                   const selected = conoce?.[key]?.[myRole];
@@ -299,53 +438,26 @@ export default function Cuestionarios({ conoce, onSave, onQuizComplete, onReset,
                       <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "#3f2f63", marginBottom: 8 }}>
                         {idx + 1}. {q.text}
                       </div>
-
-                      {quiz.type === "scale" && (
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-                          {SCALE_OPTIONS.map((opt) => (
-                            <button
-                              key={opt.id}
-                              onClick={() => saveResponse(quiz, idx, opt.id, alreadyAnswered, answeredBefore)}
-                              style={{
-                                border: selected === opt.id ? "2px solid #6f56b8" : "1px solid rgba(63,47,99,0.15)",
-                                background: opt.color,
-                                borderRadius: 9,
-                                padding: "7px 8px",
-                                fontSize: "0.72rem",
-                                fontWeight: 800,
-                                color: "#32264a",
-                                cursor: "pointer",
-                              }}
-                            >
-                              {opt.label}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-
-                      {quiz.type === "value" && (
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 6 }}>
-                          {q.options.map((opt) => (
-                            <button
-                              key={opt.id}
-                              onClick={() => saveResponse(quiz, idx, opt.id, alreadyAnswered, answeredBefore)}
-                              style={{
-                                border: selected === opt.id ? "2px solid #6f56b8" : "1px solid rgba(63,47,99,0.15)",
-                                background: selected === opt.id ? "#efe6ff" : "#fff",
-                                borderRadius: 9,
-                                padding: "8px 10px",
-                                textAlign: "left",
-                                fontSize: "0.76rem",
-                                fontWeight: 700,
-                                color: "#32264a",
-                                cursor: "pointer",
-                              }}
-                            >
-                              {opt.label}
-                            </button>
-                          ))}
-                        </div>
-                      )}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                        {SCALE_OPTIONS.map((opt) => (
+                          <button
+                            key={opt.id}
+                            onClick={() => saveResponse(quiz, idx, opt.id, alreadyAnswered, answeredBefore)}
+                            style={{
+                              border: selected === opt.id ? "2px solid #6f56b8" : "1px solid rgba(63,47,99,0.15)",
+                              background: opt.color,
+                              borderRadius: 9,
+                              padding: "7px 8px",
+                              fontSize: "0.72rem",
+                              fontWeight: 800,
+                              color: "#32264a",
+                              cursor: "pointer",
+                            }}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   );
                 })}
@@ -366,34 +478,66 @@ export default function Cuestionarios({ conoce, onSave, onQuizComplete, onReset,
       })}
 
       <div style={{ background: "#f3ecff", borderRadius: 14, padding: 12, border: "1px solid rgba(63,47,99,0.12)", marginTop: 10 }}>
-        <div style={{ fontWeight: 800, color: "#3f2f63", fontSize: "0.9rem", marginBottom: 8 }}>
-          📊 Resultados de tests
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+          <div style={{ fontWeight: 800, color: "#3f2f63", fontSize: "0.9rem" }}>📊 Resultados</div>
+          {comparison && (
+            <button
+              onClick={() => setShowResults((s) => !s)}
+              style={{ border: "none", background: "#6f56b8", color: "#f8f3ff", borderRadius: 8, padding: "5px 10px", fontSize: "0.7rem", fontWeight: 800, cursor: "pointer" }}
+            >
+              {showResults ? "Ocultar" : "Ver"}
+            </button>
+          )}
         </div>
 
-        {[{ name: myName, advice: myAdvice }, { name: otherName, advice: partnerAdvice }].map((p) => (
-          <div key={p.name} style={{ background: "#fff", borderRadius: 11, padding: 10, border: "1px solid rgba(63,47,99,0.12)", marginBottom: 8 }}>
+        {[{ name: myName, results: myResults, who: "yo" }, { name: otherName, results: partnerResults, who: "pareja" }].map((p) => (
+          <div key={p.who} style={{ background: "#fff", borderRadius: 11, padding: 10, border: "1px solid rgba(63,47,99,0.12)", marginBottom: 8 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
               <div style={{ fontSize: "0.8rem", fontWeight: 800, color: "#3f2f63" }}>🐼 {p.name}</div>
-              <div style={{ fontSize: "0.7rem", fontWeight: 800, color: p.advice.complete ? "#6f56b8" : "#5f4d7f" }}>
-                {p.advice.progress.answered}/{p.advice.progress.total}
+              <div style={{ fontSize: "0.7rem", fontWeight: 800, color: p.results.complete ? "#6f56b8" : "#5f4d7f" }}>
+                {p.results.progress.answered}/{p.results.progress.total}
               </div>
             </div>
 
-            {!p.advice.complete ? (
+            {!p.results.complete ? (
               <div style={{ fontSize: "0.74rem", color: "#5f4d7f", lineHeight: 1.6 }}>
-                Aún faltan respuestas para generar los consejos de Mochi.
+                Aún faltan respuestas para ver los resultados completos.
+              </div>
+            ) : showResults ? (
+              <div style={{ fontSize: "0.74rem", color: "#32264a", lineHeight: 1.55 }}>
+                <div style={{ marginBottom: 6 }}>
+                  <strong>Big Five:</strong>{" "}
+                  {Object.entries(p.results.bigfive).map(([k, v]) => `${BIGFIVE_LABELS[k]} ${v.score}%`).join(" · ")}
+                </div>
+                <div style={{ marginBottom: 6 }}>
+                  <strong>Amor:</strong>{" "}
+                  {LOVE_STYLE_LABELS[p.results.lovestyles.primary]} y {LOVE_STYLE_LABELS[p.results.lovestyles.secondary]}
+                </div>
+                <div>
+                  <strong>Apego:</strong>{" "}
+                  {ATTACHMENT_STYLES.find((s) => s.key === p.results.attachment.style)?.emoji}{" "}
+                  {ATTACHMENT_STYLES.find((s) => s.key === p.results.attachment.style)?.label}
+                </div>
               </div>
             ) : (
-              <ol style={{ margin: 0, paddingLeft: 18, color: "#32264a" }}>
-                {p.advice.tips.map((tip, idx) => (
-                  <li key={idx} style={{ fontSize: "0.75rem", fontWeight: 700, lineHeight: 1.55, marginBottom: 3 }}>{tip}</li>
-                ))}
-              </ol>
+              <div style={{ fontSize: "0.74rem", color: "#5f4d7f", lineHeight: 1.6 }}>
+                Resultados listos. Presiona "Ver" para descubrirlos juntos.
+              </div>
             )}
           </div>
         ))}
 
-        {/* Botón para rehacer los tests */}
+        {comparison && showResults && (
+          <div style={{ background: "#fff", borderRadius: 11, padding: 10, border: "1px solid rgba(63,47,99,0.12)", marginBottom: 8 }}>
+            <div style={{ fontSize: "0.82rem", fontWeight: 800, color: "#3f2f63", marginBottom: 6 }}>💡 Consejos de Mochi</div>
+            <ol style={{ margin: 0, paddingLeft: 18, color: "#32264a" }}>
+              {comparison.tips.map((tip, idx) => (
+                <li key={idx} style={{ fontSize: "0.75rem", fontWeight: 700, lineHeight: 1.55, marginBottom: 4 }}>{tip}</li>
+              ))}
+            </ol>
+          </div>
+        )}
+
         <button
           onClick={() => {
             if (confirm("¿Quieren rehacer los tests? Se borrarán las respuestas actuales.")) {
@@ -417,7 +561,7 @@ export default function Cuestionarios({ conoce, onSave, onQuizComplete, onReset,
         </button>
 
         <div style={{ fontSize: "0.72rem", color: "#5f4d7f", marginTop: 8 }}>
-          Aquí se muestran los resultados y consejos de los tests, dentro de Conócete.
+          Estos tests son para auto-conocimiento. No sustituyen evaluación psicológica profesional.
         </div>
       </div>
     </div>

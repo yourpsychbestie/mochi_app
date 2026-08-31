@@ -20,7 +20,7 @@ import {
   fbSaveStreakInteraction, fbListenStreakInteractions,
   fbSaveStreakProfile, fbListenStreakProfile,
 } from "./firebase";
-import Cuestionarios, { getQuizAdviceFromConoce } from "./Cuestionarios";
+import Cuestionarios from "./Cuestionarios";
 
 // Prevents the fbOnAuthChange listener from calling afterLogin while doReg/doJoin
 // is actively handling a fresh registration (avoids race conditions on new sign-ups).
