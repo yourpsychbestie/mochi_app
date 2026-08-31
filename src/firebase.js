@@ -16,9 +16,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // Keep users signed in across app restarts until they explicitly log out.
-setPersistence(auth, browserLocalPersistence).catch((err) => {
-  console.warn("Auth persistence setup warning:", err?.message || err);
-});
+setPersistence(auth, browserLocalPersistence).catch(() => {});
 
 // ─── AUTH ───────────────────────────────────────────────
 export const fbRegister = (email, password) =>
@@ -215,8 +213,7 @@ export const fbListenMessages = (coupleCode, cb) => {
       return bTime - aTime;
     });
     cb(msgs);
-  }, (error) => {
-    console.error("Messages listener error:", error);
+  }, () => {
     cb(null);
   });
 };
@@ -231,8 +228,7 @@ export const fbGetTest = async (coupleCode) => {
 export const fbListenTest = (coupleCode, cb) => {
   return onSnapshot(doc(db, "tests", coupleCode), snap => {
     cb(snap.exists() ? snap.data() : null);
-  }, (error) => {
-    console.error("Test listener error:", error);
+  }, () => {
     cb(null);
   });
 };
@@ -243,8 +239,7 @@ export const fbResetTest = (coupleCode) =>
 export const fbListenExSession = (coupleCode, exId, cb) => {
   return onSnapshot(doc(db, "exSessions", `${coupleCode}_${exId}`), snap => {
     cb(snap.exists() ? snap.data() : null);
-  }, (error) => {
-    console.error("ExSession listener error:", error);
+  }, () => {
     cb(null);
   });
 };
@@ -488,8 +483,7 @@ export const fbListenDiaryEntries = (coupleCode, cb) => {
   return onSnapshot(q, snap => {
     const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     cb(items);
-  }, (error) => {
-    console.error("Diario listener error:", error);
+  }, () => {
     cb([]);
   });
 };

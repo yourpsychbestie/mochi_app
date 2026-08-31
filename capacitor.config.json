@@ -25,7 +25,6 @@
     }
   },
   "server": {
-    "androidScheme": "https",
-    "iosScheme": "mochi"
+    "androidScheme": "https"
   }
 }

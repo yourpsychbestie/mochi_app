@@ -28,10 +28,6 @@
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
-	<key>UIRequiredDeviceCapabilities</key>
-	<array>
-		<string>armv7</string>
-	</array>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
@@ -45,13 +41,5 @@
 	<true/>
 	<key>NSUserTrackingUsageDescription</key>
 	<string>Esta app no rastrea tu actividad fuera de la app.</string>
-	<key>NSCameraUsageDescription</key>
-	<string>Mochi no usa la cámara.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Mochi no accede a tus fotos.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Mochi no usa el micrófono.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Mochi no usa tu ubicación.</string>
 </dict>
 </plist>

@@ -470,17 +470,24 @@ const EXERCISES = [
     afterPrompts:[{role:0,ph:"Lo que noté en ti hoy fue…"},{role:1,ph:"Estar presente contigo me hizo sentir…"}]},
 ];
 
+const CONOCE_LEVELS = {
+  1: { emoji: "🌱", label: "Semilla", sub: "Lo fácil y divertido", color: "#e4f0e0", ring: "#8bc48a" },
+  2: { emoji: "🌿", label: "Brote", sub: "Lo emocional", color: "#eee2ff", ring: "#9a7fd9" },
+  3: { emoji: "🌸", label: "Flor", sub: "Lo más íntimo", color: "#fce4f4", ring: "#c77fc2" },
+};
+
 const CONOCE_CATS = {
   infancia: {
     emoji: "🧸",
     label: "Infancia",
     bg: "#f5edda",
-    descripcion: "Conocer de dónde venimos nos ayuda a entender cómo amamos hoy. No hay respuestas correctas, solo tu historia.",
+    descripcion: "Conocer de dónde venimos nos ayuda a entender cómo amamos hoy. Avancemos poco a poco: desde lo sensorial hasta lo más emocional.",
+    levels: [2, 1, 2, 3, 1, 3],
     preguntas: [
       "¿Cuál es tu recuerdo más feliz de cuando eras niño/a?",
       "¿Qué comida te recuerda a tu casa?",
       "¿Qué tradición familiar te gustaría tener con nosotros?",
-      "¿Cómo se decían 'te quiero' en tu familia?",
+      "¿Qué gesto de cariño de tu infancia te gustaría tener con nosotros?",
       "¿Qué hacías para divertirte cuando eras pequeño/a?",
       "¿Qué cosa de tu infancia te gustaría recuperar?"
     ]
@@ -489,7 +496,8 @@ const CONOCE_CATS = {
     emoji: "⭐",
     label: "Cosas Favoritas",
     bg: "#fff4e0",
-    descripcion: "Las cosas que nos gustan dicen mucho de quiénes somos. Simple, rápido y divertido.",
+    descripcion: "Las cosas que nos gustan dicen mucho de quiénes somos. Empecemos por lo simple y terminemos con lo que realmente nos conmueve.",
+    levels: [1, 1, 2, 2, 3, 3],
     preguntas: [
       "¿Cuál es tu comida favorita?",
       "¿Qué película podrías ver mil veces?",
@@ -503,7 +511,8 @@ const CONOCE_CATS = {
     emoji: "🌙",
     label: "Sueños",
     bg: "#f2ecd8",
-    descripcion: "Compartir lo que soñamos nos acerca. No tiene que ser realista, solo honesto.",
+    descripcion: "Compartir lo que soñamos nos acerca. Desde deseos personales hasta lo que queremos construir juntos.",
+    levels: [1, 2, 3, 1, 3, 2],
     preguntas: [
       "¿Qué te gustaría aprender a hacer este año?",
       "¿A dónde te gustaría viajar conmigo?",
@@ -515,16 +524,17 @@ const CONOCE_CATS = {
   },
   miedos: {
     emoji: "🫂",
-    label: "Miedos & Apoyo",
+    label: "Apoyo & Cuidado",
     bg: "#e4f0e0",
-    descripcion: "Decir qué nos asusta y cómo nos cuidan es clave para sentirnos seguros juntos.",
+    descripcion: "Descubrir cómo cuidarnos mutuamente fortalece la confianza. Estas preguntas van desde lo cotidiano hasta lo más íntimo, siempre enfocadas en lo que nos hace sentir bien.",
+    levels: [1, 1, 2, 3, 2, 3],
     preguntas: [
-      "¿Qué situación te hace sentir incómodo/a?",
-      "¿Cómo puedo darte ánimos cuando estás mal?",
+      "¿Qué actividad te ayuda a relajarte cuando el día estuvo pesado?",
+      "¿Cómo puedo darte ánimos cuando estás bajito/a?",
       "¿Qué necesitas cuando tienes un día difícil?",
-      "¿Qué te cuesta pedir ayuda?",
+      "¿Qué necesitas de mí para sentirte seguro/a pidiendo apoyo?",
       "¿Qué te hace sentir más querido/a?",
-      "¿Cómo puedo mostrarte que estoy aquí para ti?"
+      "¿Qué pequeña acción me dice 'estoy aquí contigo' para ti?"
     ]
   },
 };
@@ -2762,7 +2772,29 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson })
 }
 
 
-// CONOCETE
+// CONOCETE — niveles de profundidad (Semilla → Brote → Flor)
+function getCatLevelIndices(cat, level) {
+  return CONOCE_CATS[cat].preguntas
+    .map((_, idx) => idx)
+    .filter(idx => CONOCE_CATS[cat].levels[idx] === level);
+}
+
+function getLevelProgress(cat, level, conoce, role) {
+  const indices = getCatLevelIndices(cat, level);
+  const answered = indices.filter(idx => !!conoce[`${cat}-${idx}`]?.[role]).length;
+  return { answered, total: indices.length };
+}
+
+function isLevelCompletedByBoth(cat, level, conoce, myRole, partnerRole) {
+  const indices = getCatLevelIndices(cat, level);
+  return indices.every(idx => !!conoce[`${cat}-${idx}`]?.[myRole] && !!conoce[`${cat}-${idx}`]?.[partnerRole]);
+}
+
+function isLevelUnlocked(cat, level, conoce, myRole, partnerRole) {
+  if (level === 1) return true;
+  return isLevelCompletedByBoth(cat, level - 1, conoce, myRole, partnerRole);
+}
+
 function Conocete({ conoce, onSave, user }) {
   const { nameA, nameB } = getCoupleNames(user);
   const myRole = user?.isOwner !== false ? "owner" : "partner";
@@ -2772,12 +2804,14 @@ function Conocete({ conoce, onSave, user }) {
   const partnerWho = myRole === "owner" ? "B" : "A";
   const partnerLabel = myRole === "owner" ? nameB : nameA;
   const [cat, setCat] = useState(null);
+  const [level, setLevel] = useState(null);
   const [qIdx, setQIdx] = useState(null);
   const [myAnswer, setMyAnswer] = useState("");
   const [saved, setSaved] = useState(false);
 
   const openQ = (c, i) => {
     setCat(c);
+    setLevel(CONOCE_CATS[c].levels[i]);
     setQIdx(i);
     setSaved(false);
     const ex = conoce[`${c}-${i}`] || {};
@@ -2793,12 +2827,21 @@ function Conocete({ conoce, onSave, user }) {
     setQIdx(null);
   };
 
+  const selectCat = (key) => {
+    setCat(key);
+    setLevel(null);
+    setQIdx(null);
+  };
+
   if (qIdx !== null) return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
-      <ScreenTop title="Conócete" sub="Preguntas para descubrirse · +15 bambú cada una" />
+      <ScreenTop title="Conócete" sub={`${CONOCE_LEVELS[level].emoji} ${CONOCE_LEVELS[level].label} · ${CONOCE_CATS[cat].label}`} />
       <div style={{ margin: 14 }}>
         <div style={{ background: C.white, borderRadius: 20, padding: 18, boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
-          <div style={{ fontSize: "0.7rem", fontWeight: 800, color: C.inkM, marginBottom: 8, letterSpacing: "0.5px" }}>{CONOCE_CATS[cat].emoji} {CONOCE_CATS[cat].label.toUpperCase()}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+            <span style={{ fontSize: "0.7rem", fontWeight: 800, color: C.inkM, letterSpacing: "0.5px" }}>{CONOCE_CATS[cat].emoji} {CONOCE_CATS[cat].label.toUpperCase()}</span>
+            <span style={{ fontSize: "0.65rem", fontWeight: 800, color: CONOCE_LEVELS[level].ring, background: CONOCE_LEVELS[level].color, borderRadius: 6, padding: "2px 8px" }}>{CONOCE_LEVELS[level].emoji} {CONOCE_LEVELS[level].label}</span>
+          </div>
           <div style={{ fontSize: "0.97rem", color: C.ink, lineHeight: 1.6, fontWeight: 700, marginBottom: 16 }}>{CONOCE_CATS[cat].preguntas[qIdx]}</div>
           <div style={{ marginBottom: 12 }}>
             <PBadge who={myWho} name={myLabel} />
@@ -2819,28 +2862,28 @@ function Conocete({ conoce, onSave, user }) {
     </div>
   );
 
-  if (cat) return (
+  if (level !== null) return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
-      <ScreenTop title="Conócete" sub="Preguntas para descubrirse" />
+      <ScreenTop title="Conócete" sub={`${CONOCE_LEVELS[level].emoji} ${CONOCE_LEVELS[level].label}`} />
       <div style={{ margin: 14 }}>
-        {/* Descripción de la categoría */}
         <div style={{ background: CONOCE_CATS[cat].bg, borderRadius: 14, padding: "14px 16px", marginBottom: 12, border: `1.5px solid ${C.border}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
             <span style={{ fontSize: "1.6rem" }}>{CONOCE_CATS[cat].emoji}</span>
             <span style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.1rem", color: C.dark }}>{CONOCE_CATS[cat].label}</span>
           </div>
-          <div style={{ fontSize: "0.82rem", color: C.inkM, lineHeight: 1.6 }}>{CONOCE_CATS[cat].descripcion}</div>
+          <div style={{ fontSize: "0.82rem", color: C.inkM, lineHeight: 1.6 }}>{CONOCE_LEVELS[level].emoji} <strong>{CONOCE_LEVELS[level].label}</strong> — {CONOCE_LEVELS[level].sub}</div>
         </div>
 
         <div style={{ background: C.white, borderRadius: 20, padding: 18, boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.1rem", color: C.dark }}>Preguntas</div>
-            <button onClick={() => setCat(null)} style={{ background: C.sand, border: `1.5px solid ${C.border}`, borderRadius: 8, width: 30, height: 30, cursor: "pointer", fontSize: "0.85rem", color: C.inkM }}>✕</button>
+            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.1rem", color: C.dark }}>Preguntas de {CONOCE_LEVELS[level].label}</div>
+            <button onClick={() => setLevel(null)} style={{ background: C.sand, border: `1.5px solid ${C.border}`, borderRadius: 8, width: 30, height: 30, cursor: "pointer", fontSize: "0.85rem", color: C.inkM }}>✕</button>
           </div>
-          {CONOCE_CATS[cat].preguntas.map((q, i) => {
-            const doneMine = !!conoce[`${cat}-${i}`]?.[myRole];
-            const donePartner = !!conoce[`${cat}-${i}`]?.[partnerRole];
-            return <div key={i} onClick={() => openQ(cat, i)} style={{ background: doneMine ? C.cream : C.sandL, borderRadius: 12, padding: 13, marginBottom: 8, cursor: "pointer", borderLeft: `4px solid ${doneMine ? C.olive : C.border}`, transition: "all 0.13s" }}>
+          {getCatLevelIndices(cat, level).map((idx) => {
+            const q = CONOCE_CATS[cat].preguntas[idx];
+            const doneMine = !!conoce[`${cat}-${idx}`]?.[myRole];
+            const donePartner = !!conoce[`${cat}-${idx}`]?.[partnerRole];
+            return <div key={idx} onClick={() => openQ(cat, idx)} style={{ background: doneMine ? C.cream : C.sandL, borderRadius: 12, padding: 13, marginBottom: 8, cursor: "pointer", borderLeft: `4px solid ${doneMine ? C.olive : C.border}`, transition: "all 0.13s" }}>
               <div style={{ fontSize: "0.88rem", fontWeight: 700, color: C.ink }}>{q}</div>
               <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
                 <div style={{ fontSize: "0.7rem", fontWeight: 800, color: doneMine ? C.olive : C.inkL }}>{myWho} {doneMine ? "✓" : "pendiente"}</div>
@@ -2853,16 +2896,84 @@ function Conocete({ conoce, onSave, user }) {
     </div>
   );
 
+  if (cat) return (
+    <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
+      <ScreenTop title="Conócete" sub="Preguntas para descubrirse" />
+      <div style={{ margin: 14 }}>
+        <div style={{ background: CONOCE_CATS[cat].bg, borderRadius: 14, padding: "14px 16px", marginBottom: 12, border: `1.5px solid ${C.border}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+            <span style={{ fontSize: "1.6rem" }}>{CONOCE_CATS[cat].emoji}</span>
+            <span style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.1rem", color: C.dark }}>{CONOCE_CATS[cat].label}</span>
+          </div>
+          <div style={{ fontSize: "0.82rem", color: C.inkM, lineHeight: 1.6 }}>{CONOCE_CATS[cat].descripcion}</div>
+        </div>
+
+        <div style={{ background: C.white, borderRadius: 20, padding: 18, boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.1rem", color: C.dark }}>Elige un nivel</div>
+            <button onClick={() => setCat(null)} style={{ background: C.sand, border: `1.5px solid ${C.border}`, borderRadius: 8, width: 30, height: 30, cursor: "pointer", fontSize: "0.85rem", color: C.inkM }}>✕</button>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {[1, 2, 3].map((lvl) => {
+              const meta = CONOCE_LEVELS[lvl];
+              const mine = getLevelProgress(cat, lvl, conoce, myRole);
+              const theirs = getLevelProgress(cat, lvl, conoce, partnerRole);
+              const completeBoth = isLevelCompletedByBoth(cat, lvl, conoce, myRole, partnerRole);
+              const unlocked = isLevelUnlocked(cat, lvl, conoce, myRole, partnerRole);
+              return (
+                <div
+                  key={lvl}
+                  onClick={() => unlocked && setLevel(lvl)}
+                  style={{
+                    position: "relative",
+                    background: completeBoth ? meta.color : C.sandL,
+                    borderRadius: 14,
+                    padding: 14,
+                    border: `2px solid ${completeBoth ? meta.ring : C.border}`,
+                    cursor: unlocked ? "pointer" : "default",
+                    opacity: unlocked ? 1 : 0.65,
+                    transition: "all 0.13s"
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ fontSize: "1.8rem" }}>{meta.emoji}</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1rem", color: C.dark }}>{meta.label}</div>
+                        {completeBoth && <span style={{ fontSize: "0.7rem", fontWeight: 800, color: meta.ring, background: C.white, borderRadius: 6, padding: "2px 7px" }}>✓ Completo</span>}
+                        {!unlocked && <span style={{ fontSize: "0.7rem", fontWeight: 800, color: C.inkL, background: C.white, borderRadius: 6, padding: "2px 7px" }}>🔒</span>}
+                      </div>
+                      <div style={{ fontSize: "0.78rem", color: C.inkM, marginBottom: 6 }}>{meta.sub}</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.olive }}>{myWho} {mine.answered}/{mine.total}</div>
+                        <div style={{ fontSize: "0.68rem", fontWeight: 800, color: C.teal }}>{partnerWho} {theirs.answered}/{theirs.total}</div>
+                      </div>
+                      <ProgBar value={mine.answered + theirs.answered} max={mine.total + theirs.total} color={meta.ring} style={{ marginTop: 6 }} />
+                    </div>
+                  </div>
+                  {!unlocked && (
+                    <div style={{ marginTop: 8, fontSize: "0.72rem", color: C.inkM, fontWeight: 700, background: "rgba(255,255,255,0.7)", borderRadius: 8, padding: "6px 9px" }}>
+                      Se desbloquea cuando ambos terminen {CONOCE_LEVELS[lvl - 1].label.toLowerCase()}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
       <ScreenTop title="Conócete" sub="Preguntas para descubrirse" />
       
-      {/* Instrucciones introductorias */}
       <div style={{ margin: "12px 14px", background: C.white, borderRadius: 16, padding: "16px 18px", boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
         <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "0.95rem", color: C.dark, marginBottom: 8 }}>💬 ¿Cómo funciona?</div>
         <div style={{ fontSize: "0.82rem", color: C.inkM, lineHeight: 1.7 }}>
-          Responde las preguntas por separado. Cuando ambos contesten, podrán ver las respuestas del otro. 
-          No hay respuestas correctas — se trata de conocerse mejor. Cada respuesta te da +15 bambú 🌿
+          Avancen paso a paso por 3 niveles: <strong>Semilla 🌱, Brote 🌿 y Flor 🌸</strong>. Empezamos con lo fácil y vamos profundizando juntos. Cuando ambos respondan, podrán ver la respuesta del otro. No hay respuestas correctas — cada respuesta les da +15 bambú 🌿
         </div>
       </div>
 
@@ -2870,7 +2981,7 @@ function Conocete({ conoce, onSave, user }) {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 11, padding: "10px 14px" }}>
         {Object.entries(CONOCE_CATS).map(([key, data]) => {
           const done = data.preguntas.filter((_, i) => !!conoce[`${key}-${i}`]?.[myRole]).length;
-          return <div key={key} onClick={() => setCat(key)} style={{ background: data.bg, borderRadius: 18, padding: 18, textAlign: "center", cursor: "pointer", boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}`, transition: "transform 0.13s" }} onMouseOver={e => e.currentTarget.style.transform = "translateY(-2px)"} onMouseOut={e => e.currentTarget.style.transform = "none"}>
+          return <div key={key} onClick={() => selectCat(key)} style={{ background: data.bg, borderRadius: 18, padding: 18, textAlign: "center", cursor: "pointer", boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}`, transition: "transform 0.13s" }} onMouseOver={e => e.currentTarget.style.transform = "translateY(-2px)"} onMouseOut={e => e.currentTarget.style.transform = "none"}>
             <div style={{ fontSize: "2.2rem", marginBottom: 7 }}>{data.emoji}</div>
             <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "0.97rem", color: C.dark }}>{data.label}</div>
             <div style={{ fontSize: "0.7rem", color: C.inkM, fontWeight: 700, marginTop: 3 }}>{done} / {data.preguntas.length}</div>
