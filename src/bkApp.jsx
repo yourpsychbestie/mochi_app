@@ -4,7 +4,7 @@ import {
   fbDeleteCurrentUser,
   fbCleanupBeforeAccountDelete,
   fbSaveUser, fbGetUser,
-  fbGetCode, fbCreateCodeOwner, fbClaimPartnerCode, fbFindCodeByUid,
+  fbGetCode, fbListenCode, fbCreateCodeOwner, fbClaimPartnerCode, fbFindCodeByUid,
   fbSaveProgress, fbGetProgress,
   fbSendMessage, fbListenMessages,
   fbSaveTestAnswers, fbListenTest, fbResetTest,
@@ -2049,9 +2049,86 @@ function GardenScene({ garden, waterLevel }) {
 // ═══════════════════════════════════════════════
 // JARDIN SCREEN — updated with accessories + multiple items + decay
 // ═══════════════════════════════════════════════
-function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pandaBubble, onPet, onBuy, onWater, onBuyAccessory, user }) {
+// ═══════════════════════════════════════════════
+// PRIMEROS PASOS — guía del jardín para parejas nuevas
+// ═══════════════════════════════════════════════
+function InvitePartnerBox({ user, compact = false }) {
+  const code = user?.code || "";
+  const inviteText = `¡Únete a nuestro jardín en Mochi! 🐼🌿 Usa este código al entrar en "Tengo código": ${code}`;
+  const copy = () => {
+    if (navigator.clipboard) navigator.clipboard.writeText(code).then(() => showToast("Código copiado: " + code)).catch(() => showToast("Tu código: " + code));
+    else showToast("Tu código: " + code);
+  };
+  return (
+    <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: compact ? 0 : 8 }}>
+      <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.15rem", letterSpacing: 4, color: C.dark, background: C.cream2, borderRadius: 10, padding: "6px 10px", border: `1.5px solid ${C.border}` }}>{code || "----"}</div>
+      <Btn onClick={copy} variant="sand" style={{ flex: 1, padding: "8px 10px", fontSize: "0.8rem" }}>📋 Copiar</Btn>
+      <Btn onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(inviteText)}`, "_blank")} variant="sand" style={{ flex: 1, padding: "8px 10px", fontSize: "0.8rem" }}>💬 WhatsApp</Btn>
+    </div>
+  );
+}
+
+function PrimerosPasos({ steps, user, partnerName, onHide }) {
+  const doneCount = steps.filter(st => st.done).length;
+  const next = steps.find(st => !st.done);
+  return (
+    <div style={{ margin: "0 14px 12px", background: C.white, borderRadius: 18, padding: 16, border: `1.5px solid ${C.border}`, boxShadow: `0 3px 0 ${C.border}` }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+        <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.05rem", color: C.dark }}>🐼 Primeros pasos</div>
+        <div style={{ fontSize: "0.72rem", fontWeight: 800, color: C.inkL }}>{doneCount} de {steps.length}</div>
+      </div>
+      <div style={{ fontSize: "0.78rem", color: C.inkM, lineHeight: 1.5, marginBottom: 10 }}>Algunas cosas para empezar.</div>
+      <ProgBar value={doneCount} max={steps.length} style={{ marginBottom: 12 }} />
+      {steps.map(st => {
+        const isNext = st === next;
+        return (
+          <div key={st.id} style={{ marginBottom: 8 }}>
+            <div onClick={st.done || !st.onGo ? undefined : st.onGo} style={{ display: "flex", alignItems: "center", gap: 10, background: isNext ? C.cream : C.sandL, borderRadius: 12, padding: "10px 12px", border: `1.5px solid ${isNext ? C.olive : C.border}`, cursor: st.done || !st.onGo ? "default" : "pointer", opacity: st.done ? 0.6 : 1 }}>
+              <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: st.done ? C.olive : C.white, border: `2px solid ${st.done ? C.olive : C.border}`, color: C.cream2, fontSize: "0.7rem", fontWeight: 900 }}>{st.done ? "✓" : ""}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: "0.86rem", fontWeight: 800, color: C.ink, textDecoration: st.done ? "line-through" : "none" }}>{st.icon} {st.label}</div>
+                {!st.done && st.sub && <div style={{ fontSize: "0.72rem", color: C.inkL, fontWeight: 700, marginTop: 1 }}>{st.sub}</div>}
+              </div>
+              {!st.done && st.onGo && <div style={{ color: C.inkL, fontWeight: 900 }}>›</div>}
+            </div>
+            {st.id === "invite" && !st.done && <InvitePartnerBox user={user} />}
+          </div>
+        );
+      })}
+      <div onClick={onHide} style={{ fontSize: "0.72rem", fontWeight: 700, color: C.inkL, textAlign: "center", cursor: "pointer", marginTop: 4 }}>Ocultar guía</div>
+    </div>
+  );
+}
+
+function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pandaBubble, onPet, onBuy, onWater, onBuyAccessory, user, onClaimDailyTip, onGoTab, onStartTest, testScores, testDue, testStatus, partnerConnected, conoce, exDone, lessonsDone }) {
   const [shopTab, setShopTab] = useState("plantas");
   const [showJuegos, setShowJuegos] = useState(false);
+  const shopRef = useRef(null);
+  const openConsejoRef = useRef(null);
+  const ownerKey = user?.code || user?.email || "guest";
+  const guideOffKey = `mochi_primeros_pasos_off_${ownerKey}`;
+  const [guideOff, setGuideOff] = useState(() => !!ls.get(guideOffKey));
+  const [consejoRead, setConsejoRead] = useState(() => !!ls.get(`mochi_consejo_claimed_${ownerKey}`));
+  const { nameA, nameB } = getCoupleNames(user);
+  const partnerName = user?.isOwner === false ? nameA : nameB;
+  const isGuest = user?.isGuest || !user?.code;
+
+  const testStep = testStatus?.mine && testStatus?.other
+    ? { label: "¡Sus resultados del test están listos!", sub: "Toca para verlos" }
+    : testStatus?.mine
+    ? { label: "Test de pareja", sub: `Ya contestaste · falta ${partnerName}` }
+    : { label: "Hagan su test de pareja", sub: "5 preguntas rápidas" };
+  const steps = [
+    ...(isGuest ? [] : [{ id: "invite", icon: "💌", label: `Invita a ${partnerName === "Persona B" || partnerName === "Persona A" ? "tu pareja" : partnerName}`, sub: "Comparte el código para conectar sus cuentas", done: !!partnerConnected }]),
+    { id: "consejo", icon: "💡", label: "Lee tu primer consejo del día", sub: "+15 bambú", done: consejoRead, onGo: () => openConsejoRef.current?.() },
+    { id: "conoce", icon: "💬", label: "Responde una pregunta en Conózcanse", sub: "+15 bambú", done: Object.keys(conoce || {}).length > 0, onGo: () => onGoTab?.("conocete") },
+    { id: "ejerc", icon: "⭐", label: "Hagan su primer ejercicio", sub: "+15 bambú", done: Object.keys(exDone || {}).length > 0 || Object.keys(lessonsDone || {}).length > 0, onGo: () => onGoTab?.("ejerc") },
+    { id: "planta", icon: "🌱", label: "Planta algo en su jardín", sub: "Usa el bambú en la tienda", done: Object.values(garden || {}).some(Boolean), onGo: () => shopRef.current?.scrollIntoView({ behavior: "smooth" }) },
+    { id: "test", icon: "📊", label: testStep.label, sub: testStep.sub, done: !!testScores, onGo: (testStatus?.mine && !testStatus?.other) ? undefined : onStartTest },
+  ];
+  const showGuide = !guideOff && steps.some(st => !st.done);
+  const hideGuide = () => { ls.set(guideOffKey, true); setGuideOff(true); };
+  const resultsReady = !testScores && testStatus?.mine && testStatus?.other;
   const cats = [{id:"plantas",label:"🌿 Plantas"},{id:"agua",label:"🐟 Agua"},{id:"cielo",label:"☁️ Cielo"},{id:"deco",label:"🏮 Deco"},{id:"especial",label:"✨ Especiales"},{id:"accesorios",label:"🐼 Pandas"}];
   const shopItems = (shopTab === "accesorios"
     ? PANDA_ACCESSORIES
@@ -2142,8 +2219,30 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
         </div>
       </div>
 
+      {/* Hoy: guía, avisos y consejo */}
+      <div style={{ marginTop: 14 }}>
+        {showGuide && <PrimerosPasos steps={steps} user={user} partnerName={partnerName} onHide={hideGuide} />}
+        {!showGuide && !isGuest && partnerConnected === false && (
+          <div style={{ margin: "0 14px 12px", background: C.white, borderRadius: 16, padding: "12px 14px", border: `1.5px solid ${C.border}` }}>
+            <div style={{ fontSize: "0.84rem", fontWeight: 800, color: C.ink, marginBottom: 8 }}>🐾 {partnerName} aún no se une a su jardín</div>
+            <InvitePartnerBox user={user} compact />
+          </div>
+        )}
+        {((!showGuide && resultsReady) || (testScores && testDue)) && (
+          <div onClick={onStartTest} style={{ margin: "0 14px 12px", background: C.cream, borderRadius: 16, padding: "12px 14px", border: `1.5px solid ${C.olive}`, cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ fontSize: "1.5rem" }}>📊</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: "0.88rem", fontWeight: 800, color: C.dark }}>{resultsReady ? "¡Sus resultados del test están listos!" : "Toca repetir su test de pareja"}</div>
+              <div style={{ fontSize: "0.72rem", fontWeight: 700, color: C.inkL }}>{resultsReady ? "Toca para verlos" : "Test de pareja · 5 preguntas"}</div>
+            </div>
+            <div style={{ color: C.inkL, fontWeight: 900 }}>›</div>
+          </div>
+        )}
+        <ConsejoDelDiaSection user={user} openRef={openConsejoRef} onClaimReward={() => { setConsejoRead(true); onClaimDailyTip?.(); }} />
+      </div>
+
       {/* Shop */}
-      <div style={{ background:C.white, borderRadius:"22px 22px 0 0", border:`1.5px solid ${C.border}`, boxShadow:`0 -3px 0 ${C.border}`, marginTop:10 }}>
+      <div ref={shopRef} style={{ background:C.white, borderRadius:"22px 22px 0 0", border:`1.5px solid ${C.border}`, boxShadow:`0 -3px 0 ${C.border}`, marginTop:10 }}>
         <div style={{ padding:"16px 16px 0" }}>
           <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"1.1rem", color:C.dark }}>Tienda del jardín</div>
         </div>
@@ -2211,7 +2310,8 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
 function Login({ onLogin }) {
   const [tab, setTab] = useState("login");
   const [email, setEmail] = useState(""); const [pass, setPass] = useState("");
-  const [nameA, setNameA] = useState(""); const [nameB, setNameB] = useState(""); const [durN, setDurN] = useState(""); const [durU, setDurU] = useState("meses");
+  const [nameA, setNameA] = useState(""); const [nameB, setNameB] = useState("");
+  const [guestOpen, setGuestOpen] = useState(false); const [guestA, setGuestA] = useState(""); const [guestB, setGuestB] = useState("");
   const [pCode, setPCode] = useState(""); const [pEmail, setPEmail] = useState(""); const [pPass, setPPass] = useState("");
   const [err, setErr] = useState("");
   const makeCode = () => "MO" + Math.random().toString(36).slice(2, 6).toUpperCase();
@@ -2322,7 +2422,7 @@ function Login({ onLogin }) {
     _pendingLocalAuth = true;
     let createdAuthUser = false;
     try {
-      const since = durN ? `Juntos ${durN} ${durU}` : "Juntos desde hoy";
+      const since = "Juntos desde hoy";
       const cred = await fbRegister(cleanEmail, pass);
       createdAuthUser = true;
       const uid = cred.user.uid;
@@ -2502,7 +2602,19 @@ function Login({ onLogin }) {
               </div>
             ))}
           </div>
-          <div onClick={() => onLogin({ isGuest: true, names: "Persona A & Persona B", since: "Siempre juntos" }, false)} style={{ fontSize: "0.76rem", fontWeight: 700, color: C.inkL, textAlign: "center", cursor: "pointer", textDecoration: "underline" }}>Continuar sin cuenta</div>
+          {!guestOpen ? (
+            <div onClick={() => setGuestOpen(true)} style={{ fontSize: "0.76rem", fontWeight: 700, color: C.inkL, textAlign: "center", cursor: "pointer", textDecoration: "underline" }}>Probar sin cuenta</div>
+          ) : (
+            <div style={{ background: C.cream, borderRadius: 14, padding: 12, border: `1.5px solid ${C.border}` }}>
+              <div style={{ fontSize: "0.76rem", color: C.inkM, fontWeight: 700, textAlign: "center", marginBottom: 8 }}>¿Cómo se llaman?</div>
+              <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                <Inp value={guestA} onChange={setGuestA} placeholder="Tu nombre" />
+                <Inp value={guestB} onChange={setGuestB} placeholder="Tu pareja" />
+              </div>
+              <Btn onClick={() => onLogin({ isGuest: true, names: `${guestA.trim() || "Persona A"} & ${guestB.trim() || "Persona B"}`, since: "Siempre juntos" }, true)} variant="sand" style={{ width: "100%", fontSize: "0.85rem" }}>Entrar</Btn>
+              <div style={{ fontSize: "0.68rem", color: C.inkL, fontWeight: 700, textAlign: "center", marginTop: 6 }}>Sin cuenta, el progreso solo se guarda en este dispositivo.</div>
+            </div>
+          )}
         </>}
         {tab === "register" && newUser && (() => {
           const inviteText = `¡Únete a nuestro jardín en Mochi! 🐼🌿 Usa este código al entrar en "Tengo código": ${newUser.code}`;
@@ -2530,14 +2642,7 @@ function Login({ onLogin }) {
           {[["Correo", email, setEmail, "tu@correo.com", "email"], ["Contraseña", pass, setPass, "Mínimo 6 caracteres", "password"]].map(([l, v, fn, ph, t]) => (
             <div key={l}><label style={LBL}>{l}</label><Inp value={v} onChange={fn} placeholder={ph} type={t} style={{ marginBottom: 10 }} /></div>
           ))}
-          <label style={LBL}>¿Cuánto tiempo llevan juntos?</label>
-          <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-            <input type="number" placeholder="Ej: 2" value={durN} onChange={e => setDurN(e.target.value)} style={{ flex: 1, border: `2px solid ${C.border}`, borderRadius: 12, padding: "10px", fontFamily: "'Nunito',sans-serif", fontSize: "0.9rem", outline: "none", color: C.ink, background: C.cream2 }} />
-            <select value={durU} onChange={e => setDurU(e.target.value)} style={{ flex: 1.3, border: `2px solid ${C.border}`, borderRadius: 12, padding: "10px", fontFamily: "'Nunito',sans-serif", fontSize: "0.88rem", outline: "none", color: C.ink, background: C.cream2 }}>
-              {["días", "semanas", "meses", "años"].map(u => <option key={u}>{u}</option>)}
-            </select>
-          </div>
-          <Btn onClick={doReg} style={{ width: "100%" }} disabled={loading}>{loading ? "Creando..." : "Crear cuenta 🌱"}</Btn>
+          <Btn onClick={doReg} style={{ width: "100%", marginTop: 6 }} disabled={loading}>{loading ? "Creando..." : "Crear cuenta 🌱"}</Btn>
         </>}
         {tab === "pair" && <>
           <div style={{ textAlign: "center", marginBottom: 16 }}><div style={{ fontSize: "1.8rem", marginBottom: 4 }}>🔗</div><div style={{ fontFamily: "'Baloo 2',sans-serif", color: C.dark, fontSize: "1.1rem" }}>Únete al jardín de tu pareja</div></div>
@@ -2891,7 +2996,6 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson, b
   const [ejTab, setEjTab] = useState("ejerc");
   const ex = EXERCISES.find(e => e.id === openId);
 
-  const skillLevels = useMemo(() => computeSkillLevels(exDone), [exDone]);
   const pathProgress = useMemo(() => getPathProgress(exDone), [exDone]);
   const chestState = useMemo(() => getChestState(exDone, exChestState), [exDone, exChestState]);
   const streak = useMemo(() => getExerciseStreak(exStreak), [exStreak]);
@@ -2949,7 +3053,7 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson, b
 
         {/* Minimal tabs */}
         <div style={{ display: "flex", gap: 6, padding: "12px 14px 0" }}>
-          {[["ejerc","Camino"],["skills","Habilidades"],["lecciones","Lecciones"]].map(([id,label]) => (
+          {[["ejerc","Camino"],["lecciones","Lecciones"]].map(([id,label]) => (
             <button key={id} onClick={() => setEjTab(id)}
               style={{
                 flex:1, padding:"8px 0", textAlign:"center", fontFamily:"'Baloo 2',sans-serif",
@@ -3019,27 +3123,6 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson, b
                       })}
                     </div>
                   )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* SKILLS TAB */}
-        {ejTab === "skills" && (
-          <div style={{ padding: "14px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            {Object.entries(EXERCISE_SKILLS).map(([skillKey, meta]) => {
-              const data = skillLevels[skillKey];
-              return (
-                <div key={skillKey} style={{ background: C.white, borderRadius: 16, padding: 14, border: `1.5px solid ${C.border}`, display: "flex", flexDirection: "column", gap: 8 }}>
-                  <div style={{ fontSize: "1.6rem" }}>{meta.emoji}</div>
-                  <div>
-                    <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "0.9rem", color: C.dark }}>{meta.label}</div>
-                    <div style={{ fontSize: "0.7rem", color: C.inkL }}>Nv. {data.level}</div>
-                  </div>
-                  <div style={{ background: C.cream, borderRadius: 50, height: 5, overflow: "hidden" }}>
-                    <div style={{ width: `${Math.min(100, ((data.xp - data.prevXp) / Math.max(1, data.nextXp - data.prevXp)) * 100)}%`, height: "100%", background: meta.color, borderRadius: 50 }} />
-                  </div>
                 </div>
               );
             })}
@@ -3911,7 +3994,7 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
       <div style={{ background: C.olive, padding: "48px 20px 24px", textAlign: "center" }}>
-        <h1 style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.9rem", color: C.cream2, margin: 0 }}>La Burbuja</h1>
+        <h1 style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.9rem", color: C.cream2, margin: 0 }}>Acuerdos 🫧</h1>
         <p style={{ color: `${C.cream}88`, fontSize: "0.86rem", fontWeight: 600, margin: "4px 0 0" }}>Sus reglas, acuerdos y mundo compartido · +10 bambú c/u</p>
       </div>
       <div style={{ background: C.cream, borderRadius: 18, margin: "14px 14px 8px", padding: 16, border: `1.5px solid ${C.border}`, boxShadow: `0 3px 0 ${C.border}` }}>
@@ -4266,9 +4349,13 @@ function StreakSection({ streakInfo, streakAnalytics, onUpdateSettings, user }) 
   );
 }
 
-function ConsejoDelDiaSection({ user, onClaimReward }) {
+function ConsejoDelDiaSection({ user, onClaimReward, openRef }) {
   const ownerKey = user?.code || user?.email || "guest";
   const favKey = `mochi_consejos_fav_${ownerKey}`;
+  const claimedKey = `mochi_consejo_claimed_${ownerKey}`;
+  const retoKey = `mochi_consejo_reto_${ownerKey}`;
+  const [claimedDay, setClaimedDay] = useState(() => ls.get(claimedKey));
+  const [reto, setReto] = useState(() => ls.get(retoKey)); // { day, id, done }
   const [offset, setOffset] = useState(0);
   const [open, setOpen] = useState(false);
   const [showFavs, setShowFavs] = useState(false);
@@ -4302,9 +4389,23 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
     if (selectedFav?.id === id) setSelectedFav(null);
   };
 
+  // El bambú del consejo se gana una vez al día, no cada vez que se abre
   const handleOpen = () => {
     setOpen(true);
-    onClaimReward?.();
+    if (claimedDay !== dayKey) {
+      ls.set(claimedKey, dayKey);
+      setClaimedDay(dayKey);
+      onClaimReward?.();
+    }
+  };
+  if (openRef) openRef.current = handleOpen;
+
+  const saveReto = (next) => { setReto(next); ls.set(retoKey, next); };
+  const retoHoy = reto?.day === dayKey ? reto : null;
+  const retoConsejo = retoHoy ? CONSEJOS_DIARIOS.find(c => c.id === retoHoy.id) : null;
+  const acceptReto = () => {
+    saveReto({ day: dayKey, id: consejo.id, done: false });
+    showToast("Reto guardado. Lo verás en el jardín.");
   };
 
   const handleClose = () => {
@@ -4335,9 +4436,22 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
           gap: 8,
         }}
       >
-        <span>💡 Consejo del Día · +15 bambú</span>
+        <span>{claimedDay === dayKey ? "💡 Consejo del Día · leído ✓" : "💡 Consejo del Día · +15 bambú"}</span>
         <span style={{ fontSize: "0.9rem" }}>🐼</span>
       </button>
+
+      {/* Reto aceptado desde "Qué puedes hacer hoy" */}
+      {retoConsejo && (
+        <div style={{ marginTop: 8, background: "#f0f8ff", borderRadius: 14, padding: "12px 14px", border: "1.5px solid #d0e0f0" }}>
+          <div style={{ fontSize: "0.72rem", fontWeight: 800, color: "#4a6fa5", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.5px" }}>✨ Tu reto de hoy</div>
+          <div style={{ fontSize: "0.84rem", color: C.ink, lineHeight: 1.6, marginBottom: 10 }}>{retoConsejo.practica}</div>
+          {retoHoy.done ? (
+            <div style={{ fontSize: "0.8rem", fontWeight: 800, color: C.olive, textAlign: "center" }}>Hecho ✓</div>
+          ) : (
+            <Btn onClick={() => { saveReto({ ...retoHoy, done: true }); showToast("Reto completado ✓"); }} variant="olive" style={{ width: "100%", fontSize: "0.85rem" }}>Lo hice</Btn>
+          )}
+        </div>
+      )}
 
       {/* Botón para ver favoritos (solo si hay favoritos) */}
       {favs.length > 0 && (
@@ -4438,6 +4552,11 @@ function ConsejoDelDiaSection({ user, onClaimReward }) {
             <div style={{ background: "#f0f8ff", borderRadius: 14, padding: "14px 16px", marginBottom: 12, border: `1.5px solid #d0e0f0` }}>
               <div style={{ fontSize: "0.8rem", fontWeight: 800, color: "#4a6fa5", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>✨ Qué puedes hacer hoy</div>
               <div style={{ fontSize: "0.9rem", color: C.ink, lineHeight: 1.7 }}>{consejo.practica}</div>
+              {retoHoy?.id === consejo.id ? (
+                <div style={{ marginTop: 10, fontSize: "0.82rem", fontWeight: 800, color: "#4a6fa5", textAlign: "center" }}>Reto aceptado ✓</div>
+              ) : (
+                <button onClick={acceptReto} style={{ marginTop: 10, width: "100%", background: "#4a6fa5", color: C.white, border: "none", borderRadius: 12, padding: "10px", fontFamily: "'Baloo 2',sans-serif", fontSize: "0.9rem", cursor: "pointer" }}>Lo haré hoy</button>
+              )}
             </div>
 
             {/* Quién lo dice */}
@@ -5368,15 +5487,16 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
           </div>
         ))}
       </div>
-      <div style={{ margin: "0 14px 12px", background: C.white, borderRadius: 16, padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
-        <div>
-          <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.05rem", color: C.dark }}>Racha de gratitud 💛</div>
-          <div style={{ fontSize: "0.75rem", color: C.inkL, fontWeight: 700, marginTop: 2 }}>
-            {gratitudeStreak > 0 ? `${gratitudeStreak} días seguidos agradeciendo` : "Agradece hoy para empezar tu racha"}
-          </div>
-        </div>
-        <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.9rem", color: "#c05068", minWidth: 36, textAlign: "right" }}>{gratitudeStreak}</div>
+      {/* ── MOMENTOS ── */}
+      <div style={{ margin:"0 14px 12px" }}>
+        <MomentosSection user={user} momentos={momentos} onAddMomento={onAddMomento} />
       </div>
+
+      {/* ── GRATITUD ── */}
+      <div style={{ margin:"0 14px 12px" }}>
+        <GratitudSection user={user} gratitud={gratitud} onAddGratitud={onAddGratitud} gratitudeStreak={gratitudeStreak} />
+      </div>
+
       <div style={{ margin:"0 14px 12px", background:C.white, borderRadius:18, padding:16, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}` }}>
         <button onClick={() => setShowLoveModal(true)} style={{ width:"100%", background:"#c05068", color:C.cream2, border:"none", borderRadius:12, padding:"12px 16px", fontFamily:"'Baloo 2',sans-serif", fontSize:"1rem", cursor:"pointer", boxShadow:"0 3px 0 rgba(0,0,0,0.18)" }}>
           Manda un mensaje de amor
@@ -5398,15 +5518,9 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
         </div>
       </div>
 
-      <ConsejoDelDiaSection user={user} onClaimReward={onClaimDailyTip} />
-
-      {/* ── BAÚL DE GRATITUD ── */}
+      {/* ── GALERÍA DE LOGROS ── */}
       <div style={{ margin:"0 14px 12px" }}>
-        <BaulSection
-          gratitud={gratitud} momentos={momentos}
-          onAddGratitud={onAddGratitud} onAddMomento={onAddMomento}
-          user={user}
-        />
+        <LogrosSection exDone={exDone} />
       </div>
 
       {/* ── DIARIO PERSONAL ── */}
@@ -5611,40 +5725,20 @@ select { appearance: none; }
 `;
 
 const OB = [
-  { 
-    title: "Bienvenidos a Mochi 🐼", 
-    body: "Un espacio privado para que su amor crezca. Basada en 40 años de investigación de parejas por el psicólogo John Gottman.",
+  {
+    title: "Bienvenidos a Mochi 🐼",
+    body: "Un espacio privado para ustedes dos, basado en 40 años de investigación del psicólogo John Gottman sobre parejas.",
     icon: "🐼"
   },
-  { 
-    title: "¿Cómo funciona?", 
-    body: "Cada día pueden: leer un consejo de pareja, hacer un ejercicio juntos, responder preguntas para conocerse mejor, y construir acuerdos en pareja.",
-    icon: "💡"
-  },
-  { 
-    title: "Ganen bambú juntos 🌿", 
-    body: "Cada interacción les da bambú: +15 por ejercicios, +15 por preguntas, +10 por acuerdos, +10 por lecciones. ¡Usen el bambú para decorar su jardín!",
+  {
+    title: "Ganen bambú juntos 🌿",
+    body: "Cada consejo, pregunta o ejercicio les da bambú. Con él decoran su jardín.",
     icon: "🌿"
   },
-  { 
-    title: "Mantengan su racha 🔥", 
-    body: "Conecten cada día para mantener su racha activa. Cuantos más días seguidos, más bambú extra ganan. ¡No dejen que se apague!",
-    icon: "🔥"
-  },
-  { 
-    title: "Conéctense con un código", 
-    body: "Uno de ustedes crea una cuenta y comparte el código con su pareja. Así sus respuestas, mensajes y progreso se sincronizan.",
-    icon: "🔗"
-  },
-  { 
-    title: "Todo queda entre ustedes", 
+  {
+    title: "Todo queda entre ustedes 🔒",
     body: "Sus respuestas, mensajes y acuerdos son privados. Solo ustedes dos pueden verlos. Sin publicidad, sin vender datos.",
     icon: "🔒"
-  },
-  { 
-    title: "¡Listos para empezar!", 
-    body: "Hagan su primer ejercicio juntos y siembren la primera semilla en su jardín. Su relación vale la inversión.",
-    icon: "🌱"
   },
 ];
 
@@ -5772,6 +5866,28 @@ const DAILY_LESSONS = [
       "/lessons/four_horsemen_cards/4.jpg",
       "/lessons/four_horsemen_cards/5.jpg",
       "/lessons/four_horsemen_cards/6.jpg"
+    ] },
+
+  { id:"de_escalation", emoji:"🕊", title:"Evita que una Discusión se Salga de Control",
+    tag:"Gottman · EFT",
+    fullCardImages: true,
+    intro:"Los desacuerdos son normales. El problema es cuando se convierten en discusiones o peleas llenas de gritos y acusaciones. Casi siempre hay señales antes de que eso pase. Aprender a reconocerlas y a detenerlas a tiempo es una de las habilidades más valiosas en una pareja.",
+    sections:[
+      { title:"1. Empezar suave", icon:"🌱", body:"La forma en que empieza una discusión predice cómo va a terminar. Si arrancas con un ataque, tu pareja se va a defender. Habla de lo que sientes y lo que necesitas: 'Me siento cansada con todo lo de la casa, ¿me ayudas con la cena hoy?'" },
+      { title:"2. Un tema a la vez", icon:"📌", body:"Cada tema nuevo hace la discusión más grande y más difícil de resolver. Elijan de qué están hablando hoy y quédense ahí. Lo demás también importa, pero puede esperar a otro momento." },
+      { title:"3. Escuchar para entender, no para responder", icon:"👂", body:"Repite lo que entendiste antes de contestar: 'Lo que escucho es que te sentiste ignorado cuando llegué tarde, ¿es así?'. Sentirse escuchado baja muchísimo la tensión." },
+      { title:"4. Reconocer cuando el cuerpo ya no puede", icon:"💓", body:"El corazón se acelera, sentimos calor y ya no podemos pensar con claridad. Díselo a tu pareja con calma: 'Me estoy alterando mucho y no quiero lastimarte, ¿podemos seguir en un rato?'" },
+      { title:"5. El enemigo es el ciclo, no tu pareja", icon:"🔄", body:"Muchas peleas se repiten como un baile: uno reclama y persigue, el otro se cierra y se aleja. Nómbrenlo juntos: 'Ya estamos otra vez en nuestro baile'. Son ustedes dos contra el problema." },
+    ],
+    reflect:"¿Cómo suelen empezar sus discusiones? ¿Qué señales notan en su cuerpo cuando una pelea está por salirse de control? ¿Qué palabra o gesto podrían usar para avisarse que necesitan bajarle?",
+    illustrations:[
+      "/lessons/de_escalation_cards/1.jpg",
+      "/lessons/de_escalation_cards/2.jpg",
+      "/lessons/de_escalation_cards/3.jpg",
+      "/lessons/de_escalation_cards/4.jpg",
+      "/lessons/de_escalation_cards/5.jpg",
+      "/lessons/de_escalation_cards/6.jpg",
+      "/lessons/de_escalation_cards/7.jpg"
     ] },
 
   { id:"repair_attempts", emoji:"🛠", title:"Cómo Reparar Después de una Pelea",
@@ -5991,7 +6107,7 @@ const DAILY_LESSONS = [
 // ═══════════════════════════════════════════════
 // RELATIONSHIP TEST SCREEN
 // ═══════════════════════════════════════════════
-function RelTest({ user, onDone }) {
+function RelTest({ user, onDone, onLater }) {
   const nameParts = String(user?.names || "")
     .split("&")
     .map((s) => s.trim())
@@ -6109,9 +6225,10 @@ function RelTest({ user, onDone }) {
               else { showToast("Tu código: "+c); }
             }} variant="sand" style={{ width:"100%" }}>Copiar código 📋</Btn>
         </div>
-        <div style={{ fontSize:"0.75rem", color:C.inkL, marginTop:20, textAlign:"center" }}>
-          La pantalla se actualizará automáticamente cuando {otherName} termine ✨
+        <div style={{ fontSize:"0.75rem", color:C.inkL, marginTop:20, textAlign:"center", maxWidth:300 }}>
+          Cuando {otherName} termine, verás los resultados en el jardín.
         </div>
+        {onLater && <Btn onClick={onLater} style={{ width:"100%", maxWidth:340, marginTop:16 }}>Ir al jardín mientras tanto</Btn>}
       </div>
     );
   }
@@ -6126,8 +6243,11 @@ function RelTest({ user, onDone }) {
               background: i < step ? C.olive : i === step ? C.oliveL : "rgba(255,255,255,0.2)" }}/>
           ))}
         </div>
-        <div style={{ fontSize:"0.72rem", color:`${C.cream}88`, fontWeight:800, letterSpacing:"0.6px" }}>
-          ÁREA {step+1} DE {TEST_AREAS.length} · {myName.toUpperCase()}
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+          <div style={{ fontSize:"0.72rem", color:`${C.cream}88`, fontWeight:800, letterSpacing:"0.6px" }}>
+            ÁREA {step+1} DE {TEST_AREAS.length} · {myName.toUpperCase()}
+          </div>
+          {onLater && <div onClick={onLater} style={{ fontSize:"0.72rem", color:`${C.cream}aa`, fontWeight:800, cursor:"pointer" }}>Hacerlo después →</div>}
         </div>
       </div>
 
@@ -7057,11 +7177,19 @@ function JuegoScrabble({ onBack, user }) {
 
 const NAV = [
   { id: "jardin", emoji: "🌿", label: "Jardín" },
-  { id: "ejerc", emoji: "⭐", label: "Ejerc." },
+  { id: "ejerc", emoji: "⭐", label: "Ejercicios" },
   { id: "conocete", emoji: "💬", label: "Conózcanse" },
-  { id: "burbuja", emoji: "🫧", label: "Burbuja" },
+  { id: "burbuja", emoji: "🫧", label: "Acuerdos" },
   { id: "perfil", emoji: "👤", label: "Nosotros" },
 ];
+
+// Lo que Mochi explica la primera vez que se abre cada pestaña
+const TAB_TIPS = {
+  ejerc: "Ejercicios y lecciones cortas para hacer juntos.",
+  conocete: "Preguntas para conocerse mejor. Cada uno responde por su lado y después ven la respuesta del otro.",
+  burbuja: "Aquí arman sus acuerdos: cada uno escribe su parte y después la ajustan juntos.",
+  perfil: "Momentos, gratitud, mensajes de amor y tu diario privado.",
+};
 
 const Leaf = ({ size = 20, color = "#7fb069" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" style={{ display: "inline-block" }}>
@@ -7231,6 +7359,15 @@ export default function App() {
     celebrationText: "",
   });
   const [showDailyGratitude, setShowDailyGratitude] = useState(false);
+  const [testDue, setTestDue] = useState(false);
+  const [testStatus, setTestStatus] = useState({ mine: false, other: false });
+  const [partnerConnected, setPartnerConnected] = useState(null); // null = aún no se sabe
+  const [seenTabTips, setSeenTabTips] = useState(() => ls.get("mochi_tab_tips_seen") || {});
+  const dismissTabTip = (id) => {
+    const next = { ...seenTabTips, [id]: true };
+    setSeenTabTips(next);
+    ls.set("mochi_tab_tips_seen", next);
+  };
   const happyTimer = useRef(null);
   const screenRef = useRef("login");
   const streakAnalytics = useMemo(() => computeStreakAnalytics(streakInteractions), [streakInteractions]);
@@ -7388,11 +7525,15 @@ export default function App() {
     const shouldShowTest = !s?.testScores || daysSinceLastTest >= 7 || streakFromLoaded === 6;
     const hasCompletedTest = !!s?.testScores && !shouldShowTest;
     
+    // El test ya no bloquea la entrada: si toca hacerlo, se sugiere desde el jardín
+    setTestDue(!hasCompletedTest);
+    if (isNew) ls.set(`mochi_first_day_${resolvedUser.email || resolvedUser.uid || "guest"}`, getDateKeyLocal());
+
     if (!isNew && introFlowOpen) {
       setScreen(screenRef.current);
       return;
     }
-    setScreen(isNew ? "onboarding" : (hasCompletedTest ? "main" : "reltest"));
+    setScreen(isNew ? "onboarding" : "main");
   };
 
   // Keep messages in sync whenever user/code changes
@@ -7615,6 +7756,8 @@ export default function App() {
     const dismissedKey = `mochi_gratitude_dismissed_${user?.email || user?.uid || "guest"}`;
     const dismissed = ls.get(dismissedKey);
     if (dismissed === today) return;
+    // El primer día ya hubo suficientes pantallas de bienvenida
+    if (ls.get(`mochi_first_day_${user?.email || user?.uid || "guest"}`) === today) return;
 
     const doneViaStreak = streakInteractions.some(i => i.date === today && i.type === "gratitude" && i.completed);
     const doneViaEntries = gratitud.some(g => {
@@ -7627,6 +7770,21 @@ export default function App() {
       return () => clearTimeout(t);
     }
   }, [user, screen, gratitud, streakInteractions]);
+
+  // ─── PAREJA CONECTADA Y ESTADO DEL TEST (para la guía del jardín) ───
+  useEffect(() => {
+    if (!user?.code || user?.isGuest) { setPartnerConnected(false); return; }
+    const unsub = fbListenCode(user.code, ci => setPartnerConnected(!!(ci?.partnerUid && ci?.ownerUid)));
+    return () => unsub();
+  }, [user?.code, user?.isGuest]);
+
+  useEffect(() => {
+    if (!user?.code || user?.isGuest) return;
+    const myKey = user?.isOwner !== false ? "owner" : "partner";
+    const otherKey = myKey === "owner" ? "partner" : "owner";
+    const unsub = fbListenTest(user.code, data => setTestStatus({ mine: data?.[`${myKey}Done`] === true, other: data?.[`${otherKey}Done`] === true }));
+    return () => unsub();
+  }, [user?.code, user?.isGuest, user?.isOwner]);
 
   // ─── CARRIL "YO": persistencia privada + racha personal ───
   const yoKey = user?.email || user?.uid || "guest";
@@ -7906,6 +8064,7 @@ export default function App() {
 
   const finishTest = (scores) => {
     const now = new Date().toISOString();
+    setTestDue(false);
     setTestScores(scores);
     setLastTestDate(now);
     save(null, { bamboo, happiness, water, garden, accessories, exDone, messages, conoce, burbuja, coupleInfo, lastVisit, testScores: scores, lastTestDate: now, lessonsDone, gratitud, momentos });
@@ -8462,7 +8621,7 @@ export default function App() {
   };
 
   if (screen === "login") return <><style>{STYLES}</style><Login onLogin={afterLogin}/></>;
-  if (screen === "onboarding") return <><style>{STYLES}</style><Onboarding onDone={()=>setScreen("reltest")}/></>;
+  if (screen === "onboarding") return <><style>{STYLES}</style><Onboarding onDone={()=>setScreen("main")}/></>;
   const relTestFallback = (
     <div style={{ minHeight:"100vh", background:C.sandL, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"24px 20px", fontFamily:"'Nunito',sans-serif" }}>
       <div style={{ fontFamily:"'Baloo 2',sans-serif", color:C.dark, fontSize:"1.2rem", marginBottom:8 }}>Hubo un error en el test</div>
@@ -8471,14 +8630,13 @@ export default function App() {
     </div>
   );
 
-  if (screen === "reltest") return <><style>{STYLES}</style><SectionErrorBoundary fallback={relTestFallback}><RelTest user={user} onDone={finishTest}/></SectionErrorBoundary></>;
-  if (user && !user?.isGuest && user?.code && !testScores) return <><style>{STYLES}</style><SectionErrorBoundary fallback={relTestFallback}><RelTest user={user} onDone={finishTest}/></SectionErrorBoundary></>;
+  if (screen === "reltest") return <><style>{STYLES}</style><SectionErrorBoundary fallback={relTestFallback}><RelTest user={user} onDone={finishTest} onLater={() => setScreen("main")}/></SectionErrorBoundary></>;
 
   return (
     <div style={{ fontFamily:"'Nunito',sans-serif", maxWidth:480, margin:"0 auto", minHeight:"100vh", background:C.sandL, position:"relative" }}>
       <style>{STYLES}</style>
       <div style={{ paddingBottom:72 }}>
-        {tab==="jardin" && <Jardin bamboo={bamboo} happiness={happiness} water={water} garden={garden} accessories={accessories} mochiHappy={mochiHappy} pandaBubble={pandaBubble} onPet={petMochi} onBuy={buyItem} onWater={waterGarden} onBuyAccessory={buyAccessory} user={user}/>}
+        {tab==="jardin" && <Jardin bamboo={bamboo} happiness={happiness} water={water} garden={garden} accessories={accessories} mochiHappy={mochiHappy} pandaBubble={pandaBubble} onPet={petMochi} onBuy={buyItem} onWater={waterGarden} onBuyAccessory={buyAccessory} user={user} onClaimDailyTip={claimDailyTip} onGoTab={setTab} onStartTest={() => setScreen("reltest")} testScores={testScores} testDue={testDue} testStatus={testStatus} partnerConnected={partnerConnected} conoce={conoce} exDone={exDone} lessonsDone={lessonsDone}/>}
         {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson} bamboo={bamboo} exChestState={exChestState} exStreak={exStreak} onGoToGarden={() => setTab("jardin")}/>}
         {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user} streakInfo={streakData} onDailySeedAnswer={submitDailySeed}/>}
         {tab==="burbuja" && <Burbuja burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} user={user}/>}
@@ -8515,6 +8673,15 @@ export default function App() {
           );
         })}
       </div>
+      {TAB_TIPS[tab] && !seenTabTips[tab] && (
+        <div style={{ position:"fixed", bottom:80, left:"50%", transform:"translateX(-50%)", width:"calc(100% - 28px)", maxWidth:452, background:C.white, border:`1.5px solid ${C.olive}`, borderRadius:16, padding:"12px 14px", boxShadow:"0 6px 20px rgba(0,0,0,0.18)", zIndex:1001, display:"flex", gap:10, alignItems:"flex-start", animation:"fadeIn 0.3s ease" }}>
+          <div style={{ fontSize:"1.6rem" }}>🐼</div>
+          <div style={{ flex:1 }}>
+            <div style={{ fontSize:"0.84rem", color:C.ink, lineHeight:1.55, fontWeight:700 }}>{TAB_TIPS[tab]}</div>
+            <div onClick={() => dismissTabTip(tab)} style={{ marginTop:8, fontSize:"0.8rem", fontWeight:800, color:C.olive, cursor:"pointer" }}>Entendido ✓</div>
+          </div>
+        </div>
+      )}
       <Toast msg={toastMsg}/>
       {showDailyGratitude && (
         <DailyGratitudeModal
@@ -8530,22 +8697,44 @@ export default function App() {
 // ═══════════════════════════════════════════════
 // BAUL SECTION — embedded in Perfil
 // ═══════════════════════════════════════════════
-function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) {
+// ─── Helpers compartidos por Momentos y Gratitud ───
+const getEntryTime = (entry) => {
+  if (entry?.createdAt?.toDate) return entry.createdAt.toDate().getTime();
+  if (entry?.createdAt?.seconds) return entry.createdAt.seconds * 1000;
+  if (entry?.time) return new Date(entry.time).getTime();
+  return 0;
+};
+
+function AllEntriesModal({ title, subtitle, onClose, children }) {
+  return (
+    <div style={{ position:"fixed", inset:0, background:"rgba(15,25,15,0.65)", zIndex:6000, display:"flex", alignItems:"flex-end" }} onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{ background:C.sandL, borderRadius:"22px 22px 0 0", width:"100%", maxHeight:"85vh", overflowY:"auto" }}>
+        <div style={{ background:C.dark, padding:"16px 18px 18px", borderRadius:"22px 22px 0 0" }}>
+          <div style={{ width:34, height:5, background:"rgba(255,255,255,0.2)", borderRadius:50, margin:"0 auto 12px" }}/>
+          <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"1.2rem", color:C.cream2 }}>{title}</div>
+          <div style={{ fontSize:"0.75rem", color:`${C.cream}88`, marginTop:3 }}>{subtitle}</div>
+        </div>
+        <div style={{ padding:"14px 16px 32px" }}>
+          {children}
+          <button onClick={onClose} style={{ width:"100%", marginTop:10, padding:"12px", background:C.dark, color:C.cream2, border:"none", borderRadius:14, fontFamily:"'Baloo 2',sans-serif", fontSize:"0.95rem", cursor:"pointer" }}>
+            Cerrar ✕
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
+// MOMENTOS — su historia de pareja
+// ═══════════════════════════════════════════════
+function MomentosSection({ user, momentos, onAddMomento }) {
   const nameA = user?.names ? user.names.split("&")[0].trim() : "Panda A";
   const nameB = user?.names ? user.names.split("&")[1]?.trim() || "Panda B" : "Panda B";
-  const [activeTab, setActiveTab] = useState("gratitud");
-  const [showGForm, setShowGForm] = useState(false);
-  const [showMForm, setShowMForm] = useState(false);
-  const [gText, setGText] = useState(""); const [gWho, setGWho] = useState("A");
+  const [showForm, setShowForm] = useState(false);
   const [mTitle, setMTitle] = useState(""); const [mText, setMText] = useState("");
-  const [showAllModal, setShowAllModal] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
-  const getEntryTime = (entry) => {
-    if (entry?.createdAt?.toDate) return entry.createdAt.toDate().getTime();
-    if (entry?.createdAt?.seconds) return entry.createdAt.seconds * 1000;
-    if (entry?.time) return new Date(entry.time).getTime();
-    return 0;
-  };
   const getAuthorLabel = (entry) => {
     if (entry?.authorName && entry.authorName !== "Tú") return entry.authorName;
     if (entry?.authorUid && user?.uid) {
@@ -8553,6 +8742,72 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
     }
     return nameA;
   };
+
+  const allMomentos = [...momentos].sort((a, b) => getEntryTime(b) - getEntryTime(a));
+  const recentMomentos = allMomentos.slice(0, 3);
+
+  const submit = () => { if (!mTitle.trim()||!mText.trim()) return; onAddMomento({ title:mTitle.trim(), text:mText.trim() }); setMTitle(""); setMText(""); setShowForm(false); };
+
+  const renderMomento = (m, i, big) => (
+    <div key={m.id||i} style={{ background:"#f2f6e6", borderRadius:12, padding:big ? "12px 14px" : "10px 14px", marginBottom:big ? 10 : 8, border:`1px solid #a8d48830` }}>
+      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
+        <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:big ? "0.9rem" : "0.88rem", color:C.dark }}>✨ {m.title}</div>
+        <div style={{ fontSize:"0.68rem", color:C.inkL, fontWeight:700 }}>{m.date}</div>
+      </div>
+      <div style={{ fontSize:big ? "0.88rem" : "0.85rem", color:C.inkM, lineHeight:1.65 }}>{m.text}</div>
+      <div style={{ fontSize:"0.68rem", color:C.inkL, marginTop:6, fontWeight:700 }}>
+        Por {getAuthorLabel(m)}
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ background:C.white, borderRadius:20, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}`, overflow:"hidden" }}>
+      <div style={{ background:C.dark, padding:"16px 18px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+        <div>
+          <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"1.2rem", color:C.cream2 }}>✨ Nuestros momentos</div>
+          <div style={{ fontSize:"0.75rem", color:`${C.cream}88`, fontWeight:700, marginTop:2 }}>Su historia de pareja, escrita por ustedes</div>
+        </div>
+        <div style={{ textAlign:"center", minWidth:44 }}>
+          <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"1.6rem", color:C.gold, lineHeight:1 }}>{momentos.length}</div>
+          <div style={{ fontSize:"0.62rem", color:`${C.cream}88`, fontWeight:700 }}>guardados</div>
+        </div>
+      </div>
+
+      <div style={{ padding:16 }}>
+        {!showForm
+          ? <button onClick={() => setShowForm(true)} style={{ width:"100%", background:C.olive, color:C.cream2, border:"none", borderRadius:12, padding:"12px 0", fontFamily:"'Baloo 2',sans-serif", fontSize:"1rem", cursor:"pointer", boxShadow:"0 3px 0 rgba(0,0,0,0.18)", marginBottom:12 }}>+ Guardar un momento</button>
+          : <div style={{ background:C.sandL, borderRadius:14, padding:14, marginBottom:12, border:`1.5px solid ${C.border}` }}>
+              <input value={mTitle} onChange={e => setMTitle(e.target.value)} placeholder="Título del momento" style={{ width:"100%", border:`2px solid ${C.border}`, borderRadius:10, padding:"9px 12px", fontFamily:"'Nunito',sans-serif", fontSize:"0.88rem", outline:"none", color:C.ink, background:C.cream2, marginBottom:8, boxSizing:"border-box" }}/>
+              <TA value={mText} onChange={setMText} placeholder="¿Qué pasó? ¿Cómo se sintieron?" rows={3} style={{ marginBottom:10 }}/>
+              <div style={{ display:"flex", gap:8 }}><Btn onClick={submit} style={{ flex:1 }}>Guardar ✨</Btn><Btn onClick={() => { setShowForm(false); setMTitle(""); setMText(""); }} variant="ghost" style={{ padding:"10px 12px" }}>✕</Btn></div>
+            </div>}
+        {momentos.length === 0
+          ? <div style={{ textAlign:"center", padding:"20px 0", color:C.inkL, fontSize:"0.84rem" }}>✨ Todavía no hay momentos guardados</div>
+          : recentMomentos.map((m,i) => renderMomento(m, i, false))}
+        {momentos.length > 3 && (
+          <button onClick={() => setShowAll(true)} style={{ width:"100%", marginTop:8, padding:"10px", background:C.cream, border:`1.5px solid ${C.border}`, borderRadius:12, fontFamily:"'Baloo 2',sans-serif", fontSize:"0.85rem", color:C.dark, cursor:"pointer" }}>
+            Ver todos ({momentos.length})
+          </button>
+        )}
+      </div>
+
+      {showAll && (
+        <AllEntriesModal title="✨ Todos los momentos" subtitle={`${allMomentos.length} momentos`} onClose={() => setShowAll(false)}>
+          {allMomentos.map((m,i) => renderMomento(m, i, true))}
+        </AllEntriesModal>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
+// GRATITUD — agradecimientos de tu pareja + racha
+// ═══════════════════════════════════════════════
+function GratitudSection({ user, gratitud, onAddGratitud, gratitudeStreak }) {
+  const [showForm, setShowForm] = useState(false);
+  const [gText, setGText] = useState("");
+  const [showAll, setShowAll] = useState(false);
 
   const myName = getMyName(user, "");
   const isFromMe = (entry) => {
@@ -8563,136 +8818,93 @@ function BaulSection({ user, gratitud, momentos, onAddGratitud, onAddMomento }) 
 
   const partnerGratitud = [...gratitud].filter(g => !isFromMe(g)).sort((a, b) => getEntryTime(b) - getEntryTime(a));
   const recentGratitud = partnerGratitud.slice(0, 3);
-  const recentMomentos = [...momentos].sort((a, b) => getEntryTime(b) - getEntryTime(a)).slice(0, 3);
 
-  const submitG = () => { if (!gText.trim()) return; onAddGratitud({ text:gText.trim() }); setGText(""); setShowGForm(false); };
-  const submitM = () => { if (!mTitle.trim()||!mText.trim()) return; onAddMomento({ title:mTitle.trim(), text:mText.trim() }); setMTitle(""); setMText(""); setShowMForm(false); };
+  const submit = () => { if (!gText.trim()) return; onAddGratitud({ text:gText.trim() }); setGText(""); setShowForm(false); };
 
-  const allGratitud = [...partnerGratitud];
-  const allMomentos = [...momentos].sort((a, b) => getEntryTime(b) - getEntryTime(a));
+  const renderGratitud = (g, i, big) => (
+    <div key={g.id||i} style={{ background:"#fffde8", borderRadius:12, padding:big ? "12px 14px" : "10px 14px", marginBottom:big ? 10 : 8, border:"1px solid #e8d84030" }}>
+      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
+        <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:big ? "0.85rem" : "0.8rem", color:C.dark }}>🐼 {g.authorName || g.name || "Tu pareja"}</div>
+        <div style={{ fontSize:"0.68rem", color:C.inkL, fontWeight:700 }}>{g.date}</div>
+      </div>
+      <div style={{ fontSize:big ? "0.9rem" : "0.86rem", color:C.inkM, lineHeight:1.6 }}>{g.text}</div>
+    </div>
+  );
 
   return (
     <div style={{ background:C.white, borderRadius:20, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}`, overflow:"hidden" }}>
-      {/* Tab bar */}
-      <div style={{ display:"flex", background:C.sandL, borderBottom:`1.5px solid ${C.border}` }}>
-        {[["gratitud","💛 Gratitud"],["momentos","✨ Momentos"]].map(([id,label]) => (
-          <div key={id} onClick={() => setActiveTab(id)}
-            style={{ flex:1, padding:"11px 0", textAlign:"center", fontFamily:"'Baloo 2',sans-serif",
-              fontSize:"0.88rem", cursor:"pointer",
-              background: activeTab===id ? C.white : "transparent",
-              color: activeTab===id ? C.dark : C.inkL,
-              borderBottom: activeTab===id ? `2.5px solid ${C.dark}` : "2.5px solid transparent",
-              transition:"all 0.15s" }}>
-            {label}
+      <div style={{ background:"#fff6dc", padding:"14px 18px", display:"flex", alignItems:"center", justifyContent:"space-between", borderBottom:`1.5px solid ${C.border}` }}>
+        <div>
+          <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"1.1rem", color:C.dark }}>💛 Gratitud</div>
+          <div style={{ fontSize:"0.75rem", color:C.inkL, fontWeight:700, marginTop:2 }}>
+            {gratitudeStreak > 0 ? `${gratitudeStreak} días seguidos agradeciendo` : "Agradece hoy para empezar tu racha"}
           </div>
-        ))}
+        </div>
+        <div style={{ textAlign:"center", minWidth:44 }}>
+          <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"1.6rem", color:"#c05068", lineHeight:1 }}>{gratitudeStreak}</div>
+          <div style={{ fontSize:"0.62rem", color:C.inkL, fontWeight:700 }}>racha</div>
+        </div>
       </div>
 
       <div style={{ padding:16 }}>
-        {activeTab === "gratitud" && (
-          <>
-            {!showGForm
-              ? <button onClick={() => setShowGForm(true)} style={{ width:"100%", background:C.dark, color:C.cream2, border:"none", borderRadius:12, padding:"11px 0", fontFamily:"'Baloo 2',sans-serif", fontSize:"0.95rem", cursor:"pointer", boxShadow:"0 3px 0 rgba(0,0,0,0.18)", marginBottom:12 }}>+ Anotar acto de bondad</button>
-              : <div style={{ background:C.sandL, borderRadius:14, padding:14, marginBottom:12, border:`1.5px solid ${C.border}` }}>
-                  <TA value={gText} onChange={setGText} placeholder="¿Qué le agradeces a tu pareja hoy?" rows={2} style={{ marginBottom:10 }}/>
-                  <div style={{ display:"flex", gap:8 }}><Btn onClick={submitG} style={{ flex:1 }}>Guardar 💛</Btn><Btn onClick={() => { setShowGForm(false); setGText(""); }} variant="ghost" style={{ padding:"10px 12px" }}>✕</Btn></div>
-                </div>}
-            {partnerGratitud.length === 0
-              ? <div style={{ textAlign:"center", padding:"20px 0", color:C.inkL, fontSize:"0.84rem" }}>💛 Aquí aparecerán los agradecimientos que te escriba tu pareja</div>
-              : recentGratitud.map((g,i) => (
-                <div key={g.id||i} style={{ background:"#fffde8", borderRadius:12, padding:"10px 14px", marginBottom:8, border:"1px solid #e8d84030" }}>
-                  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
-                    <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"0.8rem", color:C.dark }}>🐼 {g.authorName || g.name || "Tu pareja"}</div>
-                    <div style={{ fontSize:"0.68rem", color:C.inkL, fontWeight:700 }}>{g.date}</div>
-                  </div>
-                  <div style={{ fontSize:"0.86rem", color:C.inkM, lineHeight:1.6 }}>{g.text}</div>
-                </div>
-              ))}
-            {partnerGratitud.length > 3 && (
-              <button onClick={() => setShowAllModal(true)} style={{ width:"100%", marginTop:8, padding:"10px", background:C.cream, border:`1.5px solid ${C.border}`, borderRadius:12, fontFamily:"'Baloo 2',sans-serif", fontSize:"0.85rem", color:C.dark, cursor:"pointer" }}>
-                Ver todas ({partnerGratitud.length})
-              </button>
-            )}
-          </>
-        )}
-
-        {activeTab === "momentos" && (
-          <>
-            {!showMForm
-              ? <button onClick={() => setShowMForm(true)} style={{ width:"100%", background:C.dark, color:C.cream2, border:"none", borderRadius:12, padding:"11px 0", fontFamily:"'Baloo 2',sans-serif", fontSize:"0.95rem", cursor:"pointer", boxShadow:"0 3px 0 rgba(0,0,0,0.18)", marginBottom:12 }}>+ Guardar un momento</button>
-              : <div style={{ background:C.sandL, borderRadius:14, padding:14, marginBottom:12, border:`1.5px solid ${C.border}` }}>
-                  <input value={mTitle} onChange={e => setMTitle(e.target.value)} placeholder="Título del momento" style={{ width:"100%", border:`2px solid ${C.border}`, borderRadius:10, padding:"9px 12px", fontFamily:"'Nunito',sans-serif", fontSize:"0.88rem", outline:"none", color:C.ink, background:C.cream2, marginBottom:8, boxSizing:"border-box" }}/>
-                  <TA value={mText} onChange={setMText} placeholder="¿Qué pasó? ¿Cómo se sintieron?" rows={3} style={{ marginBottom:10 }}/>
-                  <div style={{ display:"flex", gap:8 }}><Btn onClick={submitM} style={{ flex:1 }}>Guardar ✨</Btn><Btn onClick={() => { setShowMForm(false); setMTitle(""); setMText(""); }} variant="ghost" style={{ padding:"10px 12px" }}>✕</Btn></div>
-                </div>}
-            {momentos.length === 0
-              ? <div style={{ textAlign:"center", padding:"20px 0", color:C.inkL, fontSize:"0.84rem" }}>✨ Todavía no hay momentos guardados</div>
-              : recentMomentos.map((m,i) => (
-                <div key={m.id||i} style={{ background:"#f2f6e6", borderRadius:12, padding:"10px 14px", marginBottom:8, border:`1px solid #a8d48830` }}>
-                  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
-                    <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"0.88rem", color:C.dark }}>✨ {m.title}</div>
-                    <div style={{ fontSize:"0.68rem", color:C.inkL, fontWeight:700 }}>{m.date}</div>
-                  </div>
-                  <div style={{ fontSize:"0.85rem", color:C.inkM, lineHeight:1.65 }}>{m.text}</div>
-                  <div style={{ fontSize:"0.68rem", color:C.inkL, marginTop:6, fontWeight:700 }}>
-                    Por {getAuthorLabel(m)}
-                  </div>
-                </div>
-              ))}
-            {momentos.length > 3 && (
-              <button onClick={() => setShowAllModal(true)} style={{ width:"100%", marginTop:8, padding:"10px", background:C.cream, border:`1.5px solid ${C.border}`, borderRadius:12, fontFamily:"'Baloo 2',sans-serif", fontSize:"0.85rem", color:C.dark, cursor:"pointer" }}>
-                Ver todos ({momentos.length})
-              </button>
-            )}
-          </>
+        {!showForm
+          ? <button onClick={() => setShowForm(true)} style={{ width:"100%", background:C.dark, color:C.cream2, border:"none", borderRadius:12, padding:"11px 0", fontFamily:"'Baloo 2',sans-serif", fontSize:"0.95rem", cursor:"pointer", boxShadow:"0 3px 0 rgba(0,0,0,0.18)", marginBottom:12 }}>+ Anotar acto de bondad</button>
+          : <div style={{ background:C.sandL, borderRadius:14, padding:14, marginBottom:12, border:`1.5px solid ${C.border}` }}>
+              <TA value={gText} onChange={setGText} placeholder="¿Qué le agradeces a tu pareja hoy?" rows={2} style={{ marginBottom:10 }}/>
+              <div style={{ display:"flex", gap:8 }}><Btn onClick={submit} style={{ flex:1 }}>Guardar 💛</Btn><Btn onClick={() => { setShowForm(false); setGText(""); }} variant="ghost" style={{ padding:"10px 12px" }}>✕</Btn></div>
+            </div>}
+        {partnerGratitud.length === 0
+          ? <div style={{ textAlign:"center", padding:"20px 0", color:C.inkL, fontSize:"0.84rem" }}>💛 Aquí aparecerán los agradecimientos que te escriba tu pareja</div>
+          : recentGratitud.map((g,i) => renderGratitud(g, i, false))}
+        {partnerGratitud.length > 3 && (
+          <button onClick={() => setShowAll(true)} style={{ width:"100%", marginTop:8, padding:"10px", background:C.cream, border:`1.5px solid ${C.border}`, borderRadius:12, fontFamily:"'Baloo 2',sans-serif", fontSize:"0.85rem", color:C.dark, cursor:"pointer" }}>
+            Ver todas ({partnerGratitud.length})
+          </button>
         )}
       </div>
 
-      {/* Modal para ver todos */}
-      {showAllModal && (
-        <div style={{ position:"fixed", inset:0, background:"rgba(15,25,15,0.65)", zIndex:6000, display:"flex", alignItems:"flex-end" }} onClick={() => setShowAllModal(false)}>
-          <div onClick={e => e.stopPropagation()} style={{ background:C.sandL, borderRadius:"22px 22px 0 0", width:"100%", maxHeight:"85vh", overflowY:"auto" }}>
-            <div style={{ background:C.dark, padding:"16px 18px 18px", borderRadius:"22px 22px 0 0" }}>
-              <div style={{ width:34, height:5, background:"rgba(255,255,255,0.2)", borderRadius:50, margin:"0 auto 12px" }}/>
-              <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"1.2rem", color:C.cream2 }}>
-                {activeTab === "gratitud" ? "💛 Todas las gratitudes" : "✨ Todos los momentos"}
-              </div>
-              <div style={{ fontSize:"0.75rem", color:`${C.cream}88`, marginTop:3 }}>
-                {activeTab === "gratitud" ? `${allGratitud.length} agradecimientos de tu pareja` : `${allMomentos.length} momentos`}
-              </div>
-            </div>
-            <div style={{ padding:"14px 16px 32px" }}>
-              {activeTab === "gratitud" ? (
-                allGratitud.map((g,i) => (
-                  <div key={g.id||i} style={{ background:"#fffde8", borderRadius:12, padding:"12px 14px", marginBottom:10, border:"1px solid #e8d84030" }}>
-                    <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
-                      <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"0.85rem", color:C.dark }}>🐼 {g.authorName || g.name || "Tu pareja"}</div>
-                      <div style={{ fontSize:"0.7rem", color:C.inkL, fontWeight:700 }}>{g.date}</div>
-                    </div>
-                    <div style={{ fontSize:"0.9rem", color:C.inkM, lineHeight:1.6 }}>{g.text}</div>
-                  </div>
-                ))
-              ) : (
-                allMomentos.map((m,i) => (
-                  <div key={m.id||i} style={{ background:"#f2f6e6", borderRadius:12, padding:"12px 14px", marginBottom:10, border:`1px solid #a8d48830` }}>
-                    <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
-                      <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"0.9rem", color:C.dark }}>✨ {m.title}</div>
-                      <div style={{ fontSize:"0.7rem", color:C.inkL, fontWeight:700 }}>{m.date}</div>
-                    </div>
-                    <div style={{ fontSize:"0.88rem", color:C.inkM, lineHeight:1.65 }}>{m.text}</div>
-                    <div style={{ fontSize:"0.7rem", color:C.inkL, marginTop:6, fontWeight:700 }}>
-                      Por {getAuthorLabel(m)}
-                    </div>
-                  </div>
-                ))
-              )}
-              <button onClick={() => setShowAllModal(false)} style={{ width:"100%", marginTop:10, padding:"12px", background:C.dark, color:C.cream2, border:"none", borderRadius:14, fontFamily:"'Baloo 2',sans-serif", fontSize:"0.95rem", cursor:"pointer" }}>
-                Cerrar ✕
-              </button>
-            </div>
-          </div>
-        </div>
+      {showAll && (
+        <AllEntriesModal title="💛 Todas las gratitudes" subtitle={`${partnerGratitud.length} agradecimientos de tu pareja`} onClose={() => setShowAll(false)}>
+          {partnerGratitud.map((g,i) => renderGratitud(g, i, true))}
+        </AllEntriesModal>
       )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
+// GALERÍA DE LOGROS — habilidades ganadas en ejercicios
+// ═══════════════════════════════════════════════
+function LogrosSection({ exDone }) {
+  const skillLevels = useMemo(() => computeSkillLevels(exDone), [exDone]);
+  const maxLevel = SKILL_LEVELS.length - 1;
+
+  return (
+    <div style={{ background:C.white, borderRadius:20, boxShadow:`0 3px 0 ${C.border}`, border:`1.5px solid ${C.border}`, padding:16 }}>
+      <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"1.05rem", color:C.dark }}>🏆 Galería de logros</div>
+      <div style={{ fontSize:"0.75rem", color:C.inkL, fontWeight:700, marginTop:2, marginBottom:12 }}>Habilidades de pareja que ganan con los ejercicios</div>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+        {Object.entries(EXERCISE_SKILLS).map(([skillKey, meta]) => {
+          const data = skillLevels[skillKey];
+          const locked = data.level === 0 && data.xp === 0;
+          const maxed = data.level >= maxLevel;
+          return (
+            <div key={skillKey} style={{ background: locked ? C.sandL : meta.color + "1f", borderRadius:16, padding:12, border:`1.5px solid ${locked ? C.border : meta.color + "60"}`, display:"flex", flexDirection:"column", gap:6, opacity: locked ? 0.7 : 1 }}>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                <div style={{ fontSize:"1.6rem", filter: locked ? "grayscale(1)" : "none" }}>{meta.emoji}</div>
+                <div style={{ fontSize:"0.68rem", fontWeight:800, color:C.inkM }}>{maxed ? "⭐ Máx." : `Nv. ${data.level}`}</div>
+              </div>
+              <div>
+                <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"0.9rem", color:C.dark }}>{meta.label}</div>
+                <div style={{ fontSize:"0.68rem", color:C.inkL, lineHeight:1.4 }}>{meta.desc}</div>
+              </div>
+              <div style={{ background:C.white, borderRadius:50, height:5, overflow:"hidden" }}>
+                <div style={{ width:`${maxed ? 100 : data.pct}%`, height:"100%", background:meta.color, borderRadius:50 }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
