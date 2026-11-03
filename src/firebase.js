@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, deleteUser, setPersistence, browserLocalPersistence } from "firebase/auth";
-import { getFirestore, doc, setDoc, getDoc, collection, addDoc, onSnapshot, query, where, serverTimestamp, orderBy, runTransaction, getDocs, writeBatch, deleteDoc, limit } from "firebase/firestore";
+import { getFirestore, doc, setDoc, updateDoc, getDoc, collection, addDoc, onSnapshot, query, where, serverTimestamp, orderBy, runTransaction, getDocs, writeBatch, deleteDoc, limit } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBkKnVX0kStBOrujGMFA_mUCmQmt2P245g",
@@ -493,3 +493,51 @@ export const fbDeleteDiaryEntry = (entryId) =>
 
 export const fbGetDiaryAnalysis = async (entryId, analysis) =>
   setDoc(doc(db, "diario", entryId), { analysis }, { merge: true });
+
+// ─── DAILY SEED (Semilla del día) ─────────────────────
+const dailyQuestionRef = (coupleCode, dateKey) =>
+  doc(db, "dailyQuestions", `${coupleCode}_${dateKey}`);
+
+export const fbGetDailyQuestion = async (coupleCode, dateKey) => {
+  const snap = await getDoc(dailyQuestionRef(coupleCode, dateKey));
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+};
+
+export const fbListenDailyQuestion = (coupleCode, dateKey, cb) =>
+  onSnapshot(dailyQuestionRef(coupleCode, dateKey), snap => {
+    cb(snap.exists() ? { id: snap.id, ...snap.data() } : null);
+  }, () => cb(null));
+
+// Atomically create the daily question document if it doesn't exist.
+export const fbCreateDailyQuestion = async (coupleCode, dateKey, { questionId, questionText, category }) => {
+  const ref = dailyQuestionRef(coupleCode, dateKey);
+  return runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (snap.exists()) return { id: snap.id, ...snap.data() };
+    const data = {
+      coupleCode,
+      date: dateKey,
+      questionId,
+      questionText,
+      category: category || "general",
+      answers: {},
+      bambooEarned: 10,
+      createdAt: serverTimestamp(),
+    };
+    tx.set(ref, data);
+    return { id: ref.id, ...data };
+  });
+};
+
+export const fbSaveDailyAnswer = async (coupleCode, dateKey, userId, role, text) => {
+  const ref = dailyQuestionRef(coupleCode, dateKey);
+  return updateDoc(ref, {
+    coupleCode,
+    [`answers.${role}`]: {
+      userId,
+      text,
+      timestamp: serverTimestamp(),
+    },
+    updatedAt: serverTimestamp(),
+  });
+};

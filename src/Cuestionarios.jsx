@@ -1,4 +1,5 @@
 import React, { useMemo, useRef, useState } from "react";
+import AdviceCard from "./components/AdviceCard";
 
 const SCALE_OPTIONS = [
   { id: "1", label: "Casi nunca", color: "#f3ecff" },
@@ -527,16 +528,7 @@ export default function Cuestionarios({ conoce, onSave, onQuizComplete, onReset,
           </div>
         ))}
 
-        {comparison && showResults && (
-          <div style={{ background: "#fff", borderRadius: 11, padding: 10, border: "1px solid rgba(63,47,99,0.12)", marginBottom: 8 }}>
-            <div style={{ fontSize: "0.82rem", fontWeight: 800, color: "#3f2f63", marginBottom: 6 }}>💡 Consejos de Mochi</div>
-            <ol style={{ margin: 0, paddingLeft: 18, color: "#32264a" }}>
-              {comparison.tips.map((tip, idx) => (
-                <li key={idx} style={{ fontSize: "0.75rem", fontWeight: 700, lineHeight: 1.55, marginBottom: 4 }}>{tip}</li>
-              ))}
-            </ol>
-          </div>
-        )}
+        {comparison && showResults && <AdviceCard tips={comparison.tips} />}
 
         <button
           onClick={() => {
