@@ -827,124 +827,244 @@ const getDayNumberLocal = (date = new Date()) => {
 const CONSEJOS_DIARIOS = [
   {
     id: 1,
-    texto: "Escucha de verdad, no solo esperes tu turno para hablar.",
-    explicacion: "Muchas veces cuando nuestro amor habla, ya estamos pensando en qué vamos a responder. Esto hace que no nos conectemos de verdad.",
-    practica: "Cuando tu pareja te cuente algo, haz una pausa mental y repite con tus palabras lo que escuchaste antes de dar tu opinión. Esto le hace sentir que realmente le importas.",
-    autor: "John Gottman",
-    quienEs: "Psicólogo que estudió parejas por 40 años. Descubrió que las parejas que duran son las que se sienten escuchadas, no las que nunca discuten."
+    texto: "Escucha de verdad antes de pensar en tu respuesta.",
+    explicacion: "Muchas veces, cuando tu amor te habla, ya estás pensando en qué vas a responder. Así es difícil conectar de verdad.",
+    practica: "Cuando tu pareja te cuente algo, haz una pausa y repite con tus palabras lo que escuchaste antes de dar tu opinión. Así sabe que de verdad te importa lo que dice.",
+    autor: "Dr. y Dra. Gottman",
+    quienEs: "Psicólogos que llevan décadas estudiando parejas. Encontraron que las parejas que duran se sienten escuchadas, aunque discutan."
   },
   {
     id: 2,
-    texto: "Agradece algo específico hoy, no solo 'gracias por todo'.",
-    explicacion: "Los 'gracias por todo' se olvidan. Pero cuando dices 'gracias por traerme café esta mañana, me salvaste el día', eso se queda.",
-    practica: "Menciona algo concreto que tu pareja hizo, cuándo lo hizo, y cómo te hizo sentir. Ejemplo: 'Gracias por mandarme ese mensaje antes de mi junta, me dio mucha calma'.",
-    autor: "Martin Seligman",
-    quienEs: "Padre de la Psicología Positiva. Descubrió que las parejas que practican gratitud específica son hasta 25% más felices."
+    texto: "Agradece hoy algo específico.",
+    explicacion: "Un agradecimiento con detalles se queda en la memoria de tu amor: \"gracias por traerme café esta mañana, me salvaste el día\".",
+    practica: "Dile a tu pareja qué hizo, cuándo lo hizo y cómo te hizo sentir. Por ejemplo: \"Gracias por mandarme ese mensaje antes de mi junta, me dio mucha calma\".",
+    autor: "Sara Algoe",
+    quienEs: "Psicóloga de la Universidad de Carolina del Norte. Estudia la gratitud en pareja y encontró que agradecer ayuda a notar a la otra persona, recordar por qué la elegiste y sentirte más unido/a."
   },
   {
     id: 3,
-    texto: "Pide lo que necesitas, no te quejes de lo que no te gusta.",
-    explicacion: "Decir 'nunca me escuchas' solo hace que el otro se defienda. Pero decir 'necesito 10 minutos de tu atención sin celular cuando llegue a casa' abre una conversación.",
-    practica: "Usa esta fórmula: 'Cuando [pasa algo], yo siento [emoción], porque necesito [necesidad]. ¿Podrías [petición concreta]?'",
+    texto: "Pide lo que necesitas con palabras claras.",
+    explicacion: "Una queja como \"nunca me escuchas\" hace que tu pareja se defienda. Una petición concreta, como \"necesito 10 minutos de tu atención sin celular cuando llegue a casa\", le dice cómo puede ayudarte.",
+    practica: "Usa esta fórmula: \"Cuando [pasa algo], yo siento [emoción], porque necesito [necesidad]. ¿Podrías [petición concreta]?\"",
     autor: "Marshall Rosenberg",
     quienEs: "Creador de la Comunicación No Violenta, una forma de hablar sin herir. Sus técnicas se usan en todo el mundo para resolver conflictos."
   },
   {
     id: 4,
     texto: "Cuando te equivocas, pide perdón rápido y de corazón.",
-    explicacion: "No importa tanto cuánto peleen las parejas que duran, sino qué tan rápido se reparan. Un 'me equivoqué, lo siento' sincero en las primeras horas vale más que mil explicaciones después.",
-    practica: "Si hubo un malentendido, no esperes a que se enfríe. Di: 'Me equivoqué, lo siento. ¿Cómo puedo hacerlo mejor?' Sin excusas, sin 'pero tú también...'",
-    autor: "John y Julie Gottman",
-    quienEs: "Psicólogos que pueden predecir con 90% de acierto qué parejas se divorciarán. La reparación rápida es su hallazgo más importante."
+    explicacion: "Las parejas que duran también pelean, y saben reparar pronto. Un \"me equivoqué, lo siento\" sincero en las primeras horas ayuda mucho a sanar.",
+    practica: "Si hubo un malentendido, no esperes a que se enfríe. Di: \"Me equivoqué, lo siento. ¿Cómo puedo hacerlo mejor?\" Sin excusas y sin \"pero tú también...\".",
+    autor: "Dr. y Dra. Gottman",
+    quienEs: "Psicólogos que han observado a miles de parejas en su laboratorio. Encontraron que las parejas estables saben reparar después de una pelea."
   },
   {
     id: 5,
     texto: "Nombra tu emoción antes de reaccionar.",
-    explicacion: "Cuando estamos enojados o ansiosos, nuestro cerebro entra en modo 'supervivencia' y decimos cosas que no queremos. Pero nombrar lo que sentimos calma el cerebro en segundos.",
-    practica: "Antes de responder en calor, di: 'Ahora mismo me siento [frustrado/a, asustado/a, triste...]'. Esto activa la parte racional de tu cerebro y te da control.",
+    explicacion: "Cuando estás enojado/a o ansioso/a, tu cerebro entra en modo \"supervivencia\" y dices cosas que no quieres. Ponerle nombre a lo que sientes ayuda a bajar la intensidad.",
+    practica: "Antes de responder en caliente, di (o piensa): \"Ahora mismo me siento [frustrado/a, asustado/a, triste...]\". Te da un momento para elegir qué decir.",
     autor: "Dan Siegel",
-    quienEs: "Psiquiatra y neurocientífico. Acuñó la frase 'nombrarlo para dominarlo' porque la ciencia muestra que nombrar emociones reduce la activación del miedo."
+    quienEs: "Psiquiatra que creó la frase \"nombrarlo para domarlo\". Estudios de imagen cerebral muestran que poner en palabras una emoción reduce la activación de la amígdala, la zona del miedo."
   },
   {
     id: 6,
-    texto: "Los pequeños momentos diarios valen más que los grandes gestos.",
-    explicacion: "Un viaje romántico una vez al año no sustituye a un 'buenos días' todos los días, o preguntar '¿cómo estuvo tu día?' con atención real.",
-    practica: "Crea un ritual de 2 minutos: un beso de despedida, un mensaje de buenas noches, o preguntar qué fue lo mejor del día. Lo que haces todos los días construye la base de la relación.",
-    autor: "John Gottman",
-    quienEs: "Llama a esto 'Capital Emocional': los pequeños depósitos de cariño diarios que te protegen cuando llegan las crisis."
+    texto: "Cuida los pequeños momentos de cada día.",
+    explicacion: "Un \"buenos días\" diario, o preguntar \"¿cómo estuvo tu día?\" con atención real, construye cercanía poco a poco.",
+    practica: "Crea un ritual de 2 minutos: un beso de despedida, un mensaje de buenas noches o preguntar qué fue lo mejor del día.",
+    autor: "Dr. y Dra. Gottman",
+    quienEs: "Lo llaman la \"cuenta bancaria emocional\": cada gesto de cariño es un pequeño depósito que te protege cuando llegan las crisis."
   },
   {
     id: 7,
     texto: "Puedes entender a tu pareja sin estar de acuerdo.",
-    explicacion: "Validar no significa decir 'tienes razón'. Significa decir 'entiendo por qué lo sientes así'. Esto hace que tu amor se sienta visto, no atacado.",
-    practica: "Cuando tu pareja exprese algo difícil, responde: 'Tiene sentido que te sientas así dado lo que pasó'. No des tu opinión todavía, solo reconoce su experiencia.",
+    explicacion: "Validar quiere decir reconocer que lo que siente tiene sentido, aunque tú lo veas distinto. Cuando tu amor se siente comprendido, baja la guardia.",
+    practica: "Cuando tu pareja te cuente algo difícil, responde: \"Tiene sentido que te sientas así por lo que pasó\". Espera un poco antes de dar tu opinión.",
     autor: "Sue Johnson",
-    quienEs: "Creadora de EFT, la terapia de pareja más efectiva. Su investigación muestra que el miedo más grande en pareja es no importarle a la otra persona."
+    quienEs: "Creadora de la Terapia Focalizada en las Emociones (EFT), una de las terapias de pareja con más investigación. Explica que lo que más nos asusta en pareja es sentir que no le importamos al otro."
   },
   {
     id: 8,
     texto: "Celebra los logros de tu pareja como si fueran tuyos.",
-    explicacion: "Cuando tu amor te cuenta algo bueno, tu reacción importa más de lo que crees. Responder con entusiasmo genuino fortalece el vínculo más que manejar bien los conflictos.",
-    practica: "Cuando tu pareja comparta una buena noticia, pregunta detalles, celebra con ellos, y di por qué te enorgullece. Evita minimizar ('eso es fácil') o cambiar de tema.",
+    explicacion: "Cuando tu amor te cuenta algo bueno, tu reacción importa mucho. Responder con entusiasmo fortalece mucho la relación.",
+    practica: "Cuando tu pareja te dé una buena noticia, pregúntale detalles, celebra con ella y dile por qué te enorgullece. Evita minimizarla (\"eso es fácil\") o cambiar de tema.",
     autor: "Shelly Gable",
-    quienEs: "Psicóloga de UCLA que estudió miles de parejas. Descubrió que celebrar juntos libera dopamina (la hormona de la felicidad) en ambos."
+    quienEs: "Psicóloga que encontró que la forma en que respondes a las buenas noticias de tu pareja predice qué tan satisfechos están con su relación."
   },
   {
     id: 9,
-    texto: "Respeta cuando tu pareja dice 'no tengo energía ahora'.",
-    explicacion: "A veces nuestro amor necesita espacio no porque no nos quiera, sino porque su sistema nervioso está saturado. Cuando alguien está en modo 'supervivencia', no puede conectar emocionalmente.",
-    practica: "Si notas que tu pareja está agotado/a, pregunta: '¿Tienes energía para hablar de esto ahora o mejor lo dejamos para después?' Esto no es rechazo, es cuidado mutuo.",
+    texto: "Respeta cuando tu pareja dice \"no tengo energía ahora\".",
+    explicacion: "A veces tu amor necesita espacio porque está saturado/a, aunque te quiera mucho. Con el cuerpo en modo \"supervivencia\" es muy difícil conectar.",
+    practica: "Si notas a tu pareja agotada, pregunta: \"¿Tienes energía para hablar de esto ahora o lo dejamos para después?\". Si eligen después, acuerden cuándo lo retoman.",
     autor: "Stephen Porges",
-    quienEs: "Descubrió el Sistema Nervioso Polivagal, que explica por qué a veces necesitamos pausas para regular nuestro cuerpo antes de poder conectar."
+    quienEs: "Científico que propuso la teoría polivagal, que busca explicar por qué a veces el cuerpo necesita calmarse antes de poder conectar con otros."
   },
   {
     id: 10,
-    texto: "Usa 'y' en vez de 'pero'.",
-    explicacion: "La palabra 'pero' borra todo lo anterior. 'Te amo, pero...' suena como 'en realidad no te amo tanto'. En cambio, 'y' mantiene ambas verdades: 'Entiendo que estás cansado/a Y necesito hablar contigo'.",
-    practica: "Escucha tus conversaciones. Cuando vayas a decir 'pero', cámbialo por 'y'. Notarás cómo la conversación fluye mejor.",
-    autor: "Marshall Rosenberg",
-    quienEs: "Esta técnica viene de la Comunicación No Violenta, usada en mediaciones de paz en todo el mundo."
+    texto: "Cambia el \"pero\" por \"y\".",
+    explicacion: "La palabra \"pero\" borra lo que dijiste antes. \"Te amo, pero...\" se escucha como si no lo dijeras en serio. Con \"y\" caben las dos cosas: \"Entiendo que estás cansado/a y necesito hablar contigo\".",
+    practica: "Pon atención a tus conversaciones. Cuando vayas a decir \"pero\", cámbialo por \"y\" y fíjate cómo cambia la plática.",
+    autor: "Marsha Linehan",
+    quienEs: "Psicóloga creadora de la Terapia Dialéctica Conductual (DBT), que enseña a sostener dos verdades al mismo tiempo."
   },
   {
     id: 11,
     texto: "Pregunta antes de asumir lo que piensa tu pareja.",
-    explicacion: "Nuestra mente inventa historias sobre las intenciones del otro, y casi siempre son peores de lo real. 'Seguro ya no le importo' puede ser solo 'está distraído con el trabajo'.",
-    practica: "Cuando notes que estás asumiendo algo negativo, pregunta: '¿Qué quisiste decir cuando...?' o '¿Cómo te sientes?'. La curiosidad cura más que la certeza.",
+    explicacion: "Tu mente inventa historias sobre lo que el otro quiso decir, y casi siempre son muy negativas. \"Seguro ya no le importo\" puede ser solo \"está distraído/a con el trabajo\".",
+    practica: "Cuando notes que estás asumiendo algo negativo, pregunta: \"¿Qué quisiste decir cuando...?\" o \"¿Cómo te sientes?\".",
     autor: "Aaron Beck",
-    quienEs: "Padre de la Terapia Cognitiva. Identificó la 'lectura de mente' como uno de los pensamientos más dañinos para las relaciones."
+    quienEs: "Padre de la Terapia Cognitiva. Identificó la \"lectura de mente\" como uno de los pensamientos que más daño hacen a las relaciones."
   },
   {
     id: 12,
-    texto: "La confianza se construye con pequeñas acciones repetidas.",
-    explicacion: "No son los grandes gestos los que crean seguridad, sino las pequeñas promesas cumplidas: 'Te llamo después', y llamar. 'Llego temprano', y llegar temprano.",
-    practica: "Haz una promesa pequeña y cumplela. La consistencia diaria es la base de sentirse seguro con alguien.",
+    texto: "La confianza se construye con pequeñas promesas cumplidas.",
+    explicacion: "Sentirte seguro/a con alguien nace de ver que cumple lo que dice: \"Te llamo después\", y llama. \"Llego temprano\", y llega temprano.",
+    practica: "Haz una promesa pequeña y cúmplela.",
     autor: "John Bowlby",
-    quienEs: "Estudió cómo los niños se apegan a sus cuidadores. Sus descubrimientos sobre el apego seguro aplican también a las parejas adultas."
+    quienEs: "Psiquiatra que estudió cómo los niños se apegan a sus cuidadores. Años después, otros investigadores mostraron que el apego seguro funciona de forma parecida en las parejas adultas."
   },
   {
     id: 13,
-    texto: "La mayoría de los problemas de pareja no tienen solución — y eso está bien.",
-    explicacion: "El 69% de los conflictos de pareja son por diferencias de personalidad o valores que nunca desaparecerán. Las parejas que duran no resuelven todo; aprenden a 'bailar' con sus diferencias.",
-    practica: "Cuando surja un tema recurrente, díganle: 'Ah, este es nuestro tema de siempre'. Reconocer el patrón ayuda a no tomarlo personal y buscar compromisos en vez de ganar.",
-    autor: "John Gottman",
-    quienEs: "Descubrió esto en su laboratorio de parejas. El objetivo no es eliminar diferencias, sino mantener la conexión a pesar de ellas."
+    texto: "Algunos problemas de pareja van a estar siempre.",
+    explicacion: "El 69% de los conflictos de pareja vienen de diferencias de personalidad o de valores que no van a desaparecer. Las parejas que duran aprenden a \"bailar\" con esas diferencias.",
+    practica: "Cuando salga su tema de siempre, dile a tu pareja con cariño: \"Ah, este es nuestro tema de siempre\". Reconocerlo ayuda a no tomarlo personal y a buscar acuerdos juntos.",
+    autor: "Dr. y Dra. Gottman",
+    quienEs: "Llaman a estos \"problemas perpetuos\". Su objetivo es mantener la conexión a pesar de ellos."
   },
   {
     id: 14,
     texto: "Tu cuerpo te avisa cuando necesitas una pausa.",
-    explicacion: "Cuando el corazón late rápido, los músculos se tensan y la mente se nubla, es señal de que tu sistema nervioso está saturado. En ese estado, no puedes conversar bien.",
-    practica: "Acuerden una 'palabra de pausa' (ej: 'necesito un break'). Cuando alguien la diga, ambos toman 20-30 minutos para calmarse antes de seguir hablando. No es huir, es cuidarse.",
-    autor: "John Gottman",
-    quienEs: "Llama a esto 'inundación emocional' y recomienda pausas de 20 minutos para que el cuerpo se regule."
+    explicacion: "Cuando el corazón late rápido, los músculos se tensan y la mente se nubla, tu cuerpo está saturado. En ese estado es muy difícil platicar bien.",
+    practica: "Proponle a tu pareja una \"palabra de pausa\" (por ejemplo: \"necesito un break\"). Cuando alguien la diga, se toman 20 a 30 minutos para calmarse, y quien la pidió se compromete a regresar a la plática.",
+    autor: "Dr. y Dra. Gottman",
+    quienEs: "Llaman a esto \"inundación emocional\" y recomiendan pausas de al menos 20 minutos para que el cuerpo se regule."
   },
   {
     id: 15,
-    texto: "El amor es algo que haces, no solo algo que sientes.",
-    explicacion: "La pasión sube y baja naturalmente en toda relación larga. Pero la intimidad y el compromiso se eligen todos los días: enviar ese mensaje, hacer esa pregunta, dar ese abrazo.",
-    practica: "Elige un acto de amor consciente hoy, aunque no sientas 'mariposas'. Las acciones renuevan los sentimientos, no al revés.",
+    texto: "El amor también se demuestra con lo que haces.",
+    explicacion: "La pasión sube y baja en toda relación larga. La intimidad y el compromiso se eligen todos los días: mandar ese mensaje, hacer esa pregunta, dar ese abrazo.",
+    practica: "Elige un acto de amor hoy, aunque no sientas \"mariposas\". Muchas veces el sentimiento regresa después de la acción.",
     autor: "Robert Sternberg",
-    quienEs: "Propuso que el amor duradero tiene 3 partes: intimidad, pasión y compromiso. Las parejas que duran cultivan las tres, especialmente cuando la pasión baja."
+    quienEs: "Propuso que el amor tiene 3 partes: intimidad, pasión y compromiso. Las parejas que duran cuidan las tres, sobre todo cuando la pasión baja."
   },
+  {
+    id: 16,
+    texto: "Cuando tu pareja te busque, voltea hacia ella.",
+    explicacion: "Todos los días tu amor te busca en cosas pequeñas: \"mira esto\", un suspiro, un comentario sobre el clima. Cada vez que respondes, se siente un poquito más querido/a.",
+    practica: "Fíjate en las veces que tu pareja te comparte algo pequeño. Deja el celular un momento y responde con interés, aunque sea un \"¿a ver?\".",
+    autor: "Dr. y Dra. Gottman",
+    quienEs: "En su estudio con recién casados, las parejas que seguían juntas años después respondían a estos intentos cerca del 86% de las veces. Las que se separaron, alrededor del 33%."
+  },
+  {
+    id: 17,
+    texto: "Pregunta: \"¿Quieres que te escuche o que te ayude a resolverlo?\"",
+    explicacion: "A veces das consejos cuando tu amor solo quería desahogarse, o solo escuchas cuando necesitaba ideas. Dar el apoyo que necesita le hace sentir comprendido/a.",
+    practica: "La próxima vez que tu pareja te cuente un problema, hazle esta pregunta antes de responder y sigue lo que te diga.",
+    autor: "Harry Reis",
+    quienEs: "Psicólogo de la Universidad de Rochester. Su investigación muestra que lo que más une a una pareja es sentirse comprendido, valorado y cuidado."
+  },
+  {
+    id: 18,
+    texto: "Hagan algo nuevo juntos.",
+    explicacion: "La rutina da seguridad y también apaga la chispa. Vivir algo nuevo en pareja trae de vuelta la emoción de los primeros meses.",
+    practica: "Propón algo que nunca hayan hecho: una receta, una ruta distinta, un lugar cerca de casa que no conocen. Puede ser algo gratis, lo importante es que sea nuevo para los dos.",
+    autor: "Arthur Aron",
+    quienEs: "Psicólogo que encontró que las parejas que hacen actividades nuevas y retadoras juntas se sienten más satisfechas con su relación."
+  },
+  {
+    id: 19,
+    texto: "Hay cosas de tu pareja que te toca aceptar.",
+    explicacion: "Pasar años intentando cambiar al otro cansa a los dos. Cuando dejas de pelear contra ciertas formas de ser, muchas veces tu pareja se relaja y empieza a cambiar por su cuenta.",
+    practica: "Piensa en algo de tu pareja que te molesta y que probablemente es parte de quién es. Intenta verlo como la otra cara de algo que te encanta: el desorden y su espontaneidad, la terquedad y su firmeza.",
+    autor: "Andrew Christensen y Neil Jacobson",
+    quienEs: "Creadores de la Terapia Integral de Pareja (IBCT), que combina trabajar en el cambio con aprender a aceptar."
+  },
+  {
+    id: 20,
+    texto: "Actúa como la pareja que quieres ser, aunque estés molesto/a.",
+    explicacion: "Las emociones difíciles van a llegar, y tú decides qué hacer con ellas. Tener claro qué tipo de pareja quieres ser te ayuda a decidir cómo actuar en los momentos tensos.",
+    practica: "Escribe tres palabras que describan a la pareja que quieres ser (por ejemplo: paciente, honesta, juguetona). En la próxima tensión, pregúntate: \"¿Qué haría esa persona ahora?\".",
+    autor: "Russ Harris",
+    quienEs: "Médico y terapeuta, autor de ACT con amor. Lleva la Terapia de Aceptación y Compromiso a la vida en pareja."
+  },
+  {
+    id: 21,
+    texto: "Toma su mano cuando la cosa se ponga difícil.",
+    explicacion: "El contacto de alguien que quieres le dice a tu cuerpo que no estás solo/a frente al problema. El estrés se siente más ligero.",
+    practica: "Si tu amor está pasando por algo estresante, ofrécele tu mano o un abrazo largo antes de decir cualquier cosa.",
+    autor: "James Coan",
+    quienEs: "Neurocientífico de la Universidad de Virginia. En su estudio, tomar la mano de la pareja redujo la respuesta del cerebro ante una amenaza, sobre todo en las relaciones más felices."
+  },
+  {
+    id: 22,
+    texto: "Trátate con la paciencia que le tendrías a tu pareja.",
+    explicacion: "Cuando eres muy duro/a contigo, esa dureza termina saliendo hacia los demás. Hablarte con cariño te deja más paciencia para tu amor.",
+    practica: "La próxima vez que te equivoques, nota cómo te hablas. Cambia el \"qué tonto/a soy\" por lo que le dirías a alguien que quieres: \"Fue un día pesado, mañana lo intento otra vez\".",
+    autor: "Kristin Neff",
+    quienEs: "Pionera en el estudio de la autocompasión. Encontró que las personas que se tratan con compasión son descritas por sus parejas como más cariñosas y menos controladoras."
+  },
+  {
+    id: 23,
+    texto: "Di lo que te molesta mientras todavía es pequeño.",
+    explicacion: "Las molestias que callas se van juntando y luego salen todas de golpe en una pelea que parece exagerada. Hablar a tiempo evita el resentimiento.",
+    practica: "Si hay algo chiquito que te incomodó esta semana, dilo hoy con calma y desde ti: \"Me sentí un poco ignorado/a cuando...\".",
+    autor: "Harriet Lerner",
+    quienEs: "Psicóloga y autora de La danza de la ira. Ve el enojo como una señal útil que conviene escuchar a tiempo."
+  },
+  {
+    id: 24,
+    texto: "Cuida tu propio mundo.",
+    explicacion: "Cuando la relación se vuelve pura rutina y pendientes, el deseo se apaga. Ver a tu pareja en lo suyo, haciendo algo que le apasiona, despierta de nuevo la atracción.",
+    practica: "Dedica un rato a algo que sea solo tuyo: un hobby, tus amistades, un proyecto. Y si puedes, observa a tu amor cuando está en lo suyo.",
+    autor: "Esther Perel",
+    quienEs: "Psicoterapeuta y autora de Inteligencia erótica. Explica que el amor busca cercanía y el deseo necesita un poco de distancia."
+  },
+  {
+    id: 25,
+    texto: "Cuando hablen de un problema, usa \"nosotros\".",
+    explicacion: "\"Tú siempre llegas tarde\" pone a cada quien en un bando. \"¿Cómo le hacemos con los horarios?\" pone el problema enfrente y a los dos del mismo lado.",
+    practica: "En la próxima conversación difícil, empieza con \"nosotros\": \"¿Qué podemos hacer para...?\".",
+    autor: "Robert Levenson",
+    quienEs: "Psicólogo de UC Berkeley. Encontró que las parejas de muchos años que dicen más \"nosotros\" al discutir se tratan mejor y se tensan menos."
+  },
+  {
+    id: 26,
+    texto: "Puedes acompañar a tu pareja sin cargar su estrés.",
+    explicacion: "Si cada vez que tu amor se angustia tú también te angustias, los dos se hunden. Mantener tu calma mientras sigues presente le da un lugar seguro donde apoyarse.",
+    practica: "Cuando tu pareja esté nerviosa, respira profundo antes de responder y recuérdate: \"Puedo acompañarle sin hacer mía su emoción\".",
+    autor: "Murray Bowen",
+    quienEs: "Psiquiatra que estudió a las familias como sistemas. Llamó \"diferenciación\" a la capacidad de seguir cerca de los demás sin perder tu centro."
+  },
+  {
+    id: 27,
+    texto: "Repartan también las tareas que no se ven.",
+    explicacion: "Acordarte del cumpleaños de la suegra, saber qué falta en el refri, sacar cita con el dentista: todo eso cansa aunque nadie lo vea. Cuando una sola persona lo carga, se va juntando el resentimiento.",
+    practica: "Hagan juntos una lista de las tareas \"invisibles\" de la casa y pregunta: \"¿Hay algo de aquí que yo pueda tomar completo, desde acordarme hasta hacerlo?\".",
+    autor: "Arlie Hochschild",
+    quienEs: "Socióloga de UC Berkeley, autora de La doble jornada. Documentó cómo el trabajo de casa mal repartido afecta a las parejas."
+  },
+  {
+    id: 28,
+    texto: "Perdona a tu ritmo.",
+    explicacion: "Guardar rencor te mantiene amarrado/a a lo que pasó. Perdonar te ayuda a soltar ese peso, a tu ritmo y con los límites que necesites.",
+    practica: "Si cargas algo que tu pareja hizo, intenta imaginar qué estaba viviendo en ese momento. Entender su contexto suele ser el primer paso para soltar.",
+    autor: "Everett Worthington",
+    quienEs: "Psicólogo de Virginia Commonwealth University. Creó el modelo REACH, un camino de cinco pasos para perdonar que se ha probado en muchos estudios."
+  },
+  {
+    id: 29,
+    texto: "Si dormiste mal, deja la plática difícil para otro día.",
+    explicacion: "Con poco sueño estás más irritable y te cuesta leer lo que siente el otro. Una mala noche puede convertir una plática normal en una pelea.",
+    practica: "Si dormiste mal, avísale en la mañana: \"Hoy dormí fatal, ten paciencia conmigo\". Y si sale un tema delicado, propón retomarlo cuando estén descansados.",
+    autor: "Amie Gordon",
+    quienEs: "Psicóloga que estudió en UC Berkeley cómo el sueño afecta a las parejas. Encontró más peleas y menos empatía después de una mala noche."
+  },
+  {
+    id: 30,
+    texto: "Evita el sarcasmo y la burla con tu pareja.",
+    explicacion: "Rodar los ojos, burlarte o hablar desde arriba le dice a tu amor \"te veo menos que yo\". Es de lo que más daña a una relación, aunque sea en broma.",
+    practica: "Si notas que te sale el sarcasmo, detente y busca qué necesitas en realidad. Y para equilibrar, dile hoy a tu pareja algo que admiras de ella.",
+    autor: "Dr. y Dra. Gottman",
+    quienEs: "Encontraron que el desprecio es la señal que mejor predice una separación. Su antídoto es llenar la relación de aprecio y admiración."
+  }
 ];
 
 function CouplePandaSVG({ happy = false, size = 160 }) {
@@ -4479,6 +4599,10 @@ function ConsejoDelDiaSection({ user, onClaimReward, openRef }) {
         </button>
       )}
 
+      <div style={{ fontSize: "0.68rem", color: C.inkL, fontWeight: 600, lineHeight: 1.5, textAlign: "center", marginTop: 8, padding: "0 6px" }}>
+        Estos consejos son para relaciones donde los dos se sienten seguros. Si en tu relación hay miedo, control o violencia, mereces apoyo profesional.
+      </div>
+
       {/* Modal Pop-up del Consejo */}
       {open && (
         <div 
@@ -5868,16 +5992,16 @@ const DAILY_LESSONS = [
       "/lessons/four_horsemen_cards/6.jpg"
     ] },
 
-  { id:"de_escalation", emoji:"🕊", title:"Evita que una Discusión se Salga de Control",
+  { id:"de_escalation", emoji:"🕊", title:"Cómo Evitar que un Desacuerdo se Convierta en Pelea",
     tag:"Gottman · EFT",
     fullCardImages: true,
     intro:"Los desacuerdos son normales. El problema es cuando se convierten en discusiones o peleas llenas de gritos y acusaciones. Casi siempre hay señales antes de que eso pase. Aprender a reconocerlas y a detenerlas a tiempo es una de las habilidades más valiosas en una pareja.",
     sections:[
-      { title:"1. Empezar suave", icon:"🌱", body:"La forma en que empieza una discusión predice cómo va a terminar. Si arrancas con un ataque, tu pareja se va a defender. Habla de lo que sientes y lo que necesitas: 'Me siento cansada con todo lo de la casa, ¿me ayudas con la cena hoy?'" },
-      { title:"2. Un tema a la vez", icon:"📌", body:"Cada tema nuevo hace la discusión más grande y más difícil de resolver. Elijan de qué están hablando hoy y quédense ahí. Lo demás también importa, pero puede esperar a otro momento." },
+      { title:"1. Empezar suavemente", icon:"🌱", body:"La forma en que empieza una discusión predice cómo va a terminar. Si arrancas con un ataque, tu pareja se va a defender. Habla de lo que sientes y lo que necesitas: 'Me siento cansada con todo lo de la casa, ¿me ayudas con la cena hoy?'" },
+      { title:"2. Abordar un tema a la vez", icon:"📌", body:"Cada tema nuevo hace la discusión más grande y más difícil de resolver. Elijan de qué están hablando hoy y quédense ahí. Lo demás también importa, pero puede esperar a otro momento." },
       { title:"3. Escuchar para entender, no para responder", icon:"👂", body:"Repite lo que entendiste antes de contestar: 'Lo que escucho es que te sentiste ignorado cuando llegué tarde, ¿es así?'. Sentirse escuchado baja muchísimo la tensión." },
       { title:"4. Reconocer cuando el cuerpo ya no puede", icon:"💓", body:"El corazón se acelera, sentimos calor y ya no podemos pensar con claridad. Díselo a tu pareja con calma: 'Me estoy alterando mucho y no quiero lastimarte, ¿podemos seguir en un rato?'" },
-      { title:"5. El enemigo es el ciclo, no tu pareja", icon:"🔄", body:"Muchas peleas se repiten como un baile: uno reclama y persigue, el otro se cierra y se aleja. Nómbrenlo juntos: 'Ya estamos otra vez en nuestro baile'. Son ustedes dos contra el problema." },
+      { title:"5. Reconocer que el enemigo es el ciclo, no tu pareja", icon:"🔄", body:"Muchas peleas se repiten como un baile: uno reclama y persigue, el otro se cierra y se aleja. Nómbrenlo juntos: 'Ya estamos otra vez en nuestro baile'. Son ustedes dos contra el problema." },
     ],
     reflect:"¿Cómo suelen empezar sus discusiones? ¿Qué señales notan en su cuerpo cuando una pelea está por salirse de control? ¿Qué palabra o gesto podrían usar para avisarse que necesitan bajarle?",
     illustrations:[
