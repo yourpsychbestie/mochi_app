@@ -2216,29 +2216,9 @@ function Login({ onLogin }) {
   const [err, setErr] = useState("");
   const makeCode = () => "MO" + Math.random().toString(36).slice(2, 6).toUpperCase();
   const [code, setCode] = useState(makeCode());
-  const [codeStatus, setCodeStatus] = useState("checking"); // checking | available | taken | error
+  const [newUser, setNewUser] = useState(null); // set after doReg succeeds, to show the share-code step
 
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    if (!code || tab !== "register") return;
-
-    setCodeStatus("checking");
-    fbGetCode(code)
-      .then((data) => {
-        if (cancelled) return;
-        setCodeStatus(data ? "taken" : "available");
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setCodeStatus("error");
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [code, tab]);
 
   const authErrMsg = (e, fallback) => {
     const code = e?.code || "";
@@ -2371,7 +2351,10 @@ function Login({ onLogin }) {
       }
       if (finalCode !== code) setCode(finalCode);
       await retryFirestore(() => fbSaveUser(uid, { email: cleanEmail, names, code: finalCode, since, isOwner: true }));
-      onLogin({ uid, email: cleanEmail, names, code: finalCode, since, isOwner: true, isGuest: false }, true);
+      // Keep _pendingLocalAuth on until the user leaves the share-code step.
+      setNewUser({ uid, email: cleanEmail, names, code: finalCode, since, isOwner: true, isGuest: false });
+      setLoading(false);
+      return;
     } catch(e) {
       if (e.code === "auth/email-already-in-use") {
         setErr("Este correo ya tiene cuenta");
@@ -2472,7 +2455,6 @@ function Login({ onLogin }) {
   };
 
   const LBL = { fontSize: "0.72rem", fontWeight: 800, color: C.inkM, marginBottom: 5, display: "block", letterSpacing: "0.6px", textTransform: "uppercase" };
-  const TABS = [{ id: "login", label: "Entrar" }, { id: "register", label: "Crear" }, { id: "pair", label: "Unirse" }];
 
   return (
     <div style={{ minHeight: "100vh", background: C.sandL, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "28px 20px", fontFamily: "'Nunito',sans-serif" }}>
@@ -2482,17 +2464,15 @@ function Login({ onLogin }) {
         <CouplePandaSVG size={160} happy={true} />
       </div>
       <div style={{ background: C.white, borderRadius: 24, padding: "22px 20px", width: "100%", maxWidth: 380, boxShadow: `0 4px 0 ${C.border}`, border: `1.5px solid ${C.border}` }}>
-        <div style={{ display: "flex", background: C.sand, borderRadius: 12, padding: 3, marginBottom: 18, gap: 3 }}>
-          {TABS.map(t => (
-            <div key={t.id} onClick={() => { setTab(t.id); setErr(""); }} style={{ flex: 1, padding: "8px 0", textAlign: "center", borderRadius: 9, fontFamily: "'Baloo 2',sans-serif", fontSize: "0.9rem", cursor: "pointer", background: tab === t.id ? C.white : "transparent", color: tab === t.id ? C.dark : C.inkL, boxShadow: tab === t.id ? `0 2px 0 ${C.border}` : "none", border: tab === t.id ? `1.5px solid ${C.border}` : "1.5px solid transparent", transition: "all 0.18s" }}>
-              {t.label}
-            </div>
-          ))}
-        </div>
-        {tab === "register" && (
+        {tab !== "login" && !newUser && (
+          <div onClick={() => { setTab("login"); setErr(""); }} style={{ fontSize: "0.8rem", fontWeight: 800, color: C.inkL, cursor: "pointer", marginBottom: 12 }}>
+            ← Volver a iniciar sesión
+          </div>
+        )}
+        {tab === "register" && !newUser && (
           <div style={{ background: C.cream, borderRadius: 12, padding: "9px 14px", marginBottom: 10, border: `1px solid ${C.border}`, textAlign: "center" }}>
             <div style={{ fontSize: "0.78rem", color: C.inkM, lineHeight: 1.6 }}>
-              🌱 <strong>¿Eres el primero?</strong> Crea la cuenta y le mandas tu código a tu pareja para que se una.
+              🌱 <strong>¿Empiezas tú?</strong> Crea la cuenta y al final te daremos un código para invitar a tu pareja.
             </div>
           </div>
         )}
@@ -2507,10 +2487,42 @@ function Login({ onLogin }) {
         {tab === "login" && <>
           <label style={LBL}>Correo</label><Inp value={email} onChange={setEmail} placeholder="tu@correo.com" type="email" style={{ marginBottom: 10 }} />
           <label style={LBL}>Contraseña</label><Inp value={pass} onChange={setPass} placeholder="••••••••" type="password" style={{ marginBottom: 16 }} />
-          <Btn onClick={doLogin} style={{ width: "100%", marginBottom: 8 }} disabled={loading}>{loading ? "Entrando..." : "Entrar 🐼"}</Btn>
-          <Btn onClick={() => onLogin({ isGuest: true, names: "Persona A & Persona B", since: "Siempre juntos" }, false)} variant="ghost" style={{ width: "100%" }}>Continuar sin cuenta</Btn>
+          <Btn onClick={doLogin} style={{ width: "100%", marginBottom: 18 }} disabled={loading}>{loading ? "Entrando..." : "Entrar 🐼"}</Btn>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+            <div style={{ flex: 1, height: 1, background: C.border }} />
+            <div style={{ fontSize: "0.72rem", fontWeight: 800, color: C.inkL, letterSpacing: "0.4px" }}>¿PRIMERA VEZ EN MOCHI?</div>
+            <div style={{ flex: 1, height: 1, background: C.border }} />
+          </div>
+          <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+            {[["register", "🌱", "Crear jardín", "Empiezo yo"], ["pair", "💌", "Tengo código", "Mi pareja me invitó"]].map(([id, icon, title, sub]) => (
+              <div key={id} onClick={() => { setTab(id); setErr(""); }} style={{ flex: 1, background: C.cream, border: `1.5px solid ${C.border}`, borderRadius: 14, padding: "10px 8px", textAlign: "center", cursor: "pointer" }}>
+                <div style={{ fontSize: "1.3rem" }}>{icon}</div>
+                <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "0.92rem", color: C.dark }}>{title}</div>
+                <div style={{ fontSize: "0.68rem", fontWeight: 700, color: C.inkL }}>{sub}</div>
+              </div>
+            ))}
+          </div>
+          <div onClick={() => onLogin({ isGuest: true, names: "Persona A & Persona B", since: "Siempre juntos" }, false)} style={{ fontSize: "0.76rem", fontWeight: 700, color: C.inkL, textAlign: "center", cursor: "pointer", textDecoration: "underline" }}>Continuar sin cuenta</div>
         </>}
-        {tab === "register" && <>
+        {tab === "register" && newUser && (() => {
+          const inviteText = `¡Únete a nuestro jardín en Mochi! 🐼🌿 Usa este código al entrar en "Tengo código": ${newUser.code}`;
+          return <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: "1.8rem", marginBottom: 4 }}>🎉</div>
+            <div style={{ fontFamily: "'Baloo 2',sans-serif", color: C.dark, fontSize: "1.2rem", marginBottom: 4 }}>¡Tu jardín está listo!</div>
+            <div style={{ fontSize: "0.8rem", color: C.inkM, lineHeight: 1.5, marginBottom: 14 }}>Mándale este código a tu pareja para que se una contigo.</div>
+            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "2.2rem", letterSpacing: 9, color: C.dark, background: C.cream2, borderRadius: 12, padding: "10px", marginBottom: 12, border: `1.5px solid ${C.border}` }}>{newUser.code}</div>
+            <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+              <Btn onClick={() => {
+                if (navigator.clipboard) { navigator.clipboard.writeText(newUser.code).then(() => showToast("Código copiado: " + newUser.code)).catch(() => showToast("Tu código: " + newUser.code)); }
+                else showToast("Tu código: " + newUser.code);
+              }} variant="sand" style={{ flex: 1, fontSize: "0.82rem" }}>📋 Copiar</Btn>
+              <Btn onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(inviteText)}`, "_blank")} variant="sand" style={{ flex: 1, fontSize: "0.82rem" }}>💬 WhatsApp</Btn>
+            </div>
+            <Btn onClick={() => { _pendingLocalAuth = false; onLogin(newUser, true); }} style={{ width: "100%", marginBottom: 6 }}>Entrar a nuestro jardín 🌿</Btn>
+            <div style={{ fontSize: "0.7rem", color: C.inkL, fontWeight: 700 }}>También lo encuentras después dentro de la app</div>
+          </div>;
+        })()}
+        {tab === "register" && !newUser && <>
           <div style={{ marginBottom:10 }}>
               <label style={LBL}>🐼 Tu nombre</label>
               <Inp value={nameA} onChange={setNameA} placeholder="Johana" type="text"/>
@@ -2525,21 +2537,7 @@ function Login({ onLogin }) {
               {["días", "semanas", "meses", "años"].map(u => <option key={u}>{u}</option>)}
             </select>
           </div>
-          <Btn onClick={doReg} style={{ width: "100%", marginBottom: 14 }} disabled={loading}>{loading ? "Creando..." : "Crear cuenta 🌱"}</Btn>
-          <div style={{ background: C.cream, borderRadius: 16, padding: 14, textAlign: "center", border: `1.5px solid ${C.border}` }}>
-            <div style={{ fontSize: "0.7rem", fontWeight: 800, color: C.inkL, letterSpacing: "0.6px", marginBottom: 7 }}>TU CÓDIGO DE PAREJA</div>
-            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "2.2rem", letterSpacing: 9, color: C.dark, background: C.white, borderRadius: 10, padding: "10px", marginBottom: 6, border: `1.5px solid ${C.border}` }}>{code}</div>
-            <div style={{ fontSize: "0.72rem", fontWeight: 800, marginBottom: 8, color: codeStatus === "available" ? C.olive : codeStatus === "taken" ? "#c04040" : C.inkL }}>
-              {codeStatus === "checking" && "Verificando disponibilidad..."}
-              {codeStatus === "available" && "Código disponible ✓"}
-              {codeStatus === "taken" && "Código ocupado, genera otro"}
-              {codeStatus === "error" && "No se pudo verificar ahora, se validará al crear"}
-            </div>
-            <Btn onClick={() => setCode(makeCode())} variant="sand" style={{ padding: "8px 12px", fontSize: "0.76rem", marginBottom: 8 }}>
-              Generar otro código
-            </Btn>
-            <div style={{ fontSize: "0.7rem", color: C.inkL, fontWeight: 700 }}>Compártelo para que tu pareja se una</div>
-          </div>
+          <Btn onClick={doReg} style={{ width: "100%" }} disabled={loading}>{loading ? "Creando..." : "Crear cuenta 🌱"}</Btn>
         </>}
         {tab === "pair" && <>
           <div style={{ textAlign: "center", marginBottom: 16 }}><div style={{ fontSize: "1.8rem", marginBottom: 4 }}>🔗</div><div style={{ fontFamily: "'Baloo 2',sans-serif", color: C.dark, fontSize: "1.1rem" }}>Únete al jardín de tu pareja</div></div>
