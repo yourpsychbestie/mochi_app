@@ -92,6 +92,73 @@ const ATTACHMENT_QUESTIONS = [
   { text: "Suelo procesar mis emociones solo/a antes de compartirlas.", dim: "avoidance", key: "direct" },
 ];
 
+// Aventurero u hogareño — preguntas propias, inspiradas en la investigación sobre búsqueda de sensaciones (Zuckerman)
+const ADVENTURE_QUESTIONS = [
+  { text: "Me encantaría explorar lugares a los que nunca he ido.", key: "direct" },
+  { text: "Me gusta probar comidas que no conozco.", key: "direct" },
+  { text: "Me aburro si hacemos lo mismo cada fin de semana.", key: "direct" },
+  { text: "Prefiero un plan improvisado a uno muy organizado.", key: "direct" },
+  { text: "Me animaría a algo emocionante, como una tirolesa o escalar.", key: "direct" },
+  { text: "La adrenalina me hace sentir vivo/a.", key: "direct" },
+  { text: "Disfruto conocer gente nueva en fiestas o eventos.", key: "direct" },
+  { text: "Mi fin de semana ideal es en casa, tranquilo.", key: "reverse" },
+];
+
+const ADVENTURE_PROFILES = {
+  aventura: { label: "Aventurero/a", desc: "La novedad te recarga. Te late improvisar, explorar y probar cosas." },
+  mixto: { label: "Mitad y mitad", desc: "Te gusta una aventura de vez en cuando, pero también tu sillón." },
+  hogar: { label: "Hogareño/a", desc: "Tu lugar feliz es lo conocido: casa, rituales y planes tranquilos." },
+};
+
+const ADVENTURE_DATES = {
+  "aventura-aventura": ["Elijan un pueblo cercano al azar y vayan sin plan", "Prueben juntos una actividad que les dé un poquito de miedo", "Una noche: cada quien sorprende con un lugar nuevo"],
+  "hogar-hogar": ["Noche de cocina: una receta que nunca han hecho", "Fuerte de cobijas y maratón de su saga favorita", "Armen un rompecabezas mientras platican"],
+  mixto: ["Alternen: un plan nuevo y luego uno en casa", "Picnic en un parque que no conozcan", "Clase en línea de algo nuevo, desde el sillón"],
+};
+
+// Fortalezas de carácter — preguntas propias, inspiradas en el modelo de Peterson y Seligman
+const STRENGTHS = {
+  humor: { label: "Humor", desc: "Haces reír y le quitas peso a los días difíciles." },
+  gratitud: { label: "Gratitud", desc: "Notas lo bueno y lo agradeces." },
+  curiosidad: { label: "Curiosidad", desc: "Siempre quieres saber más del mundo y de las personas." },
+  amor: { label: "Amor", desc: "Te sale natural dar y recibir cariño." },
+  bondad: { label: "Bondad", desc: "Te nace ayudar sin esperar nada a cambio." },
+  perdon: { label: "Perdón", desc: "Sabes soltar y dar otra oportunidad." },
+  valentia: { label: "Valentía", desc: "Dices lo que importa aunque te dé nervio." },
+  constancia: { label: "Constancia", desc: "No sueltas lo que te importa aunque cueste." },
+  honestidad: { label: "Honestidad", desc: "Te muestras tal como eres y dices la verdad con cariño." },
+  optimismo: { label: "Optimismo", desc: "Confías en que lo que viene puede ser mejor." },
+  prudencia: { label: "Prudencia", desc: "Piensas antes de actuar, sobre todo cuando hay emociones." },
+  empatia: { label: "Inteligencia social", desc: "Captas cómo se sienten los demás aunque no lo digan." },
+};
+
+const STRENGTHS_QUESTIONS = [
+  { text: "Encuentro el lado divertido incluso en días pesados.", strength: "humor" },
+  { text: "Me gusta hacer reír a las personas que quiero.", strength: "humor" },
+  { text: "Noto las cosas buenas que otros hacen por mí.", strength: "gratitud" },
+  { text: "Doy las gracias por detalles pequeños.", strength: "gratitud" },
+  { text: "Me encanta descubrir cosas nuevas sobre la gente.", strength: "curiosidad" },
+  { text: "Hago preguntas porque de verdad quiero saber.", strength: "curiosidad" },
+  { text: "Me sale natural expresar cariño.", strength: "amor" },
+  { text: "Cuido mucho mis relaciones cercanas.", strength: "amor" },
+  { text: "Ayudo aunque nadie me lo pida.", strength: "bondad" },
+  { text: "Disfruto hacer cosas buenas por otros sin esperar nada.", strength: "bondad" },
+  { text: "Puedo soltar un enojo y dar otra oportunidad.", strength: "perdon" },
+  { text: "No me gusta guardar rencores.", strength: "perdon" },
+  { text: "Digo lo que pienso aunque me dé nervio.", strength: "valentia" },
+  { text: "Enfrento las conversaciones difíciles en vez de evitarlas.", strength: "valentia" },
+  { text: "Termino lo que empiezo aunque se ponga difícil.", strength: "constancia" },
+  { text: "No me rindo fácil cuando algo me importa.", strength: "constancia" },
+  { text: "Prefiero decir la verdad aunque sea incómoda.", strength: "honestidad" },
+  { text: "Me muestro tal como soy, sin aparentar.", strength: "honestidad" },
+  { text: "Confío en que lo que viene puede ser mejor.", strength: "optimismo" },
+  { text: "Cuando algo sale mal, pienso en cómo mejorarlo.", strength: "optimismo" },
+  { text: "Pienso antes de hablar cuando estoy molesto/a.", strength: "prudencia" },
+  { text: "Evito decisiones impulsivas de las que me arrepentiría.", strength: "prudencia" },
+  { text: "Me doy cuenta de cómo se siente alguien aunque no lo diga.", strength: "empatia" },
+  { text: "Sé qué decir para que otros se sientan cómodos.", strength: "empatia" },
+];
+
 const BIGFIVE_LABELS = {
   E: "Extraversión",
   A: "Amabilidad",
@@ -165,6 +232,26 @@ export const QUIZZES = [
     questions: ATTACHMENT_QUESTIONS,
     disclaimer: "Inspirado en la teoría del apego adulto (Bowlby, Ainsworth, Hazan & Shaver). No es el ECR-R ni un instrumento clínico.",
   },
+  {
+    id: "adventure",
+    catKey: "quizAdventure",
+    title: "Aventurero u hogareño",
+    emoji: "🧭",
+    subtitle: "Cuánta novedad te hace feliz",
+    type: "scale",
+    questions: ADVENTURE_QUESTIONS,
+    disclaimer: "Preguntas de Mochi inspiradas en la investigación sobre búsqueda de sensaciones (Zuckerman). Es para jugar y conocerse, no un instrumento clínico.",
+  },
+  {
+    id: "strengths",
+    catKey: "quizStrengths",
+    title: "Fortalezas de carácter",
+    emoji: "🛡️",
+    subtitle: "Lo mejor de ti",
+    type: "scale",
+    questions: STRENGTHS_QUESTIONS,
+    disclaimer: "Preguntas de Mochi inspiradas en el modelo de fortalezas de carácter (Peterson y Seligman). No es un instrumento oficial.",
+  },
 ];
 
 function parseScale(v) {
@@ -227,6 +314,60 @@ function calculateAttachment(respuestas) {
   else if (anxiety < 3.6 && avoidance >= 3.6) style = "avoidant";
   else if (anxiety >= 3.6 && avoidance >= 3.6) style = "fearful";
   return { anxiety: Math.round(((anxiety - 1) / 4) * 100), avoidance: Math.round(((avoidance - 1) / 4) * 100), style };
+}
+
+function calculateAdventure(respuestas) {
+  let sum = 0;
+  let count = 0;
+  ADVENTURE_QUESTIONS.forEach((q, idx) => {
+    const raw = parseScale(respuestas[idx]);
+    if (raw == null) return;
+    sum += q.key === "reverse" ? 6 - raw : raw;
+    count += 1;
+  });
+  const score = count ? Math.round(((sum / count - 1) / 4) * 100) : 0;
+  const profile = score >= 62 ? "aventura" : score <= 38 ? "hogar" : "mixto";
+  return { score, profile };
+}
+
+function calculateStrengths(respuestas) {
+  const sums = {};
+  STRENGTHS_QUESTIONS.forEach((q, idx) => {
+    const raw = parseScale(respuestas[idx]);
+    if (raw == null) return;
+    sums[q.strength] = (sums[q.strength] || 0) + raw;
+  });
+  const ranked = Object.keys(STRENGTHS).sort((a, b) => (sums[b] || 0) - (sums[a] || 0));
+  return { top: ranked.slice(0, 3), ranked };
+}
+
+// Resultados de un test suelto (no depende de que se completen los demás)
+function getSingleQuizResult(conoce, role, quizId) {
+  const quiz = QUIZZES.find((q) => q.id === quizId);
+  const answers = {};
+  quiz.questions.forEach((_, idx) => {
+    const raw = conoce?.[`${quiz.catKey}-${idx}`]?.[role];
+    if (raw != null) answers[idx] = Number(raw);
+  });
+  if (Object.keys(answers).length < quiz.questions.length) return null;
+  return quizId === "adventure" ? calculateAdventure(answers) : calculateStrengths(answers);
+}
+
+function adventureTip(me, them, otherName) {
+  if (me.profile === them.profile && me.profile !== "mixto") {
+    return me.profile === "aventura"
+      ? "Los dos aman la novedad. Cuiden también los momentos tranquilos: ahí se dice lo importante."
+      : "Los dos son de casa. Un toque nuevo de vez en cuando (aunque sea una receta) mantiene viva la chispa.";
+  }
+  if (me.profile !== them.profile && me.profile !== "mixto" && them.profile !== "mixto") {
+    return `Tú y ${otherName} se complementan: quien es aventurero propone el plan y quien es hogareño elige el día y el ritmo.`;
+  }
+  return "Tienen un buen punto medio: alternen un plan nuevo con uno conocido.";
+}
+
+function datesFor(me, them) {
+  if (me.profile === them.profile && me.profile !== "mixto") return ADVENTURE_DATES[`${me.profile}-${them.profile}`];
+  return ADVENTURE_DATES.mixto;
 }
 
 function getQuizRoleAnswers(conoce, role) {
@@ -384,7 +525,7 @@ export default function Cuestionarios({ conoce, onSave, onQuizComplete, onReset,
   return (
     <div style={{ background: "#ffffff", borderRadius: 18, padding: 14, border: "1.5px solid rgba(63,47,99,0.16)", marginTop: 12 }}>
       <div style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1rem", color: "#3f2f63", marginBottom: 4 }}>
-        3 test para conocerse mejor
+        5 tests para conocerse mejor
       </div>
       <div style={{ fontSize: "0.78rem", color: "#5f4d7f", marginBottom: 10, lineHeight: 1.55 }}>
         Respondan individualmente y luego comparen resultados. Mochi les sugiere consejos personalizados cuando ambos terminen.
@@ -529,6 +670,73 @@ export default function Cuestionarios({ conoce, onSave, onQuizComplete, onReset,
         ))}
 
         {comparison && showResults && <AdviceCard tips={comparison.tips} />}
+
+        {/* Tests nuevos: cada uno muestra resultados por su cuenta */}
+        {(() => {
+          const myAdv = getSingleQuizResult(conoce, myRole, "adventure");
+          const theirAdv = getSingleQuizResult(conoce, partnerRole, "adventure");
+          const myStr = getSingleQuizResult(conoce, myRole, "strengths");
+          const theirStr = getSingleQuizResult(conoce, partnerRole, "strengths");
+          if (!myAdv && !myStr) return null;
+          const chip = { display: "inline-block", background: "#efe6ff", color: "#4b3b75", borderRadius: 8, padding: "3px 8px", fontSize: "0.7rem", fontWeight: 800, margin: "0 4px 4px 0" };
+          const card = { background: "#fff", borderRadius: 11, padding: 10, border: "1px solid rgba(63,47,99,0.12)", marginBottom: 8, fontSize: "0.74rem", color: "#32264a", lineHeight: 1.55 };
+          const shared = myStr && theirStr ? myStr.top.filter((k) => theirStr.top.includes(k)) : [];
+          return (
+            <>
+              {myAdv && (
+                <div style={card}>
+                  <div style={{ fontWeight: 800, color: "#3f2f63", fontSize: "0.82rem", marginBottom: 6 }}>Aventurero u hogareño</div>
+                  {[{ name: myName, res: myAdv }, { name: otherName, res: theirAdv }].map((p) => (
+                    <div key={p.name} style={{ marginBottom: 6 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 800 }}>
+                        <span>{p.name}</span>
+                        <span style={{ color: "#6f56b8" }}>{p.res ? ADVENTURE_PROFILES[p.res.profile].label : "Aún no lo hace"}</span>
+                      </div>
+                      {p.res && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.64rem", color: "#5f4d7f", fontWeight: 700 }}>
+                          <span>Casa</span>
+                          <div style={{ flex: 1, height: 6, borderRadius: 4, background: "#efe6ff", position: "relative" }}>
+                            <div style={{ position: "absolute", left: `${p.res.score}%`, top: -3, width: 12, height: 12, marginLeft: -6, borderRadius: "50%", background: "#6f56b8", border: "2px solid #fff" }} />
+                          </div>
+                          <span>Aventura</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  <div style={{ color: "#5f4d7f" }}>{ADVENTURE_PROFILES[myAdv.profile].desc}</div>
+                  {theirAdv && (
+                    <div style={{ marginTop: 8, background: "#f8f6ff", borderRadius: 9, padding: 9 }}>
+                      <div style={{ fontWeight: 800, marginBottom: 4 }}>{adventureTip(myAdv, theirAdv, otherName)}</div>
+                      {datesFor(myAdv, theirAdv).map((d) => <div key={d}>· {d}</div>)}
+                    </div>
+                  )}
+                </div>
+              )}
+              {myStr && (
+                <div style={card}>
+                  <div style={{ fontWeight: 800, color: "#3f2f63", fontSize: "0.82rem", marginBottom: 6 }}>Fortalezas de carácter</div>
+                  {[{ name: myName, res: myStr }, { name: otherName, res: theirStr }].map((p) => (
+                    <div key={p.name} style={{ marginBottom: 6 }}>
+                      <div style={{ fontWeight: 800, marginBottom: 3 }}>{p.name}</div>
+                      {p.res ? p.res.top.map((k) => <span key={k} style={chip}>{STRENGTHS[k].label}</span>) : <span style={{ color: "#5f4d7f" }}>Aún no lo hace</span>}
+                    </div>
+                  ))}
+                  <div style={{ color: "#5f4d7f" }}>
+                    Tu fortaleza principal: <strong>{STRENGTHS[myStr.top[0]].label}</strong>. {STRENGTHS[myStr.top[0]].desc}
+                  </div>
+                  {theirStr && (
+                    <div style={{ marginTop: 8, background: "#f8f6ff", borderRadius: 9, padding: 9 }}>
+                      {shared.length > 0
+                        ? <div style={{ fontWeight: 800, marginBottom: 4 }}>Comparten {shared.map((k) => STRENGTHS[k].label).join(" y ")}: es parte de su base como pareja.</div>
+                        : <div style={{ fontWeight: 800, marginBottom: 4 }}>Sus fortalezas son distintas: juntos cubren más terreno.</div>}
+                      <div>Reto: esta semana dile a {otherName} “Vi tu {STRENGTHS[theirStr.top[0]].label.toLowerCase()} cuando…”.</div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          );
+        })()}
 
         <button
           onClick={() => {

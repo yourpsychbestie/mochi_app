@@ -721,7 +721,7 @@ function getJourneyOverallProgress(conoce, myRole, partnerRole) {
 // ═══════════════════════════════════════════════
 const CONOCE_MAP_TOP_H = 1778;  // /conoce/paisaje.webp (1080×1920, con pandas)
 const CONOCE_MAP_TILE_H = 750;  // /conoce/paisaje-tile.webp (1080×810, se repite hacia abajo)
-const CONOCE_LEVEL_QUIZ = { 1: "bigfive", 2: "lovestyles", 3: "attachment" };
+const CONOCE_LEVEL_QUIZZES = { 1: ["adventure", "bigfive"], 2: ["strengths", "lovestyles"], 3: ["attachment"] };
 
 // Alterna categorías para que el camino no tenga dos preguntas seguidas del mismo tema
 function interleaveByCat(questions) {
@@ -739,7 +739,7 @@ const CONOCE_MAP = (() => {
     if (li > 0) { labels.push({ level: lvl.level, y: y + 70 }); y += 280; }
     const steps = [
       ...interleaveByCat(lvl.questions).map(q => ({ type: "q", q })),
-      { type: "quiz", quizId: CONOCE_LEVEL_QUIZ[lvl.level] },
+      ...CONOCE_LEVEL_QUIZZES[lvl.level].map(quizId => ({ type: "quiz", quizId })),
       { type: "chest" },
     ];
     steps.forEach(step => {
@@ -762,7 +762,7 @@ const CONOCE_MAP = (() => {
 
 // Íconos de línea del camino (sin emojis): mismo trazo y paleta que la app
 const CONOCE_CAT_ICON = { infancia: "bear", cosasFavoritas: "star", sueños: "moon", miedos: "umbrella" };
-const CONOCE_QUIZ_ICON = { bigfive: "flower", lovestyles: "letter", attachment: "rings" };
+const CONOCE_QUIZ_ICON = { bigfive: "flower", lovestyles: "letter", attachment: "rings", adventure: "compass", strengths: "shield" };
 const CONOCE_LEVEL_ICON = { 1: "seed", 2: "sprout", 3: "tulip" };
 const CONOCE_ICON_PATHS = {
   bear: <><path d="M5.4 9.4A2.8 2.8 0 1 1 9.2 5.7" /><path d="M14.8 5.7a2.8 2.8 0 1 1 3.8 3.7" /><circle cx="12" cy="13" r="7" /><circle cx="9.5" cy="12" r="0.9" fill="currentColor" stroke="none" /><circle cx="14.5" cy="12" r="0.9" fill="currentColor" stroke="none" /><path d="M10.5 15.4c.9.7 2.1.7 3 0" /></>,
@@ -772,6 +772,8 @@ const CONOCE_ICON_PATHS = {
   heart: <path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.4 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z" />,
   flower: <><circle cx="12" cy="6.8" r="2.7" /><circle cx="16.9" cy="10.4" r="2.7" /><circle cx="15" cy="16.1" r="2.7" /><circle cx="9" cy="16.1" r="2.7" /><circle cx="7.1" cy="10.4" r="2.7" /><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" /></>,
   letter: <><rect x="3.5" y="6" width="17" height="12.5" rx="2.5" /><path d="M4 7.5l8 6 8-6" /></>,
+  compass: <><circle cx="12" cy="12" r="8.5" /><path d="M14.8 9.2l-1.6 4-4 1.6 1.6-4z" /></>,
+  shield: <><path d="M12 3.5l7 2.8v5c0 4.4-3 7.8-7 9.2-4-1.4-7-4.8-7-9.2v-5z" /><path d="M9 12l2.2 2.2L15.2 10" /></>,
   rings: <><circle cx="9" cy="12" r="5" /><circle cx="15" cy="12" r="5" /></>,
   gift: <><rect x="4.5" y="10.5" width="15" height="9.5" rx="2" /><rect x="3.5" y="7.5" width="17" height="3.5" rx="1.5" /><path d="M12 7.5V20" /><path d="M12 7.5C10.8 4.5 7 4.3 7.3 6.5c.2 1.2 2.6 1 4.7 1zM12 7.5c1.2-3 5-3.2 4.7-1-.2 1.2-2.6 1-4.7 1z" /></>,
   trophy: <><path d="M8 4h8v5a4 4 0 0 1-8 0z" /><path d="M8 5.5H5.5a2.6 2.6 0 0 0 2.8 3.8M16 5.5h2.5a2.6 2.6 0 0 1-2.8 3.8" /><path d="M12 13v3.5M9 20h6M9.8 20l.4-3.5h3.6l.4 3.5" /></>,
