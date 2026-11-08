@@ -760,6 +760,17 @@ const CONOCE_MAP = (() => {
   return { nodes, labels, height, path, tiles };
 })();
 
+// Respuestas rápidas (tocar > escribir) para las preguntas sencillas de Semilla
+const CONOCE_QUICK = {
+  "infancia-1": ["Sopa de fideo", "Tamales", "Pozole", "Chilaquiles", "Arroz con leche", "Lo que hacía mi abuela"],
+  "infancia-4": ["Jugar en la calle", "Videojuegos", "Dibujar", "Andar en bici", "Leer", "Inventar juegos"],
+  "cosasFavoritas-0": ["Tacos", "Pizza", "Sushi", "Pasta", "Hamburguesa", "Mole"],
+  "sueños-0": ["Cocinar", "Un idioma", "Un instrumento", "Bailar", "Nadar", "Programar"],
+  "sueños-3": ["Viajar por el mundo", "Algo con animales", "Arte o música", "Cocinar", "Enseñar", "Ayudar a otros"],
+  "miedos-0": ["Escuchar música", "Caminar", "Ver una serie", "Bañarme", "Dormir", "Hacer ejercicio"],
+  "miedos-1": ["Un abrazo", "Escucharme sin consejos", "Un mensajito", "Hacerme reír", "Traerme algo rico", "Darme espacio"],
+};
+
 // Íconos de línea del camino (sin emojis): mismo trazo y paleta que la app
 const CONOCE_CAT_ICON = { infancia: "bear", cosasFavoritas: "star", sueños: "moon", miedos: "umbrella" };
 const CONOCE_QUIZ_ICON = { bigfive: "flower", lovestyles: "letter", attachment: "rings", adventure: "compass", strengths: "shield" };
@@ -3374,7 +3385,8 @@ function Conocete({ conoce, onSave, user, streakInfo, onDailySeedAnswer }) {
 
   const [openQ, setOpenQ] = useState(null);
   const [myAnswer, setMyAnswer] = useState("");
-  const [saved, setSaved] = useState(false);
+  const [editing, setEditing] = useState(true);
+  const [justSaved, setJustSaved] = useState(null); // { isNew } al guardar, para celebrar
   const [celebrateLevel, setCelebrateLevel] = useState(null);
   const [openQuizId, setOpenQuizId] = useState(null);
   const [showDailySeed, setShowDailySeed] = useState(false);
@@ -3437,10 +3449,11 @@ function Conocete({ conoce, onSave, user, streakInfo, onDailySeedAnswer }) {
   }, [conoce, myRole, partnerRole]);
 
   const openQuestion = (q) => {
-    setOpenQ(q);
-    setSaved(false);
     const ex = conoce[`${q.cat}-${q.idx}`] || {};
+    setOpenQ(q);
     setMyAnswer(ex[myRole] || "");
+    setEditing(!ex[myRole]);
+    setJustSaved(null);
   };
 
   const saveQ = () => {
@@ -3448,51 +3461,156 @@ function Conocete({ conoce, onSave, user, streakInfo, onDailySeedAnswer }) {
     if (!clean || !openQ) return;
     const isNewMine = !conoce[`${openQ.cat}-${openQ.idx}`]?.[myRole];
     onSave(openQ.cat, openQ.idx, clean, openQ.level, isNewMine);
-    setSaved(true);
-    setOpenQ(null);
+    setMyAnswer(clean);
+    setEditing(false);
+    setJustSaved({ isNew: isNewMine });
   };
 
-  // ─── Single question view (card flip style)
+  // ─── Pregunta: se juega como carta (respondes → se voltea la del otro → siguiente)
   if (openQ) {
-    const partnerAns = conoce[`${openQ.cat}-${openQ.idx}`]?.[partnerRole];
+    const lv = CONOCE_LEVELS[openQ.level];
+    const qKey = `${openQ.cat}-${openQ.idx}`;
+    const partnerAns = conoce[qKey]?.[partnerRole];
+    const levelQs = CONOCE_MAP.nodes.filter(n => n.type === "q" && n.level === openQ.level).map(n => n.q);
+    const isMine = (q) => !!conoce[`${q.cat}-${q.idx}`]?.[myRole] || (`${q.cat}-${q.idx}` === qKey && !editing);
+    const pos = levelQs.findIndex(q => `${q.cat}-${q.idx}` === qKey);
+    const nextQ = levelQs.slice(pos + 1).find(q => !isMine(q)) || levelQs.find(q => !isMine(q));
+    const quick = CONOCE_QUICK[qKey];
+    const norm = (t) => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    const matched = !editing && partnerAns && (norm(partnerAns) === norm(myAnswer) || (quick || []).some(t => norm(myAnswer).includes(norm(t)) && norm(partnerAns).includes(norm(t))));
+    const addQuick = (txt) => setMyAnswer(a => (a.trim() ? `${a.trim()}, ${txt}` : txt));
+
+    const bubble = (who, name, text, delay) => (
+      <div style={{ animation: `cardFlip 0.6s cubic-bezier(0.22,1,0.36,1) ${delay}s both`, transformOrigin: "center", marginBottom: 10 }}>
+        <div style={{ fontSize: "0.68rem", fontWeight: 800, color: who === "me" ? C.olive : C.teal, marginBottom: 4, textAlign: who === "me" ? "right" : "left" }}>{name}</div>
+        <div style={{
+          background: who === "me" ? "#fff" : lv.color, border: `2px solid ${who === "me" ? C.border : lv.ring}`,
+          borderRadius: who === "me" ? "18px 18px 6px 18px" : "18px 18px 18px 6px",
+          padding: "12px 14px", fontSize: "0.95rem", color: C.ink, lineHeight: 1.5,
+          marginLeft: who === "me" ? 28 : 0, marginRight: who === "me" ? 0 : 28,
+        }}>{text}</div>
+      </div>
+    );
+
     return (
-      <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
-        <ConozcanseBanner subtitle={CONOCE_LEVELS[openQ.level].label} />
+      <div style={{ minHeight: "100vh", paddingBottom: 90, background: `linear-gradient(180deg, ${lv.color} 0%, ${C.sandL} 70%)` }}>
         <style>{`
-          @keyframes cardIn { from { opacity:0; transform: translateY(24px) scale(0.96) rotate(-1deg); } to { opacity:1; transform: none; } }
+          @keyframes cardIn { from { opacity:0; transform: translateY(28px) scale(0.95); } to { opacity:1; transform: none; } }
           @keyframes floatSoft { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+          @keyframes cardFlip { from { opacity:0; transform: perspective(700px) rotateY(90deg); } to { opacity:1; transform: perspective(700px) rotateY(0); } }
+          @keyframes sealWiggle { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-4deg); } 75% { transform: rotate(4deg); } }
+          @keyframes rewardUp { 0% { opacity:0; transform: translate(-50%, 10px) scale(0.8); } 20% { opacity:1; transform: translate(-50%, 0) scale(1.1); } 80% { opacity:1; transform: translate(-50%, -18px) scale(1); } 100% { opacity:0; transform: translate(-50%, -30px); } }
         `}</style>
-        <div style={{ margin: 14, animation: "cardIn 0.45s cubic-bezier(0.22,1,0.36,1)" }}>
-          <div style={{ background: CONOCE_LEVELS[openQ.level].color, borderRadius: 24, padding: "22px 20px", border: `2px solid ${CONOCE_LEVELS[openQ.level].ring}`, boxShadow: `0 12px 30px ${CONOCE_LEVELS[openQ.level].ring}40` }}>
-            <div style={{ textAlign: "center", marginBottom: 18 }}>
-              <div style={{ display: "flex", justifyContent: "center", animation: "floatSoft 2.8s ease-in-out infinite", marginBottom: 10 }}>
-                <div style={{ width: 76, height: 76, borderRadius: "50%", background: "rgba(255,255,255,0.8)", border: `2.5px solid ${CONOCE_LEVELS[openQ.level].ring}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <ConoceIcon name={CONOCE_CAT_ICON[openQ.cat]} size={40} color={CONOCE_LEVELS[openQ.level].ring} stroke={1.8} />
-                </div>
-              </div>
-              <div style={{ display: "inline-flex", gap: 6, marginBottom: 10 }}>
-                <span style={{ fontSize: "0.65rem", fontWeight: 800, color: C.inkM, background: "rgba(255,255,255,0.7)", borderRadius: 8, padding: "3px 9px" }}>{openQ.catLabel.toUpperCase()}</span>
-                <span style={{ fontSize: "0.65rem", fontWeight: 800, color: C.inkM, background: "rgba(255,255,255,0.7)", borderRadius: 8, padding: "3px 9px", display: "inline-flex", alignItems: "center", gap: 4 }}><ConoceIcon name={CONOCE_LEVEL_ICON[openQ.level]} size={12} stroke={2.4} />{CONOCE_LEVELS[openQ.level].label}</span>
-              </div>
-              <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.25rem", color: C.dark, lineHeight: 1.35 }}>{openQ.text}</div>
-            </div>
 
-            <div style={{ marginBottom: 12 }}>
-              <TA value={myAnswer} onChange={setMyAnswer} placeholder="Escribe tu respuesta..." rows={5} />
-            </div>
-
-            {partnerAns && (
-              <div style={{ marginBottom: 14, background: "rgba(255,255,255,0.75)", borderRadius: 16, padding: 14, border: `1.5px solid ${C.border}` }}>
-                <PBadge who={partnerWho} name={partnerLabel} />
-                <div style={{ fontSize: "0.88rem", color: C.inkM, lineHeight: 1.6, marginTop: 6 }}>{partnerAns}</div>
-              </div>
-            )}
-
-            <div style={{ display: "flex", gap: 10 }}>
-              <Btn onClick={saveQ} style={{ flex: 1, fontSize: "1.05rem" }}>Guardar respuesta</Btn>
-              <Btn onClick={() => setOpenQ(null)} variant="ghost" style={{ padding: "12px 16px" }}>✕</Btn>
-            </div>
+        {/* Barra superior: volver + avance del nivel */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 16px 6px" }}>
+          <button onClick={() => setOpenQ(null)}
+            style={{ border: "none", background: "rgba(255,255,255,0.85)", borderRadius: 12, padding: "7px 12px", fontSize: "0.75rem", fontWeight: 800, color: C.inkM, cursor: "pointer", fontFamily: "'Nunito',sans-serif" }}>
+            ← Mapa
+          </button>
+          <div style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center", gap: 6 }}>
+            {levelQs.map((q, i) => {
+              const done = isMine(q);
+              const here = i === pos;
+              return <div key={i} style={{ width: here ? 22 : 9, height: 9, borderRadius: 6, transition: "all 0.3s",
+                background: done ? lv.ring : here ? "#fff" : "rgba(255,255,255,0.6)", border: `2px solid ${here || done ? lv.ring : "rgba(255,255,255,0.9)"}` }} />;
+            })}
           </div>
+          <div style={{ fontSize: "0.72rem", fontWeight: 800, color: C.inkM, minWidth: 38, textAlign: "right" }}>{pos + 1} de {levelQs.length}</div>
+        </div>
+
+        <div key={qKey} style={{ margin: "34px 14px 0", position: "relative", animation: "cardIn 0.45s cubic-bezier(0.22,1,0.36,1)" }}>
+          {/* Pandas asomándose sobre la carta */}
+          <div style={{ position: "absolute", top: -46, left: "50%", transform: "translateX(-50%)", zIndex: 0, pointerEvents: "none", animation: "floatSoft 3s ease-in-out infinite" }}>
+            <CouplePandaSVG happy={!editing} size={92} />
+          </div>
+
+          <div style={{ background: "#fff", borderRadius: 28, padding: "40px 18px 18px", border: `2.5px solid ${lv.ring}`, boxShadow: `0 6px 0 ${lv.ring}55, 0 14px 30px ${lv.ring}30`, position: "relative", zIndex: 1 }}>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: lv.color, color: C.inkM, borderRadius: 10, padding: "4px 10px", fontSize: "0.66rem", fontWeight: 800, letterSpacing: "0.4px" }}>
+                <ConoceIcon name={CONOCE_CAT_ICON[openQ.cat]} size={13} color={lv.ring} stroke={2.4} />
+                {openQ.catLabel.toUpperCase()}
+              </span>
+            </div>
+            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.4rem", color: C.dark, lineHeight: 1.3, textAlign: "center", marginBottom: 16 }}>{openQ.text}</div>
+
+            {editing ? (
+              <>
+                {/* Carta del otro: sellada hasta que respondas */}
+                {partnerAns ? (
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, background: `repeating-linear-gradient(45deg, ${lv.color}, ${lv.color} 10px, #fff 10px, #fff 20px)`, border: `2px dashed ${lv.ring}`, borderRadius: 18, padding: "12px 14px", marginBottom: 14 }}>
+                    <div style={{ width: 42, height: 42, borderRadius: "50%", background: "#fff", border: `2px solid ${lv.ring}`, display: "flex", alignItems: "center", justifyContent: "center", animation: "sealWiggle 1.8s ease-in-out infinite", flexShrink: 0 }}>
+                      <ConoceIcon name="letter" size={22} color={lv.ring} stroke={2.2} />
+                    </div>
+                    <div style={{ fontSize: "0.8rem", fontWeight: 800, color: C.ink, lineHeight: 1.35 }}>
+                      {partnerLabel} ya respondió
+                      <div style={{ fontWeight: 700, color: C.inkM, fontSize: "0.72rem" }}>Contesta para abrir su carta</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: "0.72rem", fontWeight: 800, color: C.inkL, marginBottom: 12 }}>
+                    <ConoceIcon name="hourglass" size={13} stroke={2.2} /> {partnerLabel} aún no responde. ¡Gánale!
+                  </div>
+                )}
+
+                {quick && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center", marginBottom: 10 }}>
+                    {quick.map(t => (
+                      <button key={t} onClick={() => addQuick(t)}
+                        style={{ border: `1.5px solid ${lv.ring}`, background: myAnswer.includes(t) ? lv.ring : "#fff", color: myAnswer.includes(t) ? "#fff" : C.ink,
+                          borderRadius: 14, padding: "6px 11px", fontSize: "0.76rem", fontWeight: 800, cursor: "pointer", fontFamily: "'Nunito',sans-serif" }}>
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <TA value={myAnswer} onChange={setMyAnswer} placeholder={quick ? "Toca una opción o escribe la tuya…" : "Escribe tu respuesta…"} rows={quick ? 2 : 4}
+                  style={{ marginBottom: 12, borderRadius: 16, borderColor: lv.ring + "80", background: "#fffdf8" }} />
+                <Btn onClick={saveQ} disabled={!myAnswer.trim()} style={{ width: "100%", fontSize: "1.05rem" }}>
+                  {partnerAns ? "Responder y abrir carta" : "Guardar respuesta"}
+                </Btn>
+              </>
+            ) : (
+              <>
+                {/* Revelación */}
+                {bubble("me", myLabel, myAnswer, 0)}
+                {partnerAns ? bubble("partner", partnerLabel, partnerAns, justSaved ? 0.35 : 0) : (
+                  <div style={{ animation: "cardFlip 0.6s ease 0.2s both", display: "flex", alignItems: "center", gap: 10, background: C.sandL, borderRadius: 16, padding: "10px 12px", marginRight: 28, marginBottom: 10 }}>
+                    <ConoceIcon name="letter" size={20} color={lv.ring} stroke={2.2} />
+                    <div style={{ fontSize: "0.78rem", fontWeight: 700, color: C.inkM, lineHeight: 1.4 }}>
+                      Tu carta está sellada. Se abre cuando {partnerLabel} responda.
+                    </div>
+                  </div>
+                )}
+                {matched && (
+                  <div style={{ animation: "cardIn 0.5s ease 0.9s both", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "#fdf1cf", border: "2px solid #e8c25a", borderRadius: 14, padding: "8px 12px", margin: "2px 0 8px", fontFamily: "'Baloo 2',sans-serif", fontSize: "1rem", color: "#8a6514" }}>
+                    <ConoceIcon name="heart" size={16} color="#e46b9c" fill="#f7a8c8" /> ¡Coincidieron!
+                  </div>
+                )}
+                <div onClick={() => { setEditing(true); setJustSaved(null); }}
+                  style={{ fontSize: "0.72rem", fontWeight: 800, color: C.inkL, textAlign: "center", cursor: "pointer", margin: "4px 0 12px" }}>
+                  Editar mi respuesta
+                </div>
+                {nextQ ? (
+                  <Btn onClick={() => openQuestion(nextQ)} style={{ width: "100%", fontSize: "1.05rem" }}>Siguiente pregunta →</Btn>
+                ) : (
+                  <>
+                    <div style={{ textAlign: "center", fontFamily: "'Baloo 2',sans-serif", fontSize: "1.05rem", color: C.dark, marginBottom: 8 }}>
+                      ¡Terminaste tus preguntas de {lv.label}!
+                    </div>
+                    <Btn onClick={() => setOpenQ(null)} style={{ width: "100%", fontSize: "1.05rem" }}>Ver el mapa</Btn>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+
+          {justSaved?.isNew && (
+            <div style={{ position: "absolute", left: "50%", top: -14, zIndex: 3, animation: "rewardUp 1.6s ease both",
+              background: C.olive, color: C.cream2, borderRadius: 14, padding: "5px 12px", fontWeight: 900, fontSize: "0.85rem", display: "flex", alignItems: "center", gap: 4, boxShadow: "0 3px 0 rgba(0,0,0,0.15)" }}>
+              +15 <ConoceIcon name="leaf" size={14} stroke={2.4} />
+            </div>
+          )}
         </div>
       </div>
     );
