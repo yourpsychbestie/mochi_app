@@ -760,6 +760,40 @@ const CONOCE_MAP = (() => {
   return { nodes, labels, height, path, tiles };
 })();
 
+// Íconos de línea del camino (sin emojis): mismo trazo y paleta que la app
+const CONOCE_CAT_ICON = { infancia: "bear", cosasFavoritas: "star", sueños: "moon", miedos: "umbrella" };
+const CONOCE_QUIZ_ICON = { bigfive: "flower", lovestyles: "letter", attachment: "rings" };
+const CONOCE_LEVEL_ICON = { 1: "seed", 2: "sprout", 3: "tulip" };
+const CONOCE_ICON_PATHS = {
+  bear: <><path d="M5.4 9.4A2.8 2.8 0 1 1 9.2 5.7" /><path d="M14.8 5.7a2.8 2.8 0 1 1 3.8 3.7" /><circle cx="12" cy="13" r="7" /><circle cx="9.5" cy="12" r="0.9" fill="currentColor" stroke="none" /><circle cx="14.5" cy="12" r="0.9" fill="currentColor" stroke="none" /><path d="M10.5 15.4c.9.7 2.1.7 3 0" /></>,
+  star: <path d="M12 3.5l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.8l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z" />,
+  moon: <><path d="M19.5 14.5A7.8 7.8 0 1 1 9.5 4.5a6.3 6.3 0 0 0 10 10z" /><path d="M17 4v3M15.5 5.5h3" /></>,
+  umbrella: <><path d="M3.5 12.5a8.5 8.5 0 0 1 17 0z" /><path d="M12 12.5v5.8a2 2 0 0 1-4 0" /><path d="M12 4V2.8" /></>,
+  heart: <path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.4 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z" />,
+  flower: <><circle cx="12" cy="6.8" r="2.7" /><circle cx="16.9" cy="10.4" r="2.7" /><circle cx="15" cy="16.1" r="2.7" /><circle cx="9" cy="16.1" r="2.7" /><circle cx="7.1" cy="10.4" r="2.7" /><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" /></>,
+  letter: <><rect x="3.5" y="6" width="17" height="12.5" rx="2.5" /><path d="M4 7.5l8 6 8-6" /></>,
+  rings: <><circle cx="9" cy="12" r="5" /><circle cx="15" cy="12" r="5" /></>,
+  gift: <><rect x="4.5" y="10.5" width="15" height="9.5" rx="2" /><rect x="3.5" y="7.5" width="17" height="3.5" rx="1.5" /><path d="M12 7.5V20" /><path d="M12 7.5C10.8 4.5 7 4.3 7.3 6.5c.2 1.2 2.6 1 4.7 1zM12 7.5c1.2-3 5-3.2 4.7-1-.2 1.2-2.6 1-4.7 1z" /></>,
+  trophy: <><path d="M8 4h8v5a4 4 0 0 1-8 0z" /><path d="M8 5.5H5.5a2.6 2.6 0 0 0 2.8 3.8M16 5.5h2.5a2.6 2.6 0 0 1-2.8 3.8" /><path d="M12 13v3.5M9 20h6M9.8 20l.4-3.5h3.6l.4 3.5" /></>,
+  check: <path d="M6 12.5l4 4 8-9" />,
+  hourglass: <><path d="M8 3.5h8M8 20.5h8" /><path d="M8.7 3.5c0 5 6.6 4 6.6 8.5s-6.6 3.5-6.6 8.5M15.3 3.5c0 5-6.6 4-6.6 8.5s6.6 3.5 6.6 8.5" /></>,
+  seed: <><path d="M12 20.5v-7" /><path d="M12 13.5c0-4 3-6.5 7-6.5 0 4-3 6.5-7 6.5z" /></>,
+  sprout: <><path d="M12 20.5v-8" /><path d="M12 12.5c0-4 3-6.5 7-6.5 0 4-3 6.5-7 6.5zM12 15.5c0-3.4-2.5-5.5-6.5-5.5 0 3.4 2.5 5.5 6.5 5.5z" /></>,
+  tulip: <><path d="M8 4.5l2 2.5L12 3.8 14 7l2-2.5V9a4 4 0 0 1-8 0z" /><path d="M12 13v7.5" /><path d="M12 18c-2.4 0-4-1.4-4.5-3.5 2.4 0 4 1.2 4.5 3.5z" /></>,
+  lock: <><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" /><rect x="5.5" y="10.5" width="13" height="9.5" rx="2.5" /></>,
+  flame: <path d="M12 21c-3.6 0-6-2.4-6-5.6 0-3.4 2.6-5 3.4-8.4 2.2 1.4 3 3.4 3 5 .9-.6 1.6-1.8 1.8-3 1.8 1.6 3.8 3.8 3.8 6.4 0 3.2-2.4 5.6-6 5.6z" />,
+  leaf: <><path d="M5 19C5 10.5 10.5 5 19 5c0 8.5-5.5 14-14 14z" /><path d="M5 19l7.5-7.5" /></>,
+};
+
+function ConoceIcon({ name, size = 24, color = "currentColor", stroke = 2, fill = "none", style }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke={color} strokeWidth={stroke}
+      strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", flexShrink: 0, color, ...style }}>
+      {CONOCE_ICON_PATHS[name]}
+    </svg>
+  );
+}
+
 const ConoceLock = () => (
   <svg width="22" height="24" viewBox="0 0 22 24">
     <path d="M6 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="#8c7bb8" strokeWidth="3" strokeLinecap="round" />
@@ -3429,10 +3463,14 @@ function Conocete({ conoce, onSave, user, streakInfo, onDailySeedAnswer }) {
         <div style={{ margin: 14, animation: "cardIn 0.45s cubic-bezier(0.22,1,0.36,1)" }}>
           <div style={{ background: CONOCE_LEVELS[openQ.level].color, borderRadius: 24, padding: "22px 20px", border: `2px solid ${CONOCE_LEVELS[openQ.level].ring}`, boxShadow: `0 12px 30px ${CONOCE_LEVELS[openQ.level].ring}40` }}>
             <div style={{ textAlign: "center", marginBottom: 18 }}>
-              <div style={{ fontSize: "3.2rem", animation: "floatSoft 2.8s ease-in-out infinite", marginBottom: 8 }}>{openQ.emoji}</div>
+              <div style={{ display: "flex", justifyContent: "center", animation: "floatSoft 2.8s ease-in-out infinite", marginBottom: 10 }}>
+                <div style={{ width: 76, height: 76, borderRadius: "50%", background: "rgba(255,255,255,0.8)", border: `2.5px solid ${CONOCE_LEVELS[openQ.level].ring}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <ConoceIcon name={CONOCE_CAT_ICON[openQ.cat]} size={40} color={CONOCE_LEVELS[openQ.level].ring} stroke={1.8} />
+                </div>
+              </div>
               <div style={{ display: "inline-flex", gap: 6, marginBottom: 10 }}>
                 <span style={{ fontSize: "0.65rem", fontWeight: 800, color: C.inkM, background: "rgba(255,255,255,0.7)", borderRadius: 8, padding: "3px 9px" }}>{openQ.catLabel.toUpperCase()}</span>
-                <span style={{ fontSize: "0.65rem", fontWeight: 800, color: C.inkM, background: "rgba(255,255,255,0.7)", borderRadius: 8, padding: "3px 9px" }}>{CONOCE_LEVELS[openQ.level].emoji} {CONOCE_LEVELS[openQ.level].label}</span>
+                <span style={{ fontSize: "0.65rem", fontWeight: 800, color: C.inkM, background: "rgba(255,255,255,0.7)", borderRadius: 8, padding: "3px 9px", display: "inline-flex", alignItems: "center", gap: 4 }}><ConoceIcon name={CONOCE_LEVEL_ICON[openQ.level]} size={12} stroke={2.4} />{CONOCE_LEVELS[openQ.level].label}</span>
               </div>
               <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.25rem", color: C.dark, lineHeight: 1.35 }}>{openQ.text}</div>
             </div>
@@ -3449,7 +3487,7 @@ function Conocete({ conoce, onSave, user, streakInfo, onDailySeedAnswer }) {
             )}
 
             <div style={{ display: "flex", gap: 10 }}>
-              <Btn onClick={saveQ} style={{ flex: 1, fontSize: "1.05rem" }}>✨ Guardar respuesta</Btn>
+              <Btn onClick={saveQ} style={{ flex: 1, fontSize: "1.05rem" }}>Guardar respuesta</Btn>
               <Btn onClick={() => setOpenQ(null)} variant="ghost" style={{ padding: "12px 16px" }}>✕</Btn>
             </div>
           </div>
@@ -3502,12 +3540,14 @@ function Conocete({ conoce, onSave, user, streakInfo, onDailySeedAnswer }) {
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: "1.4rem" }}>🌱</span>
+              <div style={{ width: 32, height: 32, borderRadius: 10, background: "#e8f2e2", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <ConoceIcon name="seed" size={20} color="#6a9a5c" />
+              </div>
               <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.05rem", color: C.dark }}>Semilla del día</div>
             </div>
             {streakInfo?.currentStreak > 0 && (
-              <div style={{ background: "#e8f5e4", color: "#3a7a2e", borderRadius: 12, padding: "4px 10px", fontSize: "0.72rem", fontWeight: 800 }}>
-                🔥 {streakInfo.currentStreak}
+              <div style={{ background: "#fdeee2", color: "#c0703a", borderRadius: 12, padding: "4px 10px", fontSize: "0.72rem", fontWeight: 800, display: "flex", alignItems: "center", gap: 4 }}>
+                <ConoceIcon name="flame" size={13} stroke={2.2} /> {streakInfo.currentStreak}
               </div>
             )}
           </div>
@@ -3515,12 +3555,12 @@ function Conocete({ conoce, onSave, user, streakInfo, onDailySeedAnswer }) {
             {dailySeedLoading ? "Cargando..." : (dailySeed?.questionText || "Pregunta de hoy")}
           </div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ fontSize: "0.75rem", fontWeight: 800, color: dailySeedAnswered ? "#3a7a2e" : C.olive }}>
-              {dailySeedAnswered ? "✅ Ya respondiste hoy" : "Toca para responder (+10 🌿)"}
+            <div style={{ fontSize: "0.75rem", fontWeight: 800, color: dailySeedAnswered ? "#3a7a2e" : C.olive, display: "flex", alignItems: "center", gap: 5 }}>
+              {dailySeedAnswered ? <><ConoceIcon name="check" size={14} stroke={2.8} /> Ya respondiste hoy</> : "Toca para responder"}
             </div>
             {!dailySeedAnswered && (
-              <div style={{ background: C.olive, color: C.cream2, borderRadius: 10, padding: "6px 12px", fontSize: "0.72rem", fontWeight: 800 }}>
-                +10 🌿
+              <div style={{ background: C.olive, color: C.cream2, borderRadius: 10, padding: "6px 12px", fontSize: "0.72rem", fontWeight: 800, display: "flex", alignItems: "center", gap: 4 }}>
+                +10 <ConoceIcon name="leaf" size={13} stroke={2.2} />
               </div>
             )}
           </div>
@@ -3551,8 +3591,8 @@ function Conocete({ conoce, onSave, user, streakInfo, onDailySeedAnswer }) {
         </svg>
 
         {/* Progreso juntos */}
-        <div style={{ position: "absolute", left: 12, top: 12, background: "rgba(255,255,255,0.85)", borderRadius: 14, padding: "5px 11px", fontSize: "0.72rem", fontWeight: 800, color: C.inkM, boxShadow: "0 2px 0 rgba(0,0,0,0.06)" }}>
-          💞 {overall.answered}/{overall.total} juntos
+        <div style={{ position: "absolute", left: 12, top: 12, background: "rgba(255,255,255,0.85)", borderRadius: 14, padding: "5px 11px", fontSize: "0.72rem", fontWeight: 800, color: C.inkM, boxShadow: "0 2px 0 rgba(0,0,0,0.06)", display: "flex", alignItems: "center", gap: 5 }}>
+          <ConoceIcon name="heart" size={13} color="#e46b9c" fill="#f7c3d8" stroke={2} /> {overall.answered}/{overall.total} juntos
         </div>
 
         {/* Letreros de nivel */}
@@ -3563,9 +3603,12 @@ function Conocete({ conoce, onSave, user, streakInfo, onDailySeedAnswer }) {
             <div key={l.level} style={{ position: "absolute", left: "50%", top: pctY(l.y), transform: "translate(-50%,-50%)", zIndex: 2,
               background: "rgba(255,255,255,0.92)", border: `2px solid ${lv.ring}`, borderRadius: 18, padding: "7px 14px", textAlign: "center",
               boxShadow: `0 4px 0 ${lv.ring}55`, whiteSpace: "nowrap" }}>
-              <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "0.98rem", color: C.dark, lineHeight: 1.1 }}>{lv.emoji} {lv.label}</div>
-              <div style={{ fontSize: "0.66rem", fontWeight: 800, color: C.inkM }}>
-                {open ? lv.sub : `🔒 Terminen ${CONOCE_LEVELS[l.level - 1].label} los dos`}
+              <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "0.98rem", color: C.dark, lineHeight: 1.1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                <ConoceIcon name={CONOCE_LEVEL_ICON[l.level]} size={17} color={lv.ring} stroke={2.2} />{lv.label}
+              </div>
+              <div style={{ fontSize: "0.66rem", fontWeight: 800, color: C.inkM, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
+                {!open && <ConoceIcon name="lock" size={11} stroke={2.4} />}
+                {open ? lv.sub : `Terminen ${CONOCE_LEVELS[l.level - 1].label} los dos`}
               </div>
             </div>
           );
@@ -3582,11 +3625,14 @@ function Conocete({ conoce, onSave, user, streakInfo, onDailySeedAnswer }) {
             ready:   { bg: "radial-gradient(circle at 35% 30%, #fff, #e9ddff)", edge: "#9a7fd9" },
             done:    { bg: "radial-gradient(circle at 35% 30%, #fff6d6, #f7d67a)", edge: "#d9a93a" },
           }[n.status];
+          const iconColor = { locked: "#a796cc", current: "#e46b9c", waiting: "#8d6fc9", ready: "#7c5fd0", done: "#b8862a" }[n.status];
+          const iconName = isChest ? (n.status === "done" ? "trophy" : "gift")
+            : isQuiz ? CONOCE_QUIZ_ICON[n.quizId]
+            : n.status === "current" ? "heart"
+            : CONOCE_CAT_ICON[n.q.cat];
           const icon = n.status === "locked" && n.type === "q" ? <ConoceLock />
-            : isChest ? (n.status === "done" ? "🏆" : "🎁")
-            : isQuiz ? n.quiz.emoji
-            : n.status === "current" ? "💗"
-            : n.q.emoji;
+            : <ConoceIcon name={iconName} size={isQuiz || isChest ? 30 : 27} color={iconColor} stroke={2.1}
+                fill={n.status === "current" ? "#f7a8c8" : "none"} />;
           const tappable = n.status !== "locked" && !isChest;
           const onTap = () => {
             if (!tappable) return;
@@ -3612,7 +3658,6 @@ function Conocete({ conoce, onSave, user, streakInfo, onDailySeedAnswer }) {
                   border: "3px solid rgba(255,255,255,0.95)",
                   boxShadow: `0 5px 0 ${look.edge}, 0 8px 14px rgba(80,60,120,0.15)`,
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: isQuiz || isChest ? "1.7rem" : "1.5rem",
                   cursor: tappable ? "pointer" : "default", position: "relative",
                   animation: n.status === "current" ? "nodeGlow 2s ease-in-out infinite, bounceSoft 2.2s ease-in-out infinite"
                     : n.status === "ready" ? "bounceSoft 2.2s ease-in-out infinite" : "none",
@@ -3621,15 +3666,15 @@ function Conocete({ conoce, onSave, user, streakInfo, onDailySeedAnswer }) {
                 }}>
                 {icon}
                 {n.type === "q" && n.status === "waiting" && (
-                  <span style={{ position: "absolute", right: -6, bottom: -4, background: "#fff", borderRadius: 10, padding: "1px 5px", fontSize: "0.7rem", boxShadow: "0 1px 3px rgba(0,0,0,0.15)" }}>⏳</span>
+                  <span style={{ position: "absolute", right: -6, bottom: -4, background: "#fff", borderRadius: 10, width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 3px rgba(0,0,0,0.15)" }}><ConoceIcon name="hourglass" size={13} color="#8d6fc9" stroke={2.2} /></span>
                 )}
                 {n.type === "q" && n.status === "done" && (
-                  <span style={{ position: "absolute", right: -6, bottom: -4, background: "#7fbf6a", color: "#fff", borderRadius: 10, width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontWeight: 900 }}>✓</span>
+                  <span style={{ position: "absolute", right: -6, bottom: -4, background: "#7fbf6a", borderRadius: 10, width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid #fff" }}><ConoceIcon name="check" size={12} color="#fff" stroke={3.2} /></span>
                 )}
               </div>
               {(isQuiz || isChest) && (
-                <div style={{ position: "absolute", top: "100%", left: "50%", transform: "translateX(-50%)", marginTop: 9, background: "rgba(255,255,255,0.9)", borderRadius: 10, padding: "2px 9px", fontSize: "0.64rem", fontWeight: 800, color: C.inkM, whiteSpace: "nowrap" }}>
-                  {isQuiz ? `${n.quiz.title} · opcional` : n.status === "done" ? `+${CONOCE_JOURNEY[n.level - 1].rewardBamboo} 🌿 ganados` : `+${CONOCE_JOURNEY[n.level - 1].rewardBamboo} 🌿 juntos`}
+                <div style={{ position: "absolute", top: "100%", left: "50%", transform: "translateX(-50%)", marginTop: 9, background: "rgba(255,255,255,0.9)", borderRadius: 10, padding: "2px 9px", fontSize: "0.64rem", fontWeight: 800, color: C.inkM, whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 3 }}>
+                  {isQuiz ? `${n.quiz.title} · opcional` : <>+{CONOCE_JOURNEY[n.level - 1].rewardBamboo} <ConoceIcon name="leaf" size={11} color={C.olive} stroke={2.4} /> {n.status === "done" ? "ganados" : "juntos"}</>}
                 </div>
               )}
             </div>
@@ -3642,10 +3687,10 @@ function Conocete({ conoce, onSave, user, streakInfo, onDailySeedAnswer }) {
           {[...Array(12)].map((_, idx) => (
             <div key={idx} style={{
               position: "absolute", top: "20%", left: `${10 + idx * 7}%`,
-              fontSize: "1.6rem", animation: `confetti 1.2s ease ${idx * 0.05}s both`
-            }}>
-              {["🎉", "✨", "🌿", "🌸", "💖", "🏆"][idx % 6]}
-            </div>
+              width: idx % 3 ? 10 : 14, height: idx % 3 ? 14 : 8, borderRadius: idx % 2 ? 3 : 7,
+              background: ["#f7a8c8", "#b9a2ec", "#f5c74a", "#8bc48a"][idx % 4],
+              animation: `confetti 1.2s ease ${idx * 0.05}s both`
+            }} />
           ))}
         </div>
       )}
