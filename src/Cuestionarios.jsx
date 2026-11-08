@@ -136,7 +136,7 @@ const ATTACHMENT_STYLES = [
   },
 ];
 
-const QUIZZES = [
+export const QUIZZES = [
   {
     id: "bigfive",
     catKey: "quizBigFive",
@@ -337,7 +337,7 @@ export function getCoupleComparison(conoce) {
   };
 }
 
-export default function Cuestionarios({ conoce, onSave, onQuizComplete, onReset, user }) {
+export default function Cuestionarios({ conoce, onSave, onQuizComplete, onReset, user, initialQuiz }) {
   const myRole = user?.isOwner !== false ? "owner" : "partner";
   const partnerRole = myRole === "owner" ? "partner" : "owner";
   const nameParts = String(user?.names || "").split("&").map((s) => s.trim()).filter(Boolean);
@@ -345,7 +345,7 @@ export default function Cuestionarios({ conoce, onSave, onQuizComplete, onReset,
   const partnerName = nameParts[1] || nameParts[0] || "Panda B";
   const myName = myRole === "owner" ? ownerName : partnerName;
   const otherName = myRole === "owner" ? partnerName : ownerName;
-  const [openQuiz, setOpenQuiz] = useState(null);
+  const [openQuiz, setOpenQuiz] = useState(initialQuiz || null);
   const [quizNoticeById, setQuizNoticeById] = useState({});
   const [showResults, setShowResults] = useState(false);
   const rewardedByQuizRef = useRef({});

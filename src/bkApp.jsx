@@ -21,7 +21,7 @@ import {
   fbSaveStreakProfile, fbListenStreakProfile,
   fbSaveDailyAnswer,
 } from "./firebase";
-import Cuestionarios from "./Cuestionarios";
+import Cuestionarios, { QUIZZES } from "./Cuestionarios";
 import DailySeedModal, { useDailySeed } from "./DailySeedModal";
 import { DAILY_SEED_BAMBOO_REWARD, getDateKeyLocal } from "./dailySeed";
 import LessonCardWizard from "./components/LessonCardWizard";
@@ -501,7 +501,7 @@ const EXERCISES = [
     afterPrompts:[{role:0,ph:"Una palabra para lo que sentí…"},{role:1,ph:"Lo que vi en tus ojos fue…"}]},
   {id:"espejo",emoji:"🪞",title:"Técnica del Espejo",tags:"Imago · Narrativa",bamboo:35,time:"20 min",skill:"comunicacion",zone:"bosque",difficulty:2,
     desc:"El espejo confirma que el mensaje fue recibido antes de responder. Basada en terapia Imago de Harville Hendrix.",
-    instructions:["Persona A escribe algo importante que quiera compartir","Persona B refleja con sus palabras lo que entendió","A confirma si fue bien capturado o aclara","B valida la experiencia de A sin dar consejos","Intercambien roles en la siguiente ronda"],
+    instructions:["Persona A escribe algo importante que quiera compartir","Persona B refleja con sus palabras lo que entendió","Persona A confirma si fue bien capturado o aclara","Persona B valida la experiencia de Persona A sin dar consejos","Intercambien roles en la siguiente ronda"],
     phases:[
       {role:0,q:"Persona A: Algo que quieras que tu pareja entienda mejor.",ph:"Quiero que entiendas que…"},
       {role:1,q:"Persona B: Refleja lo que escuchaste.",ph:"Lo que escucho es… ¿Lo capté bien?",hint:"No interpretes — solo refleja. Usa sus mismas palabras."},
@@ -698,12 +698,6 @@ const CONOCE_JOURNEY = [1, 2, 3].map(level => {
   };
 });
 
-function getJourneyLevelProgress(level, conoce, role) {
-  const questions = CONOCE_JOURNEY.find(l => l.level === level)?.questions || [];
-  const answered = questions.filter(q => !!conoce[`${q.cat}-${q.idx}`]?.[role]).length;
-  return { answered, total: questions.length };
-}
-
 function isJourneyLevelCompletedByBoth(level, conoce, myRole, partnerRole) {
   const questions = CONOCE_JOURNEY.find(l => l.level === level)?.questions || [];
   return questions.every(q => !!conoce[`${q.cat}-${q.idx}`]?.[myRole] && !!conoce[`${q.cat}-${q.idx}`]?.[partnerRole]);
@@ -721,6 +715,59 @@ function getJourneyOverallProgress(conoce, myRole, partnerRole) {
   }, 0);
   return { total, answered, pct: total ? (answered / total) * 100 : 0 };
 }
+
+// ═══════════════════════════════════════════════
+// CONÓCETE CAMINO — mapa ilustrado (coordenadas en un lienzo de 1000 de ancho)
+// ═══════════════════════════════════════════════
+const CONOCE_MAP_TOP_H = 1778;  // /conoce/paisaje.webp (1080×1920, con pandas)
+const CONOCE_MAP_TILE_H = 750;  // /conoce/paisaje-tile.webp (1080×810, se repite hacia abajo)
+const CONOCE_LEVEL_QUIZ = { 1: "bigfive", 2: "lovestyles", 3: "attachment" };
+
+// Alterna categorías para que el camino no tenga dos preguntas seguidas del mismo tema
+function interleaveByCat(questions) {
+  const lists = Object.values(questions.reduce((acc, q) => ((acc[q.cat] = acc[q.cat] || []).push(q), acc), {}));
+  const out = [];
+  for (let i = 0; out.length < questions.length; i++) lists.forEach(l => l[i] && out.push(l[i]));
+  return out;
+}
+
+const CONOCE_MAP = (() => {
+  const nodes = [];
+  const labels = [];
+  let y = 380;
+  CONOCE_JOURNEY.forEach((lvl, li) => {
+    if (li > 0) { labels.push({ level: lvl.level, y: y + 70 }); y += 280; }
+    const steps = [
+      ...interleaveByCat(lvl.questions).map(q => ({ type: "q", q })),
+      { type: "quiz", quizId: CONOCE_LEVEL_QUIZ[lvl.level] },
+      { type: "chest" },
+    ];
+    steps.forEach(step => {
+      const i = nodes.length;
+      nodes.push({ ...step, level: lvl.level, x: i === 0 ? 500 : i % 2 ? 650 : 350, y });
+      y += 200;
+    });
+  });
+  const height = y + 40;
+  const path = nodes.reduce((d, n, i) => {
+    if (i === 0) return `M ${n.x} ${n.y}`;
+    const p = nodes[i - 1];
+    const dy = (n.y - p.y) / 2;
+    return `${d} C ${p.x} ${p.y + dy} ${n.x} ${n.y - dy} ${n.x} ${n.y}`;
+  }, "");
+  const tiles = [];
+  for (let t = CONOCE_MAP_TOP_H; t < height; t += CONOCE_MAP_TILE_H) tiles.push(t);
+  return { nodes, labels, height, path, tiles };
+})();
+
+const ConoceLock = () => (
+  <svg width="22" height="24" viewBox="0 0 22 24">
+    <path d="M6 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="#8c7bb8" strokeWidth="3" strokeLinecap="round" />
+    <rect x="2" y="10" width="18" height="13" rx="4" fill="#8c7bb8" />
+    <circle cx="11" cy="15.5" r="2" fill="#efe9f8" />
+    <rect x="10" y="16" width="2" height="4" rx="1" fill="#efe9f8" />
+  </svg>
+);
 
 const BURBUJA_SECTIONS = [
   // Ordenado de lo más leve a lo más fuerte: este orden es el camino de la Burbuja
@@ -2169,9 +2216,6 @@ function GardenScene({ garden, waterLevel }) {
 // ═══════════════════════════════════════════════
 // JARDIN SCREEN — updated with accessories + multiple items + decay
 // ═══════════════════════════════════════════════
-// ═══════════════════════════════════════════════
-// PRIMEROS PASOS — guía del jardín para parejas nuevas
-// ═══════════════════════════════════════════════
 function InvitePartnerBox({ user, compact = false }) {
   const code = user?.code || "";
   const inviteText = `¡Únete a nuestro jardín en Mochi! 🐼🌿 Usa este código al entrar en "Tengo código": ${code}`;
@@ -2188,67 +2232,9 @@ function InvitePartnerBox({ user, compact = false }) {
   );
 }
 
-function PrimerosPasos({ steps, user, partnerName, onHide }) {
-  const doneCount = steps.filter(st => st.done).length;
-  const next = steps.find(st => !st.done);
-  return (
-    <div style={{ margin: "0 14px 12px", background: C.white, borderRadius: 18, padding: 16, border: `1.5px solid ${C.border}`, boxShadow: `0 3px 0 ${C.border}` }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-        <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.05rem", color: C.dark }}>🐼 Primeros pasos</div>
-        <div style={{ fontSize: "0.72rem", fontWeight: 800, color: C.inkL }}>{doneCount} de {steps.length}</div>
-      </div>
-      <div style={{ fontSize: "0.78rem", color: C.inkM, lineHeight: 1.5, marginBottom: 10 }}>Algunas cosas para empezar.</div>
-      <ProgBar value={doneCount} max={steps.length} style={{ marginBottom: 12 }} />
-      {steps.map(st => {
-        const isNext = st === next;
-        return (
-          <div key={st.id} style={{ marginBottom: 8 }}>
-            <div onClick={st.done || !st.onGo ? undefined : st.onGo} style={{ display: "flex", alignItems: "center", gap: 10, background: isNext ? C.cream : C.sandL, borderRadius: 12, padding: "10px 12px", border: `1.5px solid ${isNext ? C.olive : C.border}`, cursor: st.done || !st.onGo ? "default" : "pointer", opacity: st.done ? 0.6 : 1 }}>
-              <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: st.done ? C.olive : C.white, border: `2px solid ${st.done ? C.olive : C.border}`, color: C.cream2, fontSize: "0.7rem", fontWeight: 900 }}>{st.done ? "✓" : ""}</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: "0.86rem", fontWeight: 800, color: C.ink, textDecoration: st.done ? "line-through" : "none" }}>{st.icon} {st.label}</div>
-                {!st.done && st.sub && <div style={{ fontSize: "0.72rem", color: C.inkL, fontWeight: 700, marginTop: 1 }}>{st.sub}</div>}
-              </div>
-              {!st.done && st.onGo && <div style={{ color: C.inkL, fontWeight: 900 }}>›</div>}
-            </div>
-            {st.id === "invite" && !st.done && <InvitePartnerBox user={user} />}
-          </div>
-        );
-      })}
-      <div onClick={onHide} style={{ fontSize: "0.72rem", fontWeight: 700, color: C.inkL, textAlign: "center", cursor: "pointer", marginTop: 4 }}>Ocultar guía</div>
-    </div>
-  );
-}
-
-function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pandaBubble, onPet, onBuy, onWater, onBuyAccessory, user, onClaimDailyTip, onGoTab, onStartTest, testScores, testDue, testStatus, partnerConnected, conoce, exDone, lessonsDone }) {
+function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pandaBubble, onPet, onBuy, onWater, onBuyAccessory }) {
   const [shopTab, setShopTab] = useState("plantas");
   const [showJuegos, setShowJuegos] = useState(false);
-  const shopRef = useRef(null);
-  const openConsejoRef = useRef(null);
-  const ownerKey = user?.code || user?.email || "guest";
-  const guideOffKey = `mochi_primeros_pasos_off_${ownerKey}`;
-  const [guideOff, setGuideOff] = useState(() => !!ls.get(guideOffKey));
-  const [consejoRead, setConsejoRead] = useState(() => !!ls.get(`mochi_consejo_claimed_${ownerKey}`));
-  const { nameA, nameB } = getCoupleNames(user);
-  const partnerName = user?.isOwner === false ? nameA : nameB;
-  const isGuest = user?.isGuest || !user?.code;
-
-  const testStep = testStatus?.mine && testStatus?.other
-    ? { label: "¡Sus resultados del test están listos!", sub: "Toca para verlos" }
-    : testStatus?.mine
-    ? { label: "Test de pareja", sub: `Ya contestaste · falta ${partnerName}` }
-    : { label: "Hagan su test de pareja", sub: "5 preguntas rápidas" };
-  const steps = [
-    ...(isGuest ? [] : [{ id: "invite", icon: "💌", label: `Invita a ${partnerName === "Persona B" || partnerName === "Persona A" ? "tu pareja" : partnerName}`, sub: "Comparte el código para conectar sus cuentas", done: !!partnerConnected }]),
-    { id: "consejo", icon: "💡", label: "Lee tu primer consejo del día", sub: "+15 bambú", done: consejoRead, onGo: () => openConsejoRef.current?.() },
-    { id: "conoce", icon: "💬", label: "Responde una pregunta en Conózcanse", sub: "+15 bambú", done: Object.keys(conoce || {}).length > 0, onGo: () => onGoTab?.("conocete") },
-    { id: "ejerc", icon: "⭐", label: "Hagan su primer ejercicio", sub: "+15 bambú", done: Object.keys(exDone || {}).length > 0 || Object.keys(lessonsDone || {}).length > 0, onGo: () => onGoTab?.("ejerc") },
-    { id: "planta", icon: "🌱", label: "Planta algo en su jardín", sub: "Usa el bambú en la tienda", done: Object.values(garden || {}).some(Boolean), onGo: () => shopRef.current?.scrollIntoView({ behavior: "smooth" }) },
-    { id: "test", icon: "📊", label: testStep.label, sub: testStep.sub, done: !!testScores, onGo: (testStatus?.mine && !testStatus?.other) ? undefined : onStartTest },
-  ];
-  const showGuide = !guideOff && steps.some(st => !st.done);
-  const hideGuide = () => { ls.set(guideOffKey, true); setGuideOff(true); };
-  const resultsReady = !testScores && testStatus?.mine && testStatus?.other;
   const cats = [{id:"plantas",label:"🌿 Plantas"},{id:"agua",label:"🐟 Agua"},{id:"cielo",label:"☁️ Cielo"},{id:"deco",label:"🏮 Deco"},{id:"especial",label:"✨ Especiales"},{id:"accesorios",label:"🐼 Pandas"}];
   const shopItems = (shopTab === "accesorios"
     ? PANDA_ACCESSORIES
@@ -2339,30 +2325,8 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
         </div>
       </div>
 
-      {/* Hoy: guía, avisos y consejo */}
-      <div style={{ marginTop: 14 }}>
-        {showGuide && <PrimerosPasos steps={steps} user={user} partnerName={partnerName} onHide={hideGuide} />}
-        {!showGuide && !isGuest && partnerConnected === false && (
-          <div style={{ margin: "0 14px 12px", background: C.white, borderRadius: 16, padding: "12px 14px", border: `1.5px solid ${C.border}` }}>
-            <div style={{ fontSize: "0.84rem", fontWeight: 800, color: C.ink, marginBottom: 8 }}>🐾 {partnerName} aún no se une a su jardín</div>
-            <InvitePartnerBox user={user} compact />
-          </div>
-        )}
-        {((!showGuide && resultsReady) || (testScores && testDue)) && (
-          <div onClick={onStartTest} style={{ margin: "0 14px 12px", background: C.cream, borderRadius: 16, padding: "12px 14px", border: `1.5px solid ${C.olive}`, cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ fontSize: "1.5rem" }}>📊</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: "0.88rem", fontWeight: 800, color: C.dark }}>{resultsReady ? "¡Sus resultados del test están listos!" : "Toca repetir su test de pareja"}</div>
-              <div style={{ fontSize: "0.72rem", fontWeight: 700, color: C.inkL }}>{resultsReady ? "Toca para verlos" : "Test de pareja · 5 preguntas"}</div>
-            </div>
-            <div style={{ color: C.inkL, fontWeight: 900 }}>›</div>
-          </div>
-        )}
-        <ConsejoDelDiaSection user={user} openRef={openConsejoRef} onClaimReward={() => { setConsejoRead(true); onClaimDailyTip?.(); }} />
-      </div>
-
       {/* Shop */}
-      <div ref={shopRef} style={{ background:C.white, borderRadius:"22px 22px 0 0", border:`1.5px solid ${C.border}`, boxShadow:`0 -3px 0 ${C.border}`, marginTop:10 }}>
+      <div style={{ background:C.white, borderRadius:"22px 22px 0 0", border:`1.5px solid ${C.border}`, boxShadow:`0 -3px 0 ${C.border}`, marginTop:10 }}>
         <div style={{ padding:"16px 16px 0" }}>
           <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"1.1rem", color:C.dark }}>Tienda del jardín</div>
         </div>
@@ -2918,7 +2882,7 @@ function ChatEx({ ex, onDone, nameA = "Persona A", nameB = "Persona B", user }) 
         <div style={{ background: C.sandL, borderRadius:16, padding:14, border:`1.5px solid ${C.border}` }}>
           <PBadge who={mappedTurnRole === 0 ? "A" : "B"} name={mappedTurnRole === 0 ? nameA : nameB} />
           <div style={{ fontSize:"0.9rem", color:C.ink, fontWeight:700, marginBottom:8, lineHeight:1.6 }}>
-            {cur.q.replace(/Persona A/g, scenarioNameA).replace(/Persona B/g, scenarioNameB)}
+            {cur.q.replace(/^Persona [AB]:\s*/, "").replace(/Persona A/g, scenarioNameA).replace(/Persona B/g, scenarioNameB)}
           </div>
           {cur.hint && <div style={{ fontSize:"0.75rem", color:C.inkM, background:C.cream, borderRadius:8, padding:"6px 10px", marginBottom:9, border:`1px solid ${C.border}` }}>💡 {cur.hint}</div>}
 
@@ -3368,32 +3332,72 @@ function Conocete({ conoce, onSave, user, streakInfo, onDailySeedAnswer }) {
   const { nameA, nameB } = getCoupleNames(user);
   const myRole = user?.isOwner !== false ? "owner" : "partner";
   const partnerRole = myRole === "owner" ? "partner" : "owner";
-  const myWho = myRole === "owner" ? "A" : "B";
   const myLabel = myRole === "owner" ? nameA : nameB;
   const partnerWho = myRole === "owner" ? "B" : "A";
   const partnerLabel = myRole === "owner" ? nameB : nameA;
 
-  const [openLevel, setOpenLevel] = useState(null);
   const [openQ, setOpenQ] = useState(null);
   const [myAnswer, setMyAnswer] = useState("");
   const [saved, setSaved] = useState(false);
   const [celebrateLevel, setCelebrateLevel] = useState(null);
-  const [showQuizzes, setShowQuizzes] = useState(false);
+  const [openQuizId, setOpenQuizId] = useState(null);
   const [showDailySeed, setShowDailySeed] = useState(false);
 
   const { dailySeed, hasAnswered: dailySeedAnswered, loading: dailySeedLoading } = useDailySeed(user);
 
   const overall = useMemo(() => getJourneyOverallProgress(conoce, myRole, partnerRole), [conoce, myRole, partnerRole]);
 
-  // Detectar cuando ambos completan un nivel para celebrar
-  useEffect(() => {
-    CONOCE_JOURNEY.forEach(lvl => {
-      if (isJourneyLevelCompletedByBoth(lvl.level, conoce, myRole, partnerRole)) {
-        setCelebrateLevel(lvl.level);
-        const t = setTimeout(() => setCelebrateLevel(null), 2500);
-        return () => clearTimeout(t);
+  // Estado de cada parada: dentro de un nivel avanzas a tu ritmo (respondes una → se abre la siguiente)
+  const mapNodes = useMemo(() => {
+    let prevMine = true;
+    let prevLevel = null;
+    return CONOCE_MAP.nodes.map(n => {
+      if (n.level !== prevLevel) { prevMine = true; prevLevel = n.level; }
+      const levelOpen = isJourneyLevelUnlocked(n.level, conoce, myRole, partnerRole);
+      if (n.type === "q") {
+        const ans = conoce[`${n.q.cat}-${n.q.idx}`] || {};
+        const mine = !!ans[myRole], partnerDone = !!ans[partnerRole];
+        const open = levelOpen && (mine || prevMine);
+        prevMine = mine;
+        const status = !open ? "locked" : !mine ? "current" : partnerDone ? "done" : "waiting";
+        return { ...n, status, partnerDone };
       }
+      if (n.type === "quiz") {
+        const quiz = QUIZZES.find(z => z.id === n.quizId);
+        const answered = quiz.questions.filter((_, idx) => !!conoce[`${quiz.catKey}-${idx}`]?.[myRole]).length;
+        const status = answered === quiz.questions.length ? "done" : levelOpen && prevMine ? "ready" : "locked";
+        return { ...n, quiz, status };
+      }
+      return { ...n, status: isJourneyLevelCompletedByBoth(n.level, conoce, myRole, partnerRole) ? "done" : "locked" };
     });
+  }, [conoce, myRole, partnerRole]);
+
+  const focusIdx = useMemo(() => {
+    const i = mapNodes.findIndex(n => n.status === "current" || n.status === "ready");
+    if (i >= 0) return i;
+    for (let j = mapNodes.length - 1; j >= 0; j--) if (mapNodes[j].status !== "locked") return j;
+    return 0;
+  }, [mapNodes]);
+
+  // Al volver al camino, centrar la parada que toca
+  const focusRef = useRef(null);
+  useEffect(() => {
+    if (openQ || openQuizId) return;
+    const t = setTimeout(() => focusRef.current?.scrollIntoView({ block: "center", behavior: "smooth" }), 250);
+    return () => clearTimeout(t);
+  }, [openQ, openQuizId]);
+
+  // Celebrar solo cuando un nivel pasa a estar completo por ambos (no cada vez que se abre la pantalla)
+  const completedLevelsRef = useRef(null);
+  useEffect(() => {
+    const done = CONOCE_JOURNEY.filter(lvl => isJourneyLevelCompletedByBoth(lvl.level, conoce, myRole, partnerRole)).map(lvl => lvl.level);
+    const prev = completedLevelsRef.current;
+    completedLevelsRef.current = done;
+    const fresh = prev && done.find(l => !prev.includes(l));
+    if (!fresh) return;
+    setCelebrateLevel(fresh);
+    const t = setTimeout(() => setCelebrateLevel(null), 2500);
+    return () => clearTimeout(t);
   }, [conoce, myRole, partnerRole]);
 
   const openQuestion = (q) => {
@@ -3410,15 +3414,6 @@ function Conocete({ conoce, onSave, user, streakInfo, onDailySeedAnswer }) {
     onSave(openQ.cat, openQ.idx, clean, openQ.level, isNewMine);
     setSaved(true);
     setOpenQ(null);
-  };
-
-  const pickRandomQuestion = (level) => {
-    const lvl = CONOCE_JOURNEY.find(l => l.level === level);
-    if (!lvl) return;
-    const unanswered = lvl.questions.filter(q => !conoce[`${q.cat}-${q.idx}`]?.[myRole]);
-    const pool = unanswered.length ? unanswered : lvl.questions;
-    const q = pool[Math.floor(Math.random() * pool.length)];
-    openQuestion(q);
   };
 
   // ─── Single question view (card flip style)
@@ -3463,104 +3458,36 @@ function Conocete({ conoce, onSave, user, streakInfo, onDailySeedAnswer }) {
     );
   }
 
-  // ─── Level detail view — card deck
-  if (openLevel) {
-    const levelData = CONOCE_JOURNEY.find(l => l.level === openLevel);
-    const progress = getJourneyLevelProgress(openLevel, conoce, myRole);
-    const progressPartner = getJourneyLevelProgress(openLevel, conoce, partnerRole);
-    const completeBoth = isJourneyLevelCompletedByBoth(openLevel, conoce, myRole, partnerRole);
-    const remainingMine = levelData.questions.filter(q => !conoce[`${q.cat}-${q.idx}`]?.[myRole]);
-
+  // ─── Test de personalidad abierto desde el camino
+  if (openQuizId) {
     return (
       <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
-        <ConozcanseBanner subtitle={levelData.label} />
-        <style>{`
-          @keyframes popIn { from { opacity:0; transform: scale(0.9); } to { opacity:1; transform: scale(1); } }
-        `}</style>
-        <div style={{ margin: 14 }}>
-          <div style={{ background: levelData.color, borderRadius: 20, padding: "16px 18px", marginBottom: 14, border: `2px solid ${levelData.ring}`, textAlign: "center" }}>
-            <div style={{ fontSize: "2.6rem", marginBottom: 6 }}>{levelData.emoji}</div>
-            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.25rem", color: C.dark }}
->{levelData.label}</div>
-            <div style={{ fontSize: "0.82rem", color: C.inkM, marginBottom: 10 }}>{levelData.sub}</div>
-            {completeBoth ? (
-              <div style={{ background: C.gold, borderRadius: 12, padding: "8px 12px", display: "inline-flex", alignItems: "center", gap: 6, fontSize: "0.85rem", fontWeight: 800, color: C.ink }}>
-                🏆 ¡Nivel completado! +{levelData.rewardBamboo} 🌿
-              </div>
-            ) : (
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, fontSize: "0.75rem", fontWeight: 800, color: C.inkM }}>
-                <span style={{ color: C.olive }}
->{myLabel}: {progress.answered}/{progress.total}</span>
-                <span style={{ color: C.teal }}
->{partnerLabel}: {progressPartner.answered}/{progressPartner.total}</span>
-              </div>
-            )}
-          </div>
-
-          <button
-            onClick={() => pickRandomQuestion(openLevel)}
-            style={{
-              width: "100%", marginBottom: 14, background: C.dark, color: C.cream2, border: "none", borderRadius: 18,
-              padding: "14px 18px", fontFamily: "'Baloo 2',sans-serif", fontSize: "1rem", fontWeight: 700,
-              cursor: "pointer", boxShadow: "0 4px 0 rgba(0,0,0,0.2)", display: "flex", alignItems: "center", justifyContent: "center", gap: 8
-            }}
-          >
-            🎲 {remainingMine.length ? "Pregunta sorpresa" : "Ver una respondida"}
-          </button>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            {levelData.questions.map((q, i) => {
-              const key = `${q.cat}-${q.idx}`;
-              const doneMine = !!conoce[key]?.[myRole];
-              const donePartner = !!conoce[key]?.[partnerRole];
-              const both = doneMine && donePartner;
-              return (
-                <div key={key} onClick={() => openQuestion(q)}
-                  style={{
-                    animation: `popIn 0.35s ease ${i * 0.04}s both`,
-                    background: both ? "#f4faf2" : C.white, borderRadius: 16, padding: 14, cursor: "pointer",
-                    border: `2px solid ${both ? levelData.ring : C.border}`,
-                    boxShadow: `0 2px 0 ${both ? levelData.ring + "50" : C.border}`,
-                    minHeight: 110, display: "flex", flexDirection: "column", justifyContent: "space-between"
-                  }}
-                >
-                  <div style={{ fontSize: "1.6rem", textAlign: "center" }}>{q.emoji}</div>
-                  <div style={{ fontSize: "0.78rem", color: C.ink, fontWeight: 700, lineHeight: 1.45, textAlign: "center" }}>{q.text}</div>
-                  <div style={{ display: "flex", justifyContent: "center", gap: 6, fontSize: "0.65rem", fontWeight: 800 }}>
-                    <span style={{ color: doneMine ? C.olive : C.inkL }}
->{myWho} {doneMine ? "✓" : "·"}</span>
-                    <span style={{ color: donePartner ? C.teal : C.inkL }}
->{partnerWho} {donePartner ? "✓" : "·"}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+        <ConozcanseBanner subtitle="Tests de personalidad" />
+        <div style={{ padding: "12px 14px 0" }}>
+          <Btn onClick={() => setOpenQuizId(null)} variant="ghost" style={{ padding: "8px 12px", fontSize: "0.8rem" }}>← Volver al camino</Btn>
+          <Cuestionarios conoce={conoce} onSave={onSave} user={user} initialQuiz={openQuizId} />
         </div>
       </div>
     );
   }
 
-  // ─── Main journey view
+  // ─── Main journey view — camino ilustrado
+  const H = CONOCE_MAP.height;
+  const pctY = (y) => `${(y / H) * 100}%`;
+  const [broteY, florY] = CONOCE_MAP.labels.map(l => l.y);
+
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
       <ConozcanseBanner />
       <style>{`
-        @keyframes missionIn { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: none; } }
         @keyframes bounceSoft { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
         @keyframes confetti { 0% { transform: translateY(0) rotate(0deg); opacity:1; } 100% { transform: translateY(120px) rotate(720deg); opacity:0; } }
+        @keyframes nodeGlow { 0%,100% { box-shadow: 0 5px 0 #e79bbd, 0 0 0 6px rgba(255,214,232,0.55), 0 0 26px rgba(255,190,220,0.8); } 50% { box-shadow: 0 5px 0 #e79bbd, 0 0 0 12px rgba(255,214,232,0.35), 0 0 36px rgba(255,190,220,0.95); } }
+        @keyframes raysBlink { 0%,100% { opacity: 1; } 50% { opacity: 0.45; } }
       `}</style>
 
-      {/* Progress */}
-      <div style={{ padding: "12px 16px 0" }}>
-        <div style={{ display: "flex", justifyContent: "flex-end", fontSize: "0.72rem", color: C.inkM, marginBottom: 5 }}>{Math.round(overall.pct)}%</div>
-        <div style={{ background: C.cream, borderRadius: 50, height: 6, overflow: "hidden" }}>
-          <div style={{ width: `${overall.pct}%`, height: "100%", background: "linear-gradient(90deg, #8bc48a, #f8e060)", borderRadius: 50, transition: "width 0.8s" }} />
-        </div>
-      </div>
-
       {/* Semilla del día */}
-      <div style={{ padding: "0 14px 14px" }}>
+      <div style={{ padding: "14px 14px 14px" }}>
         <div
           onClick={() => setShowDailySeed(true)}
           style={{
@@ -3600,86 +3527,109 @@ function Conocete({ conoce, onSave, user, streakInfo, onDailySeedAnswer }) {
         </div>
       </div>
 
-      {/* Level missions */}
-      <div style={{ padding: "14px" }}>
-        {CONOCE_JOURNEY.map((lvl, i) => {
-          const progress = getJourneyLevelProgress(lvl.level, conoce, myRole);
-          const progressPartner = getJourneyLevelProgress(lvl.level, conoce, partnerRole);
-          const completeBoth = isJourneyLevelCompletedByBoth(lvl.level, conoce, myRole, partnerRole);
-          const unlocked = isJourneyLevelUnlocked(lvl.level, conoce, myRole, partnerRole) || lvl.level === 1;
-          const totalAnsweredBoth = progress.answered + progressPartner.answered;
-          const totalNeededBoth = progress.total + progressPartner.total;
-          const pctBoth = Math.round((totalAnsweredBoth / Math.max(1, totalNeededBoth)) * 100);
+      {/* Mapa */}
+      <div style={{ position: "relative", width: "100%", aspectRatio: `1000 / ${H}`, overflow: "hidden", background: "#d2dab9" }}>
+        <img src="/conoce/paisaje.webp" alt="" draggable={false}
+          style={{ position: "absolute", left: 0, top: 0, width: "100%", height: pctY(CONOCE_MAP_TOP_H + 2), display: "block" }} />
+        {CONOCE_MAP.tiles.map((t, k) => (
+          <img key={t} src="/conoce/paisaje-tile.webp" alt="" draggable={false}
+            style={{ position: "absolute", left: 0, top: pctY(t - 60), width: "100%", height: pctY(CONOCE_MAP_TILE_H + 62), display: "block", transform: k % 2 ? "scaleX(-1)" : "none",
+              WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, #000 12%)", maskImage: "linear-gradient(to bottom, transparent 0%, #000 12%)" }} />
+        ))}
+        {/* Tinte por nivel: verde → lila (Brote) → rosa (Flor) */}
+        <div style={{
+          position: "absolute", inset: 0, pointerEvents: "none", mixBlendMode: "color",
+          background: `linear-gradient(to bottom,
+            rgba(255,255,255,0) 0%, rgba(255,255,255,0) ${((broteY - 260) / H) * 100}%,
+            rgba(176,140,240,0.55) ${((broteY + 60) / H) * 100}%, rgba(176,140,240,0.55) ${((florY - 260) / H) * 100}%,
+            rgba(245,140,195,0.5) ${((florY + 60) / H) * 100}%, rgba(245,140,195,0.5) 100%)`,
+        }} />
 
+        <svg viewBox={`0 0 1000 ${H}`} preserveAspectRatio="none" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
+          <path d={CONOCE_MAP.path} fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="92" strokeLinecap="round" />
+          <path d={CONOCE_MAP.path} fill="none" stroke="#fbf3df" strokeWidth="66" strokeLinecap="round" />
+        </svg>
+
+        {/* Progreso juntos */}
+        <div style={{ position: "absolute", left: 12, top: 12, background: "rgba(255,255,255,0.85)", borderRadius: 14, padding: "5px 11px", fontSize: "0.72rem", fontWeight: 800, color: C.inkM, boxShadow: "0 2px 0 rgba(0,0,0,0.06)" }}>
+          💞 {overall.answered}/{overall.total} juntos
+        </div>
+
+        {/* Letreros de nivel */}
+        {CONOCE_MAP.labels.map(l => {
+          const lv = CONOCE_LEVELS[l.level];
+          const open = isJourneyLevelUnlocked(l.level, conoce, myRole, partnerRole);
           return (
-            <div key={lvl.level} style={{ animation: `missionIn 0.45s ease ${i * 0.08}s both`, marginBottom: 12, position: "relative" }}>
-              {i < CONOCE_JOURNEY.length - 1 && (
-                <div style={{ position: "absolute", left: 34, top: 88, bottom: -16, width: 3, background: completeBoth ? lvl.ring : C.border, opacity: completeBoth ? 0.7 : 0.25, zIndex: 0, borderRadius: 3 }} />
-              )}
-              <div
-                onClick={() => unlocked && setOpenLevel(lvl.level)}
-                style={{
-                  position: "relative", zIndex: 1,
-                  background: completeBoth ? lvl.color : unlocked ? C.white : C.sandL,
-                  borderRadius: 22, padding: 16,
-                  border: `2.5px solid ${completeBoth ? lvl.ring : unlocked ? lvl.ring : C.sand}`,
-                  boxShadow: `0 4px 0 ${completeBoth ? lvl.ring + "60" : C.border}`,
-                  cursor: unlocked ? "pointer" : "default", opacity: unlocked ? 1 : 0.65,
-                  transition: "all 0.15s"
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                  <div style={{
-                    width: 62, height: 62, borderRadius: 18,
-                    background: completeBoth ? lvl.ring : unlocked ? lvl.color : C.sand,
-                    display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2rem", flexShrink: 0,
-                    border: `2px solid ${completeBoth ? lvl.ring : unlocked ? lvl.ring : C.border}`,
-                    animation: unlocked && !completeBoth ? "bounceSoft 2.2s ease-in-out infinite" : "none"
-                  }}>
-                    {completeBoth ? "🏆" : unlocked ? lvl.emoji : "🔒"}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 3 }}>
-                      <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.1rem", color: C.dark }}
->{lvl.label}</div>
-                      {completeBoth && <span style={{ fontSize: "0.7rem", fontWeight: 800, color: C.olive, background: C.gold, borderRadius: 8, padding: "3px 9px" }}>✓ Listo</span>}
-                      {!unlocked && <span style={{ fontSize: "0.7rem", fontWeight: 800, color: C.inkL, background: C.white, borderRadius: 8, padding: "3px 9px" }}>🔒</span>}
-                    </div>
-                    <div style={{ fontSize: "0.78rem", color: C.inkM, marginBottom: 8 }}
->{lvl.sub}</div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                      <div style={{ flex: 1, background: C.cream, borderRadius: 50, height: 6, overflow: "hidden" }}>
-                        <div style={{ width: `${pctBoth}%`, height: "100%", background: completeBoth ? lvl.ring : `linear-gradient(90deg, ${C.olive}, ${C.teal})`, borderRadius: 50, transition: "width 0.6s" }} />
-                      </div>
-                      <div style={{ fontSize: "0.7rem", fontWeight: 800, color: C.inkM }}
->{pctBoth}%</div>
-                    </div>
-                    <div style={{ display: "flex", gap: 10, fontSize: "0.68rem", fontWeight: 800, color: C.inkL }}>
-                      <span style={{ color: C.olive }}
->🐼 {myLabel}: {progress.answered}/{progress.total}</span>
-                      <span style={{ color: C.teal }}
->🐾 {partnerLabel}: {progressPartner.answered}/{progressPartner.total}</span>
-                    </div>
-                  </div>
-                </div>
+            <div key={l.level} style={{ position: "absolute", left: "50%", top: pctY(l.y), transform: "translate(-50%,-50%)", zIndex: 2,
+              background: "rgba(255,255,255,0.92)", border: `2px solid ${lv.ring}`, borderRadius: 18, padding: "7px 14px", textAlign: "center",
+              boxShadow: `0 4px 0 ${lv.ring}55`, whiteSpace: "nowrap" }}>
+              <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "0.98rem", color: C.dark, lineHeight: 1.1 }}>{lv.emoji} {lv.label}</div>
+              <div style={{ fontSize: "0.66rem", fontWeight: 800, color: C.inkM }}>
+                {open ? lv.sub : `🔒 Terminen ${CONOCE_LEVELS[l.level - 1].label} los dos`}
+              </div>
+            </div>
+          );
+        })}
 
-                {completeBoth && (
-                  <div style={{ marginTop: 10, background: C.gold, borderRadius: 12, padding: "8px 12px", display: "inline-flex", alignItems: "center", gap: 6, fontSize: "0.8rem", fontWeight: 800, color: C.ink }}>
-                    🎁 +{lvl.rewardBamboo} bambú desbloqueados
+        {/* Paradas */}
+        {mapNodes.map((n, i) => {
+          const isQuiz = n.type === "quiz", isChest = n.type === "chest";
+          const size = isQuiz || isChest ? 62 : 56;
+          const look = {
+            locked:  { bg: "radial-gradient(circle at 35% 30%, #fbf8ff, #e6def4)", edge: "#c9bce3" },
+            current: { bg: "radial-gradient(circle at 35% 30%, #fff, #fcd9e8)", edge: "#e79bbd" },
+            waiting: { bg: "radial-gradient(circle at 35% 30%, #fff, #f1ebfb)", edge: "#c3b2e6" },
+            ready:   { bg: "radial-gradient(circle at 35% 30%, #fff, #e9ddff)", edge: "#9a7fd9" },
+            done:    { bg: "radial-gradient(circle at 35% 30%, #fff6d6, #f7d67a)", edge: "#d9a93a" },
+          }[n.status];
+          const icon = n.status === "locked" && n.type === "q" ? <ConoceLock />
+            : isChest ? (n.status === "done" ? "🏆" : "🎁")
+            : isQuiz ? n.quiz.emoji
+            : n.status === "current" ? "💗"
+            : n.q.emoji;
+          const tappable = n.status !== "locked" && !isChest;
+          const onTap = () => {
+            if (!tappable) return;
+            if (isQuiz) setOpenQuizId(n.quizId);
+            else openQuestion(n.q);
+          };
+          return (
+            <div key={i} ref={i === focusIdx ? focusRef : null}
+              style={{ position: "absolute", left: `${n.x / 10}%`, top: pctY(n.y), transform: "translate(-50%,-50%)", zIndex: 3 }}>
+              {n.status === "current" && (
+                <>
+                  <div style={{ position: "absolute", left: "50%", top: -24, transform: "translateX(-50%)", display: "flex", gap: 8, animation: "raysBlink 1.6s ease-in-out infinite" }}>
+                    {[-25, 0, 25].map(r => <div key={r} style={{ width: 5, height: 13, borderRadius: 3, background: "#f5c74a", transform: `rotate(${r}deg) translateY(${r ? 4 : 0}px)` }} />)}
                   </div>
+                  <div style={{ position: "absolute", left: "50%", bottom: "100%", marginBottom: 20, transform: "translateX(-50%)", background: "#fff", borderRadius: 12, padding: "3px 10px", fontSize: "0.68rem", fontWeight: 800, color: "#c2588a", whiteSpace: "nowrap", boxShadow: "0 2px 0 rgba(0,0,0,0.08)" }}>
+                    {n.partnerDone ? "¡Ya respondió! Te toca" : "¡Te toca!"}
+                  </div>
+                </>
+              )}
+              <div onClick={onTap}
+                style={{
+                  width: size, height: size, borderRadius: "50%", background: look.bg,
+                  border: "3px solid rgba(255,255,255,0.95)",
+                  boxShadow: `0 5px 0 ${look.edge}, 0 8px 14px rgba(80,60,120,0.15)`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: isQuiz || isChest ? "1.7rem" : "1.5rem",
+                  cursor: tappable ? "pointer" : "default", position: "relative",
+                  animation: n.status === "current" ? "nodeGlow 2s ease-in-out infinite, bounceSoft 2.2s ease-in-out infinite"
+                    : n.status === "ready" ? "bounceSoft 2.2s ease-in-out infinite" : "none",
+                  filter: n.status === "locked" && n.type !== "q" ? "grayscale(0.7) opacity(0.75)" : "none",
+                  WebkitTapHighlightColor: "transparent",
+                }}>
+                {icon}
+                {n.type === "q" && n.status === "waiting" && (
+                  <span style={{ position: "absolute", right: -6, bottom: -4, background: "#fff", borderRadius: 10, padding: "1px 5px", fontSize: "0.7rem", boxShadow: "0 1px 3px rgba(0,0,0,0.15)" }}>⏳</span>
+                )}
+                {n.type === "q" && n.status === "done" && (
+                  <span style={{ position: "absolute", right: -6, bottom: -4, background: "#7fbf6a", color: "#fff", borderRadius: 10, width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontWeight: 900 }}>✓</span>
                 )}
               </div>
-
-              {celebrateLevel === lvl.level && (
-                <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 9999, display: "flex", justifyContent: "center" }}>
-                  {[...Array(12)].map((_, idx) => (
-                    <div key={idx} style={{
-                      position: "absolute", top: "20%", left: `${10 + idx * 7}%`,
-                      fontSize: "1.6rem", animation: `confetti 1.2s ease ${idx * 0.05}s both`
-                    }}>
-                      {["🎉", "✨", "🌿", "🌸", "💖", "🏆"][idx % 6]}
-                    </div>
-                  ))}
+              {(isQuiz || isChest) && (
+                <div style={{ position: "absolute", top: "100%", left: "50%", transform: "translateX(-50%)", marginTop: 9, background: "rgba(255,255,255,0.9)", borderRadius: 10, padding: "2px 9px", fontSize: "0.64rem", fontWeight: 800, color: C.inkM, whiteSpace: "nowrap" }}>
+                  {isQuiz ? `${n.quiz.title} · opcional` : n.status === "done" ? `+${CONOCE_JOURNEY[n.level - 1].rewardBamboo} 🌿 ganados` : `+${CONOCE_JOURNEY[n.level - 1].rewardBamboo} 🌿 juntos`}
                 </div>
               )}
             </div>
@@ -3687,26 +3637,18 @@ function Conocete({ conoce, onSave, user, streakInfo, onDailySeedAnswer }) {
         })}
       </div>
 
-      {/* Personality quizzes collapsed */}
-      <div style={{ margin: "0 14px 14px" }}>
-        <div
-          onClick={() => setShowQuizzes(s => !s)}
-          style={{ background: C.white, borderRadius: 18, padding: "14px 16px", border: `1.5px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}
-        >
-          <div>
-            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "0.95rem", color: C.dark }}
->🧩 Tests de personalidad</div>
-            <div style={{ fontSize: "0.72rem", color: C.inkM }}
->3 minijuegos para conocerse más</div>
-          </div>
-          <div style={{ fontSize: "0.85rem", color: C.inkM, transform: showQuizzes ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>▼</div>
+      {celebrateLevel && (
+        <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 9999, display: "flex", justifyContent: "center" }}>
+          {[...Array(12)].map((_, idx) => (
+            <div key={idx} style={{
+              position: "absolute", top: "20%", left: `${10 + idx * 7}%`,
+              fontSize: "1.6rem", animation: `confetti 1.2s ease ${idx * 0.05}s both`
+            }}>
+              {["🎉", "✨", "🌿", "🌸", "💖", "🏆"][idx % 6]}
+            </div>
+          ))}
         </div>
-        {showQuizzes && (
-          <div style={{ marginTop: 10 }}>
-            <Cuestionarios conoce={conoce} onSave={onSave} user={user} />
-          </div>
-        )}
-      </div>
+      )}
       {showDailySeed && (
         <DailySeedModal
           user={user}
@@ -8760,7 +8702,7 @@ export default function App() {
     <div style={{ fontFamily:"'Nunito',sans-serif", maxWidth:480, margin:"0 auto", minHeight:"100vh", background:C.sandL, position:"relative" }}>
       <style>{STYLES}</style>
       <div style={{ paddingBottom:72 }}>
-        {tab==="jardin" && <Jardin bamboo={bamboo} happiness={happiness} water={water} garden={garden} accessories={accessories} mochiHappy={mochiHappy} pandaBubble={pandaBubble} onPet={petMochi} onBuy={buyItem} onWater={waterGarden} onBuyAccessory={buyAccessory} user={user} onClaimDailyTip={claimDailyTip} onGoTab={setTab} onStartTest={() => setScreen("reltest")} testScores={testScores} testDue={testDue} testStatus={testStatus} partnerConnected={partnerConnected} conoce={conoce} exDone={exDone} lessonsDone={lessonsDone}/>}
+        {tab==="jardin" && <Jardin bamboo={bamboo} happiness={happiness} water={water} garden={garden} accessories={accessories} mochiHappy={mochiHappy} pandaBubble={pandaBubble} onPet={petMochi} onBuy={buyItem} onWater={waterGarden} onBuyAccessory={buyAccessory}/>}
         {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson} bamboo={bamboo} exChestState={exChestState} exStreak={exStreak} onGoToGarden={() => setTab("jardin")}/>}
         {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user} streakInfo={streakData} onDailySeedAnswer={submitDailySeed}/>}
         {tab==="burbuja" && <Burbuja burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} user={user}/>}
