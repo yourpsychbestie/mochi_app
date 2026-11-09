@@ -749,16 +749,25 @@ const CONOCE_MAP = (() => {
     });
   });
   const height = y + 40;
-  const path = nodes.reduce((d, n, i) => {
+  return { nodes, labels, height, path: mapCurvePath(nodes), tiles: mapTiles(height) };
+})();
+
+// Curva suave que une las paradas de un camino
+function mapCurvePath(nodes) {
+  return nodes.reduce((d, n, i) => {
     if (i === 0) return `M ${n.x} ${n.y}`;
     const p = nodes[i - 1];
     const dy = (n.y - p.y) / 2;
     return `${d} C ${p.x} ${p.y + dy} ${n.x} ${n.y - dy} ${n.x} ${n.y}`;
   }, "");
+}
+
+// Posiciones de paisaje-tile.webp para cubrir un mapa de cierta altura
+function mapTiles(height) {
   const tiles = [];
   for (let t = CONOCE_MAP_TOP_H; t < height; t += CONOCE_MAP_TILE_H) tiles.push(t);
-  return { nodes, labels, height, path, tiles };
-})();
+  return tiles;
+}
 
 // Respuestas rápidas (tocar > escribir) para las preguntas sencillas de Semilla
 const CONOCE_QUICK = {
@@ -796,6 +805,16 @@ const CONOCE_ICON_PATHS = {
   lock: <><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" /><rect x="5.5" y="10.5" width="13" height="9.5" rx="2.5" /></>,
   flame: <path d="M12 21c-3.6 0-6-2.4-6-5.6 0-3.4 2.6-5 3.4-8.4 2.2 1.4 3 3.4 3 5 .9-.6 1.6-1.8 1.8-3 1.8 1.6 3.8 3.8 3.8 6.4 0 3.2-2.4 5.6-6 5.6z" />,
   leaf: <><path d="M5 19C5 10.5 10.5 5 19 5c0 8.5-5.5 14-14 14z" /><path d="M5 19l7.5-7.5" /></>,
+  chat: <path d="M6.5 4h11A2.5 2.5 0 0 1 20 6.5v7a2.5 2.5 0 0 1-2.5 2.5H10l-4 3.5V16A2.5 2.5 0 0 1 4 13.5v-7A2.5 2.5 0 0 1 6.5 4z" />,
+  clock: <><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5V12l3 2" /></>,
+  bolt: <path d="M13 3L5.5 13.5H11L10 21l7.5-10.5H12z" />,
+  family: <><circle cx="8.5" cy="7.5" r="2.5" /><circle cx="16" cy="9" r="2" /><path d="M4 19.5v-2a4.5 4.5 0 0 1 9 0v2" /><path d="M13.5 14.2a3.6 3.6 0 0 1 6 2.8v2.5" /></>,
+  home: <><path d="M4 11l8-6.5 8 6.5" /><path d="M6.5 9.5v10h11v-10" /><path d="M10 19.5v-5h4v5" /></>,
+  coin: <><circle cx="12" cy="12" r="8.5" /><path d="M14.5 9.2c-.5-.9-1.4-1.3-2.5-1.3-1.5 0-2.6.8-2.6 2s1.1 1.6 2.6 2 2.6.9 2.6 2.1-1.1 2-2.6 2c-1.1 0-2.1-.5-2.6-1.4M12 6.3v1.6M12 16.4V18" /></>,
+  book: <><path d="M12 6.5C10 5 7 4.5 4 5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V5c-3-.5-6 0-8 1.5z" /><path d="M12 6.5v13" /></>,
+  candle: <><rect x="9" y="10" width="6" height="10" rx="1.5" /><path d="M12 10V8.5" /><path d="M12 3.5c1.3 1.5 1.8 2.6 1.8 3.4a1.8 1.8 0 0 1-3.6 0c0-.8.5-1.9 1.8-3.4z" /></>,
+  mountain: <><path d="M3 19.5l6-10 4 6 2.5-3.5 5.5 7.5z" /><path d="M7.4 12.2l1.6 1.3 1.6-1.3" /></>,
+  baby: <><circle cx="12" cy="13" r="7" /><path d="M12 6c0-1.6 1-2.5 2.3-2.5" /><circle cx="9.5" cy="12.5" r="0.9" fill="currentColor" stroke="none" /><circle cx="14.5" cy="12.5" r="0.9" fill="currentColor" stroke="none" /><path d="M10.5 16c.9.6 2.1.6 3 0" /></>,
 };
 
 function ConoceIcon({ name, size = 24, color = "currentColor", stroke = 2, fill = "none", style }) {
@@ -815,6 +834,161 @@ const ConoceLock = () => (
     <rect x="10" y="16" width="2" height="4" rx="1" fill="#efe9f8" />
   </svg>
 );
+
+// ═══════════════════════════════════════════════
+// CAMINO ILUSTRADO GENÉRICO — Acuerdos, Ejercicios y Lecciones (mismo paisaje que Conócete)
+// ═══════════════════════════════════════════════
+// steps: [{ stage, ... }] en orden; se pone un letrero cada vez que cambia la etapa
+function buildPathMap(steps) {
+  const nodes = [];
+  const labels = [];
+  let y = 380;
+  steps.forEach((s, i) => {
+    if (i > 0 && steps[i - 1].stage !== s.stage) { labels.push({ stage: s.stage, y: y + 70 }); y += 280; }
+    nodes.push({ ...s, x: i === 0 ? 500 : i % 2 ? 650 : 350, y });
+    y += 200;
+  });
+  const height = y + 40;
+  return { nodes, labels, height, path: mapCurvePath(nodes), tiles: mapTiles(height) };
+}
+
+const PATH_NODE_LOOK = {
+  locked:    { bg: "radial-gradient(circle at 35% 30%, #fbf8ff, #e6def4)", edge: "#c9bce3", icon: "#a796cc" },
+  current:   { bg: "radial-gradient(circle at 35% 30%, #fff, #fcd9e8)", edge: "#e79bbd", icon: "#e46b9c" },
+  open:      { bg: "radial-gradient(circle at 35% 30%, #fff, #f1ebfb)", edge: "#c3b2e6", icon: "#8d6fc9" },
+  waiting:   { bg: "radial-gradient(circle at 35% 30%, #fff, #f1ebfb)", edge: "#c3b2e6", icon: "#8d6fc9" },
+  negotiate: { bg: "radial-gradient(circle at 35% 30%, #fff, #e9ddff)", edge: "#9a7fd9", icon: "#7c5fd0" },
+  done:      { bg: "radial-gradient(circle at 35% 30%, #fff6d6, #f7d67a)", edge: "#d9a93a", icon: "#b8862a" },
+};
+const PATH_STATUS_BADGE = {
+  waiting: ["hourglass", "#fff", "#8d6fc9"],
+  negotiate: ["letter", "#fff", "#7c5fd0"],
+  done: ["check", "#7fbf6a", "#fff"],
+};
+// Tinte por etapa (en orden de aparición): verde → lila → rosa
+const PATH_TINTS = ["rgba(255,255,255,0)", "rgba(176,140,240,0.55)", "rgba(245,140,195,0.5)"];
+
+// nodes: los de buildPathMap + { key, status, icon, badge?, bubble?, caption?, bounce?, tappable }
+// stageInfo(stage) → { label, sub, ring, icon }
+function CaminoMapa({ map, nodes, stageInfo, tints = PATH_TINTS, counter, focusIdx, focusRef, onTap }) {
+  const H = map.height;
+  const pctY = (y) => `${(y / H) * 100}%`;
+  const tintStops = [`${tints[0]} 0%`];
+  map.labels.forEach((l, k) => {
+    tintStops.push(`${tints[k]} ${pctY(l.y - 260)}`, `${tints[k + 1]} ${pctY(l.y + 60)}`);
+  });
+  tintStops.push(`${tints[map.labels.length]} 100%`);
+
+  return (
+    <div style={{ position: "relative", width: "100%", aspectRatio: `1000 / ${H}`, overflow: "hidden", background: "#d2dab9" }}>
+      <style>{`
+        @keyframes bounceSoft { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        @keyframes nodeGlow { 0%,100% { box-shadow: 0 5px 0 #e79bbd, 0 0 0 6px rgba(255,214,232,0.55), 0 0 26px rgba(255,190,220,0.8); } 50% { box-shadow: 0 5px 0 #e79bbd, 0 0 0 12px rgba(255,214,232,0.35), 0 0 36px rgba(255,190,220,0.95); } }
+        @keyframes raysBlink { 0%,100% { opacity: 1; } 50% { opacity: 0.45; } }
+      `}</style>
+      <img src="/conoce/paisaje.webp" alt="" draggable={false}
+        style={{ position: "absolute", left: 0, top: 0, width: "100%", height: pctY(CONOCE_MAP_TOP_H + 2), display: "block" }} />
+      {map.tiles.map((t, k) => (
+        <img key={t} src="/conoce/paisaje-tile.webp" alt="" draggable={false}
+          style={{ position: "absolute", left: 0, top: pctY(t - 60), width: "100%", height: pctY(CONOCE_MAP_TILE_H + 62), display: "block", transform: k % 2 ? "scaleX(-1)" : "none",
+            WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, #000 12%)", maskImage: "linear-gradient(to bottom, transparent 0%, #000 12%)" }} />
+      ))}
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none", mixBlendMode: "color", background: `linear-gradient(to bottom, ${tintStops.join(", ")})` }} />
+
+      <svg viewBox={`0 0 1000 ${H}`} preserveAspectRatio="none" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
+        <path d={map.path} fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="92" strokeLinecap="round" />
+        <path d={map.path} fill="none" stroke="#fbf3df" strokeWidth="66" strokeLinecap="round" />
+      </svg>
+
+      {counter && (
+        <div style={{ position: "absolute", left: 12, top: 12, background: "rgba(255,255,255,0.85)", borderRadius: 14, padding: "5px 11px", fontSize: "0.72rem", fontWeight: 800, color: C.inkM, boxShadow: "0 2px 0 rgba(0,0,0,0.06)", display: "flex", alignItems: "center", gap: 5 }}>
+          <ConoceIcon name="heart" size={13} color="#e46b9c" fill="#f7c3d8" stroke={2} /> {counter}
+        </div>
+      )}
+
+      {/* Letreros de etapa */}
+      {map.labels.map(l => {
+        const info = stageInfo(l.stage);
+        return (
+          <div key={l.stage} style={{ position: "absolute", left: "50%", top: pctY(l.y), transform: "translate(-50%,-50%)", zIndex: 2,
+            background: "rgba(255,255,255,0.92)", border: `2px solid ${info.ring}`, borderRadius: 18, padding: "7px 14px", textAlign: "center",
+            boxShadow: `0 4px 0 ${info.ring}55`, whiteSpace: "nowrap" }}>
+            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "0.98rem", color: C.dark, lineHeight: 1.1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+              <ConoceIcon name={info.icon} size={17} color={info.ring} stroke={2.2} />{info.label}
+            </div>
+            <div style={{ fontSize: "0.66rem", fontWeight: 800, color: C.inkM, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
+              {info.locked && <ConoceIcon name="lock" size={11} stroke={2.4} />}
+              {info.sub}
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Paradas */}
+      {nodes.map((n, i) => {
+        const look = PATH_NODE_LOOK[n.status];
+        const isFocus = i === focusIdx;
+        const badge = n.badge || PATH_STATUS_BADGE[n.status];
+        const side = n.x < 500 ? "left" : n.x > 500 ? "right" : null;
+        return (
+          <div key={n.key} ref={isFocus ? focusRef : null}
+            style={{ position: "absolute", left: `${n.x / 10}%`, top: pctY(n.y), transform: "translate(-50%,-50%)", zIndex: 3 }}>
+            {isFocus && n.bubble && (
+              <>
+                <div style={{ position: "absolute", left: "50%", top: -24, transform: "translateX(-50%)", display: "flex", gap: 8, animation: "raysBlink 1.6s ease-in-out infinite" }}>
+                  {[-25, 0, 25].map(r => <div key={r} style={{ width: 5, height: 13, borderRadius: 3, background: "#f5c74a", transform: `rotate(${r}deg) translateY(${r ? 4 : 0}px)` }} />)}
+                </div>
+                <div style={{ position: "absolute", left: "50%", bottom: "100%", marginBottom: 20, transform: "translateX(-50%)", background: "#fff", borderRadius: 12, padding: "3px 10px", fontSize: "0.68rem", fontWeight: 800, color: "#c2588a", whiteSpace: "nowrap", boxShadow: "0 2px 0 rgba(0,0,0,0.08)" }}>
+                  {n.bubble}
+                </div>
+              </>
+            )}
+            <div onClick={() => n.tappable && onTap(n)}
+              style={{
+                width: 56, height: 56, borderRadius: "50%", background: look.bg,
+                border: "3px solid rgba(255,255,255,0.95)",
+                boxShadow: `0 5px 0 ${look.edge}, 0 8px 14px rgba(80,60,120,0.15)`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: n.tappable ? "pointer" : "default", position: "relative",
+                animation: n.status === "current" && isFocus ? "nodeGlow 2s ease-in-out infinite, bounceSoft 2.2s ease-in-out infinite"
+                  : n.bounce ? "bounceSoft 2.2s ease-in-out infinite" : "none",
+                WebkitTapHighlightColor: "transparent",
+              }}>
+              {n.status === "locked" ? <ConoceLock />
+                : <ConoceIcon name={n.status === "current" ? "heart" : n.icon} size={27} color={look.icon} stroke={2.1}
+                    fill={n.status === "current" ? "#f7a8c8" : "none"} />}
+              {badge && (
+                <span style={{ position: "absolute", right: -6, bottom: -4, background: badge[1], borderRadius: 10, width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 3px rgba(0,0,0,0.15)", border: badge[1] === "#fff" ? "none" : "2px solid #fff", boxSizing: "border-box" }}>
+                  <ConoceIcon name={badge[0]} size={badge[1] === "#fff" ? 13 : 12} color={badge[2]} stroke={badge[1] === "#fff" ? 2.2 : 3.2} />
+                </span>
+              )}
+            </div>
+            {n.caption && (
+              <div style={{
+                position: "absolute", width: "max-content", maxWidth: 112, background: "rgba(255,255,255,0.9)", borderRadius: 10, padding: "2px 9px",
+                fontSize: "0.64rem", fontWeight: 800, color: C.inkM, lineHeight: 1.25, textAlign: "center",
+                ...(side === "left" ? { right: "100%", marginRight: 12, top: "50%", transform: "translateY(-50%)" }
+                  : side === "right" ? { left: "100%", marginLeft: 12, top: "50%", transform: "translateY(-50%)" }
+                  : { top: "100%", left: "50%", transform: "translateX(-50%)", marginTop: 9 }),
+              }}>
+                {n.caption}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// Camino de ejercicios: una etapa por zona (Pradera → Cumbre)
+const EXERCISE_SKILL_ICON = { comunicacion: "chat", confianza: "shield", pasion: "flame", calma: "leaf" };
+const EXERCISE_ZONE_ICON = { pradera: "seed", bosque: "sprout", cueva: "candle", cumbre: "mountain" };
+const EXERCISE_ZONE_RING = { pradera: "#8bc48a", bosque: "#5aa88a", cueva: "#d9935a", cumbre: "#7a9ad9" };
+const EXERCISE_ZONE_TINTS = ["rgba(255,255,255,0)", "rgba(80,170,140,0.4)", "rgba(230,150,90,0.5)", "rgba(120,150,230,0.5)"];
+const EXERCISE_MAP = buildPathMap(EXERCISE_ZONES_ORDER.flatMap(zone =>
+  EXERCISES.filter(e => e.zone === zone).map(ex => ({ key: ex.id, ex, stage: zone, icon: EXERCISE_SKILL_ICON[ex.skill], caption: ex.title }))
+));
 
 const BURBUJA_SECTIONS = [
   // Ordenado de lo más leve a lo más fuerte: este orden es el camino de la Burbuja
@@ -899,6 +1073,11 @@ const BURBUJA_LEVELS = {
 const burbujaHasActivity = (e) => !!(e?.owner || e?.partner || e?.proposalText || e?.history?.length || e?.status === "approved");
 // Preguntas retiradas (legacy) solo siguen visibles si la pareja ya las usó
 const burbujaItemVisible = (item, burbuja) => !item.legacy || burbujaHasActivity(burbuja[item.id]);
+
+const BURBUJA_SEC_ICON = {
+  quiero: "gift", contacto: "chat", espacio: "clock", discusion: "bolt", planes: "compass", tipo: "rings",
+  familias: "family", fidelidad: "shield", hogar: "home", economia: "coin", crianza: "baby",
+};
 
 const LOVE_PROMPTS = [
   { icon:"🌸", idea:"Hoy noté algo lindo en ti: " },
@@ -3131,28 +3310,53 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson, b
   const chestState = useMemo(() => getChestState(exDone, exChestState), [exDone, exChestState]);
   const streak = useMemo(() => getExerciseStreak(exStreak), [exStreak]);
 
-  const exercisesByZone = useMemo(() => {
-    const unlockedZoneIds = getUnlockedZones(exDone);
-    return unlockedZoneIds.map(zoneId => ({
-      zoneId,
-      zone: EXERCISE_ZONES[zoneId],
-      exercises: EXERCISES.filter(e => e.zone === zoneId),
-    }));
-  }, [exDone]);
+  const myKey = getMyExRole(user);
+  const partnerKey = myKey === "owner" ? "partner" : "owner";
+  const unlockedZones = useMemo(() => getUnlockedZones(exDone), [exDone]);
 
-  const [expandedZones, setExpandedZones] = useState(() => {
-    const ids = exercisesByZone.map(z => z.zoneId);
-    return ids.length ? { [ids[ids.length - 1]]: true } : {};
-  });
+  // Ejercicios: toda la zona abierta se juega en cualquier orden; la siguiente zona se abre al terminarla
+  const exNodes = useMemo(() => {
+    let currentSet = false;
+    return EXERCISE_MAP.nodes.map(n => {
+      const count = exDone?.[n.ex.id] || 0;
+      if (count >= 1) return { ...n, status: "done", tappable: true, badge: count >= 3 ? ["star", "#f5c74a", "#fff"] : null };
+      if (!unlockedZones.includes(n.stage)) return { ...n, status: "locked" };
+      if (currentSet) return { ...n, status: "open", tappable: true };
+      currentSet = true;
+      return { ...n, status: "current", tappable: true, bubble: "¡Juguemos!" };
+    });
+  }, [exDone, unlockedZones]);
 
+  // Lecciones: lees a tu ritmo (terminas una → se abre la siguiente)
+  const lessonNodes = useMemo(() => {
+    let prevMine = true;
+    return LESSON_MAP.nodes.map(n => {
+      const d = lessonsDone?.[n.lesson.id] || {};
+      const mine = d[myKey] === true, partnerDone = d[partnerKey] === true;
+      const open = mine || prevMine;
+      prevMine = mine;
+      if (!open) return { ...n, status: "locked" };
+      if (!mine) return { ...n, status: "current", tappable: true, bubble: partnerDone ? "¡Ya la leyó! Te toca" : "¡Te toca!" };
+      return { ...n, status: partnerDone ? "done" : "waiting", tappable: true };
+    });
+  }, [lessonsDone, myKey, partnerKey]);
+
+  const focusOf = (nodes) => {
+    const i = nodes.findIndex(n => n.status === "current");
+    if (i >= 0) return i;
+    for (let k = nodes.length - 1; k >= 0; k--) if (nodes[k].status !== "locked") return k;
+    return 0;
+  };
+  const exFocus = useMemo(() => focusOf(exNodes), [exNodes]);
+  const lessonFocus = useMemo(() => focusOf(lessonNodes), [lessonNodes]);
+
+  // Al cambiar de pestaña o cerrar un ejercicio/lección, centrar la parada que toca
+  const focusRef = useRef(null);
   useEffect(() => {
-    const ids = exercisesByZone.map(z => z.zoneId);
-    if (ids.length && !expandedZones[ids[ids.length - 1]]) {
-      setExpandedZones(prev => ({ ...prev, [ids[ids.length - 1]]: true }));
-    }
-  }, [exercisesByZone]);
-
-  const toggleZone = (zoneId) => setExpandedZones(prev => ({ ...prev, [zoneId]: !prev[zoneId] }));
+    if (openId || openLesson) return;
+    const t = setTimeout(() => focusRef.current?.scrollIntoView({ block: "center", behavior: "smooth" }), 250);
+    return () => clearTimeout(t);
+  }, [ejTab, openId, openLesson]);
 
   return (
     <>
@@ -3200,95 +3404,37 @@ function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson, b
 
         {/* CAMINO TAB */}
         {ejTab === "ejerc" && (
-          <div style={{ padding: "14px" }}>
-            {exercisesByZone.map(({ zoneId, zone, exercises }) => {
-              const zoneCompleted = exercises.filter(e => (exDone[e.id] || 0) >= 1).length;
-              const zoneTotal = exercises.length;
-              const allZoneCompleted = zoneCompleted === zoneTotal;
-              const expanded = !!expandedZones[zoneId];
-              const firstPending = exercises.find(e => (exDone[e.id] || 0) < 1) || exercises[0];
-
-              const handleZoneClick = () => {
-                if (!expanded) {
-                  toggleZone(zoneId);
-                } else if (firstPending) {
-                  setOpenId(firstPending.id);
-                }
-              };
-
-              return (
-                <div key={zoneId} style={{ background: C.white, borderRadius: 18, marginBottom: 10, border: `1.5px solid ${C.border}`, overflow: "hidden" }}>
-                  <div onClick={handleZoneClick}
-                    style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", cursor: "pointer", userSelect: "none", WebkitTapHighlightColor: "transparent" }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 10, background: zone.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem" }}>{zone.emoji}</div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "0.95rem", color: C.dark }}>{zone.label}</div>
-                      <div style={{ fontSize: "0.7rem", color: C.inkL }}>{zoneCompleted}/{zoneTotal} · {allZoneCompleted ? "Completada" : zone.desc}</div>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontSize: "0.7rem", fontWeight: 800, color: C.olive, background: C.cream, borderRadius: 10, padding: "4px 10px" }}>
-                        {expanded ? "Jugar" : "Abrir"}
-                      </span>
-                      <div style={{ fontSize: "0.85rem", color: C.inkM, transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>▼</div>
-                    </div>
-                  </div>
-                  {expanded && (
-                    <div style={{ padding: "0 8px 10px" }}>
-                      {exercises.map(e => {
-                        const count = exDone[e.id] || 0;
-                        const completed = count >= 1;
-                        return (
-                          <div key={e.id} onClick={() => setOpenId(e.id)}
-                            style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px", borderRadius: 12, cursor: "pointer", background: completed ? "#f8faf6" : "transparent", border: `1.5px solid ${completed ? C.olive + "40" : "transparent"}`, marginBottom: 4 }}>
-                            <div style={{ width: 34, height: 34, borderRadius: 10, background: completed ? C.olive : C.cream, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.1rem", flexShrink: 0 }}>
-                              {completed ? "✓" : e.emoji}
-                            </div>
-                            <div style={{ flex: 1 }}>
-                              <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "0.92rem", color: C.dark }}>{e.title}</div>
-                              <div style={{ fontSize: "0.7rem", color: C.inkL }}>{completed ? (count >= 3 ? "Dominado" : "Completado") : `+${e.bamboo} 🌿`}</div>
-                            </div>
-                            <div style={{ fontSize: "0.8rem", color: C.inkL }}>›</div>
-                            {count >= 3 && <span style={{ fontSize: "0.75rem" }}>🌟</span>}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+          <div style={{ marginTop: 12 }}>
+            <CaminoMapa
+              map={EXERCISE_MAP}
+              nodes={exNodes}
+              tints={EXERCISE_ZONE_TINTS}
+              stageInfo={zoneId => {
+                const zone = EXERCISE_ZONES[zoneId];
+                const prev = EXERCISE_ZONES[EXERCISE_ZONES_ORDER[EXERCISE_ZONES_ORDER.indexOf(zoneId) - 1]];
+                const locked = !unlockedZones.includes(zoneId);
+                return { label: zone.label, sub: locked ? `Terminen ${prev.label}` : zone.desc, ring: EXERCISE_ZONE_RING[zoneId], icon: EXERCISE_ZONE_ICON[zoneId], locked };
+              }}
+              counter={`${pathProgress.completed}/${pathProgress.total} hechos`}
+              focusIdx={exFocus}
+              focusRef={focusRef}
+              onTap={n => setOpenId(n.ex.id)}
+            />
           </div>
         )}
 
         {/* LECCIONES TAB */}
         {ejTab === "lecciones" && (
-          <div style={{ padding: "14px" }}>
-            {(() => {
-              const dayOfYear = Math.floor((new Date()-new Date(new Date().getFullYear(),0,0))/86400000);
-              const todayId = DAILY_LESSONS[dayOfYear % DAILY_LESSONS.length].id;
-              return DAILY_LESSONS.map(lesson => {
-                const doneData = lessonsDone?.[lesson.id] || {};
-                const myKey = user?.isOwner !== false ? "owner" : "partner";
-                const iDone = doneData[myKey] === true;
-                const bothDone = doneData.owner === true && doneData.partner === true;
-                const isToday = lesson.id === todayId;
-                return (
-                  <div key={lesson.id} onClick={() => setOpenLesson(lesson)}
-                    style={{ background: isToday&&!iDone ? C.dark : C.white, borderRadius:14,
-                      padding:"12px 14px", marginBottom:8, cursor:"pointer",
-                      border:`1.5px solid ${isToday&&!iDone ? C.dark : bothDone ? C.olive+"50" : C.border}` }}>
-                    <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                      <div style={{ fontSize:"1.4rem" }}>{lesson.emoji}</div>
-                      <div style={{ flex:1 }}>
-                        <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "0.9rem", color:isToday&&!iDone?C.cream2:C.dark }}>{lesson.title}</div>
-                        <div style={{ fontSize:"0.68rem", marginTop:2, color:isToday&&!iDone?`${C.cream}88`:C.inkL }}>{lesson.tag}{isToday?" · HOY":""}</div>
-                      </div>
-                      <div style={{ fontSize:"0.85rem", color: iDone ? C.olive : C.inkL }}>{iDone ? "✓" : "+10 🌿"}</div>
-                    </div>
-                  </div>
-                );
-              });
-            })()}
+          <div style={{ marginTop: 12 }}>
+            <CaminoMapa
+              map={LESSON_MAP}
+              nodes={lessonNodes}
+              stageInfo={level => ({ ...CONOCE_LEVELS[level], sub: LESSON_STAGE_SUB[level], icon: CONOCE_LEVEL_ICON[level] })}
+              counter={`${lessonNodes.filter(n => n.status === "done").length}/${lessonNodes.length} juntos`}
+              focusIdx={lessonFocus}
+              focusRef={focusRef}
+              onTap={n => setOpenLesson(n.lesson)}
+            />
           </div>
         )}
       </div>
@@ -4119,11 +4265,10 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
   const partnerRole = myRole === "owner" ? "partner" : "owner";
   const myName = myRole === "owner" ? nameA : nameB;
   const partnerName = myRole === "owner" ? nameB : nameA;
-  const [open, setOpen] = useState({});
   const [tmp, setTmp] = useState({});
   const [editingApproved, setEditingApproved] = useState({});
   const [burbujaTab, setBurbujaTab] = useState("preguntas");
-  const [showList, setShowList] = useState(false);
+  const [openStep, setOpenStep] = useState(null); // { item, sec } de la parada abierta
 
   const get = (id, f) => tmp[id]?.[f] ?? burbuja[id]?.[f] ?? "";
   const set_ = (id, f, v) => setTmp(p => ({ ...p, [id]: { ...p[id], [f]: v } }));
@@ -4134,9 +4279,44 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
     sec.items.filter(item => burbujaItemVisible(item, burbuja)).map(item => ({ item, sec }))
   );
   const total = pathItems.length;
-  const pendingPath = pathItems.filter(({ item }) => burbuja[item.id]?.status !== "approved");
-  const current = pendingPath.find(({ item }) => !burbuja[item.id]?.[myRole]) || pendingPath[0] || null;
-  const currentStep = current ? pathItems.indexOf(current) + 1 : 0;
+  const burbujaMap = useMemo(() => buildPathMap(pathItems.map((p, i) => ({
+    ...p, key: p.item.id, stage: p.sec.level, icon: BURBUJA_SEC_ICON[p.sec.id],
+    caption: !i || pathItems[i - 1].sec.id !== p.sec.id ? p.sec.title : null,
+  }))), [pathItems.length]);
+
+  // Estado de cada parada: respondes tu parte a tu ritmo (respondes una → se abre la siguiente)
+  const mapNodes = useMemo(() => {
+    let prevMine = true;
+    return burbujaMap.nodes.map(n => {
+      const e = burbuja[n.item.id] || {};
+      const mine = !!e[myRole], partnerDone = !!e[partnerRole];
+      const open = mine || prevMine;
+      prevMine = mine;
+      if (e.status === "approved") return { ...n, status: "done", tappable: true };
+      if (!open) return { ...n, status: "locked" };
+      if (!mine) return { ...n, status: "current", tappable: true, bubble: partnerDone ? "¡Ya respondió! Te toca" : "¡Te toca!" };
+      if (!partnerDone) return { ...n, status: "waiting", tappable: true };
+      const myTurn = !(e.status === "pending" && e.proposalText) || e.proposalBy !== myRole;
+      return { ...n, status: "negotiate", tappable: true, bounce: myTurn, bubble: myTurn ? "¡A negociar!" : null };
+    });
+  }, [burbujaMap, burbuja, myRole, partnerRole]);
+
+  const focusIdx = useMemo(() => {
+    const i = mapNodes.findIndex(n => n.status === "current");
+    if (i >= 0) return i;
+    const j = mapNodes.findIndex(n => n.status === "negotiate" && n.bounce);
+    if (j >= 0) return j;
+    for (let k = mapNodes.length - 1; k >= 0; k--) if (mapNodes[k].status !== "locked") return k;
+    return 0;
+  }, [mapNodes]);
+
+  // Al volver al camino, centrar la parada que toca
+  const focusRef = useRef(null);
+  useEffect(() => {
+    if (openStep || burbujaTab !== "preguntas") return;
+    const t = setTimeout(() => focusRef.current?.scrollIntoView({ block: "center", behavior: "smooth" }), 250);
+    return () => clearTimeout(t);
+  }, [openStep, burbujaTab]);
 
   const approvedItems = BURBUJA_SECTIONS.flatMap(sec =>
     sec.items
@@ -4230,7 +4410,6 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
           Acá construyen juntos las reglas y acuerdos de su relación, empezando por lo más ligero. En <strong>Preguntas</strong>: cada uno responde su parte del acuerdo.
           En <strong>Negociación</strong>: el ida y vuelta de propuestas y contraofertas hasta que uno acepte.
           En <strong>Acuerdos</strong>: todo lo acordado, con opción de <strong>re-negociar</strong> cuando quieran.
-          Cada acuerdo aprobado da +10 bambú 🌿 a los dos.
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
           <ProgBar value={approvedCount} max={total} color={C.olive} height={7} style={{ flex: 1 }} />
@@ -4275,75 +4454,53 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
         />
       )}
 
-      {burbujaTab === "preguntas" && !showList && current && (
-        <div style={{ background: C.white, borderRadius: 18, margin: "0 14px 10px", padding: 16, border: `1.5px solid ${C.border}`, boxShadow: `0 3px 0 ${C.border}` }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-            <div style={{ width: 44, height: 44, background: current.sec.itemBg, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.7rem", flexShrink: 0 }}>{current.sec.icon}</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.05rem", color: C.dark }}>{current.sec.title}</div>
-              <div style={{ fontSize: "0.72rem", color: C.inkL, fontWeight: 700 }}>Acuerdo {currentStep} de {total}</div>
-            </div>
-            <span style={{ fontSize: "0.65rem", fontWeight: 800, color: C.inkM, background: BURBUJA_LEVELS[current.sec.level].color, borderRadius: 8, padding: "3px 9px", whiteSpace: "nowrap" }}>
-              {BURBUJA_LEVELS[current.sec.level].emoji} {BURBUJA_LEVELS[current.sec.level].label}
-            </span>
-          </div>
-          {renderItem(current.item)}
-          <div style={{ display: "flex", justifyContent: "center", marginTop: 4 }}>
-            <Btn onClick={() => setShowList(true)} variant="ghost" style={{ padding: "8px 14px", fontSize: "0.8rem" }}>Ver más acuerdos</Btn>
-          </div>
-        </div>
-      )}
-
-      {burbujaTab === "preguntas" && showList && (
-        <div style={{ display: "flex", margin: "0 14px 4px" }}>
-          <Btn onClick={() => setShowList(false)} variant="ghost" style={{ padding: "8px 12px", fontSize: "0.8rem" }}>← Volver al camino</Btn>
-        </div>
-      )}
-
-      {burbujaTab === "preguntas" && showList && [1, 2, 3].map(level => {
-        const info = BURBUJA_LEVELS[level];
-        const levelSections = BURBUJA_SECTIONS.filter(sec => sec.level === level);
-        if (!levelSections.some(sec => sec.items.some(item => burbujaItemVisible(item, burbuja) && burbuja[item.id]?.status !== "approved"))) return null;
-
+      {burbujaTab === "preguntas" && openStep && (() => {
+        const { item, sec } = openStep;
+        const lv = BURBUJA_LEVELS[sec.level];
+        const entry = burbuja[item.id] || {};
         return (
-        <div key={level} style={{ marginBottom: 6 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "12px 18px 8px" }}>
-            <span style={{ fontSize: "1.1rem" }}>{info.emoji}</span>
-            <div>
-              <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.02rem", color: C.dark, lineHeight: 1.2 }}>{info.label}</div>
-              <div style={{ fontSize: "0.72rem", color: C.inkL, fontWeight: 700 }}>{info.sub}</div>
+          <>
+            <div style={{ display: "flex", margin: "0 14px 6px" }}>
+              <Btn onClick={() => setOpenStep(null)} variant="ghost" style={{ padding: "8px 12px", fontSize: "0.8rem" }}>← Volver al camino</Btn>
             </div>
-          </div>
-
-          {levelSections.map(sec => {
-            const pendingItems = sec.items.filter(item => burbuja[item.id]?.status !== "approved" && burbujaItemVisible(item, burbuja));
-            if (!pendingItems.length) return null;
-
-            return (
-            <div key={sec.id} style={{ background: C.white, borderRadius: 18, margin: "0 14px 10px", boxShadow: `0 3px 0 ${C.border}`, border: `1.5px solid ${C.border}`, overflow: "hidden" }}>
-              <div onClick={() => setOpen(p => ({ ...p, [sec.id]: !p[sec.id] }))} style={{ display: "flex", alignItems: "center", gap: 12, padding: 16, cursor: "pointer" }}>
-                <div style={{ width: 44, height: 44, background: sec.itemBg, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.7rem", flexShrink: 0 }}>{sec.icon}</div>
+            <div style={{ background: C.white, borderRadius: 18, margin: "0 14px 10px", padding: 16, border: `1.5px solid ${C.border}`, boxShadow: `0 3px 0 ${C.border}` }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+                <div style={{ width: 44, height: 44, background: sec.itemBg, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <ConoceIcon name={BURBUJA_SEC_ICON[sec.id]} size={24} color={C.inkM} stroke={2.1} />
+                </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.05rem", color: C.dark }}>{sec.title}</div>
-                  <div style={{ fontSize: "0.72rem", color: C.inkL, fontWeight: 700 }}>{sec.sub}</div>
+                  <div style={{ fontSize: "0.72rem", color: C.inkL, fontWeight: 700 }}>Acuerdo {pathItems.findIndex(p => p.item.id === item.id) + 1} de {total}</div>
                 </div>
-                <div style={{ color: C.inkL, transition: "transform 0.25s", transform: open[sec.id] ? "rotate(180deg)" : "none" }}>▼</div>
+                <span style={{ fontSize: "0.65rem", fontWeight: 800, color: C.inkM, background: lv.color, borderRadius: 8, padding: "3px 9px", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 4 }}>
+                  <ConoceIcon name={CONOCE_LEVEL_ICON[sec.level]} size={12} color={lv.ring} stroke={2.4} /> {lv.label}
+                </span>
               </div>
-              {open[sec.id] && <div style={{ padding: "0 16px 16px" }}>
-                {pendingItems.map(renderItem)}
-              </div>}
+              {entry.status === "approved" ? (
+                <div style={{ background: C.cream, borderRadius: 13, padding: 13, borderLeft: `3px solid ${C.olive}` }}>
+                  <div style={{ fontSize: "0.88rem", fontWeight: 700, color: C.ink, marginBottom: 8 }}>{item.q}</div>
+                  <div style={{ fontSize: "0.72rem", fontWeight: 800, color: C.olive, marginBottom: 3, letterSpacing: "0.3px" }}>ACUERDO</div>
+                  <div style={{ fontSize: "0.85rem", fontWeight: 700, color: C.ink, lineHeight: 1.6 }}>{entry.approvedText || entry.proposalText}</div>
+                  <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+                    <Btn onClick={() => { setOpenStep(null); setBurbujaTab("acuerdos"); }} variant="sand" style={{ padding: "8px 12px", fontSize: "0.8rem" }}>Ver en Acuerdos</Btn>
+                  </div>
+                </div>
+              ) : renderItem(item)}
             </div>
-          )})}
-        </div>
+          </>
         );
-      })}
+      })()}
 
-      {burbujaTab === "preguntas" && !current && (
-        <div style={{ margin: "0 14px 10px", background: C.white, borderRadius: 16, padding: 14, border: `1.5px solid ${C.border}` }}>
-          <div style={{ fontSize: "0.82rem", color: C.inkM, fontWeight: 700, lineHeight: 1.6 }}>
-            No hay preguntas pendientes. Revisa Negociación o la pestaña de Acuerdos.
-          </div>
-        </div>
+      {burbujaTab === "preguntas" && !openStep && (
+        <CaminoMapa
+          map={burbujaMap}
+          nodes={mapNodes}
+          stageInfo={level => ({ ...BURBUJA_LEVELS[level], icon: CONOCE_LEVEL_ICON[level] })}
+          counter={`${approvedCount}/${total} acordados`}
+          focusIdx={focusIdx}
+          focusRef={focusRef}
+          onTap={n => setOpenStep({ item: n.item, sec: n.sec })}
+        />
       )}
 
       {burbujaTab === "acuerdos" && (
@@ -6335,6 +6492,12 @@ const DAILY_LESSONS = [
     ] }
 ];
 
+// Camino de lecciones: de lo básico a las herramientas de terapia
+const LESSON_STAGE_SUB = { 1: "Amor y desacuerdos", 2: "Conexión diaria", 3: "Herramientas de terapia" };
+const LESSON_MAP = buildPathMap(DAILY_LESSONS.map((lesson, i) => ({
+  key: lesson.id, lesson, stage: i < 5 ? 1 : i < 9 ? 2 : 3, icon: "book", caption: lesson.title,
+})));
+
 // ═══════════════════════════════════════════════
 // RELATIONSHIP TEST SCREEN
 // ═══════════════════════════════════════════════
@@ -6719,16 +6882,23 @@ function Onboarding({ onDone }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// JUEGOS — Memoria sincronizada y Scrabble
+// JUEGOS — menú
 // ═══════════════════════════════════════════════════════════════════════════════
+const LISTA_JUEGOS = [
+  { id: "memoria", emoji: "🧠", nombre: "Memoria sincronizada", desc: "Encuentra pares de cartas juntos. ¡Quien encuentre más gana!", Componente: JuegoMemoria },
+  { id: "scrabble", emoji: "🔤", nombre: "Scrabble de parejas", desc: "Forma palabras con letras limitadas. ¡Más puntos por palabras románticas!", Componente: JuegoScrabble },
+  { id: "esto", emoji: "⚖️", nombre: "Esto o aquello", desc: "Elijan en secreto entre dos opciones y descubran cuánto coinciden.", Componente: JuegoEstoOAquello },
+  { id: "tres", emoji: "❤️", nombre: "Tres en raya", desc: "Corazones contra pandas. ¡Tres en línea gana la partida!", Componente: JuegoTresEnRaya },
+  { id: "sopa", emoji: "🔍", nombre: "Sopa de letras", desc: "Encuentren juntos las palabras de amor antes de que acabe el tiempo.", Componente: JuegoSopaLetras },
+];
+
 function Juegos({ onBack, user }) {
   const [selectedGame, setSelectedGame] = useState(null);
 
-  if (selectedGame === "memoria") {
-    return <JuegoMemoria onBack={() => setSelectedGame(null)} user={user} />;
-  }
-  if (selectedGame === "scrabble") {
-    return <JuegoScrabble onBack={() => setSelectedGame(null)} user={user} />;
+  const juego = LISTA_JUEGOS.find(j => j.id === selectedGame);
+  if (juego) {
+    const { Componente } = juego;
+    return <Componente onBack={() => setSelectedGame(null)} user={user} />;
   }
 
   return (
@@ -6744,51 +6914,30 @@ function Juegos({ onBack, user }) {
       </div>
 
       <div style={{ padding: "16px 14px 0" }}>
-        {/* Memoria sincronizada */}
-        <div
-          onClick={() => setSelectedGame("memoria")}
-          style={{
-            background: C.white,
-            borderRadius: 18,
-            padding: "18px 16px",
-            marginBottom: 12,
-            border: `1.5px solid ${C.border}`,
-            boxShadow: `0 3px 0 ${C.border}`,
-            cursor: "pointer",
-            transition: "transform 0.2s"
-          }}
-        >
-          <div style={{ fontSize: "2.2rem", marginBottom: 8 }}>🧠</div>
-          <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.1rem", color: C.dark, marginBottom: 4 }}>
-            Memoria sincronizada
+        {LISTA_JUEGOS.map(j => (
+          <div
+            key={j.id}
+            onClick={() => setSelectedGame(j.id)}
+            style={{
+              background: C.white,
+              borderRadius: 18,
+              padding: "18px 16px",
+              marginBottom: 12,
+              border: `1.5px solid ${C.border}`,
+              boxShadow: `0 3px 0 ${C.border}`,
+              cursor: "pointer",
+              transition: "transform 0.2s"
+            }}
+          >
+            <div style={{ fontSize: "2.2rem", marginBottom: 8 }}>{j.emoji}</div>
+            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.1rem", color: C.dark, marginBottom: 4 }}>
+              {j.nombre}
+            </div>
+            <div style={{ fontSize: "0.8rem", color: C.inkM, lineHeight: 1.5 }}>
+              {j.desc}
+            </div>
           </div>
-          <div style={{ fontSize: "0.8rem", color: C.inkM, lineHeight: 1.5 }}>
-            Encuentra pares de cartas juntos. ¡Quien encuentre más gana!
-          </div>
-        </div>
-
-        {/* Scrabble */}
-        <div
-          onClick={() => setSelectedGame("scrabble")}
-          style={{
-            background: C.white,
-            borderRadius: 18,
-            padding: "18px 16px",
-            marginBottom: 12,
-            border: `1.5px solid ${C.border}`,
-            boxShadow: `0 3px 0 ${C.border}`,
-            cursor: "pointer",
-            transition: "transform 0.2s"
-          }}
-        >
-          <div style={{ fontSize: "2.2rem", marginBottom: 8 }}>🔤</div>
-          <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.1rem", color: C.dark, marginBottom: 4 }}>
-            Scrabble de parejas
-          </div>
-          <div style={{ fontSize: "0.8rem", color: C.inkM, lineHeight: 1.5 }}>
-            Forma palabras con letras limitadas. ¡Más puntos por palabras románticas!
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   );
@@ -7398,6 +7547,567 @@ function JuegoScrabble({ onBack, user }) {
                 </div>
               )}
             </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Piezas compartidas de los juegos nuevos
+// ═══════════════════════════════════════════════════════════════════════════════
+const nombresPareja = (user) => {
+  const names = user?.names?.split("&") || [];
+  return [names[0]?.trim() || "Jugador 1", names[1]?.trim() || "Jugador 2"];
+};
+
+function JuegoHeader({ titulo, subtitulo, onBack }) {
+  return (
+    <div style={{ background: C.dark, padding: "44px 20px 20px" }}>
+      <button onClick={onBack} style={{ background: "none", border: "none", color: C.cream2, fontSize: "1.5rem", cursor: "pointer", marginBottom: 10, display: "block" }}>←</button>
+      <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.4rem", color: C.cream2 }}>{titulo}</div>
+      {subtitulo && <div style={{ fontSize: "0.8rem", color: `${C.cream}88` }}>{subtitulo}</div>}
+    </div>
+  );
+}
+
+function JuegoIntro({ titulo, pasos, extra, onStart, onBack }) {
+  return (
+    <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
+      <JuegoHeader titulo={titulo} onBack={onBack} />
+      <div style={{ padding: "20px 16px" }}>
+        <div style={{ background: C.white, borderRadius: 16, padding: "20px", marginBottom: 16, border: `1.5px solid ${C.border}` }}>
+          <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.1rem", color: C.dark, marginBottom: 12 }}>
+            📋 Cómo jugar
+          </div>
+          <div style={{ fontSize: "0.9rem", color: C.inkM, lineHeight: 1.7 }}>
+            {pasos.map((paso, i) => <p key={i}>{i + 1}. {paso}</p>)}
+          </div>
+        </div>
+        {extra}
+        <button onClick={onStart} style={btnJuego(C.dark)}>¡Empezar a jugar! 🎮</button>
+      </div>
+    </div>
+  );
+}
+
+const btnJuego = (bg, color = C.cream2) => ({
+  width: "100%", background: bg, color, border: "none", borderRadius: 14, padding: "16px",
+  fontFamily: "'Baloo 2',sans-serif", fontSize: "1.1rem", cursor: "pointer", boxShadow: "0 3px 0 rgba(0,0,0,0.18)"
+});
+
+function MarcadorDos({ etiquetas, valores, activo }) {
+  return (
+    <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+      {etiquetas.map((etiqueta, i) => (
+        <div key={i} style={{ flex: 1, background: activo === i ? C.olive : C.white, borderRadius: 12, padding: "12px", textAlign: "center", border: `1.5px solid ${C.border}` }}>
+          <div style={{ fontSize: "0.75rem", color: activo === i ? C.cream : C.inkL }}>{etiqueta}</div>
+          <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.5rem", color: activo === i ? C.cream2 : C.dark }}>{valores[i]}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// JUEGO 3: ESTO O AQUELLO
+// ═══════════════════════════════════════════════════════════════════════════════
+const OPCIONES_ESTO_AQUELLO = [
+  ["🏖️ Playa", "⛰️ Montaña"], ["☕ Café", "🍵 Té"], ["🐶 Perros", "🐱 Gatos"],
+  ["🌅 Madrugar", "🌙 Trasnochar"], ["🍿 Película en casa", "🍝 Salir a cenar"], ["🍬 Dulce", "🥨 Salado"],
+  ["☀️ Verano", "❄️ Invierno"], ["📞 Llamada", "💬 Mensaje"], ["✈️ Viajar", "🛋️ Quedarse en casa"],
+  ["🍕 Pizza", "🍣 Sushi"], ["📖 Libro", "📺 Serie"], ["👩‍🍳 Cocinar juntos", "🛵 Pedir a domicilio"],
+  ["🎉 Fiesta", "🕯️ Plan tranquilo"], ["🎁 Sorpresa", "🗓️ Plan organizado"], ["🏙️ Ciudad", "🌾 Campo"],
+  ["🌧️ Lluvia", "🌤️ Sol"], ["🥐 Desayuno en la cama", "🍷 Cena con velas"], ["💃 Bailar", "🎤 Cantar"],
+  ["😂 Comedia", "👻 Terror"], ["🌊 Mar", "🏊 Piscina"], ["🍫 Chocolate", "🍦 Helado"],
+  ["✉️ Carta a mano", "🛍️ Regalo comprado"], ["🤗 Abrazo", "💋 Beso"], ["🌄 Mañana", "🌃 Noche"],
+  ["🛫 Avión", "🚗 Carretera"], ["🖼️ Museo", "🎢 Parque de diversiones"], ["🐾 Mascota", "🪴 Planta"],
+  ["🗣️ Hablar de todo", "🤫 Silencio cómodo"], ["🎲 Juegos de mesa", "🎮 Videojuegos"], ["📷 Recordar el pasado", "🔮 Soñar el futuro"],
+];
+const RONDAS_ESTO_AQUELLO = 10;
+
+const nuevasPreguntasEsto = () =>
+  [...OPCIONES_ESTO_AQUELLO].sort(() => Math.random() - 0.5).slice(0, RONDAS_ESTO_AQUELLO);
+
+function JuegoEstoOAquello({ onBack, user }) {
+  const nombres = nombresPareja(user);
+  const storageKey = `mochi_estoaquello_${user?.email || "guest"}`;
+
+  const [showInstrucciones, setShowInstrucciones] = useState(true);
+  const [preguntas, setPreguntas] = useState(nuevasPreguntasEsto);
+  const [ronda, setRonda] = useState(0);
+  const [fase, setFase] = useState("primero"); // primero → pasar → segundo → revelar
+  const [elecciones, setElecciones] = useState([null, null]);
+  const [resultados, setResultados] = useState([]);
+  const [mejor, setMejor] = useState(() => ls.get(storageKey)?.mejor || 0);
+
+  // Se alterna quién elige primero en cada ronda
+  const primero = ronda % 2;
+  const segundo = 1 - primero;
+  const [opA, opB] = preguntas[ronda] || [];
+
+  const elegir = (opcion) => {
+    const nuevas = [...elecciones];
+    if (fase === "primero") {
+      nuevas[primero] = opcion;
+      setElecciones(nuevas);
+      setFase("pasar");
+    } else {
+      nuevas[segundo] = opcion;
+      setElecciones(nuevas);
+      setResultados([...resultados, { pregunta: preguntas[ronda], elecciones: nuevas }]);
+      setFase("revelar");
+    }
+  };
+
+  const siguiente = () => {
+    if (ronda + 1 === RONDAS_ESTO_AQUELLO) {
+      const coincidencias = resultados.filter(r => r.elecciones[0] === r.elecciones[1]).length;
+      if (coincidencias > mejor) {
+        setMejor(coincidencias);
+        ls.set(storageKey, { mejor: coincidencias });
+      }
+      setFase("fin");
+      return;
+    }
+    setRonda(ronda + 1);
+    setElecciones([null, null]);
+    setFase("primero");
+  };
+
+  const reiniciar = () => {
+    setPreguntas(nuevasPreguntasEsto());
+    setRonda(0);
+    setElecciones([null, null]);
+    setResultados([]);
+    setFase("primero");
+  };
+
+  if (showInstrucciones) {
+    return (
+      <JuegoIntro
+        titulo="⚖️ Esto o aquello"
+        onBack={onBack}
+        onStart={() => setShowInstrucciones(false)}
+        pasos={[
+          <><strong>En secreto:</strong> uno elige su opción sin que el otro mire.</>,
+          <><strong>Pasa el celular:</strong> tu pareja elige la suya.</>,
+          <><strong>Revelen:</strong> ¿coincidieron? ¡Cada coincidencia suma!</>,
+          <><strong>{RONDAS_ESTO_AQUELLO} rondas:</strong> al final verán qué tan sincronizados están.</>,
+        ]}
+        extra={mejor > 0 && (
+          <div style={{ background: C.cream, borderRadius: 16, padding: "14px 16px", marginBottom: 16, border: `1.5px solid ${C.border}`, textAlign: "center", color: C.dark }}>
+            🏆 Su récord: <strong>{mejor} de {RONDAS_ESTO_AQUELLO}</strong> coincidencias
+          </div>
+        )}
+      />
+    );
+  }
+
+  if (fase === "fin") {
+    const coincidencias = resultados.filter(r => r.elecciones[0] === r.elecciones[1]);
+    const pct = Math.round((coincidencias.length / RONDAS_ESTO_AQUELLO) * 100);
+    const veredicto = pct >= 80 ? "¡Almas gemelas! 💞" : pct >= 50 ? "¡Muy sincronizados! 💜" : "Los opuestos se atraen 🧲";
+    return (
+      <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
+        <JuegoHeader titulo="⚖️ Esto o aquello" onBack={onBack} />
+        <div style={{ padding: "24px 16px", textAlign: "center" }}>
+          <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "3rem", color: C.olive }}>{pct}%</div>
+          <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.3rem", color: C.dark, marginBottom: 6 }}>{veredicto}</div>
+          <div style={{ fontSize: "0.9rem", color: C.inkM, marginBottom: 18 }}>
+            Coincidieron en {coincidencias.length} de {RONDAS_ESTO_AQUELLO} · Récord: {mejor}
+          </div>
+          {coincidencias.length > 0 && (
+            <div style={{ background: C.white, borderRadius: 16, padding: "14px", marginBottom: 20, border: `1.5px solid ${C.border}`, textAlign: "left" }}>
+              <div style={{ fontSize: "0.8rem", color: C.inkL, fontWeight: 700, marginBottom: 8 }}>A los dos les gusta:</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {coincidencias.map((r, i) => (
+                  <span key={i} style={{ background: C.cream, color: C.dark, padding: "4px 10px", borderRadius: 10, fontSize: "0.85rem" }}>{r.elecciones[0]}</span>
+                ))}
+              </div>
+            </div>
+          )}
+          <button onClick={reiniciar} style={btnJuego(C.olive)}>🔄 Jugar otra vez</button>
+        </div>
+      </div>
+    );
+  }
+
+  const subtitulo = `Ronda ${ronda + 1} de ${RONDAS_ESTO_AQUELLO}`;
+
+  if (fase === "pasar") {
+    return (
+      <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
+        <JuegoHeader titulo="⚖️ Esto o aquello" subtitulo={subtitulo} onBack={onBack} />
+        <div style={{ padding: "60px 24px", textAlign: "center" }}>
+          <div style={{ fontSize: "4rem", marginBottom: 16 }}>🙈</div>
+          <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.3rem", color: C.dark, marginBottom: 8 }}>
+            Pásale el celular a {nombres[segundo]}
+          </div>
+          <div style={{ fontSize: "0.9rem", color: C.inkM, marginBottom: 28 }}>¡Sin espiar lo que eligió {nombres[primero]}!</div>
+          <button onClick={() => setFase("segundo")} style={btnJuego(C.dark)}>Ya lo tengo 👀</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (fase === "revelar") {
+    const coinciden = elecciones[0] === elecciones[1];
+    return (
+      <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
+        <JuegoHeader titulo="⚖️ Esto o aquello" subtitulo={subtitulo} onBack={onBack} />
+        <div style={{ padding: "28px 16px", textAlign: "center" }}>
+          <div style={{ fontSize: "3.5rem", marginBottom: 8 }}>{coinciden ? "💞" : "🤭"}</div>
+          <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.3rem", color: C.dark, marginBottom: 20 }}>
+            {coinciden ? "¡Coincidieron!" : "Esta vez no"}
+          </div>
+          <div style={{ display: "flex", gap: 10, marginBottom: 24 }}>
+            {nombres.map((nombre, i) => (
+              <div key={i} style={{ flex: 1, background: coinciden ? C.mint : C.white, borderRadius: 14, padding: "14px 10px", border: `1.5px solid ${C.border}` }}>
+                <div style={{ fontSize: "0.75rem", color: C.inkL, marginBottom: 6 }}>{nombre}</div>
+                <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.05rem", color: C.dark }}>{elecciones[i]}</div>
+              </div>
+            ))}
+          </div>
+          <button onClick={siguiente} style={btnJuego(C.olive)}>
+            {ronda + 1 === RONDAS_ESTO_AQUELLO ? "Ver resultado 🏁" : "Siguiente →"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const quienElige = fase === "primero" ? primero : segundo;
+  const opcionStyle = {
+    width: "100%", background: C.white, color: C.dark, border: `2px solid ${C.border}`, borderRadius: 18,
+    padding: "26px 16px", fontFamily: "'Baloo 2',sans-serif", fontSize: "1.3rem", cursor: "pointer", boxShadow: `0 4px 0 ${C.border}`
+  };
+  return (
+    <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
+      <JuegoHeader titulo="⚖️ Esto o aquello" subtitulo={subtitulo} onBack={onBack} />
+      <div style={{ padding: "24px 16px", textAlign: "center" }}>
+        <div style={{ fontSize: "0.9rem", color: C.inkM, marginBottom: 18 }}>
+          Elige, <strong style={{ color: C.dark }}>{nombres[quienElige]}</strong> 🤫
+        </div>
+        <button onClick={() => elegir(opA)} style={opcionStyle}>{opA}</button>
+        <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.1rem", color: C.inkL, margin: "12px 0" }}>o</div>
+        <button onClick={() => elegir(opB)} style={opcionStyle}>{opB}</button>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// JUEGO 4: TRES EN RAYA
+// ═══════════════════════════════════════════════════════════════════════════════
+const FICHAS_TRES = ["❤️", "🐼"];
+const LINEAS_TRES = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
+
+const lineaGanadoraTres = (tablero) =>
+  LINEAS_TRES.find(([a, b, c]) => tablero[a] !== null && tablero[a] === tablero[b] && tablero[a] === tablero[c]) || null;
+
+function JuegoTresEnRaya({ onBack, user }) {
+  const nombres = nombresPareja(user);
+  const storageKey = `mochi_tresenraya_${user?.email || "guest"}`;
+
+  const [showInstrucciones, setShowInstrucciones] = useState(true);
+  const [tablero, setTablero] = useState(Array(9).fill(null));
+  const [empieza, setEmpieza] = useState(0);
+  const [turno, setTurno] = useState(0);
+  const [linea, setLinea] = useState(null);
+  const [historial, setHistorial] = useState(() => ls.get(storageKey) || { victorias: [0, 0], empates: 0 });
+
+  useEffect(() => { ls.set(storageKey, historial); }, [historial, storageKey]);
+
+  const empate = !linea && tablero.every(c => c !== null);
+  const terminado = Boolean(linea) || empate;
+
+  const jugar = (i) => {
+    if (tablero[i] !== null || terminado) return;
+    const nuevo = [...tablero];
+    nuevo[i] = turno;
+    setTablero(nuevo);
+    const ganadora = lineaGanadoraTres(nuevo);
+    if (ganadora) {
+      setLinea(ganadora);
+      setHistorial(prev => {
+        const victorias = [...prev.victorias];
+        victorias[turno]++;
+        return { ...prev, victorias };
+      });
+    } else if (nuevo.every(c => c !== null)) {
+      setHistorial(prev => ({ ...prev, empates: prev.empates + 1 }));
+    } else {
+      setTurno(1 - turno);
+    }
+  };
+
+  // Quien no empezó la partida anterior empieza la siguiente
+  const nuevaPartida = () => {
+    const siguiente = 1 - empieza;
+    setTablero(Array(9).fill(null));
+    setEmpieza(siguiente);
+    setTurno(siguiente);
+    setLinea(null);
+  };
+
+  if (showInstrucciones) {
+    return (
+      <JuegoIntro
+        titulo="❤️ Tres en raya"
+        onBack={onBack}
+        onStart={() => setShowInstrucciones(false)}
+        pasos={[
+          <><strong>{nombres[0]}</strong> juega con {FICHAS_TRES[0]} y <strong>{nombres[1]}</strong> con {FICHAS_TRES[1]}.</>,
+          <><strong>Por turnos:</strong> toquen una casilla vacía para poner su ficha.</>,
+          <><strong>Gana</strong> quien forme una línea de tres: horizontal, vertical o diagonal.</>,
+          <><strong>Revancha:</strong> en cada partida nueva empieza el otro.</>,
+        ]}
+      />
+    );
+  }
+
+  const mensaje = linea
+    ? `¡Ganó ${nombres[turno]}! ${FICHAS_TRES[turno]}`
+    : empate ? "¡Empate! 🤝" : `Turno de ${nombres[turno]} ${FICHAS_TRES[turno]}`;
+
+  return (
+    <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
+      <JuegoHeader titulo="❤️ Tres en raya" subtitulo={`Empates: ${historial.empates}`} onBack={onBack} />
+      <div style={{ padding: "16px 14px" }}>
+        <MarcadorDos
+          etiquetas={nombres.map((n, i) => `${FICHAS_TRES[i]} ${n}`)}
+          valores={historial.victorias}
+          activo={terminado ? null : turno}
+        />
+        <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.2rem", color: C.dark, textAlign: "center", marginBottom: 14 }}>
+          {mensaje}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, maxWidth: 320, margin: "0 auto 20px" }}>
+          {tablero.map((celda, i) => {
+            const enLinea = linea?.includes(i);
+            return (
+              <button
+                key={i}
+                onClick={() => jugar(i)}
+                style={{
+                  aspectRatio: "1", background: enLinea ? C.mint : C.white, borderRadius: 16,
+                  border: `2px solid ${enLinea ? C.teal : C.border}`, boxShadow: `0 3px 0 ${enLinea ? C.teal : C.border}`,
+                  fontSize: "2.6rem", cursor: celda === null && !terminado ? "pointer" : "default",
+                  display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s"
+                }}
+              >
+                {celda !== null ? FICHAS_TRES[celda] : ""}
+              </button>
+            );
+          })}
+        </div>
+        {terminado && <button onClick={nuevaPartida} style={btnJuego(C.olive)}>🔄 Revancha</button>}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// JUEGO 5: SOPA DE LETRAS
+// ═══════════════════════════════════════════════════════════════════════════════
+const PALABRAS_SOPA = [
+  "AMOR", "BESO", "ABRAZO", "CARIÑO", "LUNA", "CITA", "ROSA", "SUEÑO", "HOGAR",
+  "PAREJA", "TERNURA", "DULCE", "CORAZON", "VIAJE", "RISA", "FLOR", "BAILE", "CENA"
+];
+const SOPA_N = 9;
+const SOPA_PALABRAS_POR_PARTIDA = 6;
+const SOPA_SEGUNDOS = 180;
+const COLORES_SOPA = ["#f6c6d8", "#c8e8c0", "#c9d4f6", "#f6e2b0", "#e0c8f6", "#bfe6e6"];
+
+// Coloca palabras hacia la derecha, abajo y en ambas diagonales; se leen también al revés
+const crearSopa = () => {
+  const dirs = [[0, 1], [1, 0], [1, 1], [-1, 1]];
+  const grid = Array(SOPA_N * SOPA_N).fill(null);
+  const palabras = [];
+  for (const palabra of [...PALABRAS_SOPA].sort(() => Math.random() - 0.5)) {
+    if (palabras.length === SOPA_PALABRAS_POR_PARTIDA) break;
+    const letras = [...palabra];
+    for (let intento = 0; intento < 100; intento++) {
+      const [dr, dc] = dirs[Math.floor(Math.random() * dirs.length)];
+      const r0 = Math.floor(Math.random() * SOPA_N);
+      const c0 = Math.floor(Math.random() * SOPA_N);
+      const celdas = letras.map((_, i) => [r0 + dr * i, c0 + dc * i]);
+      if (!celdas.every(([r, c]) => r >= 0 && r < SOPA_N && c >= 0 && c < SOPA_N)) continue;
+      const indices = celdas.map(([r, c]) => r * SOPA_N + c);
+      if (!indices.every((k, i) => grid[k] === null || grid[k] === letras[i])) continue;
+      indices.forEach((k, i) => { grid[k] = letras[i]; });
+      palabras.push(palabra);
+      break;
+    }
+  }
+  const relleno = "ABCDEFGHIJLMNOPRSTUVZ";
+  return {
+    grid: grid.map(l => l || relleno[Math.floor(Math.random() * relleno.length)]),
+    palabras,
+  };
+};
+
+// Celdas en línea recta entre dos índices, o null si no están alineadas
+const celdasEntreSopa = (a, b) => {
+  const r1 = Math.floor(a / SOPA_N), c1 = a % SOPA_N;
+  const r2 = Math.floor(b / SOPA_N), c2 = b % SOPA_N;
+  const dr = Math.sign(r2 - r1), dc = Math.sign(c2 - c1);
+  const largo = Math.max(Math.abs(r2 - r1), Math.abs(c2 - c1));
+  if (r2 - r1 !== dr * largo || c2 - c1 !== dc * largo) return null;
+  return Array.from({ length: largo + 1 }, (_, i) => (r1 + dr * i) * SOPA_N + c1 + dc * i);
+};
+
+function JuegoSopaLetras({ onBack, user }) {
+  const storageKey = `mochi_sopa_${user?.email || "guest"}`;
+
+  const [showInstrucciones, setShowInstrucciones] = useState(true);
+  const [sopa, setSopa] = useState(crearSopa);
+  const [encontradas, setEncontradas] = useState([]); // { palabra, celdas }
+  const [inicio, setInicio] = useState(null);
+  const [restante, setRestante] = useState(SOPA_SEGUNDOS);
+  const [mensaje, setMensaje] = useState("");
+  const [mejorTiempo, setMejorTiempo] = useState(() => ls.get(storageKey)?.mejorTiempo || null);
+
+  const gano = sopa.palabras.length > 0 && encontradas.length === sopa.palabras.length;
+  const terminado = gano || restante === 0;
+
+  useEffect(() => {
+    if (showInstrucciones || terminado) return;
+    const id = setInterval(() => setRestante(t => Math.max(0, t - 1)), 1000);
+    return () => clearInterval(id);
+  }, [showInstrucciones, terminado]);
+
+  useEffect(() => {
+    if (!gano) return;
+    const usado = SOPA_SEGUNDOS - restante;
+    if (!mejorTiempo || usado < mejorTiempo) {
+      setMejorTiempo(usado);
+      ls.set(storageKey, { mejorTiempo: usado });
+    }
+    // Solo al completar la sopa
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gano]);
+
+  useEffect(() => {
+    if (!mensaje) return;
+    const id = setTimeout(() => setMensaje(""), 1200);
+    return () => clearTimeout(id);
+  }, [mensaje]);
+
+  const tocar = (k) => {
+    if (terminado) return;
+    if (inicio === null) { setInicio(k); return; }
+    if (inicio === k) { setInicio(null); return; }
+    const celdas = celdasEntreSopa(inicio, k);
+    setInicio(null);
+    if (!celdas) { setMensaje("Elige letras en línea recta 📏"); return; }
+    const texto = celdas.map(i => sopa.grid[i]).join("");
+    const alReves = [...texto].reverse().join("");
+    const palabra = sopa.palabras.find(p =>
+      (p === texto || p === alReves) && !encontradas.some(e => e.palabra === p)
+    );
+    if (palabra) {
+      setEncontradas([...encontradas, { palabra, celdas }]);
+      setMensaje(`¡${palabra}! 💜`);
+    } else {
+      setMensaje("Esa no es 🙈");
+    }
+  };
+
+  const reiniciar = () => {
+    setSopa(crearSopa());
+    setEncontradas([]);
+    setInicio(null);
+    setRestante(SOPA_SEGUNDOS);
+  };
+
+  const formatoTiempo = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+
+  if (showInstrucciones) {
+    return (
+      <JuegoIntro
+        titulo="🔍 Sopa de letras"
+        onBack={onBack}
+        onStart={() => setShowInstrucciones(false)}
+        pasos={[
+          <><strong>Juntos contra el reloj:</strong> tienen {SOPA_SEGUNDOS / 60} minutos.</>,
+          <><strong>Encuentra {SOPA_PALABRAS_POR_PARTIDA} palabras</strong> de amor escondidas en la sopa.</>,
+          <><strong>Toca la primera letra</strong> y después la última de la palabra.</>,
+          <><strong>Pueden estar</strong> en horizontal, vertical, diagonal o al revés.</>,
+        ]}
+        extra={mejorTiempo && (
+          <div style={{ background: C.cream, borderRadius: 16, padding: "14px 16px", marginBottom: 16, border: `1.5px solid ${C.border}`, textAlign: "center", color: C.dark }}>
+            🏆 Su mejor tiempo: <strong>{formatoTiempo(mejorTiempo)}</strong>
+          </div>
+        )}
+      />
+    );
+  }
+
+  const colorDeCelda = (k) => {
+    const idx = encontradas.findIndex(e => e.celdas.includes(k));
+    return idx >= 0 ? COLORES_SOPA[sopa.palabras.indexOf(encontradas[idx].palabra) % COLORES_SOPA.length] : null;
+  };
+
+  return (
+    <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
+      <JuegoHeader
+        titulo="🔍 Sopa de letras"
+        subtitulo={`⏱️ ${formatoTiempo(restante)} · ${encontradas.length} de ${sopa.palabras.length}`}
+        onBack={onBack}
+      />
+      <div style={{ padding: "16px 12px" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center", marginBottom: 12 }}>
+          {sopa.palabras.map((p, i) => {
+            const hallada = encontradas.some(e => e.palabra === p);
+            return (
+              <span key={p} style={{
+                background: hallada ? COLORES_SOPA[i % COLORES_SOPA.length] : C.white, color: hallada ? C.inkL : C.dark,
+                textDecoration: hallada ? "line-through" : "none", padding: "4px 10px", borderRadius: 10,
+                fontSize: "0.8rem", fontWeight: 700, border: `1.5px solid ${C.border}`
+              }}>{p}</span>
+            );
+          })}
+        </div>
+
+        <div style={{ height: 22, textAlign: "center", fontSize: "0.85rem", color: C.inkM, fontWeight: 700, marginBottom: 6 }}>{mensaje}</div>
+
+        <div style={{
+          display: "grid", gridTemplateColumns: `repeat(${SOPA_N}, 1fr)`, gap: 4, maxWidth: 380, margin: "0 auto 18px",
+          background: C.white, padding: 8, borderRadius: 16, border: `1.5px solid ${C.border}`, opacity: terminado && !gano ? 0.6 : 1
+        }}>
+          {sopa.grid.map((letra, k) => {
+            const color = colorDeCelda(k);
+            const seleccionada = inicio === k;
+            return (
+              <button
+                key={k}
+                onClick={() => tocar(k)}
+                style={{
+                  aspectRatio: "1", padding: 0, borderRadius: 8, cursor: terminado ? "default" : "pointer",
+                  background: seleccionada ? C.olive : color || C.sandL, color: seleccionada ? C.cream2 : C.dark,
+                  border: "none", fontFamily: "'Baloo 2',sans-serif", fontSize: "1.05rem", fontWeight: 700,
+                  transform: seleccionada ? "scale(1.12)" : "none", transition: "all 0.15s"
+                }}
+              >
+                {letra}
+              </button>
+            );
+          })}
+        </div>
+
+        {terminado && (
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: "3rem", marginBottom: 6 }}>{gano ? "🏆" : "⏰"}</div>
+            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.3rem", color: C.dark, marginBottom: 4 }}>
+              {gano ? `¡Lo lograron en ${formatoTiempo(SOPA_SEGUNDOS - restante)}!` : "¡Se acabó el tiempo!"}
+            </div>
+            {mejorTiempo && (
+              <div style={{ fontSize: "0.85rem", color: C.inkM, marginBottom: 16 }}>Mejor tiempo: {formatoTiempo(mejorTiempo)}</div>
+            )}
+            <button onClick={reiniciar} style={btnJuego(C.olive)}>🔄 Otra sopa</button>
           </div>
         )}
       </div>
