@@ -333,11 +333,6 @@ function computeSkillLevels(exDone) {
   return levels;
 }
 
-function getPathProgress(exDone) {
-  const completed = EXERCISES.filter(ex => (exDone?.[ex.id] || 0) >= 1).length;
-  const total = EXERCISES.length;
-  return { completed, total, pct: total ? (completed / total) * 100 : 0 };
-}
 
 function getExercisesCompletedByBoth(exDone) {
   return EXERCISES.filter(ex => (exDone?.[ex.id] || 0) >= 1).length;
@@ -356,33 +351,8 @@ function getNextChestReward(openedCount) {
   return CHEST_REWARDS[openedCount % CHEST_REWARDS.length];
 }
 
-function getExerciseStreak(exStreak = {}) {
-  const today = new Date().toISOString().slice(0, 10);
-  const last = exStreak?.lastDate;
-  let count = exStreak?.count || 0;
-  if (last && last !== today) {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    if (last !== yesterday.toISOString().slice(0, 10)) count = 0;
-  }
-  return { count, lastDate: last, today, active: last === today };
-}
 
-function getUnlockedZones(exDone) {
-  const unlocked = [];
-  for (let i = 0; i < EXERCISE_ZONES_ORDER.length; i++) {
-    const zoneId = EXERCISE_ZONES_ORDER[i];
-    unlocked.push(zoneId);
-    const exercises = EXERCISES.filter(e => e.zone === zoneId);
-    const allCompleted = exercises.length > 0 && exercises.every(e => (exDone?.[e.id] || 0) >= 1);
-    if (!allCompleted) break;
-  }
-  return unlocked;
-}
 
-function getMyExRole(user) {
-  return user?.isOwner !== false ? "owner" : "partner";
-}
 
 // ═══════════════════════════════════════════════
 // GARDEN ITEMS — multiple quantities, koi/lotus aesthetic
@@ -453,13 +423,6 @@ const EXERCISE_SKILLS = {
   calma:        { emoji: "🧘", label: "Calma",        color: "#8ac89a", desc: "Presencia y regulación" },
 };
 
-const EXERCISE_ZONES_ORDER = ["pradera","bosque","cueva","cumbre"];
-const EXERCISE_ZONES = {
-  pradera: { emoji: "🌱", label: "Pradera", color: "#d8f0c8", desc: "Ejercicios suaves para empezar" },
-  bosque:  { emoji: "🌿", label: "Bosque del Diálogo", color: "#c8e8d8", desc: "Aprendan a hablar y escuchar" },
-  cueva:   { emoji: "🕯️", label: "Cueva del Corazón",  color: "#f0e0d0", desc: "Más profundo, más íntimo" },
-  cumbre:  { emoji: "🏔️", label: "Cumbre del Perdón",  color: "#d8e0f0", desc: "Sanar y cerrar heridas" },
-};
 
 const DIFFICULTY_EMOJI = { 1: "🌱", 2: "🌿", 3: "🌸" };
 const DIFFICULTY_LABEL = { 1: "Semilla", 2: "Brote", 3: "Flor" };
@@ -703,18 +666,7 @@ function isJourneyLevelCompletedByBoth(level, conoce, myRole, partnerRole) {
   return questions.every(q => !!conoce[`${q.cat}-${q.idx}`]?.[myRole] && !!conoce[`${q.cat}-${q.idx}`]?.[partnerRole]);
 }
 
-function isJourneyLevelUnlocked(level, conoce, myRole, partnerRole) {
-  if (level === 1) return true;
-  return isJourneyLevelCompletedByBoth(level - 1, conoce, myRole, partnerRole);
-}
 
-function getJourneyOverallProgress(conoce, myRole, partnerRole) {
-  const total = CONOCE_JOURNEY.reduce((acc, l) => acc + l.questions.length, 0);
-  const answered = CONOCE_JOURNEY.reduce((acc, l) => {
-    return acc + l.questions.filter(q => !!conoce[`${q.cat}-${q.idx}`]?.[myRole] && !!conoce[`${q.cat}-${q.idx}`]?.[partnerRole]).length;
-  }, 0);
-  return { total, answered, pct: total ? (answered / total) * 100 : 0 };
-}
 
 // ═══════════════════════════════════════════════
 // CONÓCETE CAMINO — mapa ilustrado (coordenadas en un lienzo de 1000 de ancho)
@@ -730,27 +682,6 @@ function interleaveByCat(questions) {
   for (let i = 0; out.length < questions.length; i++) lists.forEach(l => l[i] && out.push(l[i]));
   return out;
 }
-
-const CONOCE_MAP = (() => {
-  const nodes = [];
-  const labels = [];
-  let y = 380;
-  CONOCE_JOURNEY.forEach((lvl, li) => {
-    if (li > 0) { labels.push({ level: lvl.level, y: y + 70 }); y += 280; }
-    const steps = [
-      ...interleaveByCat(lvl.questions).map(q => ({ type: "q", q })),
-      ...CONOCE_LEVEL_QUIZZES[lvl.level].map(quizId => ({ type: "quiz", quizId })),
-      { type: "chest" },
-    ];
-    steps.forEach(step => {
-      const i = nodes.length;
-      nodes.push({ ...step, level: lvl.level, x: i === 0 ? 500 : i % 2 ? 650 : 350, y });
-      y += 200;
-    });
-  });
-  const height = y + 40;
-  return { nodes, labels, height, path: mapCurvePath(nodes), tiles: mapTiles(height) };
-})();
 
 // Curva suave que une las paradas de un camino
 function mapCurvePath(nodes) {
@@ -782,7 +713,6 @@ const CONOCE_QUICK = {
 
 // Íconos de línea del camino (sin emojis): mismo trazo y paleta que la app
 const CONOCE_CAT_ICON = { infancia: "bear", cosasFavoritas: "star", sueños: "moon", miedos: "umbrella" };
-const CONOCE_QUIZ_ICON = { bigfive: "flower", lovestyles: "letter", attachment: "rings", adventure: "compass", strengths: "shield" };
 const CONOCE_LEVEL_ICON = { 1: "seed", 2: "sprout", 3: "tulip" };
 const CONOCE_ICON_PATHS = {
   bear: <><path d="M5.4 9.4A2.8 2.8 0 1 1 9.2 5.7" /><path d="M14.8 5.7a2.8 2.8 0 1 1 3.8 3.7" /><circle cx="12" cy="13" r="7" /><circle cx="9.5" cy="12" r="0.9" fill="currentColor" stroke="none" /><circle cx="14.5" cy="12" r="0.9" fill="currentColor" stroke="none" /><path d="M10.5 15.4c.9.7 2.1.7 3 0" /></>,
@@ -798,6 +728,8 @@ const CONOCE_ICON_PATHS = {
   gift: <><rect x="4.5" y="10.5" width="15" height="9.5" rx="2" /><rect x="3.5" y="7.5" width="17" height="3.5" rx="1.5" /><path d="M12 7.5V20" /><path d="M12 7.5C10.8 4.5 7 4.3 7.3 6.5c.2 1.2 2.6 1 4.7 1zM12 7.5c1.2-3 5-3.2 4.7-1-.2 1.2-2.6 1-4.7 1z" /></>,
   trophy: <><path d="M8 4h8v5a4 4 0 0 1-8 0z" /><path d="M8 5.5H5.5a2.6 2.6 0 0 0 2.8 3.8M16 5.5h2.5a2.6 2.6 0 0 1-2.8 3.8" /><path d="M12 13v3.5M9 20h6M9.8 20l.4-3.5h3.6l.4 3.5" /></>,
   check: <path d="M6 12.5l4 4 8-9" />,
+  question: <><path d="M6.5 4h11A2.5 2.5 0 0 1 20 6.5v7a2.5 2.5 0 0 1-2.5 2.5H10l-4 3.5V16A2.5 2.5 0 0 1 4 13.5v-7A2.5 2.5 0 0 1 6.5 4z" /><path d="M10.1 8.1a1.9 1.9 0 1 1 2.6 1.8c-.5.2-.7.5-.7 1v.4" /><circle cx="12" cy="13.6" r="0.95" fill="currentColor" stroke="none" /></>,
+  pact: <><path d="M7 3.5h7l4 4V19a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 5.5 19V5A1.5 1.5 0 0 1 7 3.5z" /><path d="M14 3.5v4h4" /><path d="M8.5 11h7M8.5 14h4" /><path d="M8.5 17.6c.9-1.1 1.5-1.1 2 0s1.1 1.1 2 0 1.5-1.1 2.2 0" /></>,
   hourglass: <><path d="M8 3.5h8M8 20.5h8" /><path d="M8.7 3.5c0 5 6.6 4 6.6 8.5s-6.6 3.5-6.6 8.5M15.3 3.5c0 5-6.6 4-6.6 8.5s6.6 3.5 6.6 8.5" /></>,
   seed: <><path d="M12 20.5v-7" /><path d="M12 13.5c0-4 3-6.5 7-6.5 0 4-3 6.5-7 6.5z" /></>,
   sprout: <><path d="M12 20.5v-8" /><path d="M12 12.5c0-4 3-6.5 7-6.5 0 4-3 6.5-7 6.5zM12 15.5c0-3.4-2.5-5.5-6.5-5.5 0 3.4 2.5 5.5 6.5 5.5z" /></>,
@@ -826,15 +758,6 @@ function ConoceIcon({ name, size = 24, color = "currentColor", stroke = 2, fill 
   );
 }
 
-const ConoceLock = () => (
-  <svg width="22" height="24" viewBox="0 0 22 24">
-    <path d="M6 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="#8c7bb8" strokeWidth="3" strokeLinecap="round" />
-    <rect x="2" y="10" width="18" height="13" rx="4" fill="#8c7bb8" />
-    <circle cx="11" cy="15.5" r="2" fill="#efe9f8" />
-    <rect x="10" y="16" width="2" height="4" rx="1" fill="#efe9f8" />
-  </svg>
-);
-
 // ═══════════════════════════════════════════════
 // CAMINO ILUSTRADO GENÉRICO — Acuerdos, Ejercicios y Lecciones (mismo paisaje que Conócete)
 // ═══════════════════════════════════════════════
@@ -845,30 +768,38 @@ function buildPathMap(steps) {
   let y = 380;
   steps.forEach((s, i) => {
     if (i > 0 && steps[i - 1].stage !== s.stage) { labels.push({ stage: s.stage, y: y + 70 }); y += 280; }
-    nodes.push({ ...s, x: i === 0 ? 500 : i % 2 ? 650 : 350, y });
+    nodes.push({ ...s, x: i === 0 ? 500 : i % 2 ? 630 : 370, y });
     y += 200;
   });
   const height = y + 40;
   return { nodes, labels, height, path: mapCurvePath(nodes), tiles: mapTiles(height) };
 }
 
-const PATH_NODE_LOOK = {
-  locked:    { bg: "radial-gradient(circle at 35% 30%, #fbf8ff, #e6def4)", edge: "#c9bce3", icon: "#a796cc" },
-  current:   { bg: "radial-gradient(circle at 35% 30%, #fff, #fcd9e8)", edge: "#e79bbd", icon: "#e46b9c" },
-  open:      { bg: "radial-gradient(circle at 35% 30%, #fff, #f1ebfb)", edge: "#c3b2e6", icon: "#8d6fc9" },
-  waiting:   { bg: "radial-gradient(circle at 35% 30%, #fff, #f1ebfb)", edge: "#c3b2e6", icon: "#8d6fc9" },
-  negotiate: { bg: "radial-gradient(circle at 35% 30%, #fff, #e9ddff)", edge: "#9a7fd9", icon: "#7c5fd0" },
-  done:      { bg: "radial-gradient(circle at 35% 30%, #fff6d6, #f7d67a)", edge: "#d9a93a", icon: "#b8862a" },
+// Cada tipo de parada tiene un solo ícono y color, en todos los caminos
+const PATH_TYPES = {
+  conoce:    { icon: "question", color: "#e46b9c", light: "#fde3ee", edge: "#c9578a" },
+  acuerdo:   { icon: "pact",     color: "#3f8fb0", light: "#dcf0f8", edge: "#2f6f8a" },
+  leccion:   { icon: "book",     color: "#d29a2e", light: "#fbefd2", edge: "#a87a1f" },
+  ejercicio: { icon: "star",     color: "#5aa15f", light: "#e2f2dc", edge: "#3f7a44" },
+  premio:    { icon: "gift",     color: "#e0a92e", light: "#fbefd2", edge: "#b8862a" },
 };
+const PATH_GRAY = { bg: "radial-gradient(circle at 35% 30%, #f6f6f8, #dedee4)", edge: "#bdbdc6", icon: "#a8a8b3" };
+// done = lleno de color · current/waiting/negotiate = blanco con ícono de color · open/locked = gris
+function pathNodeLook(status, type) {
+  if (status === "open" || status === "locked") return PATH_GRAY;
+  if (status === "done") return { bg: type.color, edge: type.edge, icon: "#fff" };
+  return { bg: `radial-gradient(circle at 35% 30%, #fff, ${type.light})`, edge: type.color, icon: type.color };
+}
 const PATH_STATUS_BADGE = {
   waiting: ["hourglass", "#fff", "#8d6fc9"],
   negotiate: ["letter", "#fff", "#7c5fd0"],
   done: ["check", "#7fbf6a", "#fff"],
+  locked: ["lock", "#fff", "#a8a8b3"],
 };
 // Tinte por etapa (en orden de aparición): verde → lila → rosa
 const PATH_TINTS = ["rgba(255,255,255,0)", "rgba(176,140,240,0.55)", "rgba(245,140,195,0.5)"];
 
-// nodes: los de buildPathMap + { key, status, icon, badge?, bubble?, caption?, bounce?, tappable }
+// nodes: los de buildPathMap + { key, kind, status, icon?, size?, badge?, bubble?, caption?, bounce?, tappable }
 // stageInfo(stage) → { label, sub, ring, icon }
 function CaminoMapa({ map, nodes, stageInfo, tints = PATH_TINTS, counter, focusIdx, focusRef, onTap }) {
   const H = map.height;
@@ -883,7 +814,7 @@ function CaminoMapa({ map, nodes, stageInfo, tints = PATH_TINTS, counter, focusI
     <div style={{ position: "relative", width: "100%", aspectRatio: `1000 / ${H}`, overflow: "hidden", background: "#d2dab9" }}>
       <style>{`
         @keyframes bounceSoft { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-        @keyframes nodeGlow { 0%,100% { box-shadow: 0 5px 0 #e79bbd, 0 0 0 6px rgba(255,214,232,0.55), 0 0 26px rgba(255,190,220,0.8); } 50% { box-shadow: 0 5px 0 #e79bbd, 0 0 0 12px rgba(255,214,232,0.35), 0 0 36px rgba(255,190,220,0.95); } }
+        @keyframes nodeGlow { 0%,100% { box-shadow: 0 5px 0 var(--edge), 0 0 0 6px rgba(255,214,232,0.55), 0 0 26px rgba(255,190,220,0.8); } 50% { box-shadow: 0 5px 0 var(--edge), 0 0 0 12px rgba(255,214,232,0.35), 0 0 36px rgba(255,190,220,0.95); } }
         @keyframes raysBlink { 0%,100% { opacity: 1; } 50% { opacity: 0.45; } }
       `}</style>
       <img src="/conoce/paisaje.webp" alt="" draggable={false}
@@ -926,7 +857,9 @@ function CaminoMapa({ map, nodes, stageInfo, tints = PATH_TINTS, counter, focusI
 
       {/* Paradas */}
       {nodes.map((n, i) => {
-        const look = PATH_NODE_LOOK[n.status];
+        const type = PATH_TYPES[n.kind];
+        const look = pathNodeLook(n.status, type);
+        const size = n.size || 56;
         const isFocus = i === focusIdx;
         const badge = n.badge || PATH_STATUS_BADGE[n.status];
         const side = n.x < 500 ? "left" : n.x > 500 ? "right" : null;
@@ -945,7 +878,7 @@ function CaminoMapa({ map, nodes, stageInfo, tints = PATH_TINTS, counter, focusI
             )}
             <div onClick={() => n.tappable && onTap(n)}
               style={{
-                width: 56, height: 56, borderRadius: "50%", background: look.bg,
+                "--edge": look.edge, width: size, height: size, borderRadius: "50%", background: look.bg,
                 border: "3px solid rgba(255,255,255,0.95)",
                 boxShadow: `0 5px 0 ${look.edge}, 0 8px 14px rgba(80,60,120,0.15)`,
                 display: "flex", alignItems: "center", justifyContent: "center",
@@ -954,21 +887,19 @@ function CaminoMapa({ map, nodes, stageInfo, tints = PATH_TINTS, counter, focusI
                   : n.bounce ? "bounceSoft 2.2s ease-in-out infinite" : "none",
                 WebkitTapHighlightColor: "transparent",
               }}>
-              {n.status === "locked" ? <ConoceLock />
-                : <ConoceIcon name={n.status === "current" ? "heart" : n.icon} size={27} color={look.icon} stroke={2.1}
-                    fill={n.status === "current" ? "#f7a8c8" : "none"} />}
+              <ConoceIcon name={n.icon || type.icon} size={Math.round(size * 0.48)} color={look.icon} stroke={2.1} />
               {badge && (
                 <span style={{ position: "absolute", right: -6, bottom: -4, background: badge[1], borderRadius: 10, width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 3px rgba(0,0,0,0.15)", border: badge[1] === "#fff" ? "none" : "2px solid #fff", boxSizing: "border-box" }}>
-                  <ConoceIcon name={badge[0]} size={badge[1] === "#fff" ? 13 : 12} color={badge[2]} stroke={badge[1] === "#fff" ? 2.2 : 3.2} />
+                  <ConoceIcon name={badge[0]} size={badge[1] === "#fff" ? 13 : 12} color={badge[2]} stroke={badge[1] === "#fff" ? 2.4 : 3.2} />
                 </span>
               )}
             </div>
             {n.caption && (
               <div style={{
-                position: "absolute", width: "max-content", maxWidth: 112, background: "rgba(255,255,255,0.9)", borderRadius: 10, padding: "2px 9px",
-                fontSize: "0.64rem", fontWeight: 800, color: C.inkM, lineHeight: 1.25, textAlign: "center",
-                ...(side === "left" ? { right: "100%", marginRight: 12, top: "50%", transform: "translateY(-50%)" }
-                  : side === "right" ? { left: "100%", marginLeft: 12, top: "50%", transform: "translateY(-50%)" }
+                position: "absolute", width: "max-content", maxWidth: 100, background: "rgba(255,255,255,0.9)", borderRadius: 10, padding: "2px 8px",
+                fontSize: "0.64rem", fontWeight: 800, color: look === PATH_GRAY ? C.inkL : C.inkM, lineHeight: 1.25, textAlign: "center",
+                ...(side === "left" ? { right: "100%", marginRight: 10, top: "50%", transform: "translateY(-50%)" }
+                  : side === "right" ? { left: "100%", marginLeft: 10, top: "50%", transform: "translateY(-50%)" }
                   : { top: "100%", left: "50%", transform: "translateX(-50%)", marginTop: 9 }),
               }}>
                 {n.caption}
@@ -980,15 +911,6 @@ function CaminoMapa({ map, nodes, stageInfo, tints = PATH_TINTS, counter, focusI
     </div>
   );
 }
-
-// Camino de ejercicios: una etapa por zona (Pradera → Cumbre)
-const EXERCISE_SKILL_ICON = { comunicacion: "chat", confianza: "shield", pasion: "flame", calma: "leaf" };
-const EXERCISE_ZONE_ICON = { pradera: "seed", bosque: "sprout", cueva: "candle", cumbre: "mountain" };
-const EXERCISE_ZONE_RING = { pradera: "#8bc48a", bosque: "#5aa88a", cueva: "#d9935a", cumbre: "#7a9ad9" };
-const EXERCISE_ZONE_TINTS = ["rgba(255,255,255,0)", "rgba(80,170,140,0.4)", "rgba(230,150,90,0.5)", "rgba(120,150,230,0.5)"];
-const EXERCISE_MAP = buildPathMap(EXERCISE_ZONES_ORDER.flatMap(zone =>
-  EXERCISES.filter(e => e.zone === zone).map(ex => ({ key: ex.id, ex, stage: zone, icon: EXERCISE_SKILL_ICON[ex.skill], caption: ex.title }))
-));
 
 const BURBUJA_SECTIONS = [
   // Ordenado de lo más leve a lo más fuerte: este orden es el camino de la Burbuja
@@ -1007,18 +929,18 @@ const BURBUJA_SECTIONS = [
       {id:"tipo2",q:"¿Cuánto espacio personal necesita cada uno?",phA:"Necesito...",phB:"Necesito..."},
       {id:"tipo3",q:"¿Cómo manejan el tiempo con amigos y familia por separado?",phA:"Para mí es importante...",phB:"Para mí es importante..."},
     ]},
-  {id:"discusion",level:1,icon:"⚡",title:"Reglas para discutir",sub:"Cómo manejar conflictos juntos",itemBg:"#f5e8d4",
+  {id:"planes",level:1,icon:"🌱",title:"Planes juntos",sub:"Gastos compartidos, mascotas y futuro",itemBg:"#e4f4e8",
+    items:[
+      {id:"fam6",q:"¿Tienen mascotas o quieren tenerlas?",phA:"Sobre las mascotas...",phB:"Sobre las mascotas..."},
+      {id:"fut1",q:"¿Dónde se imaginan viviendo en 5 años?",phA:"Me imagino que...",phB:"Me imagino que..."},
+      {id:"plan1",q:"¿Cómo quieren dividir los gastos de salidas y viajes?",phA:"Para mí lo justo es...",phB:"Para mí lo justo es..."},
+    ]},
+  {id:"discusion",level:2,icon:"⚡",title:"Reglas para discutir",sub:"Cómo manejar conflictos juntos",itemBg:"#f5e8d4",
     items:[
       {id:"disc1",q:"Señal de 'necesito pausa' — ¿cuál es la tuya?",phA:"Cuando me desborda...",phB:"Cuando me desborda..."},
       {id:"disc4",q:"¿Cuánto tiempo de pausa está bien antes de retomar una conversación?",phA:"Necesito al menos...",phB:"Necesito al menos..."},
       {id:"disc3",q:"¿Cómo se reconcilian después de una pelea?",phA:"Para reconciliarme necesito...",phB:"Para reconciliarme necesito..."},
       {id:"disc2",q:"¿Qué está PROHIBIDO en una discusión entre ustedes?",phA:"Ej: gritar, traer el pasado...",phB:"Ej: insultar, silencio de días..."},
-    ]},
-  {id:"planes",level:2,icon:"🌱",title:"Planes juntos",sub:"Gastos compartidos, mascotas y futuro",itemBg:"#e4f4e8",
-    items:[
-      {id:"fam6",q:"¿Tienen mascotas o quieren tenerlas?",phA:"Sobre las mascotas...",phB:"Sobre las mascotas..."},
-      {id:"fut1",q:"¿Dónde se imaginan viviendo en 5 años?",phA:"Me imagino que...",phB:"Me imagino que..."},
-      {id:"plan1",q:"¿Cómo quieren dividir los gastos de salidas y viajes?",phA:"Para mí lo justo es...",phB:"Para mí lo justo es..."},
     ]},
   {id:"tipo",level:2,icon:"💑",title:"Nuestra relación",sub:"Qué somos y qué necesitamos",itemBg:"#fce4d0",
     items:[
@@ -1068,15 +990,6 @@ const BURBUJA_LEVELS = {
   1: { ...CONOCE_LEVELS[1], sub: "Cómo nos tratamos" },
   2: { ...CONOCE_LEVELS[2], sub: "Hacia dónde vamos" },
   3: { ...CONOCE_LEVELS[3], sub: "Construir una vida juntos" },
-};
-
-const burbujaHasActivity = (e) => !!(e?.owner || e?.partner || e?.proposalText || e?.history?.length || e?.status === "approved");
-// Preguntas retiradas (legacy) solo siguen visibles si la pareja ya las usó
-const burbujaItemVisible = (item, burbuja) => !item.legacy || burbujaHasActivity(burbuja[item.id]);
-
-const BURBUJA_SEC_ICON = {
-  quiero: "gift", contacto: "chat", espacio: "clock", discusion: "bolt", planes: "compass", tipo: "rings",
-  familias: "family", fidelidad: "shield", hogar: "home", economia: "coin", crianza: "baby",
 };
 
 const LOVE_PROMPTS = [
@@ -2460,7 +2373,6 @@ function InvitePartnerBox({ user, compact = false }) {
 
 function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pandaBubble, onPet, onBuy, onWater, onBuyAccessory }) {
   const [shopTab, setShopTab] = useState("plantas");
-  const [showJuegos, setShowJuegos] = useState(false);
   const cats = [{id:"plantas",label:"🌿 Plantas"},{id:"agua",label:"🐟 Agua"},{id:"cielo",label:"☁️ Cielo"},{id:"deco",label:"🏮 Deco"},{id:"especial",label:"✨ Especiales"},{id:"accesorios",label:"🐼 Pandas"}];
   const shopItems = (shopTab === "accesorios"
     ? PANDA_ACCESSORIES
@@ -2468,10 +2380,6 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
 
   const dry = water < 20;
   const withering = water < 40;
-
-  if (showJuegos) {
-    return <Juegos onBack={() => setShowJuegos(false)} user={user} />;
-  }
 
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
@@ -2539,16 +2447,11 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
         </SectionErrorBoundary>
       </div>
 
-      {/* Water button + Games button */}
+      {/* Water button */}
       <div style={{ textAlign: "center", padding: "22px 14px 6px" }}>
-        <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
-          <button onClick={onWater} style={{ background: dry ? "#e86030" : C.sky, color: C.white, border: "none", borderRadius: 12,
-            padding: "10px 22px", fontFamily: "'Baloo 2',sans-serif", fontSize: "0.95rem", cursor: "pointer",
-            boxShadow: "0 3px 0 rgba(0,0,0,0.18)" }}>💧 Regar el jardín</button>
-          <button onClick={() => setShowJuegos(true)} style={{ background: C.olive, color: C.cream2, border: "none", borderRadius: 12,
-            padding: "10px 22px", fontFamily: "'Baloo 2',sans-serif", fontSize: "0.95rem", cursor: "pointer",
-            boxShadow: "0 3px 0 rgba(0,0,0,0.18)" }}>🎮 Juegos</button>
-        </div>
+        <button onClick={onWater} style={{ background: dry ? "#e86030" : C.sky, color: C.white, border: "none", borderRadius: 12,
+          padding: "10px 22px", fontFamily: "'Baloo 2',sans-serif", fontSize: "0.95rem", cursor: "pointer",
+          boxShadow: "0 3px 0 rgba(0,0,0,0.18)" }}>💧 Regar el jardín</button>
       </div>
 
       {/* Shop */}
@@ -3299,146 +3202,17 @@ function ExModal({ ex, onClose, onComplete, nameA, nameB, user, onGoToGarden }) 
   );
 }
 
-function Ejercicios({ exDone, onComplete, user, lessonsDone, onCompleteLesson, bamboo, exChestState, exStreak, onGoToGarden }) {
+// Lección o ejercicio abierto desde el Camino; al cerrarlo se vuelve al camino
+function Ejercicios({ step, onStepClose, onComplete, user, lessonsDone, onCompleteLesson, onGoToGarden }) {
   const { nameA, nameB } = getCoupleNames(user);
-  const [openId, setOpenId] = useState(null);
-  const [openLesson, setOpenLesson] = useState(null);
-  const [ejTab, setEjTab] = useState("ejerc");
+  const [openId, setOpenId] = useState(step.ex?.id || null);
+  const [openLesson, setOpenLesson] = useState(step.lesson || null);
   const ex = EXERCISES.find(e => e.id === openId);
 
-  const pathProgress = useMemo(() => getPathProgress(exDone), [exDone]);
-  const chestState = useMemo(() => getChestState(exDone, exChestState), [exDone, exChestState]);
-  const streak = useMemo(() => getExerciseStreak(exStreak), [exStreak]);
-
-  const myKey = getMyExRole(user);
-  const partnerKey = myKey === "owner" ? "partner" : "owner";
-  const unlockedZones = useMemo(() => getUnlockedZones(exDone), [exDone]);
-
-  // Ejercicios: toda la zona abierta se juega en cualquier orden; la siguiente zona se abre al terminarla
-  const exNodes = useMemo(() => {
-    let currentSet = false;
-    return EXERCISE_MAP.nodes.map(n => {
-      const count = exDone?.[n.ex.id] || 0;
-      if (count >= 1) return { ...n, status: "done", tappable: true, badge: count >= 3 ? ["star", "#f5c74a", "#fff"] : null };
-      if (!unlockedZones.includes(n.stage)) return { ...n, status: "locked" };
-      if (currentSet) return { ...n, status: "open", tappable: true };
-      currentSet = true;
-      return { ...n, status: "current", tappable: true, bubble: "¡Juguemos!" };
-    });
-  }, [exDone, unlockedZones]);
-
-  // Lecciones: lees a tu ritmo (terminas una → se abre la siguiente)
-  const lessonNodes = useMemo(() => {
-    let prevMine = true;
-    return LESSON_MAP.nodes.map(n => {
-      const d = lessonsDone?.[n.lesson.id] || {};
-      const mine = d[myKey] === true, partnerDone = d[partnerKey] === true;
-      const open = mine || prevMine;
-      prevMine = mine;
-      if (!open) return { ...n, status: "locked" };
-      if (!mine) return { ...n, status: "current", tappable: true, bubble: partnerDone ? "¡Ya la leyó! Te toca" : "¡Te toca!" };
-      return { ...n, status: partnerDone ? "done" : "waiting", tappable: true };
-    });
-  }, [lessonsDone, myKey, partnerKey]);
-
-  const focusOf = (nodes) => {
-    const i = nodes.findIndex(n => n.status === "current");
-    if (i >= 0) return i;
-    for (let k = nodes.length - 1; k >= 0; k--) if (nodes[k].status !== "locked") return k;
-    return 0;
-  };
-  const exFocus = useMemo(() => focusOf(exNodes), [exNodes]);
-  const lessonFocus = useMemo(() => focusOf(lessonNodes), [lessonNodes]);
-
-  // Al cambiar de pestaña o cerrar un ejercicio/lección, centrar la parada que toca
-  const focusRef = useRef(null);
-  useEffect(() => {
-    if (openId || openLesson) return;
-    const t = setTimeout(() => focusRef.current?.scrollIntoView({ block: "center", behavior: "smooth" }), 250);
-    return () => clearTimeout(t);
-  }, [ejTab, openId, openLesson]);
+  useEffect(() => { if (!openId && !openLesson) onStepClose(); }, [openId, openLesson]);
 
   return (
     <>
-      <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
-        {/* Minimal header */}
-        <div style={{ background: C.dark, padding: "44px 18px 16px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.6rem", color: C.cream2 }}>Ejercicios</div>
-            <div style={{ background: C.olive, borderRadius: 20, padding: "5px 12px", fontFamily: "'Baloo 2',sans-serif", fontSize: "0.85rem", color: C.cream2 }}>{bamboo} 🌿</div>
-          </div>
-        </div>
-
-        {/* Compact stats */}
-        <div style={{ display: "flex", gap: 10, padding: "12px 14px", background: C.white, borderBottom: `1px solid ${C.border}` }}>
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.7rem", color: C.inkL, fontWeight: 800 }}>
-              <span>Progreso</span>
-              <span>{pathProgress.completed}/{pathProgress.total}</span>
-            </div>
-            <div style={{ background: C.cream, borderRadius: 50, height: 6, overflow: "hidden" }}>
-              <div style={{ width: `${pathProgress.pct}%`, height: "100%", background: C.olive, borderRadius: 50, transition: "width 0.6s" }} />
-            </div>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.8rem", color: C.inkM, fontWeight: 700 }}>
-            <span>🔥 {streak.count}</span>
-            <span>{chestState.canOpen ? "🎁" : "🎀"}</span>
-          </div>
-        </div>
-
-        {/* Minimal tabs */}
-        <div style={{ display: "flex", gap: 6, padding: "12px 14px 0" }}>
-          {[["ejerc","Camino"],["lecciones","Lecciones"]].map(([id,label]) => (
-            <button key={id} onClick={() => setEjTab(id)}
-              style={{
-                flex:1, padding:"8px 0", textAlign:"center", fontFamily:"'Baloo 2',sans-serif",
-                fontSize:"0.85rem", cursor:"pointer", borderRadius:20, border:"none",
-                background: ejTab===id ? C.dark : "transparent",
-                color: ejTab===id ? C.cream2 : C.inkM,
-                boxShadow: ejTab===id ? "0 2px 0 rgba(0,0,0,0.1)" : "inset 0 0 0 1.5px " + C.border,
-                transition:"all 0.15s" }}>
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {/* CAMINO TAB */}
-        {ejTab === "ejerc" && (
-          <div style={{ marginTop: 12 }}>
-            <CaminoMapa
-              map={EXERCISE_MAP}
-              nodes={exNodes}
-              tints={EXERCISE_ZONE_TINTS}
-              stageInfo={zoneId => {
-                const zone = EXERCISE_ZONES[zoneId];
-                const prev = EXERCISE_ZONES[EXERCISE_ZONES_ORDER[EXERCISE_ZONES_ORDER.indexOf(zoneId) - 1]];
-                const locked = !unlockedZones.includes(zoneId);
-                return { label: zone.label, sub: locked ? `Terminen ${prev.label}` : zone.desc, ring: EXERCISE_ZONE_RING[zoneId], icon: EXERCISE_ZONE_ICON[zoneId], locked };
-              }}
-              counter={`${pathProgress.completed}/${pathProgress.total} hechos`}
-              focusIdx={exFocus}
-              focusRef={focusRef}
-              onTap={n => setOpenId(n.ex.id)}
-            />
-          </div>
-        )}
-
-        {/* LECCIONES TAB */}
-        {ejTab === "lecciones" && (
-          <div style={{ marginTop: 12 }}>
-            <CaminoMapa
-              map={LESSON_MAP}
-              nodes={lessonNodes}
-              stageInfo={level => ({ ...CONOCE_LEVELS[level], sub: LESSON_STAGE_SUB[level], icon: CONOCE_LEVEL_ICON[level] })}
-              counter={`${lessonNodes.filter(n => n.status === "done").length}/${lessonNodes.length} juntos`}
-              focusIdx={lessonFocus}
-              focusRef={focusRef}
-              onTap={n => setOpenLesson(n.lesson)}
-            />
-          </div>
-        )}
-      </div>
-
       {/* LESSON MODAL */}
       {openLesson && (
         <div style={{ position:"fixed", inset:0, background:"rgba(15,25,15,0.65)", zIndex:5000, display:"flex", alignItems:"flex-end" }} onClick={e => { if(e.target===e.currentTarget) setOpenLesson(null); }}>
@@ -3521,86 +3295,22 @@ function ConozcanseBanner({ subtitle }) {
   );
 }
 
-function Conocete({ conoce, onSave, user, streakInfo, onDailySeedAnswer }) {
+// Pregunta o test de Conócete abierto desde el Camino; al cerrarlo se vuelve al camino
+function Conocete({ step, onStepClose, conoce, onSave, user }) {
   const { nameA, nameB } = getCoupleNames(user);
   const myRole = user?.isOwner !== false ? "owner" : "partner";
   const partnerRole = myRole === "owner" ? "partner" : "owner";
   const myLabel = myRole === "owner" ? nameA : nameB;
-  const partnerWho = myRole === "owner" ? "B" : "A";
   const partnerLabel = myRole === "owner" ? nameB : nameA;
+  const startAns = step.q ? conoce[`${step.q.cat}-${step.q.idx}`]?.[myRole] || "" : "";
 
-  const [openQ, setOpenQ] = useState(null);
-  const [myAnswer, setMyAnswer] = useState("");
-  const [editing, setEditing] = useState(true);
+  const [openQ, setOpenQ] = useState(step.q || null);
+  const [myAnswer, setMyAnswer] = useState(startAns);
+  const [editing, setEditing] = useState(!startAns);
   const [justSaved, setJustSaved] = useState(null); // { isNew } al guardar, para celebrar
-  const [celebrateLevel, setCelebrateLevel] = useState(null);
-  const [openQuizId, setOpenQuizId] = useState(null);
-  const [showDailySeed, setShowDailySeed] = useState(false);
+  const [openQuizId, setOpenQuizId] = useState(step.quizId || null);
 
-  const { dailySeed, hasAnswered: dailySeedAnswered, loading: dailySeedLoading } = useDailySeed(user);
-
-  const overall = useMemo(() => getJourneyOverallProgress(conoce, myRole, partnerRole), [conoce, myRole, partnerRole]);
-
-  // Estado de cada parada: dentro de un nivel avanzas a tu ritmo (respondes una → se abre la siguiente)
-  const mapNodes = useMemo(() => {
-    let prevMine = true;
-    let prevLevel = null;
-    return CONOCE_MAP.nodes.map(n => {
-      if (n.level !== prevLevel) { prevMine = true; prevLevel = n.level; }
-      const levelOpen = isJourneyLevelUnlocked(n.level, conoce, myRole, partnerRole);
-      if (n.type === "q") {
-        const ans = conoce[`${n.q.cat}-${n.q.idx}`] || {};
-        const mine = !!ans[myRole], partnerDone = !!ans[partnerRole];
-        const open = levelOpen && (mine || prevMine);
-        prevMine = mine;
-        const status = !open ? "locked" : !mine ? "current" : partnerDone ? "done" : "waiting";
-        return { ...n, status, partnerDone };
-      }
-      if (n.type === "quiz") {
-        const quiz = QUIZZES.find(z => z.id === n.quizId);
-        const answered = quiz.questions.filter((_, idx) => !!conoce[`${quiz.catKey}-${idx}`]?.[myRole]).length;
-        const status = answered === quiz.questions.length ? "done" : levelOpen && prevMine ? "ready" : "locked";
-        return { ...n, quiz, status };
-      }
-      return { ...n, status: isJourneyLevelCompletedByBoth(n.level, conoce, myRole, partnerRole) ? "done" : "locked" };
-    });
-  }, [conoce, myRole, partnerRole]);
-
-  const focusIdx = useMemo(() => {
-    const i = mapNodes.findIndex(n => n.status === "current" || n.status === "ready");
-    if (i >= 0) return i;
-    for (let j = mapNodes.length - 1; j >= 0; j--) if (mapNodes[j].status !== "locked") return j;
-    return 0;
-  }, [mapNodes]);
-
-  // Al volver al camino, centrar la parada que toca
-  const focusRef = useRef(null);
-  useEffect(() => {
-    if (openQ || openQuizId) return;
-    const t = setTimeout(() => focusRef.current?.scrollIntoView({ block: "center", behavior: "smooth" }), 250);
-    return () => clearTimeout(t);
-  }, [openQ, openQuizId]);
-
-  // Celebrar solo cuando un nivel pasa a estar completo por ambos (no cada vez que se abre la pantalla)
-  const completedLevelsRef = useRef(null);
-  useEffect(() => {
-    const done = CONOCE_JOURNEY.filter(lvl => isJourneyLevelCompletedByBoth(lvl.level, conoce, myRole, partnerRole)).map(lvl => lvl.level);
-    const prev = completedLevelsRef.current;
-    completedLevelsRef.current = done;
-    const fresh = prev && done.find(l => !prev.includes(l));
-    if (!fresh) return;
-    setCelebrateLevel(fresh);
-    const t = setTimeout(() => setCelebrateLevel(null), 2500);
-    return () => clearTimeout(t);
-  }, [conoce, myRole, partnerRole]);
-
-  const openQuestion = (q) => {
-    const ex = conoce[`${q.cat}-${q.idx}`] || {};
-    setOpenQ(q);
-    setMyAnswer(ex[myRole] || "");
-    setEditing(!ex[myRole]);
-    setJustSaved(null);
-  };
+  useEffect(() => { if (!openQ && !openQuizId) onStepClose(); }, [openQ, openQuizId]);
 
   const saveQ = () => {
     const clean = myAnswer.trim();
@@ -3617,7 +3327,7 @@ function Conocete({ conoce, onSave, user, streakInfo, onDailySeedAnswer }) {
     const lv = CONOCE_LEVELS[openQ.level];
     const qKey = `${openQ.cat}-${openQ.idx}`;
     const partnerAns = conoce[qKey]?.[partnerRole];
-    const levelQs = CONOCE_MAP.nodes.filter(n => n.type === "q" && n.level === openQ.level).map(n => n.q);
+    const levelQs = CAMINO_STEPS.filter(st => st.kind === "conoce" && st.q && st.stage === openQ.level).map(st => st.q);
     const isMine = (q) => !!conoce[`${q.cat}-${q.idx}`]?.[myRole] || (`${q.cat}-${q.idx}` === qKey && !editing);
     const pos = levelQs.findIndex(q => `${q.cat}-${q.idx}` === qKey);
     const nextQ = levelQs.slice(pos + 1).find(q => !isMine(q)) || levelQs.find(q => !isMine(q));
@@ -3652,7 +3362,7 @@ function Conocete({ conoce, onSave, user, streakInfo, onDailySeedAnswer }) {
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 16px 6px" }}>
           <button onClick={() => setOpenQ(null)}
             style={{ border: "none", background: "rgba(255,255,255,0.85)", borderRadius: 12, padding: "7px 12px", fontSize: "0.75rem", fontWeight: 800, color: C.inkM, cursor: "pointer", fontFamily: "'Nunito',sans-serif" }}>
-            ← Mapa
+            ← Camino
           </button>
           <div style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center", gap: 6 }}>
             {levelQs.map((q, i) => {
@@ -3737,16 +3447,12 @@ function Conocete({ conoce, onSave, user, streakInfo, onDailySeedAnswer }) {
                   style={{ fontSize: "0.72rem", fontWeight: 800, color: C.inkL, textAlign: "center", cursor: "pointer", margin: "4px 0 12px" }}>
                   Editar mi respuesta
                 </div>
-                {nextQ ? (
-                  <Btn onClick={() => openQuestion(nextQ)} style={{ width: "100%", fontSize: "1.05rem" }}>Siguiente pregunta →</Btn>
-                ) : (
-                  <>
-                    <div style={{ textAlign: "center", fontFamily: "'Baloo 2',sans-serif", fontSize: "1.05rem", color: C.dark, marginBottom: 8 }}>
-                      ¡Terminaste tus preguntas de {lv.label}!
-                    </div>
-                    <Btn onClick={() => setOpenQ(null)} style={{ width: "100%", fontSize: "1.05rem" }}>Ver el mapa</Btn>
-                  </>
+                {!nextQ && (
+                  <div style={{ textAlign: "center", fontFamily: "'Baloo 2',sans-serif", fontSize: "1.05rem", color: C.dark, marginBottom: 8 }}>
+                    ¡Terminaste tus preguntas de {lv.label}!
+                  </div>
                 )}
+                <Btn onClick={() => setOpenQ(null)} style={{ width: "100%", fontSize: "1.05rem" }}>Seguir el camino →</Btn>
               </>
             )}
           </div>
@@ -3775,35 +3481,118 @@ function Conocete({ conoce, onSave, user, streakInfo, onDailySeedAnswer }) {
     );
   }
 
-  // ─── Main journey view — camino ilustrado
-  const H = CONOCE_MAP.height;
-  const pctY = (y) => `${(y / H) * 100}%`;
-  const [broteY, florY] = CONOCE_MAP.labels.map(l => l.y);
+  return null;
+}
+
+// ═══════════════════════════════════════════════
+// CAMINO — la columna vertebral: todo en un solo mapa
+// ═══════════════════════════════════════════════
+// Bloquean el avance solo los pasos que dependen de mí (pregunta, lección, mi parte del acuerdo).
+// Ejercicios (se hacen juntos), tests opcionales y cofres no bloquean: quedan en gris hasta hacerse.
+// Estado de cada parada del camino para mí: done / waiting / current / negotiate / open / locked
+function getCaminoNodes(conoce, burbuja, lessonsDone, myRole, partnerRole) {
+  let currentSet = false;
+  return CAMINO_MAP.nodes.map(n => {
+    let mine = false, done = false, blocking = true, partnerDone = false, extra = {};
+    if (n.kind === "conoce" && n.q) {
+      const ans = conoce[`${n.q.cat}-${n.q.idx}`] || {};
+      mine = !!ans[myRole]; partnerDone = !!ans[partnerRole]; done = mine && partnerDone;
+    } else if (n.kind === "conoce") {
+      blocking = false;
+      done = mine = n.quiz.questions.every((_, idx) => !!conoce[`${n.quiz.catKey}-${idx}`]?.[myRole]);
+      extra = { caption: `${n.quiz.title} · opcional` };
+    } else if (n.kind === "leccion") {
+      const d = lessonsDone?.[n.lesson.id] || {};
+      mine = d[myRole] === true; partnerDone = d[partnerRole] === true; done = mine && partnerDone;
+    } else if (n.kind === "acuerdo") {
+      const e = burbuja[n.item.id] || {};
+      mine = !!e[myRole]; partnerDone = !!e[partnerRole]; done = e.status === "approved";
+      if (mine && partnerDone && !done) {
+        const myTurn = !(e.status === "pending" && e.proposalText) || e.proposalBy !== myRole;
+        return { ...n, status: "negotiate", tappable: true, bounce: myTurn, bubble: myTurn ? "¡A negociar!" : null };
+      }
+    } else {
+      const reward = CONOCE_JOURNEY[n.stage - 1].rewardBamboo;
+      const won = isJourneyLevelCompletedByBoth(n.stage, conoce, myRole, partnerRole);
+      return { ...n, icon: won ? "trophy" : undefined, status: won ? "done" : currentSet ? "locked" : "open",
+        caption: <>+{reward} <ConoceIcon name="leaf" size={11} color={C.olive} stroke={2.4} style={{ display: "inline-block", verticalAlign: "-1px" }} /> {won ? "ganados" : "juntos"}</> };
+    }
+    if (done) return { ...n, ...extra, status: "done", tappable: true };
+    if (mine) return { ...n, ...extra, status: "waiting", tappable: true };
+    if (currentSet) return { ...n, ...extra, status: "locked" };
+    if (!blocking) return { ...n, ...extra, status: "open", tappable: true };
+    currentSet = true;
+    const read = n.kind === "leccion" ? "¡Ya la leyó! Te toca" : "¡Ya respondió! Te toca";
+    return { ...n, ...extra, status: "current", tappable: true, bubble: partnerDone ? read : "¡Te toca!" };
+  });
+}
+
+// Etapa en la que va la pareja (la de la parada que toca)
+function getCaminoStage(nodes) {
+  const cur = nodes.find(n => n.status === "current");
+  if (cur) return cur.stage;
+  for (let k = nodes.length - 1; k >= 0; k--) if (nodes[k].status !== "locked") return nodes[k].stage;
+  return 1;
+}
+
+function Camino({ user, conoce, burbuja, lessonsDone, bamboo, streakInfo, onDailySeedAnswer, renderStep, onPractice }) {
+  const myRole = user?.isOwner !== false ? "owner" : "partner";
+  const partnerRole = myRole === "owner" ? "partner" : "owner";
+  const [step, setStep] = useState(null);
+  const [showDailySeed, setShowDailySeed] = useState(false);
+  const { dailySeed, hasAnswered: dailySeedAnswered, loading: dailySeedLoading } = useDailySeed(user);
+  const closeStep = useCallback(() => setStep(null), []);
+  // Al terminar una lección, invitar a practicarla en Juntos
+  const [pendingLesson, setPendingLesson] = useState(null);
+  const [practice, setPractice] = useState(null);
+  const openStep = st => {
+    setPendingLesson(st.kind === "leccion" && !lessonsDone?.[st.lesson.id]?.[myRole] ? st.lesson.id : null);
+    setStep(st);
+  };
+  useEffect(() => {
+    if (step || !pendingLesson || !lessonsDone?.[pendingLesson]?.[myRole]) return;
+    // Después del aviso de "Lección completada" para no taparlo
+    const ex = EXERCISES.find(e => e.id === CAMINO_LESSON_PRACTICE[pendingLesson]) || null;
+    const t = setTimeout(() => { setPendingLesson(null); setPractice(ex); }, 2200);
+    return () => clearTimeout(t);
+  }, [step, pendingLesson, lessonsDone, myRole]);
+
+  const nodes = useMemo(() => getCaminoNodes(conoce, burbuja, lessonsDone, myRole, partnerRole),
+    [conoce, burbuja, lessonsDone, myRole, partnerRole]);
+
+  const focusIdx = useMemo(() => {
+    const i = nodes.findIndex(n => n.status === "current");
+    if (i >= 0) return i;
+    const j = nodes.findIndex(n => n.status === "negotiate" && n.bounce);
+    if (j >= 0) return j;
+    for (let k = nodes.length - 1; k >= 0; k--) if (nodes[k].status !== "locked") return k;
+    return 0;
+  }, [nodes]);
+  const doneCount = nodes.filter(n => n.status === "done").length;
+
+  // Al volver de un paso, centrar la parada que toca
+  const focusRef = useRef(null);
+  useEffect(() => {
+    if (step) return;
+    const t = setTimeout(() => focusRef.current?.scrollIntoView({ block: "center", behavior: "smooth" }), 250);
+    return () => clearTimeout(t);
+  }, [step]);
+
+  // Preguntas y acuerdos ocupan la pantalla; las lecciones se abren encima del mapa
+  const overlayStep = step && step.kind === "leccion";
+  if (step && !overlayStep) return renderStep(step, closeStep);
 
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
-      <ConozcanseBanner />
-      <style>{`
-        @keyframes bounceSoft { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-        @keyframes confetti { 0% { transform: translateY(0) rotate(0deg); opacity:1; } 100% { transform: translateY(120px) rotate(720deg); opacity:0; } }
-        @keyframes nodeGlow { 0%,100% { box-shadow: 0 5px 0 #e79bbd, 0 0 0 6px rgba(255,214,232,0.55), 0 0 26px rgba(255,190,220,0.8); } 50% { box-shadow: 0 5px 0 #e79bbd, 0 0 0 12px rgba(255,214,232,0.35), 0 0 36px rgba(255,190,220,0.95); } }
-        @keyframes raysBlink { 0%,100% { opacity: 1; } 50% { opacity: 0.45; } }
-      `}</style>
+      <div style={{ background: C.dark, padding: "44px 18px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.6rem", color: C.cream2 }}>Su camino</div>
+        <div style={{ background: C.olive, borderRadius: 20, padding: "5px 12px", fontFamily: "'Baloo 2',sans-serif", fontSize: "0.85rem", color: C.cream2 }}>{bamboo} 🌿</div>
+      </div>
 
       {/* Semilla del día */}
-      <div style={{ padding: "14px 14px 14px" }}>
-        <div
-          onClick={() => setShowDailySeed(true)}
-          style={{
-            background: "linear-gradient(135deg, #fff9e8 0%, #f3ecfb 100%)",
-            borderRadius: 20,
-            padding: "16px 18px",
-            border: "1.5px solid rgba(141,111,201,0.22)",
-            boxShadow: "0 4px 0 rgba(141,111,201,0.12)",
-            cursor: "pointer",
-            textAlign: "left",
-          }}
-        >
+      <div style={{ padding: 14 }}>
+        <div onClick={() => setShowDailySeed(true)}
+          style={{ background: "linear-gradient(135deg, #fff9e8 0%, #f3ecfb 100%)", borderRadius: 20, padding: "16px 18px", border: "1.5px solid rgba(141,111,201,0.22)", boxShadow: "0 4px 0 rgba(141,111,201,0.12)", cursor: "pointer" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ width: 32, height: 32, borderRadius: 10, background: "#e8f2e2", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -3833,143 +3622,41 @@ function Conocete({ conoce, onSave, user, streakInfo, onDailySeedAnswer }) {
         </div>
       </div>
 
-      {/* Mapa */}
-      <div style={{ position: "relative", width: "100%", aspectRatio: `1000 / ${H}`, overflow: "hidden", background: "#d2dab9" }}>
-        <img src="/conoce/paisaje.webp" alt="" draggable={false}
-          style={{ position: "absolute", left: 0, top: 0, width: "100%", height: pctY(CONOCE_MAP_TOP_H + 2), display: "block" }} />
-        {CONOCE_MAP.tiles.map((t, k) => (
-          <img key={t} src="/conoce/paisaje-tile.webp" alt="" draggable={false}
-            style={{ position: "absolute", left: 0, top: pctY(t - 60), width: "100%", height: pctY(CONOCE_MAP_TILE_H + 62), display: "block", transform: k % 2 ? "scaleX(-1)" : "none",
-              WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, #000 12%)", maskImage: "linear-gradient(to bottom, transparent 0%, #000 12%)" }} />
-        ))}
-        {/* Tinte por nivel: verde → lila (Brote) → rosa (Flor) */}
-        <div style={{
-          position: "absolute", inset: 0, pointerEvents: "none", mixBlendMode: "color",
-          background: `linear-gradient(to bottom,
-            rgba(255,255,255,0) 0%, rgba(255,255,255,0) ${((broteY - 260) / H) * 100}%,
-            rgba(176,140,240,0.55) ${((broteY + 60) / H) * 100}%, rgba(176,140,240,0.55) ${((florY - 260) / H) * 100}%,
-            rgba(245,140,195,0.5) ${((florY + 60) / H) * 100}%, rgba(245,140,195,0.5) 100%)`,
-        }} />
+      <CaminoMapa
+        map={CAMINO_MAP}
+        nodes={nodes}
+        stageInfo={stage => {
+          const firstIdx = nodes.findIndex(n => n.stage === stage);
+          const locked = focusIdx < firstIdx && nodes[focusIdx]?.status === "current";
+          return { ...CONOCE_LEVELS[stage], icon: CONOCE_LEVEL_ICON[stage], locked,
+            sub: locked ? `Termina ${CONOCE_LEVELS[stage - 1].label} para abrir` : CONOCE_LEVELS[stage].sub };
+        }}
+        counter={`${doneCount}/${nodes.length} hechos`}
+        focusIdx={focusIdx}
+        focusRef={focusRef}
+        onTap={openStep}
+      />
 
-        <svg viewBox={`0 0 1000 ${H}`} preserveAspectRatio="none" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
-          <path d={CONOCE_MAP.path} fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="92" strokeLinecap="round" />
-          <path d={CONOCE_MAP.path} fill="none" stroke="#fbf3df" strokeWidth="66" strokeLinecap="round" />
-        </svg>
-
-        {/* Progreso juntos */}
-        <div style={{ position: "absolute", left: 12, top: 12, background: "rgba(255,255,255,0.85)", borderRadius: 14, padding: "5px 11px", fontSize: "0.72rem", fontWeight: 800, color: C.inkM, boxShadow: "0 2px 0 rgba(0,0,0,0.06)", display: "flex", alignItems: "center", gap: 5 }}>
-          <ConoceIcon name="heart" size={13} color="#e46b9c" fill="#f7c3d8" stroke={2} /> {overall.answered}/{overall.total} juntos
-        </div>
-
-        {/* Letreros de nivel */}
-        {CONOCE_MAP.labels.map(l => {
-          const lv = CONOCE_LEVELS[l.level];
-          const open = isJourneyLevelUnlocked(l.level, conoce, myRole, partnerRole);
-          return (
-            <div key={l.level} style={{ position: "absolute", left: "50%", top: pctY(l.y), transform: "translate(-50%,-50%)", zIndex: 2,
-              background: "rgba(255,255,255,0.92)", border: `2px solid ${lv.ring}`, borderRadius: 18, padding: "7px 14px", textAlign: "center",
-              boxShadow: `0 4px 0 ${lv.ring}55`, whiteSpace: "nowrap" }}>
-              <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "0.98rem", color: C.dark, lineHeight: 1.1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
-                <ConoceIcon name={CONOCE_LEVEL_ICON[l.level]} size={17} color={lv.ring} stroke={2.2} />{lv.label}
-              </div>
-              <div style={{ fontSize: "0.66rem", fontWeight: 800, color: C.inkM, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
-                {!open && <ConoceIcon name="lock" size={11} stroke={2.4} />}
-                {open ? lv.sub : `Terminen ${CONOCE_LEVELS[l.level - 1].label} los dos`}
-              </div>
+      {overlayStep && renderStep(step, closeStep)}
+      {practice && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15,25,15,0.55)", zIndex: 5000, display: "flex", alignItems: "flex-end" }} onClick={e => { if (e.target === e.currentTarget) setPractice(null); }}>
+          <div style={{ background: C.white, borderRadius: "22px 22px 0 0", padding: "18px 20px 34px", width: "100%", maxWidth: 480, margin: "0 auto", textAlign: "center", animation: "fadeIn 0.25s ease" }}>
+            <div style={{ width: 34, height: 5, background: C.border, borderRadius: 50, margin: "0 auto 14px" }} />
+            <div style={{ fontSize: "0.72rem", fontWeight: 800, color: "#3f7a44", letterSpacing: "0.3px", marginBottom: 6 }}>¿LO PRACTICAN JUNTOS?</div>
+            <div style={{ fontSize: "2.4rem", marginBottom: 4 }}>{practice.emoji}</div>
+            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.2rem", color: C.dark, lineHeight: 1.2 }}>{practice.title}</div>
+            <div style={{ fontSize: "0.82rem", color: C.inkM, lineHeight: 1.55, margin: "8px 0 16px" }}>
+              Cuando estén en el mismo lugar, prueben esto para llevar la lección a la vida real. ⏱ {practice.time}
             </div>
-          );
-        })}
-
-        {/* Paradas */}
-        {mapNodes.map((n, i) => {
-          const isQuiz = n.type === "quiz", isChest = n.type === "chest";
-          const size = isQuiz || isChest ? 62 : 56;
-          const look = {
-            locked:  { bg: "radial-gradient(circle at 35% 30%, #fbf8ff, #e6def4)", edge: "#c9bce3" },
-            current: { bg: "radial-gradient(circle at 35% 30%, #fff, #fcd9e8)", edge: "#e79bbd" },
-            waiting: { bg: "radial-gradient(circle at 35% 30%, #fff, #f1ebfb)", edge: "#c3b2e6" },
-            ready:   { bg: "radial-gradient(circle at 35% 30%, #fff, #e9ddff)", edge: "#9a7fd9" },
-            done:    { bg: "radial-gradient(circle at 35% 30%, #fff6d6, #f7d67a)", edge: "#d9a93a" },
-          }[n.status];
-          const iconColor = { locked: "#a796cc", current: "#e46b9c", waiting: "#8d6fc9", ready: "#7c5fd0", done: "#b8862a" }[n.status];
-          const iconName = isChest ? (n.status === "done" ? "trophy" : "gift")
-            : isQuiz ? CONOCE_QUIZ_ICON[n.quizId]
-            : n.status === "current" ? "heart"
-            : CONOCE_CAT_ICON[n.q.cat];
-          const icon = n.status === "locked" && n.type === "q" ? <ConoceLock />
-            : <ConoceIcon name={iconName} size={isQuiz || isChest ? 30 : 27} color={iconColor} stroke={2.1}
-                fill={n.status === "current" ? "#f7a8c8" : "none"} />;
-          const tappable = n.status !== "locked" && !isChest;
-          const onTap = () => {
-            if (!tappable) return;
-            if (isQuiz) setOpenQuizId(n.quizId);
-            else openQuestion(n.q);
-          };
-          return (
-            <div key={i} ref={i === focusIdx ? focusRef : null}
-              style={{ position: "absolute", left: `${n.x / 10}%`, top: pctY(n.y), transform: "translate(-50%,-50%)", zIndex: 3 }}>
-              {n.status === "current" && (
-                <>
-                  <div style={{ position: "absolute", left: "50%", top: -24, transform: "translateX(-50%)", display: "flex", gap: 8, animation: "raysBlink 1.6s ease-in-out infinite" }}>
-                    {[-25, 0, 25].map(r => <div key={r} style={{ width: 5, height: 13, borderRadius: 3, background: "#f5c74a", transform: `rotate(${r}deg) translateY(${r ? 4 : 0}px)` }} />)}
-                  </div>
-                  <div style={{ position: "absolute", left: "50%", bottom: "100%", marginBottom: 20, transform: "translateX(-50%)", background: "#fff", borderRadius: 12, padding: "3px 10px", fontSize: "0.68rem", fontWeight: 800, color: "#c2588a", whiteSpace: "nowrap", boxShadow: "0 2px 0 rgba(0,0,0,0.08)" }}>
-                    {n.partnerDone ? "¡Ya respondió! Te toca" : "¡Te toca!"}
-                  </div>
-                </>
-              )}
-              <div onClick={onTap}
-                style={{
-                  width: size, height: size, borderRadius: "50%", background: look.bg,
-                  border: "3px solid rgba(255,255,255,0.95)",
-                  boxShadow: `0 5px 0 ${look.edge}, 0 8px 14px rgba(80,60,120,0.15)`,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  cursor: tappable ? "pointer" : "default", position: "relative",
-                  animation: n.status === "current" ? "nodeGlow 2s ease-in-out infinite, bounceSoft 2.2s ease-in-out infinite"
-                    : n.status === "ready" ? "bounceSoft 2.2s ease-in-out infinite" : "none",
-                  filter: n.status === "locked" && n.type !== "q" ? "grayscale(0.7) opacity(0.75)" : "none",
-                  WebkitTapHighlightColor: "transparent",
-                }}>
-                {icon}
-                {n.type === "q" && n.status === "waiting" && (
-                  <span style={{ position: "absolute", right: -6, bottom: -4, background: "#fff", borderRadius: 10, width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 3px rgba(0,0,0,0.15)" }}><ConoceIcon name="hourglass" size={13} color="#8d6fc9" stroke={2.2} /></span>
-                )}
-                {n.type === "q" && n.status === "done" && (
-                  <span style={{ position: "absolute", right: -6, bottom: -4, background: "#7fbf6a", borderRadius: 10, width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid #fff" }}><ConoceIcon name="check" size={12} color="#fff" stroke={3.2} /></span>
-                )}
-              </div>
-              {(isQuiz || isChest) && (
-                <div style={{ position: "absolute", top: "100%", left: "50%", transform: "translateX(-50%)", marginTop: 9, background: "rgba(255,255,255,0.9)", borderRadius: 10, padding: "2px 9px", fontSize: "0.64rem", fontWeight: 800, color: C.inkM, whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 3 }}>
-                  {isQuiz ? `${n.quiz.title} · opcional` : <>+{CONOCE_JOURNEY[n.level - 1].rewardBamboo} <ConoceIcon name="leaf" size={11} color={C.olive} stroke={2.4} /> {n.status === "done" ? "ganados" : "juntos"}</>}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {celebrateLevel && (
-        <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 9999, display: "flex", justifyContent: "center" }}>
-          {[...Array(12)].map((_, idx) => (
-            <div key={idx} style={{
-              position: "absolute", top: "20%", left: `${10 + idx * 7}%`,
-              width: idx % 3 ? 10 : 14, height: idx % 3 ? 14 : 8, borderRadius: idx % 2 ? 3 : 7,
-              background: ["#f7a8c8", "#b9a2ec", "#f5c74a", "#8bc48a"][idx % 4],
-              animation: `confetti 1.2s ease ${idx * 0.05}s both`
-            }} />
-          ))}
+            <Btn onClick={() => { const ex = practice; setPractice(null); onPractice?.(ex); }} style={{ width: "100%", marginBottom: 8 }}>Hacerlo ahora →</Btn>
+            <button onClick={() => setPractice(null)} style={{ background: "none", border: "none", color: C.inkL, fontWeight: 800, fontSize: "0.85rem", cursor: "pointer", padding: 8 }}>Después, en Juntos</button>
+          </div>
         </div>
       )}
       {showDailySeed && (
-        <DailySeedModal
-          user={user}
-          streakInfo={streakInfo}
-          onAnswer={({ dateKey }) => {
-            setShowDailySeed(false);
-            onDailySeedAnswer?.({ dateKey });
-          }}
-          onClose={() => setShowDailySeed(false)}
-        />
+        <DailySeedModal user={user} streakInfo={streakInfo}
+          onAnswer={({ dateKey }) => { setShowDailySeed(false); onDailySeedAnswer?.({ dateKey }); }}
+          onClose={() => setShowDailySeed(false)} />
       )}
     </div>
   );
@@ -4259,7 +3946,8 @@ function BurbujaInbox({ threads, myRole, myName, partnerName, onPropose, onAppro
 }
 
 // BURBUJA
-function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
+// Sin step: biblioteca de acuerdos y negociación. Con step: una pregunta abierta desde el Camino
+function Burbuja({ step, onStepClose, onBack, burbuja, onSaveMine, onPropose, onApprove, user }) {
   const { nameA, nameB } = getCoupleNames(user);
   const myRole = user?.isOwner !== false ? "owner" : "partner";
   const partnerRole = myRole === "owner" ? "partner" : "owner";
@@ -4267,56 +3955,13 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
   const partnerName = myRole === "owner" ? nameB : nameA;
   const [tmp, setTmp] = useState({});
   const [editingApproved, setEditingApproved] = useState({});
-  const [burbujaTab, setBurbujaTab] = useState("preguntas");
-  const [openStep, setOpenStep] = useState(null); // { item, sec } de la parada abierta
+  const [burbujaTab, setBurbujaTab] = useState("acuerdos");
 
   const get = (id, f) => tmp[id]?.[f] ?? burbuja[id]?.[f] ?? "";
   const set_ = (id, f, v) => setTmp(p => ({ ...p, [id]: { ...p[id], [f]: v } }));
   const approvedCount = Object.values(burbuja).filter(v => v?.status === "approved").length;
 
-  // Camino: de lo más leve a lo más fuerte, en el orden de BURBUJA_SECTIONS
-  const pathItems = BURBUJA_SECTIONS.flatMap(sec =>
-    sec.items.filter(item => burbujaItemVisible(item, burbuja)).map(item => ({ item, sec }))
-  );
-  const total = pathItems.length;
-  const burbujaMap = useMemo(() => buildPathMap(pathItems.map((p, i) => ({
-    ...p, key: p.item.id, stage: p.sec.level, icon: BURBUJA_SEC_ICON[p.sec.id],
-    caption: !i || pathItems[i - 1].sec.id !== p.sec.id ? p.sec.title : null,
-  }))), [pathItems.length]);
-
-  // Estado de cada parada: respondes tu parte a tu ritmo (respondes una → se abre la siguiente)
-  const mapNodes = useMemo(() => {
-    let prevMine = true;
-    return burbujaMap.nodes.map(n => {
-      const e = burbuja[n.item.id] || {};
-      const mine = !!e[myRole], partnerDone = !!e[partnerRole];
-      const open = mine || prevMine;
-      prevMine = mine;
-      if (e.status === "approved") return { ...n, status: "done", tappable: true };
-      if (!open) return { ...n, status: "locked" };
-      if (!mine) return { ...n, status: "current", tappable: true, bubble: partnerDone ? "¡Ya respondió! Te toca" : "¡Te toca!" };
-      if (!partnerDone) return { ...n, status: "waiting", tappable: true };
-      const myTurn = !(e.status === "pending" && e.proposalText) || e.proposalBy !== myRole;
-      return { ...n, status: "negotiate", tappable: true, bounce: myTurn, bubble: myTurn ? "¡A negociar!" : null };
-    });
-  }, [burbujaMap, burbuja, myRole, partnerRole]);
-
-  const focusIdx = useMemo(() => {
-    const i = mapNodes.findIndex(n => n.status === "current");
-    if (i >= 0) return i;
-    const j = mapNodes.findIndex(n => n.status === "negotiate" && n.bounce);
-    if (j >= 0) return j;
-    for (let k = mapNodes.length - 1; k >= 0; k--) if (mapNodes[k].status !== "locked") return k;
-    return 0;
-  }, [mapNodes]);
-
-  // Al volver al camino, centrar la parada que toca
-  const focusRef = useRef(null);
-  useEffect(() => {
-    if (openStep || burbujaTab !== "preguntas") return;
-    const t = setTimeout(() => focusRef.current?.scrollIntoView({ block: "center", behavior: "smooth" }), 250);
-    return () => clearTimeout(t);
-  }, [openStep, burbujaTab]);
+  const total = CAMINO_STEPS.filter(st => st.kind === "acuerdo").length;
 
   const approvedItems = BURBUJA_SECTIONS.flatMap(sec =>
     sec.items
@@ -4398,18 +4043,54 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
     </div>;
   };
 
+  if (step) {
+    const { item, sec } = step;
+    const lv = BURBUJA_LEVELS[sec.level];
+    const entry = burbuja[item.id] || {};
+    return (
+      <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90, paddingTop: 16 }}>
+        <div style={{ display: "flex", margin: "0 14px 6px" }}>
+          <Btn onClick={onStepClose} variant="ghost" style={{ padding: "8px 12px", fontSize: "0.8rem" }}>← Volver al camino</Btn>
+        </div>
+        <div style={{ background: C.white, borderRadius: 18, margin: "0 14px 10px", padding: 16, border: `1.5px solid ${C.border}`, boxShadow: `0 3px 0 ${C.border}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+            <div style={{ width: 44, height: 44, background: PATH_TYPES.acuerdo.light, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <ConoceIcon name={PATH_TYPES.acuerdo.icon} size={24} color={PATH_TYPES.acuerdo.color} stroke={2.1} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.05rem", color: C.dark }}>{sec.title}</div>
+              <div style={{ fontSize: "0.72rem", color: C.inkL, fontWeight: 700 }}>Acuerdo · {sec.sub}</div>
+            </div>
+            <span style={{ fontSize: "0.65rem", fontWeight: 800, color: C.inkM, background: lv.color, borderRadius: 8, padding: "3px 9px", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 4 }}>
+              <ConoceIcon name={CONOCE_LEVEL_ICON[sec.level]} size={12} color={lv.ring} stroke={2.4} /> {lv.label}
+            </span>
+          </div>
+          {entry.status === "approved" ? (
+            <div style={{ background: C.cream, borderRadius: 13, padding: 13, borderLeft: `3px solid ${C.olive}` }}>
+              <div style={{ fontSize: "0.88rem", fontWeight: 700, color: C.ink, marginBottom: 8 }}>{item.q}</div>
+              <div style={{ fontSize: "0.72rem", fontWeight: 800, color: C.olive, marginBottom: 3, letterSpacing: "0.3px" }}>ACUERDO</div>
+              <div style={{ fontSize: "0.85rem", fontWeight: 700, color: C.ink, lineHeight: 1.6 }}>{entry.approvedText || entry.proposalText}</div>
+              <div style={{ fontSize: "0.72rem", color: C.inkL, fontWeight: 700, marginTop: 8 }}>Para re-negociarlo, búsquenlo en Nosotros → Acuerdos.</div>
+            </div>
+          ) : renderItem(item)}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
-      <div style={{ background: C.olive, padding: "48px 20px 24px", textAlign: "center" }}>
+      <div style={{ background: C.olive, padding: "48px 20px 24px", textAlign: "center", position: "relative" }}>
+        {onBack && <button onClick={onBack} style={{ position: "absolute", left: 14, top: 14, background: "none", border: "none", color: C.cream2, fontSize: "0.9rem", fontWeight: 800, cursor: "pointer" }}>← Nosotros</button>}
         <h1 style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.9rem", color: C.cream2, margin: 0 }}>Acuerdos 🫧</h1>
         <p style={{ color: `${C.cream}88`, fontSize: "0.86rem", fontWeight: 600, margin: "4px 0 0" }}>Sus reglas, acuerdos y mundo compartido · +10 bambú c/u</p>
       </div>
       <div style={{ background: C.cream, borderRadius: 18, margin: "14px 14px 8px", padding: 16, border: `1.5px solid ${C.border}`, boxShadow: `0 3px 0 ${C.border}` }}>
         <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.05rem", color: C.dark, marginBottom: 5 }}>🫧 ¿Qué es la Burbuja?</div>
         <div style={{ fontSize: "0.85rem", color: C.inkM, lineHeight: 1.7 }}>
-          Acá construyen juntos las reglas y acuerdos de su relación, empezando por lo más ligero. En <strong>Preguntas</strong>: cada uno responde su parte del acuerdo.
-          En <strong>Negociación</strong>: el ida y vuelta de propuestas y contraofertas hasta que uno acepte.
-          En <strong>Acuerdos</strong>: todo lo acordado, con opción de <strong>re-negociar</strong> cuando quieran.
+          Las preguntas de acuerdos aparecen en su <strong>Camino</strong>, de lo más ligero a lo más serio. Aquí queda todo lo que firmaron.
+          En <strong>Acuerdos</strong>: lo acordado, con opción de <strong>re-negociar</strong> cuando quieran.
+          En <strong>Negociación</strong>: el ida y vuelta de propuestas hasta que uno acepte.
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
           <ProgBar value={approvedCount} max={total} color={C.olive} height={7} style={{ flex: 1 }} />
@@ -4417,7 +4098,7 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
         </div>
       </div>
       <div style={{ display: "flex", gap: 6, margin: "0 14px 10px" }}>
-        {[ ["preguntas", "Preguntas"], ["inbox", "Negociación"], ["acuerdos", "Acuerdos"] ].map(([id, label]) => (
+        {[ ["acuerdos", "Acuerdos"], ["inbox", "Negociación"] ].map(([id, label]) => (
           <button
             key={id}
             onClick={() => setBurbujaTab(id)}
@@ -4454,61 +4135,12 @@ function Burbuja({ burbuja, onSaveMine, onPropose, onApprove, user }) {
         />
       )}
 
-      {burbujaTab === "preguntas" && openStep && (() => {
-        const { item, sec } = openStep;
-        const lv = BURBUJA_LEVELS[sec.level];
-        const entry = burbuja[item.id] || {};
-        return (
-          <>
-            <div style={{ display: "flex", margin: "0 14px 6px" }}>
-              <Btn onClick={() => setOpenStep(null)} variant="ghost" style={{ padding: "8px 12px", fontSize: "0.8rem" }}>← Volver al camino</Btn>
-            </div>
-            <div style={{ background: C.white, borderRadius: 18, margin: "0 14px 10px", padding: 16, border: `1.5px solid ${C.border}`, boxShadow: `0 3px 0 ${C.border}` }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-                <div style={{ width: 44, height: 44, background: sec.itemBg, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <ConoceIcon name={BURBUJA_SEC_ICON[sec.id]} size={24} color={C.inkM} stroke={2.1} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.05rem", color: C.dark }}>{sec.title}</div>
-                  <div style={{ fontSize: "0.72rem", color: C.inkL, fontWeight: 700 }}>Acuerdo {pathItems.findIndex(p => p.item.id === item.id) + 1} de {total}</div>
-                </div>
-                <span style={{ fontSize: "0.65rem", fontWeight: 800, color: C.inkM, background: lv.color, borderRadius: 8, padding: "3px 9px", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 4 }}>
-                  <ConoceIcon name={CONOCE_LEVEL_ICON[sec.level]} size={12} color={lv.ring} stroke={2.4} /> {lv.label}
-                </span>
-              </div>
-              {entry.status === "approved" ? (
-                <div style={{ background: C.cream, borderRadius: 13, padding: 13, borderLeft: `3px solid ${C.olive}` }}>
-                  <div style={{ fontSize: "0.88rem", fontWeight: 700, color: C.ink, marginBottom: 8 }}>{item.q}</div>
-                  <div style={{ fontSize: "0.72rem", fontWeight: 800, color: C.olive, marginBottom: 3, letterSpacing: "0.3px" }}>ACUERDO</div>
-                  <div style={{ fontSize: "0.85rem", fontWeight: 700, color: C.ink, lineHeight: 1.6 }}>{entry.approvedText || entry.proposalText}</div>
-                  <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
-                    <Btn onClick={() => { setOpenStep(null); setBurbujaTab("acuerdos"); }} variant="sand" style={{ padding: "8px 12px", fontSize: "0.8rem" }}>Ver en Acuerdos</Btn>
-                  </div>
-                </div>
-              ) : renderItem(item)}
-            </div>
-          </>
-        );
-      })()}
-
-      {burbujaTab === "preguntas" && !openStep && (
-        <CaminoMapa
-          map={burbujaMap}
-          nodes={mapNodes}
-          stageInfo={level => ({ ...BURBUJA_LEVELS[level], icon: CONOCE_LEVEL_ICON[level] })}
-          counter={`${approvedCount}/${total} acordados`}
-          focusIdx={focusIdx}
-          focusRef={focusRef}
-          onTap={n => setOpenStep({ item: n.item, sec: n.sec })}
-        />
-      )}
-
       {burbujaTab === "acuerdos" && (
         <div style={{ margin: "0 14px 10px" }}>
           {!approvedItems.length ? (
             <div style={{ background: C.white, borderRadius: 16, padding: 14, border: `1.5px solid ${C.border}` }}>
               <div style={{ fontSize: "0.82rem", color: C.inkM, fontWeight: 700, lineHeight: 1.6 }}>
-                Aún no tienen acuerdos aprobados. Cuando aprueben uno, aparecerá aquí.
+                Aún no tienen acuerdos aprobados. Cuando aprueben uno en el Camino, aparecerá aquí.
               </div>
             </div>
           ) : approvedItems.map(({ item, entry }) => {
@@ -5749,8 +5381,9 @@ function CarrilYo({ user, entries, yo, streak, onCheckin, onSaveEntry }) {
 }
 
 // PROFILE — Enhanced with more info fields
-function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, conoce, lessonsDone, coupleInfo, streakInfo, gratitudeStreak, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento, onSendMessage, onClaimDailyTip, diarioEntries, onSaveDiarioEntry }) {
+function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, conoce, lessonsDone, coupleInfo, streakInfo, gratitudeStreak, onSaveCoupleInfo, onSaveNames, onLogout, testScores, onRetakeTest, onDeleteAccount, gratitud, momentos, onAddGratitud, onAddMomento, onSendMessage, onClaimDailyTip, diarioEntries, onSaveDiarioEntry, renderAcuerdos }) {
   const [editMode, setEditMode] = useState(false);
+  const [acuerdosView, setAcuerdosView] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [showLoveModal, setShowLoveModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -5845,6 +5478,8 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
 
   useEffect(() => () => clearTimeout(deleteCloseTimer.current), []);
 
+  if (acuerdosView) return renderAcuerdos(() => setAcuerdosView(false));
+
   if (diarioView) {
     return (
       <DiarioPersonal
@@ -5875,6 +5510,20 @@ function Perfil({ user, bamboo, garden, accessories, exDone, messages, burbuja, 
           </div>
         ))}
       </div>
+      {/* ── ACUERDOS ── */}
+      <div onClick={() => setAcuerdosView(true)} style={{ margin:"0 14px 12px", background:C.white, borderRadius:16, padding:"14px 16px", border:`1.5px solid ${C.border}`, boxShadow:`0 2px 0 ${C.border}`, display:"flex", alignItems:"center", gap:12, cursor:"pointer" }}>
+        <div style={{ width:40, height:40, borderRadius:12, background:PATH_TYPES.acuerdo.light, display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <ConoceIcon name="pact" size={22} color={PATH_TYPES.acuerdo.color} />
+        </div>
+        <div style={{ flex:1 }}>
+          <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"0.95rem", color:C.dark }}>Nuestros acuerdos</div>
+          <div style={{ fontSize:"0.76rem", color:C.inkL, fontWeight:700 }}>
+            {Object.values(burbuja || {}).filter(v => v?.status === "approved").length} firmados · negociaciones en curso
+          </div>
+        </div>
+        <div style={{ color:C.inkL, fontSize:"1.1rem" }}>›</div>
+      </div>
+
       {/* ── MOMENTOS ── */}
       <div style={{ margin:"0 14px 12px" }}>
         <MomentosSection user={user} momentos={momentos} onAddMomento={onAddMomento} />
@@ -6492,11 +6141,47 @@ const DAILY_LESSONS = [
     ] }
 ];
 
-// Camino de lecciones: de lo básico a las herramientas de terapia
-const LESSON_STAGE_SUB = { 1: "Amor y desacuerdos", 2: "Conexión diaria", 3: "Herramientas de terapia" };
-const LESSON_MAP = buildPathMap(DAILY_LESSONS.map((lesson, i) => ({
-  key: lesson.id, lesson, stage: i < 5 ? 1 : i < 9 ? 2 : 3, icon: "book", caption: lesson.title,
-})));
+// ═══════════════════════════════════════════════
+// CAMINO — una sola columna: Semilla → Brote → Flor, de lo más ligero a lo más serio
+// ═══════════════════════════════════════════════
+// Orden de lo más ligero y divertido a lo más serio
+const CAMINO_LESSONS = {
+  1: ["love_languages", "bids_connection", "positive_sentiment", "lesson8"],
+  2: ["attachment_styles", "de_escalation", "four_horsemen", "repair_attempts", "couples_communication"],
+  3: ["emotional_flooding", "emotional_regulation", "cognitive_restructuring", "acceptance_commitment", "intimacy_vulnerability"],
+};
+// Ejercicio de Juntos que lleva cada lección a la práctica (siempre de su misma etapa o antes)
+const CAMINO_LESSON_PRACTICE = {
+  love_languages: "apreciacion", bids_connection: "presencia", positive_sentiment: "ojos", lesson8: "apreciacion",
+  attachment_styles: "amor_idiomas", de_escalation: "respiracion", four_horsemen: "espejo", repair_attempts: "validacion", couples_communication: "espejo",
+  emotional_flooding: "respiracion", emotional_regulation: "conflicto", cognitive_restructuring: "conflicto", acceptance_commitment: "perdida", intimacy_vulnerability: "carta",
+};
+// Reparte una lista en n rondas lo más parejo posible
+const spreadRounds = (list, n) => Array.from({ length: n }, (_, r) =>
+  list.slice(Math.round((r * list.length) / n), Math.round(((r + 1) * list.length) / n)));
+
+// Cada ronda: Lección → preguntas de Conócete → Acuerdos (+ test opcional); cofre al final de la etapa.
+// Los ejercicios presenciales viven en Juntos.
+const CAMINO_STEPS = [1, 2, 3].flatMap(stage => {
+  const lessons = CAMINO_LESSONS[stage].map(id => DAILY_LESSONS.find(l => l.id === id));
+  // Primero las de respuesta rápida (tocar > escribir), sin repetir tema seguido
+  const questions = interleaveByCat(CONOCE_JOURNEY[stage - 1].questions)
+    .sort((a, b) => !CONOCE_QUICK[`${a.cat}-${a.idx}`] - !CONOCE_QUICK[`${b.cat}-${b.idx}`]);
+  const agreements = BURBUJA_SECTIONS.filter(sec => sec.level === stage)
+    .flatMap(sec => sec.items.filter(item => !item.legacy).map(item => ({ item, sec })));
+  const rounds = lessons.length;
+  const [Q, A, T] = [questions, agreements, CONOCE_LEVEL_QUIZZES[stage]].map(l => spreadRounds(l, rounds));
+  return [
+    ...lessons.flatMap((lesson, r) => [
+      { kind: "leccion", key: `l-${lesson.id}`, lesson, caption: lesson.title },
+      ...Q[r].map(q => ({ kind: "conoce", key: `q-${q.cat}-${q.idx}`, q })),
+      ...A[r].map(({ item, sec }) => ({ kind: "acuerdo", key: `a-${item.id}`, item, sec, caption: sec.title })),
+      ...T[r].map(quizId => ({ kind: "conoce", key: `t-${quizId}`, quizId, quiz: QUIZZES.find(z => z.id === quizId), size: 62 })),
+    ]),
+    { kind: "premio", key: `p-${stage}`, size: 62 },
+  ].map(st => ({ ...st, stage }));
+});
+const CAMINO_MAP = buildPathMap(CAMINO_STEPS);
 
 // ═══════════════════════════════════════════════
 // RELATIONSHIP TEST SCREEN
@@ -6885,60 +6570,145 @@ function Onboarding({ onDone }) {
 // JUEGOS — menú
 // ═══════════════════════════════════════════════════════════════════════════════
 const LISTA_JUEGOS = [
-  { id: "memoria", emoji: "🧠", nombre: "Memoria sincronizada", desc: "Encuentra pares de cartas juntos. ¡Quien encuentre más gana!", Componente: JuegoMemoria },
-  { id: "scrabble", emoji: "🔤", nombre: "Scrabble de parejas", desc: "Forma palabras con letras limitadas. ¡Más puntos por palabras románticas!", Componente: JuegoScrabble },
-  { id: "esto", emoji: "⚖️", nombre: "Esto o aquello", desc: "Elijan en secreto entre dos opciones y descubran cuánto coinciden.", Componente: JuegoEstoOAquello },
-  { id: "tres", emoji: "❤️", nombre: "Tres en raya", desc: "Corazones contra pandas. ¡Tres en línea gana la partida!", Componente: JuegoTresEnRaya },
-  { id: "sopa", emoji: "🔍", nombre: "Sopa de letras", desc: "Encuentren juntos las palabras de amor antes de que acabe el tiempo.", Componente: JuegoSopaLetras },
+  { id: "esto", emoji: "⚖️", nombre: "Esto o aquello", mins: 5, desc: "Elijan en secreto entre dos opciones y descubran cuánto coinciden.", Componente: JuegoEstoOAquello },
+  { id: "tres", emoji: "❤️", nombre: "Tres en raya", mins: 5, desc: "Corazones contra pandas. ¡Tres en línea gana la partida!", Componente: JuegoTresEnRaya },
+  { id: "memoria", emoji: "🧠", nombre: "Memoria sincronizada", mins: 10, desc: "Encuentra pares de cartas juntos. ¡Quien encuentre más gana!", Componente: JuegoMemoria },
+  { id: "sopa", emoji: "🔍", nombre: "Sopa de letras", mins: 10, desc: "Encuentren juntos las palabras de amor antes de que acabe el tiempo.", Componente: JuegoSopaLetras },
+  { id: "scrabble", emoji: "🔤", nombre: "Scrabble de parejas", mins: 15, desc: "Forma palabras con letras limitadas. ¡Más puntos por palabras románticas!", Componente: JuegoScrabble },
 ];
 
-function Juegos({ onBack, user }) {
-  const [selectedGame, setSelectedGame] = useState(null);
+// ═══════════════════════════════════════════════
+// JUNTOS — juegos y ejercicios para hacer en el mismo lugar
+// ═══════════════════════════════════════════════
+const JUNTOS_MOODS = [
+  { id: "reir", emoji: "😂", label: "Reírnos", sub: "Juegos rápidos para pasarla bien" },
+  { id: "conectar", emoji: "💞", label: "Conectar", sub: "Ejercicios suaves para sentirse cerca" },
+  { id: "serio", emoji: "🗣️", label: "Hablar en serio", sub: "Para cuando hay algo que platicar" },
+];
+const JUNTOS_TIMES = [[5, "5 min"], [15, "15 min"], [Infinity, "30+ min"]];
+// Etapa del camino que abre cada ejercicio (de lo más ligero a lo más profundo)
+const JUNTOS_EXERCISE_STAGE = {
+  apreciacion: 1, presencia: 1, respiracion: 1, ojos: 1,
+  amor_idiomas: 2, suenos: 2, validacion: 2, espejo: 2,
+  conflicto: 3, carta: 3, perdida: 3,
+};
+const JUNTOS_EXERCISE_MOOD = {
+  apreciacion: "conectar", respiracion: "conectar", presencia: "conectar", ojos: "conectar", amor_idiomas: "conectar", suenos: "conectar",
+  validacion: "serio", espejo: "serio", conflicto: "serio", carta: "serio", perdida: "serio",
+};
+const JUNTOS_ITEMS = [
+  ...LISTA_JUEGOS.map(j => ({ key: `g-${j.id}`, game: j, mood: "reir", mins: j.mins, emoji: j.emoji, title: j.nombre, desc: j.desc, stage: 1 })),
+  ...Object.keys(JUNTOS_EXERCISE_STAGE).map(id => {
+    const ex = EXERCISES.find(e => e.id === id);
+    return { key: `e-${id}`, ex, mood: JUNTOS_EXERCISE_MOOD[id], mins: parseInt(ex.time, 10) || 15, emoji: ex.emoji, title: ex.title, desc: ex.desc, stage: JUNTOS_EXERCISE_STAGE[id] };
+  }),
+];
 
-  const juego = LISTA_JUEGOS.find(j => j.id === selectedGame);
-  if (juego) {
-    const { Componente } = juego;
-    return <Componente onBack={() => setSelectedGame(null)} user={user} />;
+function Juntos({ user, conoce, burbuja, lessonsDone, exDone, renderExercise, initialExercise }) {
+  const myRole = user?.isOwner !== false ? "owner" : "partner";
+  const partnerRole = myRole === "owner" ? "partner" : "owner";
+  const [time, setTime] = useState(null);
+  const [mood, setMood] = useState(null);
+  const [game, setGame] = useState(null);
+  const [exercise, setExercise] = useState(initialExercise || null);
+  const closeExercise = useCallback(() => setExercise(null), []);
+
+  const stage = useMemo(() => getCaminoStage(getCaminoNodes(conoce, burbuja, lessonsDone, myRole, partnerRole)),
+    [conoce, burbuja, lessonsDone, myRole, partnerRole]);
+
+  if (game) {
+    const { Componente } = game;
+    return <Componente onBack={() => setGame(null)} user={user} />;
   }
+
+  const isLocked = it => it.stage > stage;
+  const fits = it => (!time || it.mins <= time) && (!mood || it.mood === mood);
+  // Sugerencia: el ejercicio abierto más reciente que aún no han hecho
+  const pick = JUNTOS_ITEMS.filter(it => it.ex && !isLocked(it) && !exDone?.[it.ex.id]).sort((a, b) => b.stage - a.stage)[0];
+  const open = it => it.game ? setGame(it.game) : setExercise(it.ex);
+
+  const chip = (active, label, onClick) => (
+    <button key={label} onClick={onClick} style={{
+      flex: 1, borderRadius: 12, padding: "9px 6px", cursor: "pointer",
+      border: `1.5px solid ${active ? C.dark : C.border}`, background: active ? C.dark : C.white, color: active ? C.cream2 : C.ink,
+      fontFamily: "'Baloo 2',sans-serif", fontSize: "0.8rem", boxShadow: active ? "0 2px 0 rgba(0,0,0,0.18)" : `0 2px 0 ${C.border}` }}>
+      {label}
+    </button>
+  );
+
+  const card = it => {
+    const locked = isLocked(it);
+    const count = it.ex ? exDone?.[it.ex.id] || 0 : 0;
+    return (
+      <div key={it.key} onClick={locked ? undefined : () => open(it)} style={{
+        display: "flex", gap: 12, alignItems: "center", background: locked ? "#f1f0ee" : C.white, borderRadius: 16, padding: "12px 14px", marginBottom: 9,
+        border: `1.5px solid ${C.border}`, boxShadow: `0 2px 0 ${C.border}`, cursor: locked ? "default" : "pointer", opacity: locked ? 0.7 : 1 }}>
+        <div style={{ fontSize: "1.7rem", width: 40, textAlign: "center", filter: locked ? "grayscale(1)" : "none" }}>{it.emoji}</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "0.98rem", color: locked ? C.inkL : C.dark, lineHeight: 1.2 }}>{it.title}</div>
+          <div style={{ fontSize: "0.74rem", color: C.inkL, fontWeight: 700, marginTop: 3 }}>
+            {locked ? `🔒 Se abre en ${CONOCE_LEVELS[it.stage].label}` : `⏱ ${it.mins} min${count ? ` · ✓ ${count === 1 ? "hecho" : `${count} veces`}` : ""}`}
+          </div>
+        </div>
+        {!locked && <div style={{ color: C.inkL, fontSize: "1.1rem" }}>›</div>}
+      </div>
+    );
+  };
+
+  const visible = JUNTOS_ITEMS.filter(fits);
+  const moods = JUNTOS_MOODS.filter(m => !mood || m.id === mood);
 
   return (
     <div style={{ background: C.sandL, minHeight: "100vh", paddingBottom: 90 }}>
-      <div style={{ background: C.dark, padding: "44px 20px 24px" }}>
-        <button onClick={onBack} style={{ background: "none", border: "none", color: C.cream2, fontSize: "1.5rem", cursor: "pointer", marginBottom: 10, display: "block" }}>←</button>
-        <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.5rem", color: C.cream2, marginBottom: 4 }}>
-          🎮 Juegos para parejas
+      <div style={{ background: C.dark, padding: "44px 18px 18px" }}>
+        <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.6rem", color: C.cream2 }}>Juntos</div>
+        <div style={{ fontSize: "0.82rem", color: `${C.cream}99`, fontWeight: 700 }}>Para cuando estén en el mismo lugar, con un solo teléfono</div>
+      </div>
+
+      <div style={{ padding: "14px 14px 4px" }}>
+        <div style={{ fontSize: "0.74rem", fontWeight: 800, color: C.inkL, letterSpacing: "0.3px", marginBottom: 6 }}>¿CUÁNTO TIEMPO TIENEN?</div>
+        <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+          {JUNTOS_TIMES.map(([v, label]) => chip(time === v, label, () => setTime(time === v ? null : v)))}
         </div>
-        <div style={{ fontSize: "0.85rem", color: `${C.cream}88` }}>
-          Diviértete y conecta con tu pareja
+        <div style={{ fontSize: "0.74rem", fontWeight: 800, color: C.inkL, letterSpacing: "0.3px", marginBottom: 6 }}>¿QUÉ SE LES ANTOJA?</div>
+        <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
+          {JUNTOS_MOODS.map(m => chip(mood === m.id, `${m.emoji} ${m.label}`, () => setMood(mood === m.id ? null : m.id)))}
         </div>
       </div>
 
-      <div style={{ padding: "16px 14px 0" }}>
-        {LISTA_JUEGOS.map(j => (
-          <div
-            key={j.id}
-            onClick={() => setSelectedGame(j.id)}
-            style={{
-              background: C.white,
-              borderRadius: 18,
-              padding: "18px 16px",
-              marginBottom: 12,
-              border: `1.5px solid ${C.border}`,
-              boxShadow: `0 3px 0 ${C.border}`,
-              cursor: "pointer",
-              transition: "transform 0.2s"
-            }}
-          >
-            <div style={{ fontSize: "2.2rem", marginBottom: 8 }}>{j.emoji}</div>
-            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.1rem", color: C.dark, marginBottom: 4 }}>
-              {j.nombre}
-            </div>
-            <div style={{ fontSize: "0.8rem", color: C.inkM, lineHeight: 1.5 }}>
-              {j.desc}
+      {!time && !mood && pick && (
+        <div onClick={() => open(pick)} style={{ margin: "0 14px 14px", background: "linear-gradient(135deg, #e2f2dc 0%, #fff9e8 100%)", borderRadius: 18, padding: "14px 16px", border: "1.5px solid rgba(90,161,95,0.3)", boxShadow: "0 3px 0 rgba(90,161,95,0.18)", cursor: "pointer" }}>
+          <div style={{ fontSize: "0.72rem", fontWeight: 800, color: "#3f7a44", letterSpacing: "0.3px", marginBottom: 6 }}>✨ PARA SU PRÓXIMA CITA</div>
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <div style={{ fontSize: "2rem" }}>{pick.emoji}</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.05rem", color: C.dark, lineHeight: 1.2 }}>{pick.title}</div>
+              <div style={{ fontSize: "0.76rem", color: C.inkM, fontWeight: 700, marginTop: 2 }}>⏱ {pick.mins} min · nuevo en su etapa</div>
             </div>
           </div>
-        ))}
+        </div>
+      )}
+
+      <div style={{ padding: "0 14px" }}>
+        {moods.map(m => {
+          const items = visible.filter(it => it.mood === m.id);
+          if (!items.length) return null;
+          return (
+            <div key={m.id} style={{ marginBottom: 10 }}>
+              <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.05rem", color: C.dark }}>{m.emoji} {m.label}</div>
+              <div style={{ fontSize: "0.76rem", color: C.inkL, fontWeight: 700, marginBottom: 8 }}>{m.sub}</div>
+              {items.map(card)}
+            </div>
+          );
+        })}
+        {!visible.length && (
+          <div style={{ background: C.white, borderRadius: 16, padding: 16, border: `1.5px solid ${C.border}`, fontSize: "0.84rem", color: C.inkM, fontWeight: 700, textAlign: "center" }}>
+            Nada cabe en ese tiempo. Prueben con un poquito más 😉
+          </div>
+        )}
       </div>
+
+      {exercise && renderExercise(exercise, closeExercise)}
     </div>
   );
 }
@@ -8118,18 +7888,16 @@ function JuegoSopaLetras({ onBack, user }) {
 
 const NAV = [
   { id: "jardin", emoji: "🌿", label: "Jardín" },
-  { id: "ejerc", emoji: "⭐", label: "Ejercicios" },
-  { id: "conocete", emoji: "💬", label: "Conózcanse" },
-  { id: "burbuja", emoji: "🫧", label: "Acuerdos" },
+  { id: "camino", emoji: "🗺️", label: "Camino" },
+  { id: "juntos", emoji: "🎲", label: "Juntos" },
   { id: "perfil", emoji: "👤", label: "Nosotros" },
 ];
 
 // Lo que Mochi explica la primera vez que se abre cada pestaña
 const TAB_TIPS = {
-  ejerc: "Ejercicios y lecciones cortas para hacer juntos.",
-  conocete: "Preguntas para conocerse mejor. Cada uno responde por su lado y después ven la respuesta del otro.",
-  burbuja: "Aquí arman sus acuerdos: cada uno escribe su parte y después la ajustan juntos.",
-  perfil: "Momentos, gratitud, mensajes de amor y tu diario privado.",
+  camino: "Su camino juntos: preguntas, lecciones y acuerdos, de lo más ligero a lo más serio. Lo gris es lo que aún no hacen.",
+  juntos: "Juegos y ejercicios para cuando estén en el mismo lugar. Elijan cuánto tiempo tienen y qué se les antoja.",
+  perfil: "Sus acuerdos, momentos, gratitud, mensajes de amor y tu diario privado.",
 };
 
 const Leaf = ({ size = 20, color = "#7fb069" }) => (
@@ -8263,6 +8031,7 @@ export default function App() {
   const [screen, setScreen] = useState("login");
   const [user, setUser] = useState(null);
   const [tab, setTab] = useState("jardin");
+  const [juntosEx, setJuntosEx] = useState(null); // ejercicio a abrir al llegar a Juntos desde el Camino
   const [toastMsg, setToastMsg] = useState(null);
   const [bamboo, setBamboo] = useState(0);
   const [happiness, setHappiness] = useState(20);
@@ -9578,10 +9347,15 @@ export default function App() {
       <style>{STYLES}</style>
       <div style={{ paddingBottom:72 }}>
         {tab==="jardin" && <Jardin bamboo={bamboo} happiness={happiness} water={water} garden={garden} accessories={accessories} mochiHappy={mochiHappy} pandaBubble={pandaBubble} onPet={petMochi} onBuy={buyItem} onWater={waterGarden} onBuyAccessory={buyAccessory}/>}
-        {tab==="ejerc" && <Ejercicios exDone={exDone} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson} bamboo={bamboo} exChestState={exChestState} exStreak={exStreak} onGoToGarden={() => setTab("jardin")}/>}
-        {tab==="conocete" && <Conocete conoce={conoce} onSave={saveConoce} user={user} streakInfo={streakData} onDailySeedAnswer={submitDailySeed}/>}
-        {tab==="burbuja" && <Burbuja burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} user={user}/>}
-        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} garden={garden} accessories={accessories} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} lessonsDone={lessonsDone} coupleInfo={coupleInfo} streakInfo={streakData} gratitudeStreak={gratitudeStreak} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={retakeTest} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} onSendMessage={sendMsg} onClaimDailyTip={claimDailyTip} diarioEntries={diarioEntries} onSaveDiarioEntry={saveDiarioEntry}/>} 
+        {tab==="camino" && <Camino user={user} conoce={conoce} burbuja={burbuja} lessonsDone={lessonsDone} onPractice={ex => { setJuntosEx(ex); setTab("juntos"); }} bamboo={bamboo} streakInfo={streakData} onDailySeedAnswer={submitDailySeed}
+          renderStep={(step, close) =>
+            step.kind === "conoce" ? <Conocete step={step} onStepClose={close} conoce={conoce} onSave={saveConoce} user={user}/>
+            : step.kind === "acuerdo" ? <Burbuja step={step} onStepClose={close} burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} user={user}/>
+            : <Ejercicios step={step} onStepClose={close} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson} onGoToGarden={() => setTab("jardin")}/>}/>}
+        {tab==="juntos" && <Juntos user={user} conoce={conoce} burbuja={burbuja} lessonsDone={lessonsDone} exDone={exDone} initialExercise={juntosEx}
+          renderExercise={(ex, close) => <Ejercicios step={{ kind: "ejercicio", ex }} onStepClose={close} onComplete={completeEx} user={user} lessonsDone={lessonsDone} onCompleteLesson={completeLesson} onGoToGarden={() => setTab("jardin")}/>}/>}
+        {tab==="perfil" && <Perfil user={user} bamboo={bamboo} garden={garden} accessories={accessories} exDone={exDone} messages={messages} burbuja={burbuja} conoce={conoce} lessonsDone={lessonsDone} coupleInfo={coupleInfo} streakInfo={streakData} gratitudeStreak={gratitudeStreak} onSaveCoupleInfo={saveCoupleInfo} onSaveNames={saveNames} onLogout={logout} testScores={testScores} onRetakeTest={retakeTest} onDeleteAccount={deleteAccount} gratitud={gratitud} momentos={momentos} onAddGratitud={addGratitud} onAddMomento={addMomento} onSendMessage={sendMsg} onClaimDailyTip={claimDailyTip} diarioEntries={diarioEntries} onSaveDiarioEntry={saveDiarioEntry}
+          renderAcuerdos={back => <Burbuja onBack={back} burbuja={burbuja} onSaveMine={saveBurbujaMine} onPropose={proposeBurbuja} onApprove={approveBurbuja} user={user}/>}/>} 
       </div>
       <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:480, background:C.white, borderTop:`1.5px solid ${C.border}`, display:"flex", zIndex:1000, boxShadow:`0 -3px 0 ${C.line}` }}>
         {NAV.map(n => {
@@ -9592,12 +9366,13 @@ export default function App() {
             if (x.fromUid && user?.uid && x.fromUid === user.uid) return false;
             return x.forUid === user?.uid || x.forUid === myNotifRole || (x.forUid === "partner" && myNotifRole === "partner");
           };
-          const notifTypes = { "ejerc":["ejercicio","leccion"], "conocete":["conoce"], "burbuja":["gratitud","momento","acuerdo"], "perfil":["racha","mensaje"] };
+          const notifTypes = { "camino":["leccion","conoce"], "juntos":["ejercicio"], "perfil":["racha","mensaje","gratitud","momento","acuerdo"] };
           const nBadge = notifTypes[n.id] ? notifs.filter(x => isNotifForMe(x) && notifTypes[n.id].includes(x.type)).length : 0;
           const badge = nBadge > 0 ? nBadge : null;
           return (
             <div key={n.id} onClick={()=>{
               setTab(n.id);
+              setJuntosEx(null);
               // Mark related notifs as read
               const tabTypes = notifTypes[n.id] || [];
               notifs
