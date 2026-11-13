@@ -25,6 +25,8 @@ import Cuestionarios, { QUIZZES } from "./Cuestionarios";
 import DailySeedModal, { useDailySeed } from "./DailySeedModal";
 import { DAILY_SEED_BAMBOO_REWARD, getDateKeyLocal } from "./dailySeed";
 import LessonCardWizard from "./components/LessonCardWizard";
+import { MochiSVG } from "./components/MochiSVG";
+import { ART, ArtIcon, TIENDA_CATS, TIENDA_JARDIN, TIENDA_PANDAS, TiendaJardinLayer, PandaRopaLayer, ponerPrenda } from "./components/TiendaArt";
 
 // Prevents the fbOnAuthChange listener from calling afterLogin while doReg/doJoin
 // is actively handling a fresh registration (avoids race conditions on new sign-ups).
@@ -796,6 +798,9 @@ const PATH_STATUS_BADGE = {
   done: ["check", "#7fbf6a", "#fff"],
   locked: ["lock", "#fff", "#a8a8b3"],
 };
+// Las preguntas de pareja son mochis: mi mitad a la izquierda, la de mi pareja a la derecha.
+// Mismo color que el tinte de su etapa.
+const MOCHI_STAGE_COLOR = { 1: "verde", 2: "lavanda", 3: "rosa" };
 // Tinte por etapa (en orden de aparición): verde → lila → rosa
 const PATH_TINTS = ["rgba(255,255,255,0)", "rgba(176,140,240,0.55)", "rgba(245,140,195,0.5)"];
 
@@ -816,6 +821,7 @@ function CaminoMapa({ map, nodes, stageInfo, tints = PATH_TINTS, counter, focusI
         @keyframes bounceSoft { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
         @keyframes nodeGlow { 0%,100% { box-shadow: 0 5px 0 var(--edge), 0 0 0 6px rgba(255,214,232,0.55), 0 0 26px rgba(255,190,220,0.8); } 50% { box-shadow: 0 5px 0 var(--edge), 0 0 0 12px rgba(255,214,232,0.35), 0 0 36px rgba(255,190,220,0.95); } }
         @keyframes raysBlink { 0%,100% { opacity: 1; } 50% { opacity: 0.45; } }
+        @keyframes mochiGlow { 0%,100% { filter: drop-shadow(0 4px 0 rgba(61,42,85,0.18)) drop-shadow(0 0 10px rgba(255,190,220,0.85)); } 50% { filter: drop-shadow(0 4px 0 rgba(61,42,85,0.18)) drop-shadow(0 0 20px rgba(255,190,220,1)); } }
       `}</style>
       <img src="/conoce/paisaje.webp" alt="" draggable={false}
         style={{ position: "absolute", left: 0, top: 0, width: "100%", height: pctY(CONOCE_MAP_TOP_H + 2), display: "block" }} />
@@ -876,6 +882,18 @@ function CaminoMapa({ map, nodes, stageInfo, tints = PATH_TINTS, counter, focusI
                 </div>
               </>
             )}
+            {n.halves ? (
+              <div onClick={() => n.tappable && onTap(n)}
+                style={{
+                  cursor: n.tappable ? "pointer" : "default", opacity: n.status === "locked" ? 0.6 : 1,
+                  filter: "drop-shadow(0 4px 0 rgba(61,42,85,0.18))",
+                  animation: n.status === "current" && isFocus ? "mochiGlow 2s ease-in-out infinite, bounceSoft 2.2s ease-in-out infinite" : "none",
+                  WebkitTapHighlightColor: "transparent",
+                }}>
+                <MochiSVG left={n.halves[0]} right={n.halves[1]} color={MOCHI_STAGE_COLOR[n.stage]} size={80} weight={8}
+                  title={n.status === "done" ? "Pregunta respondida por los dos" : n.halves[0] ? "Esperando a tu pareja" : n.halves[1] ? "Tu pareja ya respondió" : "Pregunta sin responder"} />
+              </div>
+            ) : (
             <div onClick={() => n.tappable && onTap(n)}
               style={{
                 "--edge": look.edge, width: size, height: size, borderRadius: "50%", background: look.bg,
@@ -894,6 +912,7 @@ function CaminoMapa({ map, nodes, stageInfo, tints = PATH_TINTS, counter, focusI
                 </span>
               )}
             </div>
+            )}
             {n.caption && (
               <div style={{
                 position: "absolute", width: "max-content", maxWidth: 100, background: "rgba(255,255,255,0.9)", borderRadius: 10, padding: "2px 8px",
@@ -2340,6 +2359,8 @@ function GardenScene({ garden, waterLevel }) {
         <path d="M150 190 C150 190 140 182 140 192 C140 200 150 210 150 210 C150 210 160 200 160 192 C160 182 150 190 150 190Z" fill="#e8607a"/>
       </g>}
 
+      <TiendaJardinLayer garden={garden}/>
+
       {/* Dryness crack overlay */}
       {dry && <g>
         <path d="M50 250 L60 265 L55 275" fill="none" stroke="#a08030" strokeWidth="1.5" opacity="0.5"/>
@@ -2371,12 +2392,167 @@ function InvitePartnerBox({ user, compact = false }) {
   );
 }
 
+// Los pandas con ropa puesta (para la tienda y el probador)
+function PandaConLook({ accessories, size = 160, happy = false }) {
+  return (
+    <div style={{ position: "relative", width: size, height: size * 0.846 }}>
+      <CouplePandaSVG happy={happy} size={size}/>
+      <PandaAccessoryLayer accessories={accessories} pandaSize={size}/>
+      <PandaRopaLayer accessories={accessories} pandaSize={size}/>
+    </div>
+  );
+}
+
+function TiendaIcono({ item, size = 60 }) {
+  if (ART[item.id]) return <ArtIcon id={item.id} size={size}/>;
+  if (item.cat === "trajes") return <PandaConLook accessories={{ [item.id]: true }} size={size * 1.5}/>;
+  if (item.tipo === "panda") return <div style={{ fontSize: size * 0.55, lineHeight: 1 }}>{item.emoji}</div>;
+  return <GardenItemIcon id={item.id} size={size * 0.8}/>;
+}
+
+function Tienda({ bamboo, garden, accessories, onBuy, onBuyAccessory }) {
+  const [zona, setZona] = useState("jardin");
+  const [cat, setCat] = useState("bambu");
+  const [abierto, setAbierto] = useState(null);
+
+  const estadoDe = item => {
+    const v = (item.tipo === "panda" ? accessories : garden)?.[item.id];
+    return v === true ? "puesto" : v === "owned" ? "guardado" : "nuevo";
+  };
+  const mios = [
+    ...[...TIENDA_JARDIN, ...GARDEN_ITEMS].map(i => ({ ...i, tipo: "jardin" })),
+    ...[...TIENDA_PANDAS, ...PANDA_ACCESSORIES].map(i => ({ ...i, tipo: "panda" })),
+  ].filter(i => estadoDe(i) !== "nuevo");
+  const items = zona === "tuyo" ? mios
+    : (zona === "jardin" ? TIENDA_JARDIN : TIENDA_PANDAS).filter(i => i.cat === cat).map(i => ({ ...i, tipo: zona === "jardin" ? "jardin" : "panda" }));
+
+  const cambiarZona = z => {
+    setZona(z);
+    const primera = TIENDA_CATS.find(c => c.zona === z);
+    if (primera) setCat(primera.id);
+  };
+
+  const accion = item => {
+    const estado = estadoDe(item);
+    if (item.tipo === "panda") return estado === "puesto" ? "Quitárselo" : estado === "guardado" ? "Ponérselo" : `Comprar y ponérselo · ${item.cost} 🌿`;
+    return estado === "puesto" ? "Quitar del jardín" : estado === "guardado" ? "Poner en el jardín" : `Comprar · ${item.cost} 🌿`;
+  };
+
+  const pill = (bg, color, txt, border = bg) => (
+    <span style={{ background: bg, color, border: `1.5px solid ${border}`, borderRadius: 50, padding: "2px 9px", fontSize: "0.64rem", fontWeight: 800, whiteSpace: "nowrap" }}>{txt}</span>
+  );
+
+  const sel = abierto && { ...abierto, estado: estadoDe(abierto) };
+  const falta = sel && sel.estado === "nuevo" ? Math.max(0, sel.cost - bamboo) : 0;
+
+  return (
+    <div style={{ background: C.sandL, borderRadius: "22px 22px 0 0", border: `1.5px solid ${C.border}`, boxShadow: `0 -3px 0 ${C.border}`, marginTop: 10, paddingBottom: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 16px 10px" }}>
+        <div>
+          <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.25rem", color: C.dark, lineHeight: 1.1 }}>Tienda</div>
+          <div style={{ fontSize: "0.72rem", color: C.inkM, fontWeight: 700 }}>Decoren su jardín y vistan a sus pandas</div>
+        </div>
+        <div style={{ background: C.white, border: `1.5px solid ${C.border}`, borderRadius: 50, padding: "5px 12px", fontFamily: "'Baloo 2',sans-serif", fontSize: "0.95rem", color: C.dark }}>🌿 {bamboo}</div>
+      </div>
+
+      {/* Zonas */}
+      <div style={{ display: "flex", gap: 4, margin: "0 14px", background: C.cream, borderRadius: 14, padding: 4 }}>
+        {[["jardin", "Jardín"], ["pandas", "Pandas"], ["tuyo", `Comprado${mios.length ? ` · ${mios.length}` : ""}`]].map(([id, label]) => (
+          <button key={id} onClick={() => cambiarZona(id)}
+            style={{ flex: 1, border: "none", borderRadius: 11, padding: "8px 4px", cursor: "pointer", fontFamily: "'Nunito',sans-serif", fontSize: "0.8rem", fontWeight: 800,
+              background: zona === id ? C.white : "transparent", color: zona === id ? C.dark : C.inkM,
+              boxShadow: zona === id ? `0 2px 0 ${C.border}` : "none", transition: "all 0.15s" }}>{label}</button>
+        ))}
+      </div>
+
+      {/* Categorías */}
+      {zona !== "tuyo" && (
+        <div style={{ display: "flex", gap: 8, overflowX: "auto", padding: "12px 14px 4px" }}>
+          {TIENDA_CATS.filter(c => c.zona === zona).map(c => (
+            <button key={c.id} onClick={() => setCat(c.id)}
+              style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, cursor: "pointer", fontFamily: "'Nunito',sans-serif",
+                background: cat === c.id ? C.dark : C.white, color: cat === c.id ? C.cream2 : C.inkM,
+                border: `1.5px solid ${cat === c.id ? C.dark : C.border}`, borderRadius: 50, padding: "4px 12px 4px 5px", fontSize: "0.76rem", fontWeight: 800 }}>
+              <span style={{ background: C.white, borderRadius: "50%", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <ArtIcon id={c.icon} size={22}/>
+              </span>
+              {c.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Artículos */}
+      {items.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "28px 24px", color: C.inkM, fontSize: "0.85rem", fontWeight: 700 }}>
+          Aún no tienen nada. Lo que compren aparecerá aquí para ponerlo o guardarlo cuando quieran.
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10, padding: "12px 14px 0" }}>
+          {items.map(item => {
+            const estado = estadoDe(item);
+            return (
+              <button key={`${item.tipo}-${item.id}`} onClick={() => setAbierto(item)}
+                style={{ position: "relative", background: C.white, border: `1.5px solid ${estado === "puesto" ? C.olive : C.border}`, borderRadius: 18,
+                  padding: "10px 6px 10px", display: "flex", flexDirection: "column", alignItems: "center", gap: 5, cursor: "pointer",
+                  fontFamily: "'Nunito',sans-serif", boxShadow: `0 3px 0 ${estado === "puesto" ? C.oliveL : C.line}` }}>
+                <div style={{ height: 80, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                  <TiendaIcono item={item} size={64}/>
+                </div>
+                <div style={{ fontSize: "0.7rem", fontWeight: 800, color: C.ink, lineHeight: 1.15, textAlign: "center", minHeight: "1.6rem", display: "flex", alignItems: "center" }}>{item.name}</div>
+                {estado === "puesto" ? pill(C.olive, C.cream2, item.tipo === "panda" ? "Puesto" : "En el jardín")
+                  : estado === "guardado" ? pill(C.white, C.inkM, "Guardado", C.border)
+                  : item.cost > 0 ? pill(bamboo >= item.cost ? C.dark : C.sand, bamboo >= item.cost ? C.cream2 : C.inkL, `${item.cost} 🌿`)
+                  : pill(C.sand, C.inkL, "Cofre")}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Detalle + probador */}
+      {sel && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15,25,15,0.55)", zIndex: 5000, display: "flex", alignItems: "flex-end", justifyContent: "center" }}
+          onClick={e => { if (e.target === e.currentTarget) setAbierto(null); }}>
+          <div style={{ background: C.sandL, borderRadius: "22px 22px 0 0", width: "100%", maxWidth: 520, padding: "10px 18px calc(22px + env(safe-area-inset-bottom))", animation: "fadeIn 0.2s ease" }}>
+            <div style={{ width: 34, height: 5, background: C.border, borderRadius: 50, margin: "0 auto 12px" }}/>
+            {sel.tipo === "panda" ? (
+              <div style={{ position: "relative", borderRadius: 18, overflow: "hidden", height: 200, display: "flex", alignItems: "flex-end", justifyContent: "center",
+                background: "linear-gradient(#cfe9f2 0%, #e6f3ec 64%, #a8d68f 64%, #8cc56a 100%)", border: `1.5px solid ${C.border}` }}>
+                {sel.estado !== "puesto" && (
+                  <span style={{ position: "absolute", top: 10, left: 10, background: "rgba(255,255,255,0.85)", borderRadius: 50, padding: "3px 10px", fontSize: "0.68rem", fontWeight: 800, color: C.inkM }}>Así se verían</span>
+                )}
+                <div style={{ marginBottom: 6 }}><PandaConLook accessories={ponerPrenda(accessories || {}, sel.id)} size={220} happy/></div>
+              </div>
+            ) : (
+              <div style={{ background: C.white, borderRadius: 18, height: 180, display: "flex", alignItems: "center", justifyContent: "center", border: `1.5px solid ${C.border}` }}>
+                {ART[sel.id] ? <ArtIcon id={sel.id} size={150}/> : <GardenItemIcon id={sel.id} size={110}/>}
+              </div>
+            )}
+            <div style={{ textAlign: "center", margin: "14px 0 16px" }}>
+              <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.35rem", color: C.dark, lineHeight: 1.15 }}>{sel.name}</div>
+              <div style={{ fontSize: "0.85rem", color: C.inkM, fontWeight: 600, marginTop: 2 }}>{sel.desc}</div>
+            </div>
+            {falta > 0 ? (
+              <>
+                <Btn disabled style={{ width: "100%" }}>Te faltan {falta} 🌿</Btn>
+                <div style={{ textAlign: "center", fontSize: "0.75rem", color: C.inkL, fontWeight: 700, marginTop: 8 }}>Completen ejercicios y lecciones para ganar bambú</div>
+              </>
+            ) : sel.estado === "nuevo" && !(sel.cost > 0) ? (
+              <div style={{ textAlign: "center", fontSize: "0.8rem", color: C.inkM, fontWeight: 700 }}>Solo se consigue abriendo cofres</div>
+            ) : (
+              <Btn onClick={() => { (sel.tipo === "panda" ? onBuyAccessory : onBuy)(sel); setAbierto(null); }} style={{ width: "100%" }}>{accion(sel)}</Btn>
+            )}
+            <button onClick={() => setAbierto(null)}
+              style={{ display: "block", margin: "10px auto 0", background: "none", border: "none", color: C.inkM, fontWeight: 800, fontSize: "0.82rem", cursor: "pointer", fontFamily: "'Nunito',sans-serif" }}>Cerrar</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pandaBubble, onPet, onBuy, onWater, onBuyAccessory }) {
-  const [shopTab, setShopTab] = useState("plantas");
-  const cats = [{id:"plantas",label:"🌿 Plantas"},{id:"agua",label:"🐟 Agua"},{id:"cielo",label:"☁️ Cielo"},{id:"deco",label:"🏮 Deco"},{id:"especial",label:"✨ Especiales"},{id:"accesorios",label:"🐼 Pandas"}];
-  const shopItems = (shopTab === "accesorios"
-    ? PANDA_ACCESSORIES
-    : GARDEN_ITEMS.filter(i => i.cat === shopTab)).filter(i => i && i.id && typeof i.cost === "number" && i.cost > 0);
 
   const dry = water < 20;
   const withering = water < 40;
@@ -2442,6 +2618,7 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
               )}
               <CouplePandaSVG happy={mochiHappy} size={140}/>
               <PandaAccessoryLayer accessories={accessories} pandaSize={140}/>
+              <PandaRopaLayer accessories={accessories} pandaSize={140}/>
             </div>
           </div>
         </SectionErrorBoundary>
@@ -2454,68 +2631,7 @@ function Jardin({ bamboo, happiness, water, garden, accessories, mochiHappy, pan
           boxShadow: "0 3px 0 rgba(0,0,0,0.18)" }}>💧 Regar el jardín</button>
       </div>
 
-      {/* Shop */}
-      <div style={{ background:C.white, borderRadius:"22px 22px 0 0", border:`1.5px solid ${C.border}`, boxShadow:`0 -3px 0 ${C.border}`, marginTop:10 }}>
-        <div style={{ padding:"16px 16px 0" }}>
-          <div style={{ fontFamily:"'Baloo 2',sans-serif", fontSize:"1.1rem", color:C.dark }}>Tienda del jardín</div>
-        </div>
-        {/* Category tabs */}
-        <div style={{ display:"flex", gap:6, overflowX:"auto", padding:"10px 14px 6px" }}>
-          {cats.map(c => (
-            <div key={c.id} onClick={() => setShopTab(c.id)}
-              style={{ background:shopTab===c.id?C.dark:C.sandL, color:shopTab===c.id?C.cream2:C.inkM,
-                borderRadius:10, padding:"6px 12px", fontSize:"0.72rem", fontWeight:800,
-                cursor:"pointer", whiteSpace:"nowrap", flexShrink:0, border:`1.5px solid ${shopTab===c.id?C.dark:C.border}`,
-                transition:"all 0.15s" }}>
-              {c.label}
-            </div>
-          ))}
-        </div>
-        {/* Items grid */}
-        <div style={{ display:"flex", gap:10, overflowX:"auto", padding:"8px 14px 20px" }}>
-          {shopItems.map(item => {
-            const owned = shopTab === "accesorios" ? accessories?.[item.id] : garden?.[item.id];
-            const POND_DEPS = ["koi1", "koi2", "lotus_pad"];
-            const pondReady = garden?.pond === true || garden?.pond === "owned";
-            const locked = shopTab !== "accesorios" && POND_DEPS.includes(item.id) && !pondReady && !owned;
-            return (
-              <div key={item.id} onClick={() => {
-                if (locked) return;
-                shopTab === "accesorios" ? onBuyAccessory(item) : onBuy(item);
-              }}
-                style={{ background:owned===true?"#d4e8c4":owned==="owned"?C.cream:locked?"#f0ede8":C.sandL,
-                  border:`2px solid ${owned===true?C.olive:owned==="owned"?"#c8b060":locked?C.sand:C.border}`,
-                  borderRadius:16, padding:"12px 10px", textAlign:"center", cursor:locked?"default":"pointer",
-                  minWidth:84, flexShrink:0, opacity:locked?0.6:1,
-                  boxShadow:owned?`0 3px 0 ${C.olive}50`:`0 2px 0 ${C.border}`,
-                  transition:"all 0.15s" }}>
-                <div style={{ display:"flex", justifyContent:"center", marginBottom:4 }}>
-                  {shopTab === "accesorios"
-                    ? <div style={{ fontSize:"1.8rem" }}>{item.emoji}</div>
-                    : <GardenItemIcon id={item.id} size={38}/>}
-                </div>
-                <div style={{ fontSize:"0.67rem", fontWeight:800, color:C.ink, marginBottom:2, lineHeight:1.2 }}>{item.name}</div>
-                <div style={{ fontSize:"0.62rem", color:C.inkL, marginBottom:5, lineHeight:1.2 }}>{locked ? "🔒 Requiere Estanque" : item.desc}</div>
-                {shopTab !== "accesorios" ? (
-                  owned === true
-                    ? <div style={{ background:C.olive, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>Quitar</div>
-                    : owned === "owned"
-                    ? <div style={{ background:C.dark, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>Poner</div>
-                    : locked
-                    ? <div style={{ background:C.sand, color:C.inkL, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>🔒</div>
-                    : <div style={{ background:C.dark, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>{item.cost} 🌿</div>
-                ) : (
-                  owned
-                    ? <div style={{ background:C.olive, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>✓</div>
-                    : locked
-                    ? <div style={{ background:C.sand, color:C.inkL, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>🔒</div>
-                    : <div style={{ background:C.dark, color:C.cream2, borderRadius:6, padding:"2px 7px", fontSize:"0.65rem", fontWeight:800 }}>{item.cost} 🌿</div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      <Tienda bamboo={bamboo} garden={garden} accessories={accessories} onBuy={onBuy} onBuyAccessory={onBuyAccessory}/>
     </div>
   );
 }
@@ -3322,7 +3438,7 @@ function Conocete({ step, onStepClose, conoce, onSave, user }) {
     setJustSaved({ isNew: isNewMine });
   };
 
-  // ─── Pregunta: se juega como carta (respondes → se voltea la del otro → siguiente)
+  // ─── Pregunta: cada quien pone su mitad del mochi; cuando están las dos se juntan y se abren
   if (openQ) {
     const lv = CONOCE_LEVELS[openQ.level];
     const qKey = `${openQ.cat}-${openQ.idx}`;
@@ -3336,105 +3452,118 @@ function Conocete({ step, onStepClose, conoce, onSave, user }) {
     const matched = !editing && partnerAns && (norm(partnerAns) === norm(myAnswer) || (quick || []).some(t => norm(myAnswer).includes(norm(t)) && norm(partnerAns).includes(norm(t))));
     const addQuick = (txt) => setMyAnswer(a => (a.trim() ? `${a.trim()}, ${txt}` : txt));
 
-    const bubble = (who, name, text, delay) => (
-      <div style={{ animation: `cardFlip 0.6s cubic-bezier(0.22,1,0.36,1) ${delay}s both`, transformOrigin: "center", marginBottom: 10 }}>
-        <div style={{ fontSize: "0.68rem", fontWeight: 800, color: who === "me" ? C.olive : C.teal, marginBottom: 4, textAlign: who === "me" ? "right" : "left" }}>{name}</div>
-        <div style={{
-          background: who === "me" ? "#fff" : lv.color, border: `2px solid ${who === "me" ? C.border : lv.ring}`,
-          borderRadius: who === "me" ? "18px 18px 6px 18px" : "18px 18px 18px 6px",
-          padding: "12px 14px", fontSize: "0.95rem", color: C.ink, lineHeight: 1.5,
-          marginLeft: who === "me" ? 28 : 0, marginRight: who === "me" ? 0 : 28,
-        }}>{text}</div>
+    // El mochi: mi mitad a la izquierda, la de mi pareja a la derecha; se junta cuando respondemos los dos
+    const mineIn = !editing && !!myAnswer;
+    const both = mineIn && !!partnerAns;
+    const answeredCount = levelQs.filter(isMine).length;
+    const namePill = (name, done) => (
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, borderRadius: 14, padding: "4px 12px", fontSize: "0.8rem", fontWeight: 800,
+        background: done ? lv.color : "transparent", color: done ? C.ink : C.inkL, border: done ? `1.5px solid ${lv.color}` : `1.5px dashed ${C.border}` }}>
+        {name}{done ? <ConoceIcon name="check" size={14} stroke={2.8} /> : " · aún no"}
+      </span>
+    );
+    const answerCard = (side, name, text, delay) => (
+      <div style={{ animation: `cardIn 0.5s cubic-bezier(0.22,1,0.36,1) ${delay}s both`, background: C.white, borderRadius: 20, padding: "12px 16px", marginBottom: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+          <MochiSVG left={side === "left"} right={side === "right"} showMissing={false} color={MOCHI_STAGE_COLOR[openQ.level]} size={30} weight={9} />
+          <span style={{ fontSize: "0.75rem", fontWeight: 800, color: C.inkL }}>{name}</span>
+        </div>
+        <div style={{ fontSize: "1rem", fontWeight: 800, color: C.ink, lineHeight: 1.4 }}>{text}</div>
       </div>
     );
 
     return (
-      <div style={{ minHeight: "100vh", paddingBottom: 90, background: `linear-gradient(180deg, ${lv.color} 0%, ${C.sandL} 70%)` }}>
+      <div style={{ minHeight: "100vh", paddingBottom: 90, background: C.sandL }}>
         <style>{`
-          @keyframes cardIn { from { opacity:0; transform: translateY(28px) scale(0.95); } to { opacity:1; transform: none; } }
-          @keyframes floatSoft { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
-          @keyframes cardFlip { from { opacity:0; transform: perspective(700px) rotateY(90deg); } to { opacity:1; transform: perspective(700px) rotateY(0); } }
-          @keyframes sealWiggle { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-4deg); } 75% { transform: rotate(4deg); } }
+          @keyframes cardIn { from { opacity:0; transform: translateY(18px); } to { opacity:1; transform: none; } }
+          @keyframes sparkleIn { 0% { opacity:0; transform: scale(0) rotate(-30deg); } 60% { opacity:1; transform: scale(1.25) rotate(8deg); } 100% { opacity:1; transform: scale(1) rotate(0); } }
           @keyframes rewardUp { 0% { opacity:0; transform: translate(-50%, 10px) scale(0.8); } 20% { opacity:1; transform: translate(-50%, 0) scale(1.1); } 80% { opacity:1; transform: translate(-50%, -18px) scale(1); } 100% { opacity:0; transform: translate(-50%, -30px); } }
         `}</style>
 
-        {/* Barra superior: volver + avance del nivel */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 16px 6px" }}>
+        <div style={{ padding: "14px 16px 0" }}>
           <button onClick={() => setOpenQ(null)}
             style={{ border: "none", background: "rgba(255,255,255,0.85)", borderRadius: 12, padding: "7px 12px", fontSize: "0.75rem", fontWeight: 800, color: C.inkM, cursor: "pointer", fontFamily: "'Nunito',sans-serif" }}>
             ← Camino
           </button>
-          <div style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center", gap: 6 }}>
-            {levelQs.map((q, i) => {
-              const done = isMine(q);
-              const here = i === pos;
-              return <div key={i} style={{ width: here ? 22 : 9, height: 9, borderRadius: 6, transition: "all 0.3s",
-                background: done ? lv.ring : here ? "#fff" : "rgba(255,255,255,0.6)", border: `2px solid ${here || done ? lv.ring : "rgba(255,255,255,0.9)"}` }} />;
-            })}
-          </div>
-          <div style={{ fontSize: "0.72rem", fontWeight: 800, color: C.inkM, minWidth: 38, textAlign: "right" }}>{pos + 1} de {levelQs.length}</div>
         </div>
 
-        <div key={qKey} style={{ margin: "34px 14px 0", position: "relative", animation: "cardIn 0.45s cubic-bezier(0.22,1,0.36,1)" }}>
-          {/* Pandas asomándose sobre la carta */}
-          <div style={{ position: "absolute", top: -46, left: "50%", transform: "translateX(-50%)", zIndex: 0, pointerEvents: "none", animation: "floatSoft 3s ease-in-out infinite" }}>
-            <CouplePandaSVG happy={!editing} size={92} />
+        <div key={qKey} style={{ padding: "0 20px", maxWidth: 440, margin: "0 auto", textAlign: "center" }}>
+          {/* Única señal de avance: etapa · posición y barra */}
+          <span style={{ display: "inline-block", background: lv.color, color: C.ink, borderRadius: 16, padding: "5px 14px", fontSize: "0.8rem", fontWeight: 800 }}>
+            {lv.label} · {pos + 1} de {levelQs.length}
+          </span>
+          <div style={{ width: 120, height: 5, borderRadius: 3, background: C.line, margin: "10px auto 0", overflow: "hidden" }}>
+            <div style={{ width: `${(answeredCount / levelQs.length) * 100}%`, height: "100%", background: lv.ring, transition: "width 0.4s" }} />
           </div>
 
-          <div style={{ background: "#fff", borderRadius: 28, padding: "40px 18px 18px", border: `2.5px solid ${lv.ring}`, boxShadow: `0 6px 0 ${lv.ring}55, 0 14px 30px ${lv.ring}30`, position: "relative", zIndex: 1 }}>
-            <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: lv.color, color: C.inkM, borderRadius: 10, padding: "4px 10px", fontSize: "0.66rem", fontWeight: 800, letterSpacing: "0.4px" }}>
-                <ConoceIcon name={CONOCE_CAT_ICON[openQ.cat]} size={13} color={lv.ring} stroke={2.4} />
-                {openQ.catLabel.toUpperCase()}
-              </span>
-            </div>
-            <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.4rem", color: C.dark, lineHeight: 1.3, textAlign: "center", marginBottom: 16 }}>{openQ.text}</div>
+          <div style={{ fontFamily: "'Baloo 2',sans-serif", fontSize: "1.55rem", color: C.dark, lineHeight: 1.2, margin: "18px 0 20px" }}>{openQ.text}</div>
 
+          <div style={{ position: "relative", width: 200, margin: "0 auto" }}>
+            <MochiSVG left={mineIn} right={!!partnerAns} color={MOCHI_STAGE_COLOR[openQ.level]} expression={both ? "feliz" : "contento"} size={200}
+              title={both ? "Mochi completo" : mineIn ? `Esperando a ${partnerLabel}` : partnerAns ? `${partnerLabel} ya puso su mitad` : "Mochi vacío"} />
+            {both && [[-22, 4, 12, "#A8CF8E"], [8, -14, 8, C.dark], [96, 2, 13, "#C9B6EE"], [104, 40, 8, C.dark], [-24, 52, 8, "#C9B6EE"], [-6, 92, 7, "#F4A9B8"], [90, 90, 10, "#A8CF8E"]]
+              .map(([x, y, r, c], i) => (
+                <svg key={i} viewBox="-10 -10 20 20" width={r * 2} height={r * 2}
+                  style={{ position: "absolute", left: `${x}%`, top: `${y}%`, animation: `sparkleIn 0.45s ease ${0.5 + i * 0.06}s both` }}>
+                  <path d="M0 -10 C1 -2 2 -1 10 0 C2 1 1 2 0 10 C-1 2 -2 1 -10 0 C-2 -1 -1 -2 0 -10 Z" fill={c} />
+                </svg>
+              ))}
+            {justSaved?.isNew && (
+              <div style={{ position: "absolute", left: "50%", top: -10, zIndex: 3, animation: "rewardUp 1.6s ease both",
+                background: C.olive, color: C.cream2, borderRadius: 14, padding: "5px 12px", fontWeight: 900, fontSize: "0.85rem", display: "flex", alignItems: "center", gap: 4, boxShadow: "0 3px 0 rgba(0,0,0,0.15)" }}>
+                +15 <ConoceIcon name="leaf" size={14} stroke={2.4} />
+              </div>
+            )}
+          </div>
+
+          {!both && (
+            <>
+              <div style={{ display: "flex", justifyContent: "center", gap: 28, margin: "16px 0 10px" }}>
+                {namePill(myLabel, mineIn)}
+                {namePill(partnerLabel, !!partnerAns)}
+              </div>
+              <div style={{ fontSize: "0.85rem", color: C.inkM, lineHeight: 1.45, marginBottom: 16, minHeight: "1.2em" }}>
+                {mineIn ? `Tu mitad está lista. Se abre cuando ${partnerLabel} ponga la suya.`
+                  : partnerAns ? `${partnerLabel} ya puso su mitad. Pon la tuya para abrirlas.` : ""}
+              </div>
+            </>
+          )}
+
+          <div style={{ textAlign: "left", marginTop: both ? 22 : 0 }}>
             {editing ? (
               <>
-                {/* Carta del otro: sellada hasta que respondas */}
-                {partnerAns ? (
-                  <div style={{ display: "flex", alignItems: "center", gap: 12, background: `repeating-linear-gradient(45deg, ${lv.color}, ${lv.color} 10px, #fff 10px, #fff 20px)`, border: `2px dashed ${lv.ring}`, borderRadius: 18, padding: "12px 14px", marginBottom: 14 }}>
-                    <div style={{ width: 42, height: 42, borderRadius: "50%", background: "#fff", border: `2px solid ${lv.ring}`, display: "flex", alignItems: "center", justifyContent: "center", animation: "sealWiggle 1.8s ease-in-out infinite", flexShrink: 0 }}>
-                      <ConoceIcon name="letter" size={22} color={lv.ring} stroke={2.2} />
-                    </div>
-                    <div style={{ fontSize: "0.8rem", fontWeight: 800, color: C.ink, lineHeight: 1.35 }}>
-                      {partnerLabel} ya respondió
-                      <div style={{ fontWeight: 700, color: C.inkM, fontSize: "0.72rem" }}>Contesta para abrir su carta</div>
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: "0.72rem", fontWeight: 800, color: C.inkL, marginBottom: 12 }}>
-                    <ConoceIcon name="hourglass" size={13} stroke={2.2} /> {partnerLabel} aún no responde. ¡Gánale!
-                  </div>
-                )}
-
                 {quick && (
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center", marginBottom: 10 }}>
                     {quick.map(t => (
                       <button key={t} onClick={() => addQuick(t)}
-                        style={{ border: `1.5px solid ${lv.ring}`, background: myAnswer.includes(t) ? lv.ring : "#fff", color: myAnswer.includes(t) ? "#fff" : C.ink,
-                          borderRadius: 14, padding: "6px 11px", fontSize: "0.76rem", fontWeight: 800, cursor: "pointer", fontFamily: "'Nunito',sans-serif" }}>
+                        style={{ border: `1.5px solid ${myAnswer.includes(t) ? lv.ring : C.border}`, background: myAnswer.includes(t) ? lv.color : C.white, color: C.ink,
+                          borderRadius: 16, padding: "7px 12px", fontSize: "0.8rem", fontWeight: 800, cursor: "pointer", fontFamily: "'Nunito',sans-serif" }}>
                         {t}
                       </button>
                     ))}
                   </div>
                 )}
-                <TA value={myAnswer} onChange={setMyAnswer} placeholder={quick ? "Toca una opción o escribe la tuya…" : "Escribe tu respuesta…"} rows={quick ? 2 : 4}
-                  style={{ marginBottom: 12, borderRadius: 16, borderColor: lv.ring + "80", background: "#fffdf8" }} />
-                <Btn onClick={saveQ} disabled={!myAnswer.trim()} style={{ width: "100%", fontSize: "1.05rem" }}>
-                  {partnerAns ? "Responder y abrir carta" : "Guardar respuesta"}
+                <TA value={myAnswer} onChange={setMyAnswer} placeholder={quick ? "O escríbela tú…" : "Escribe tu respuesta…"} rows={quick ? 2 : 4}
+                  style={{ marginBottom: 14, borderRadius: 18, borderColor: C.border, background: C.white }} />
+                <Btn onClick={saveQ} disabled={!myAnswer.trim()} style={{ width: "100%", fontSize: "1.05rem", borderRadius: 26, padding: "15px 24px" }}>
+                  Poner mi mitad
                 </Btn>
               </>
             ) : (
               <>
-                {/* Revelación */}
-                {bubble("me", myLabel, myAnswer, 0)}
-                {partnerAns ? bubble("partner", partnerLabel, partnerAns, justSaved ? 0.35 : 0) : (
-                  <div style={{ animation: "cardFlip 0.6s ease 0.2s both", display: "flex", alignItems: "center", gap: 10, background: C.sandL, borderRadius: 16, padding: "10px 12px", marginRight: 28, marginBottom: 10 }}>
-                    <ConoceIcon name="letter" size={20} color={lv.ring} stroke={2.2} />
-                    <div style={{ fontSize: "0.78rem", fontWeight: 700, color: C.inkM, lineHeight: 1.4 }}>
-                      Tu carta está sellada. Se abre cuando {partnerLabel} responda.
+                {both ? (
+                  <>
+                    {answerCard("left", myLabel, myAnswer, 0.35)}
+                    {answerCard("right", partnerLabel, partnerAns, justSaved ? 0.5 : 0.35)}
+                  </>
+                ) : (
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, background: C.white, borderRadius: 20, padding: "12px 16px", marginBottom: 10 }}>
+                    <div style={{ width: 42, height: 42, borderRadius: "50%", background: lv.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <ConoceIcon name={CONOCE_CAT_ICON[openQ.cat]} size={22} color={C.dark} stroke={2} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "0.75rem", fontWeight: 800, color: C.inkL }}>Tu respuesta</div>
+                      <div style={{ fontSize: "1rem", fontWeight: 800, color: C.ink, lineHeight: 1.4 }}>{myAnswer}</div>
                     </div>
                   </div>
                 )}
@@ -3444,7 +3573,7 @@ function Conocete({ step, onStepClose, conoce, onSave, user }) {
                   </div>
                 )}
                 <div onClick={() => { setEditing(true); setJustSaved(null); }}
-                  style={{ fontSize: "0.72rem", fontWeight: 800, color: C.inkL, textAlign: "center", cursor: "pointer", margin: "4px 0 12px" }}>
+                  style={{ fontSize: "0.72rem", fontWeight: 800, color: C.inkL, textAlign: "center", cursor: "pointer", margin: "4px 0 14px" }}>
                   Editar mi respuesta
                 </div>
                 {!nextQ && (
@@ -3452,17 +3581,10 @@ function Conocete({ step, onStepClose, conoce, onSave, user }) {
                     ¡Terminaste tus preguntas de {lv.label}!
                   </div>
                 )}
-                <Btn onClick={() => setOpenQ(null)} style={{ width: "100%", fontSize: "1.05rem" }}>Seguir el camino →</Btn>
+                <Btn onClick={() => setOpenQ(null)} style={{ width: "100%", fontSize: "1.05rem", borderRadius: 26, padding: "15px 24px" }}>Seguir el camino →</Btn>
               </>
             )}
           </div>
-
-          {justSaved?.isNew && (
-            <div style={{ position: "absolute", left: "50%", top: -14, zIndex: 3, animation: "rewardUp 1.6s ease both",
-              background: C.olive, color: C.cream2, borderRadius: 14, padding: "5px 12px", fontWeight: 900, fontSize: "0.85rem", display: "flex", alignItems: "center", gap: 4, boxShadow: "0 3px 0 rgba(0,0,0,0.15)" }}>
-              +15 <ConoceIcon name="leaf" size={14} stroke={2.4} />
-            </div>
-          )}
         </div>
       </div>
     );
@@ -3497,6 +3619,7 @@ function getCaminoNodes(conoce, burbuja, lessonsDone, myRole, partnerRole) {
     if (n.kind === "conoce" && n.q) {
       const ans = conoce[`${n.q.cat}-${n.q.idx}`] || {};
       mine = !!ans[myRole]; partnerDone = !!ans[partnerRole]; done = mine && partnerDone;
+      extra = { halves: [mine, partnerDone] };
     } else if (n.kind === "conoce") {
       blocking = false;
       done = mine = n.quiz.questions.every((_, idx) => !!conoce[`${n.quiz.catKey}-${idx}`]?.[myRole]);
@@ -8665,7 +8788,7 @@ export default function App() {
 
       // If already owned, toggle it on/off (equip/unequip)
       if (safeAccessories[item.id] === "owned") {
-        const na = { ...safeAccessories, [item.id]: true };
+        const na = ponerPrenda(safeAccessories, item.id);
         setAccessories(na);
         if (user?.code && !user?.isGuest) {
           fbSaveGardenState(user.code, { garden, accessories: na, water, happiness }).catch(() => {});
@@ -8685,7 +8808,7 @@ export default function App() {
         return;
       }
       if (bamboo < item.cost) { toast("Necesitas más bambú"); return; }
-      const nb = bamboo - item.cost, na = { ...safeAccessories, [item.id]: true }, nh = Math.min(100, happiness + 5);
+      const nb = bamboo - item.cost, na = ponerPrenda(safeAccessories, item.id), nh = Math.min(100, happiness + 5);
       const nv = new Date().toISOString();
       if (user?.code && !user?.isGuest) {
         fbPurchaseGardenUpdate(user.code, item.cost, { garden, accessories: na, water, happiness: nh })
@@ -8695,7 +8818,7 @@ export default function App() {
             setHappiness(nh);
             setLastVisit(nv);
             trigHappy();
-            toast(`${item.name} puesto ${item.emoji} +5 amor`);
+            toast(`${item.name} puesto ${item.emoji || "🐼"} +5 amor`);
             save(null, { bamboo:newTotal, happiness:nh, water, garden, accessories:na, exDone, messages, conoce, burbuja, coupleInfo, lastVisit:nv, testScores, lessonsDone, gratitud, momentos });
           })
           .catch((e) => {
@@ -8712,7 +8835,7 @@ export default function App() {
         return;
       }
       setBamboo(nb); setAccessories(na); setHappiness(nh); setLastVisit(nv); trigHappy();
-      toast(`${item.name} puesto ${item.emoji} +5 amor`);
+      toast(`${item.name} puesto ${item.emoji || "🐼"} +5 amor`);
       save(null, { bamboo:nb, happiness:nh, water, garden, accessories:na, exDone, messages, conoce, burbuja, coupleInfo, lastVisit:nv, testScores, lessonsDone, gratitud, momentos });
     } catch (e) {
       if (process.env.NODE_ENV !== "production") {
